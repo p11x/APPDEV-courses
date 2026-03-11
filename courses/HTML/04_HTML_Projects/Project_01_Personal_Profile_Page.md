@@ -1,0 +1,313 @@
+# Project 1: Personal Profile Page
+
+## Project Overview
+
+### Project Title
+Personal Profile Page
+
+### Project Description
+Create a personal profile webpage that showcases your information including profile image, biography, skills, links, and contact information. This project demonstrates your ability to structure content using fundamental HTML elements.
+
+### Learning Objectives
+
+- Apply basic HTML structure (headings, paragraphs, images)
+- Use links and navigation
+- Create semantic page layout
+- Add contact information
+
+### Estimated Duration
+2-3 hours
+
+---
+
+## Project Requirements
+
+### Required Elements
+
+1. **Profile Image**
+   - Use an `<img>` element with appropriate `alt` text
+   - Include width and height attributes
+
+2. **Personal Information**
+   - Name as main heading (h1)
+   - Professional title (h2)
+   - Short biography (paragraphs)
+   - Skills list (unordered list)
+
+3. **Links Section**
+   - Social media links (LinkedIn, GitHub, Twitter)
+   - Portfolio or website link
+   - Use anchor tags with `target="_blank"` for external links
+
+4. **Contact Information**
+   - Email address (mailto link)
+   - Phone number (tel link)
+   - Location
+
+5. **Additional Sections**
+   - Work experience or education
+   - Hobbies/interests
+
+---
+
+## Code Template
+
+### Basic Structure
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Profile - Your Name</title>
+    <meta name="description" content="Personal profile and portfolio of Your Name">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <!-- Profile Image -->
+        <img src="profile.jpg" alt="Your Name Profile Photo="200" height="200" width">
+        
+        <!-- Name and Title -->
+        <h1>Your Name</h1>
+        <h2>Professional Title</h2>
+        
+        <!-- Social Links -->
+        <nav>
+            <a href="https://linkedin.com" target="_blank">LinkedIn</a>
+            <a href="https://github.com" target="_blank">GitHub</a>
+            <a href="mailto:email@example.com">Email</a>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main>
+        <!-- About Section -->
+        <section id="about">
+            <h2>About Me</h2>
+            <p>Your biography goes here...</p>
+        </section>
+        
+        <!-- Skills Section -->
+        <section id="skills">
+            <h2>Skills</h2>
+            <ul>
+                <li>HTML</li>
+                <li>CSS</li>
+                <li>JavaScript</li>
+            </ul>
+        </section>
+        
+        <!-- Experience Section -->
+        <section id="experience">
+            <h2>Experience</h2>
+            <article>
+                <h3>Job Title</h3>
+                <p>Company Name | 2020 - Present</p>
+                <p>Description of responsibilities...</p>
+            </article>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Your Name. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+```
+
+---
+
+## Complete Example Code
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>John Smith - Web Developer</title>
+    <meta name="description" content="Personal portfolio of John Smith, a web developer specializing in frontend development">
+</head>
+<body>
+    <!-- Profile Header -->
+    <header style="text-align: center; padding: 40px 20px; background-color: #f5f5f5;">
+        <!-- Profile Image - Replace with your image -->
+        <img src="profile-placeholder.jpg" 
+             alt="John Smith Profile Photo" 
+             width="200" 
+             height="200"
+             style="border-radius: 50%;">
+        
+        <h1>John Smith</h1>
+        <h2>Web Developer</h2>
+        
+        <!-- Social Links -->
+        <nav style="margin-top: 20px;">
+            <a href="https://linkedin.com/in/johnsmith" 
+               target="_blank"
+               style="margin: 0 10px;">LinkedIn</a>
+            <a href="https://github.com/johnsmith" 
+               target="_blank"
+               style="margin: 0 10px;">GitHub</a>
+            <a href="https://twitter.com/johnsmith" 
+               target="_blank"
+               style="margin: 0 10px;">Twitter</a>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main style="max-width: 800px; margin: 0 auto; padding: 20px;">
+        
+        <!-- About Section -->
+        <section id="about" style="margin-bottom: 40px;">
+            <h2>About Me</h2>
+            <p>
+                Hello! I'm a passionate web developer with 3 years of experience 
+                creating modern, responsive websites. I love turning ideas into 
+                reality through code and continuously learning new technologies.
+            </p>
+            <p>
+                When I'm not coding, you can find me exploring new technologies, 
+                contributing to open-source projects, or enjoying outdoor activities.
+            </p>
+        </section>
+        
+        <!-- Skills Section -->
+        <section id="skills" style="margin-bottom: 40px;">
+            <h2>Skills</h2>
+            <ul style="columns: 2; list-style-position: inside;">
+                <li>HTML5 & CSS3</li>
+                <li>JavaScript (ES6+)</li>
+                <li>React</li>
+                <li>Angular</li>
+                <li>Node.js</li>
+                <li>Git & GitHub</li>
+                <li>Responsive Design</li>
+                <li>Web Accessibility</li>
+            </ul>
+        </section>
+        
+        <!-- Experience Section -->
+        <section id="experience" style="margin-bottom: 40px;">
+            <h2>Work Experience</h2>
+            
+            <article style="margin-bottom: 20px;">
+                <h3>Frontend Developer</h3>
+                <p><strong>Tech Company Inc.</strong> | January 2022 - Present</p>
+                <ul>
+                    <li>Developed responsive web applications using React</li>
+                    <li>Collaborated with design team to implement UI/UX</li>
+                    <li>Improved website performance by 40%</li>
+                </ul>
+            </article>
+            
+            <article style="margin-bottom: 20px;">
+                <h3>Junior Web Developer</h3>
+                <p><strong>Web Agency LLC</strong> | June 2020 - December 2021</p>
+                <ul>
+                    <li>Built and maintained client websites</li>
+                    <li>Implemented responsive designs for mobile devices</li>
+                    <li>Worked with CMS platforms like WordPress</li>
+                </ul>
+            </article>
+        </section>
+        
+        <!-- Education Section -->
+        <section id="education" style="margin-bottom: 40px;">
+            <h2>Education</h2>
+            
+            <article>
+                <h3>Bachelor of Science in Computer Science</h3>
+                <p><strong>University of Technology</strong> | 2016 - 2020</p>
+            </article>
+        </section>
+        
+        <!-- Contact Section -->
+        <section id="contact" style="margin-bottom: 40px;">
+            <h2>Contact Me</h2>
+            <p>
+                <strong>Email:</strong> 
+                <a href="mailto:john.smith@email.com">john.smith@email.com</a>
+            </p>
+            <p>
+                <strong>Phone:</strong> 
+                <a href="tel:+1234567890">+1 (234) 567-890</a>
+            </p>
+            <p>
+                <strong>Location:</strong> San Francisco, CA
+            </p>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 20px; background-color: #333; color: white;">
+        <p>&copy; 2024 John Smith. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+```
+
+---
+
+## Project Checklist
+
+### Structure (10 points)
+- [ ] Proper HTML5 document structure with DOCTYPE
+- [ ] Head section with title and meta tags
+- [ ] Semantic structure using header, main, section, footer
+
+### Content (20 points)
+- [ ] Profile image with alt text
+- [ ] Name as h1 heading
+- [ ] Professional title as h2 heading
+- [ ] Biography in paragraphs
+- [ ] Skills listed in unordered list
+
+### Links and Navigation (10 points)
+- [ ] At least 3 external links (social media)
+- [ ] Email contact link (mailto)
+- [ ] Phone contact link (tel)
+
+### Additional Elements (10 points)
+- [ ] Work experience section
+- [ ] Education section
+- [ ] Proper heading hierarchy
+
+---
+
+## Grading Rubric
+
+| Criteria | Excellent (A) | Good (B) | Needs Work (C) |
+|----------|---------------|----------|----------------|
+| Structure | Complete semantic HTML | Basic HTML | Missing elements |
+| Content | All sections complete | Most sections | Incomplete |
+| Links | Working, properly styled | Working | Missing |
+| Code Quality | Clean, well-organized | Readable | Messy |
+
+---
+
+## Extension Ideas
+
+### For Advanced Students
+1. Add a contact form using `<form>` element
+2. Include a portfolio gallery section
+3. Add structured data (JSON-LD) for SEO
+4. Create a downloadable resume link
+
+### For Extra Challenge
+1. Add multiple pages (index.html, about.html, contact.html)
+2. Implement internal navigation with anchor links
+3. Add a dark/light mode toggle
+
+---
+
+## Tips for Success
+
+1. **Start Simple** - Build the basic structure first, then add content
+2. **Use Semantic HTML** - Practice using proper semantic elements
+3. **Validate Your Code** - Use W3C validator to check for errors
+4. **Test Links** - Make sure all links work correctly
+5. **Responsive Design** - Ensure it looks good on different screen sizes

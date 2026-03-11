@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<!-- 
+    ==========================================================================
+    WEB WORKERS & SERVICE WORKERS - PRACTICAL EXAMPLES
+    ==========================================================================
+    
+    This file demonstrates Web Workers and Service Workers for background 
+    processing and offline capabilities.
+    
+    WHAT YOU WILL LEARN:
+    - Web Workers basics
+    - Service Workers for offline apps
+    - Cache management
+    ==========================================================================
+-->
+
+<!-- ==========================================================================
+     EXAMPLE 1: Basic Web Worker (Simple)
+     ==========================================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Worker Basic</title>
+</head>
+<body>
+    <h1>Web Worker</h1>
+    <button onclick="startWorker()">Start Worker</button>
+    <p id="result"></p>
+    
+    <script>
+        var worker;
+        
+        function startWorker() {
+            worker = new Worker('worker.js');
+            worker.onmessage = function(e) {
+                document.getElementById('result').innerHTML = e.data;
+            };
+            worker.postMessage('Hello Worker');
+        }
+    </script>
+</body>
+</html>
+
+
+<!-- ==========================================================================
+     EXAMPLE 2: Service Worker (Intermediate)
+     ==========================================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Service Worker</title>
+</head>
+<body>
+    <h1>Service Worker</h1>
+    <p>Open DevTools to see Service Worker in action</p>
+    <button onclick="registerSW()">Register Service Worker</button>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW failed', err));
+        }
+    </script>
+</body>
+</html>
+
+
+<!-- ==========================================================================
+     EXAMPLE 3: Complete Web Workers & Service Workers Guide (Advanced)
+     ==========================================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Complete Web Workers & Service Workers Guide</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #2c3e50; text-align: center; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #2c3e50; }
+        
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th { background: #2c3e50; color: white; }
+        
+        code {
+            background: #282c34;
+            color: #98c379;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        button {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Web Workers & Service Workers Complete Guide</h1>
+    
+    <div class="warning">
+        <strong>Note:</strong> Web Workers and Service Workers require HTTPS or localhost to work.
+    </div>
+    
+    <!-- Web Workers Section -->
+    <div class="section">
+        <h2>Web Workers</h2>
+        
+        <p>Web Workers run JavaScript in background threads without blocking the UI.</p>
+        
+        <table>
+            <tr><th>Property/Method</th><th>Description</th></tr>
+            <tr><td>new Worker(script)</td><td>Create new worker</td></tr>
+            <tr><td>postMessage(data)</td><td>Send message to worker</td></tr>
+            <tr><td>onmessage</td><td>Receive message from worker</td></tr>
+            <tr><td>terminate()</td><td>Stop worker</td></tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>Creating a Web Worker</h2>
+        
+        <pre><code>// main.js
+var worker = new Worker('worker.js');
+
+worker.onmessage = function(e) {
+    console.log('Message:', e.data);
+};
+
+worker.postMessage('Hello');
+
+// worker.js
+self.onmessage = function(e) {
+    var result = doHeavyCalculation(e.data);
+    self.postMessage(result);
+};</code></pre>
+    </div>
+    
+    <div class="section">
+        <h2>Worker Types</h2>
+        
+        <table>
+            <tr><th>Type</th><th>Description</th></tr>
+            <tr><td>Dedicated Worker</td><td>Used by single script</td></tr>
+            <tr><td>Shared Worker</td><td>Shared by multiple scripts</td></tr>
+            <tr><td>Service Worker</td><td>Acts as proxy, handles offline</td></tr>
+        </table>
+        
+        <pre><code>// Shared Worker
+var worker = new SharedWorker('shared-worker.js');
+
+// Service Worker
+navigator.serviceWorker.register('sw.js');</code></pre>
+    </div>
+    
+    <!-- Service Workers Section -->
+    <div class="section">
+        <h2>Service Workers</h2>
+        
+        <p>Service Workers act as a network proxy, enabling offline experiences and push notifications.</p>
+        
+        <table>
+            <tr><th>Event</th><th>Description</th></tr>
+            <tr><td>install</td><td>Worker installed</td></tr>
+            <tr><td>activate</td><td>Worker activated</td></tr>
+            <tr><td>fetch</td><td>Network request</td></tr>
+            <tr><td>push</td><td>Push notification</td></tr>
+            <tr><td>sync</td><td>Background sync</td></tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>Service Worker Lifecycle</h2>
+        
+        <pre><code>// sw.js - Service Worker
+self.addEventListener('install', event => {
+    console.log('Service Worker installing');
+    // Open cache and add files
+    caches.open('my-cache').then(cache => {
+        cache.addAll(['/', '/index.html', '/styles.css']);
+    });
+});
+
+self.addEventListener('activate', event => {
+    console.log('Service Worker activated');
+});
+
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => response || fetch(event.request))
+    );
+});</code></pre>
+    </div>
+    
+    <div class="section">
+        <h2>Cache Strategies</h2>
+        
+        <table>
+            <tr><th>Strategy</th><th>Description</th></tr>
+            <tr><td>Cache First</td><td>Check cache, then network</td></tr>
+            <tr><td>Network First</td><td>Try network, fallback to cache</td></tr>
+            <tr><td>Stale While Revalidate</td><td>Use cache, update in background</td></tr>
+            <tr><td>Cache Only</td><td>Only use cached responses</td></tr>
+            <tr><td>Network Only</td><td>Only use network</td></tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>Best Practices</h2>
+        <ul>
+            <li>Use HTTPS for Service Workers</li>
+            <li>Keep worker scripts small</li>
+            <li>Use versioned caches</li>
+            <li>Clean up old caches on activate</li>
+            <li>Handle errors gracefully</li>
+        </ul>
+    </div>
+</body>
+</html>
+
+
+<!-- ==========================================================================
+     SUMMARY:
+     ==========================================================================
+     - Web Workers for background processing
+     - Service Workers for offline functionality
+     - Cache strategies for performance
+     - install, activate, fetch events
+     - postMessage for communication
+     ========================================================================== -->
