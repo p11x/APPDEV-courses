@@ -143,6 +143,41 @@ git clone https://github.com/p11x/APPDEV-courses.git
 
 ---
 
+## ⚙️ Auto-Commit Watcher
+
+This repository includes an automatic file watcher that monitors changes and automatically commits and pushes them to GitHub.
+
+### What it does
+
+- 🔍 **Monitors** the entire repository for new or modified files
+- ⏱️ **Waits** 3 seconds (debounce) to batch rapid changes
+- ✅ **Commits** changes with descriptive messages
+- 🚀 **Pushes** automatically to the master branch
+- 📝 **Logs** all actions to `auto_commit.log`
+
+### How to Start
+
+#### Windows
+```cmd
+start_watcher.bat
+```
+
+#### Mac / Linux
+```bash
+bash start_watcher.sh
+```
+
+### How to Stop
+
+Press `Ctrl + C` in the terminal to stop the watcher.
+
+### Requirements
+
+- Python 3.7+
+- `watchdog` library (automatically installed)
+
+---
+
 ## 🛠️ Tech Stack
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
