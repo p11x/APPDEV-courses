@@ -1,32 +1,30 @@
-# Scroll Restoration
+# Scroll Restoration in React Router v6
 
 ## Overview
+Scroll restoration ensures users return to their previous scroll position when navigating back, improving user experience.
 
-Scroll restoration ensures users return to their previous scroll position when navigating back in a single-page app. React Router handles this automatically in most cases.
+## Core Concepts
 
-## Implementation
+### Using ScrollRestoration Component
 
 ```jsx
-import { ScrollRestoration, BrowserRouter } from 'react-router-dom';
+// File: src/App.jsx
+
+import { BrowserRouter, ScrollRestoration } from 'react-router-dom';
 
 function App() {
   return (
     <BrowserRouter>
       <ScrollRestoration />
-      <Routes>
-        <Route path="/" element={<Home />} />
-      </Routes>
+      {/* Routes */}
     </BrowserRouter>
   );
 }
 ```
 
 ## Key Takeaways
-
-- React Router v6 handles scroll restoration
-- Use ScrollRestoration component
-- Works with BrowserRouter
+- Use ScrollRestoration for automatic scroll management
+- Works with browser back/forward buttons
 
 ## What's Next
-
-Let's explore query params handling.
+Continue to [Query Params Handling](03-query-params-handling.md)

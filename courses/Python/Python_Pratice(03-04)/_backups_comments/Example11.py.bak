@@ -1,0 +1,176 @@
+# Example11.py
+# Topic: Combining *args and **kwargs
+
+# This file demonstrates how to use both *args and **kwargs together
+# in the same function to accept any combination of positional and keyword arguments.
+
+
+# Prints both positional and keyword arguments
+def print_all(*args, **kwargs) -> None:
+    print("Positional arguments:")
+    for arg in args:
+        print("  " + str(arg))
+    print("Keyword arguments:")
+    for key, value in kwargs.items():
+        print("  " + key + ": " + str(value))
+
+print_all(1, 2, 3, name="Alice", age=25)
+
+
+# Processes data with flexible arguments
+def process(*args, **kwargs) -> dict:
+    result = {"args": args, "kwargs": kwargs}
+    return result
+
+data = process(1, 2, "hello", key1="value1", key2=42)
+print("Result: " + str(data))
+
+
+# Creates a flexible calculator
+def calculate(*numbers, operation="add", **options) -> int:
+    if not numbers:
+        return 0
+    
+    if operation == "add":
+        result = 0
+        for n in numbers:
+            result = result + n
+    elif operation == "multiply":
+        result = 1
+        for n in numbers:
+            result = result * n
+    else:
+        result = numbers[0]
+    
+    if options.get("double"):
+        result = result * 2
+    
+    return result
+
+result = calculate(1, 2, 3, operation="add")
+print("Sum: " + str(result))
+
+result2 = calculate(2, 3, 4, operation="multiply")
+print("Product: " + str(result2))
+
+result3 = calculate(5, 6, operation="add", double=True)
+print("Doubled sum: " + str(result3))
+
+
+# Flexible greeting function
+def greet(greeting, *names, **options) -> None:
+    punct = options.get("punctuation", "!")
+    loud = options.get("loud", False)
+    
+    for name in names:
+        msg = greeting + ", " + name + punct
+        if loud:
+            msg = msg.upper()
+        print(msg)
+
+greet("Hello", "Alice", "Bob")
+greet("Hi", "Charlie", punctuation="?", loud=True)
+
+
+# Database query builder
+def query(table, *columns, **conditions) -> str:
+    col_str = ", ".join(columns) if columns else "*"
+    query = "SELECT " + col_str + " FROM " + table
+    
+    if conditions:
+        where_parts = []
+        for key, value in conditions.items():
+            where_parts.append(key + " = " + str(value))
+        query = query + " WHERE " + " AND ".join(where_parts)
+    
+    return query
+
+sql = query("users", "name", "email", age=25, city="NYC")
+print("SQL: " + sql)
+
+sql2 = query("products")
+print("SQL: " + sql2)
+
+
+# Flexible logger function
+def log(level, *tags, **details) -> None:
+    print("[" + level + "]", end=" ")
+    
+    if tags:
+        print(" ".join("#" + tag for tag in tags), end=" ")
+    
+    print("Message:", end=" ")
+    
+    for key, value in details.items():
+        print(key + "=" + str(value), end=" ")
+    print()
+
+log("INFO", "user", "login", username="alice", ip="192.168.1.1")
+log("ERROR", code=500, message="Server down")
+
+
+# Flexible formatting function
+def format_text(text, *styles, **attrs) -> None:
+    result = text
+    
+    for style in styles:
+        if style == "upper":
+            result = result.upper()
+        elif style == "lower":
+            result = result.lower()
+        elif style == "title":
+            result = result.title()
+    
+    prefix = ""
+    suffix = ""
+    
+    if attrs.get("bold"):
+        prefix = prefix + "**"
+        suffix = suffix + "**"
+    if attrs.get("italic"):
+        prefix = prefix + "*"
+        suffix = suffix + "*"
+    if attrs.get("code"):
+        prefix = prefix + "`"
+        suffix = suffix + "`"
+    
+    print(prefix + result + suffix)
+
+format_text("hello", "upper", bold=True)
+format_text("world", "title", italic=True)
+
+
+# Build a complete HTTP request
+def make_request(url, *path_parts, **params) -> str:
+    full_url = url
+    for part in path_parts:
+        full_url = full_url + "/" + part
+    
+    if params:
+        query = "&".join(k + "=" + str(v) for k, v in params.items())
+        full_url = full_url + "?" + query
+    
+    return full_url
+
+request = make_request("https://api.example.com", "users", "123", format="json")
+print("Request: " + request)
+
+request2 = make_request("https://site.com", page=1, limit=10)
+print("Request: " + request2)
+
+
+# Counts totals from mixed arguments
+def totalize(*args, **kwargs) -> dict:
+    arg_sum = 0
+    for n in args:
+        arg_sum = arg_sum + n
+    
+    kwarg_sum = 0
+    for v in kwargs.values():
+        if isinstance(v, (int, float)):
+            kwarg_sum = kwarg_sum + v
+    
+    return {"args_total": arg_sum, "kwargs_total": kwarg_sum, "combined": arg_sum + kwarg_sum}
+
+totals = totalize(1, 2, 3, a=4, b=5)
+print("Totals: " + str(totals))

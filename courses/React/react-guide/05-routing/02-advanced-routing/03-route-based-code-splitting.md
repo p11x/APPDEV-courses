@@ -1,39 +1,36 @@
-# Route-Based Code Splitting
+# Route-based Code Splitting
 
 ## Overview
+Route-based code splitting separates your application into chunks that load on demand, reducing initial bundle size and improving performance.
 
-Route-based code splitting is a technique that splits your application into separate JavaScript bundles for each route. Users only download the code for routes they visit, improving initial load performance.
+## Key Concepts
 
-## Implementation
-
-Use React.lazy with React Router to implement route-based code splitting:
+### Vite Configuration for Code Splitting
 
 ```jsx
-import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-const Home = lazy(() => import('./pages/Home'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-
-function App() {
-  return (
-    <Suspense fallback={<Loading />}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-      </Routes>
-    </Suspense>
-  );
-}
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@mui/material', '@emotion/react'],
+        },
+      },
+    },
+  },
+});
 ```
 
 ## Key Takeaways
-
-- Each route gets its own bundle
-- Suspense shows loading state
-- Reduces initial bundle size
-- Vite/Webpack handles the splitting
+- Configure Vite/Rollup for manual chunks
+- Each route becomes a separate chunk
+- Reduces initial JavaScript payload
 
 ## What's Next
-
-Let's explore breadcrumb navigation.
+Continue to [Breadcrumb Navigation](../03-router-patterns/01-breadcrumb-navigation.md)

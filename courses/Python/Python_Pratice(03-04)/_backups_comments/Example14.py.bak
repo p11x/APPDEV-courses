@@ -1,0 +1,206 @@
+# Example14.py
+# Topic: Modern Python 3.12+ Parameter Syntax
+
+# This file demonstrates the modern parameter syntax that combines all
+# parameter types: positional-only, positional-or-keyword, *args,
+# keyword-only, and **kwargs.
+
+
+# Complete modern function signature
+def modern_func(
+    pos_or_kw,
+    /,
+    *args,
+    keyword_only,
+    **kwargs
+) -> None:
+    print("pos_or_kw:", pos_or_kw)
+    print("args:", args)
+    print("keyword_only:", keyword_only)
+    print("kwargs:", kwargs)
+
+modern_func(1, 2, 3, keyword_only="value", extra="data")
+
+
+# Real-world API endpoint handler
+def handle_request(
+    path,
+    /,
+    method="GET",
+    *,
+    auth_required=True,
+    timeout=30,
+    headers=None
+) -> None:
+    print("Path:", path)
+    print("Method:", method)
+    print("Auth required:", auth_required)
+    print("Timeout:", timeout)
+    print("Headers:", headers)
+
+handle_request("/api/users")
+handle_request("/api/login", "POST", auth_required=False)
+
+
+# Database query builder with positional-only and keyword args
+def build_query(
+    table,
+    /,
+    *columns,
+    where_clause=None,
+    order_by=None,
+    limit=None
+) -> str:
+    col_str = ", ".join(columns) if columns else "*"
+    query = "SELECT " + col_str + " FROM " + table
+    
+    if where_clause:
+        query += " WHERE " + where_clause
+    
+    if order_by:
+        query += " ORDER BY " + order_by
+    
+    if limit:
+        query += " LIMIT " + str(limit)
+    
+    return query
+
+sql = build_query("users", "name", "email", where_clause="active=1", order_by="name", limit=10)
+print("SQL:", sql)
+
+
+# Flexible HTTP request function
+def make_request(
+    url,
+    /,
+    *paths,
+    method="GET",
+    headers=None,
+    timeout=30,
+    **params
+) -> str:
+    full_url = url
+    for part in paths:
+        full_url = full_url + "/" + part
+    
+    if params:
+        query = "&".join(k + "=" + str(v) for k, v in params.items())
+        full_url = full_url + "?" + query
+    
+    print("URL:", full_url)
+    print("Method:", method)
+    print("Headers:", headers)
+    print("Timeout:", timeout)
+    return full_url
+
+make_request("https://api.example.com", "users", "123", method="GET", token="abc")
+
+
+# Advanced calculator with all parameter types
+def calculator(
+    a,
+    b,
+    /,
+    *operations,
+    show_steps=False,
+    precision=2
+):
+    results = {}
+    
+    for op in operations:
+        if op == "add":
+            results["add"] = a + b
+        elif op == "subtract":
+            results["subtract"] = a - b
+        elif op == "multiply":
+            results["multiply"] = a * b
+        elif op == "divide":
+            if b != 0:
+                results["divide"] = a / b
+    
+    if show_steps:
+        print("Operations performed:", operations)
+        print("Results:", results)
+    
+    return results
+
+calc_results = calculator(10, 5, "add", "multiply", show_steps=True, precision=3)
+print("Results:", calc_results)
+
+
+# Logger with complete parameter flexibility
+def log_message(
+    message,
+    /,
+    *tags,
+    level="INFO",
+    timestamp=True,
+    output="console",
+    **metadata
+) -> None:
+    parts = []
+    
+    if timestamp:
+        import datetime
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        parts.append("[" + now + "]")
+    
+    parts.append("[" + level + "]")
+    parts.append(message)
+    
+    if tags:
+        tag_str = " ".join("#" + t for t in tags)
+        parts.append(tag_str)
+    
+    if metadata:
+        parts.append(str(metadata))
+    
+    final = " ".join(parts)
+    print(final)
+
+log_message("Server started", "system", "boot")
+log_message("User logged in", level="WARNING", user_id=123, ip="192.168.1.1")
+
+
+# Complete function signature example
+def complete_example(
+    pos_only,
+    /,
+    pos_or_kw="default",
+    *args,
+    kw_only="keyword",
+    **kwargs
+):
+    return {
+        "pos_only": pos_only,
+        "pos_or_kw": pos_or_kw,
+        "args": args,
+        "kw_only": kw_only,
+        "kwargs": kwargs
+    }
+
+result = complete_example(1, "two", 3, 4, kw_only="custom", extra="value")
+print("Result:", result)
+
+
+# Data processor with all parameter types
+def process_data(
+    source,
+    /,
+    *fields,
+    filter_by=None,
+    transform=None,
+    validate=True,
+    **options
+) -> dict:
+    return {
+        "source": source,
+        "fields": fields,
+        "filter_by": filter_by,
+        "transform": transform,
+        "validate": validate,
+        "options": options
+    }
+
+data = process_data("database", "name", "email", "age", filter_by="active", transform="uppercase")
+print("Data:", data)

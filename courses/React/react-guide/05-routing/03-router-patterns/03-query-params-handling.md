@@ -1,41 +1,63 @@
-# Query Params Handling
+# Query Parameters Handling in React Router v6
 
 ## Overview
+Query parameters allow passing data via URL without creating new routes. They're useful for filtering, sorting, and pagination.
 
-Query parameters are URL parameters after the ? symbol. They're used for filtering, sorting, pagination, and other client-side state that should be shareable via URL.
+## Core Concepts
 
-## Implementation
+### Using useSearchParams Hook
 
 ```jsx
+// File: src/components/SearchableList.jsx
+
 import { useSearchParams } from 'react-router-dom';
 
-function ProductList() {
+function SearchableList() {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  const category = searchParams.get('category') || 'all';
-  const sort = searchParams.get('sort') || 'name';
-  
-  const setCategory = (cat) => {
-    setSearchParams(prev => {
-      prev.set('category', cat);
-      return prev;
-    });
+  const query = searchParams.get('q') || '';
+  const page = parseInt(searchParams.get('page')) || 1;
+  const sort = searchParams.get('sort') || 'newest';
+
+  const handleSearch = (q) => {
+    const params = new URLSearchParams(searchParams);
+    if (q) {
+      params.set('q', q);
+    } else {
+      params.delete('q');
+    }
+    params.set('page', '1'); // Reset to page 1 on search
+    setSearchParams(params);
   };
-  
+
+  const handlePageChange = (newPage) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', newPage.toString());
+    setSearchParams(params);
+  };
+
   return (
     <div>
-      <select value={category} onChange={e => setCategory(e.target.value)}>
-        <option value="all">All</option>
-        <option value="electronics">Electronics</option>
-      </select>
+      <input
+        value={query}
+        onChange={(e) => handleSearch(e.target.value)}
+        placeholder="Search..."
+      />
+      <div>
+        Page: {page}
+        <button onClick={() => handlePageChange(page - 1)}>Prev</button>
+        <button onClick={() => handlePageChange(page + 1)}>Next</button>
+      </div>
+      <div>Sort: {sort}</div>
     </div>
   );
 }
 ```
 
 ## Key Takeaways
+- Use useSearchParams hook to read/write query params
+- Use URLSearchParams for easy manipulation
+- Query params don't affect route matching
 
-- useSearchParams hook manages query params
-- get() reads parameters
-- set() updates parameters
-- URL remains shareable
+## What's Next
+This concludes the routing section. Continue to [CSS Modules Setup](../08-styling/01-css-modules/01-css-modules-setup.md)

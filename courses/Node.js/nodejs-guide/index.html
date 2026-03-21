@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Node.js Learning Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --card-bg: #1a1a1a;
+      --card-bg-hover: #222222;
+      --card-bg-done: #1a2518;
+      --text: #e0e0e0;
+      --text-dim: #888888;
+      --accent: #c8f55a;
+      --accent-dim: #a3c847;
+      --border: #333333;
+      --teal: #4ecdc4;
+      --purple: #b794f4;
+      --blue: #63b3ed;
+      --amber: #f6ad55;
+      --coral: #fc8181;
+      --font-mono: 'DM Mono', monospace;
+      --font-serif: 'Fraunces', serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-top: 20px;
+    }
+
+    header h1 {
+      font-family: var(--font-serif);
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    header .subtitle {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .stat-chip {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-chip .value {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .stat-chip.completed .value {
+      color: var(--accent);
+    }
+
+    /* Toolbar */
+    .toolbar {
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      padding: 20px 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .toolbar-inner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      max-width: 400px;
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 16px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent);
+    }
+
+    .search-box input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 8px 14px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--text-dim);
+      color: var(--text);
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+
+    .action-btn:hover {
+      color: var(--text);
+    }
+
+    /* Progress bar */
+    .progress-container {
+      margin-bottom: 32px;
+    }
+
+    .progress-text {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--card-bg);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.4s ease-out;
+      border-radius: 3px;
+    }
+
+    /* Sections */
+    .sections {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .section.hidden {
+      display: none;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s;
+    }
+
+    .section-header:hover {
+      background: var(--card-bg-hover);
+    }
+
+    .section-number {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      min-width: 24px;
+    }
+
+    .section-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .section-dot.teal { background: var(--teal); }
+    .section-dot.purple { background: var(--purple); }
+    .section-dot.blue { background: var(--blue); }
+    .section-dot.amber { background: var(--amber); }
+    .section-dot.coral { background: var(--coral); }
+
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .section-badge {
+      font-size: 0.65rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.1);
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-badge.Beginner { background: rgba(78, 205, 196, 0.15); color: var(--teal); }
+    .section-badge.Fundamental { background: rgba(183, 148, 244, 0.15); color: var(--purple); }
+    .section-badge.Applied { background: rgba(99, 179, 237, 0.15); color: var(--blue); }
+    .section-badge.Advanced { background: rgba(246, 173, 85, 0.15); color: var(--amber); }
+    .section-badge.Pro { background: rgba(252, 129, 129, 0.15); color: var(--coral); }
+
+    .section-count {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .section-chevron {
+      color: var(--text-dim);
+      font-size: 1.2rem;
+      transition: transform 0.3s;
+      line-height: 1;
+    }
+
+    .section.open .section-chevron {
+      transform: rotate(90deg);
+    }
+
+    .section-content {
+      display: none;
+      padding: 0 20px 20px;
+    }
+
+    .section.open .section-content {
+      display: block;
+    }
+
+    /* Subtopic labels */
+    .subtopics {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .subtopic-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .subtopic-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding-left: 4px;
+      border-left: 2px solid var(--border);
+    }
+
+    /* File cards grid */
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+    }
+
+    .file-card {
+      background: var(--card-bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .file-card:hover {
+      background: #2a2a2a;
+    }
+
+    .file-card.done {
+      background: var(--card-bg-done);
+      border-left: 3px solid var(--accent);
+    }
+
+    .file-card .file-num {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .file-card .file-name {
+      font-size: 0.85rem;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .file-card .file-desc {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .file-card .check-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--bg);
+    }
+
+    .file-card.done .check-icon {
+      display: flex;
+    }
+
+    /* No results */
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-dim);
+      display: none;
+    }
+
+    .no-results.visible {
+      display: block;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+
+    .reset-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 8px 16px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      border-color: var(--coral);
+      color: var(--coral);
+    }
+
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 2.2rem;
+      }
+      
+      .toolbar-inner {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .search-box {
+        max-width: none;
+      }
+      
+      .filter-buttons {
+        justify-content: flex-start;
+      }
+      
+      .toolbar-actions {
+        margin-left: 0;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>The complete Node.js guide</h1>
+      <p class="subtitle">75 files · 10 sections · Node v20+ · ES Modules</p>
+      <div class="stats">
+        <div class="stat-chip">Total Files <span class="value">75</span></div>
+        <div class="stat-chip">Sections <span class="value">10</span></div>
+        <div class="stat-chip">Subtopics <span class="value">28</span></div>
+        <div class="stat-chip completed">Completed <span class="value" id="completed-count">0</span></div>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar-inner">
+        <div class="search-box">
+          <input type="text" id="search" placeholder="Search files...">
+        </div>
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-tier="All">All</button>
+          <button class="filter-btn" data-tier="Beginner">Beginner</button>
+          <button class="filter-btn" data-tier="Fundamental">Fundamental</button>
+          <button class="filter-btn" data-tier="Applied">Applied</button>
+          <button class="filter-btn" data-tier="Advanced">Advanced</button>
+          <button class="filter-btn" data-tier="Pro">Pro</button>
+        </div>
+        <div class="toolbar-actions">
+          <button class="action-btn" id="open-all">Open all</button>
+          <button class="action-btn" id="close-all">Close all</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-text">
+        <span>Progress</span>
+        <span id="progress-text">0 / 75 completed</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="sections" id="sections"></div>
+    
+    <div class="no-results" id="no-results">
+      No matching files found.
+    </div>
+
+    <footer>
+      <p>Node.js Learning Guide · Generated with Kilo Code</p>
+      <button class="reset-btn" id="reset-btn">Reset progress</button>
+    </footer>
+  </div>
+
+  <script>
+    const SECTIONS = [
+      {
+        id: "01", title: "Introduction", tier: "Beginner", color: "teal", files: 8,
+        subtopics: [
+          { name: "what-is-nodejs", files: [
+            { num: "01", name: "overview", desc: "What Node.js is, V8 engine" },
+            { num: "02", name: "event-loop", desc: "Phases, microtasks, macrotasks" },
+            { num: "03", name: "nodejs-vs-browser", desc: "Globals, APIs, differences" }
+          ]},
+          { name: "installation", files: [
+            { num: "01", name: "install-nvm", desc: "Installing nvm, switching versions" },
+            { num: "02", name: "verify-setup", desc: "node -v, npm -v, first script" },
+            { num: "03", name: "repl-guide", desc: "Using the Node REPL" }
+          ]},
+          { name: "first-program", files: [
+            { num: "01", name: "hello-world", desc: "ESM hello world explained" },
+            { num: "02", name: "running-scripts", desc: "node command, --watch flag" },
+            { num: "03", name: "script-args", desc: "process.argv, parsing CLI args" }
+          ]}
+        ]
+      },
+      {
+        id: "02", title: "Core modules", tier: "Beginner", color: "teal", files: 12,
+        subtopics: [
+          { name: "fs-module", files: [
+            { num: "01", name: "reading-files", desc: "fs/promises, async/await" },
+            { num: "02", name: "writing-files", desc: "writeFile, appendFile" },
+            { num: "03", name: "watching-files", desc: "fs.watch, FSWatcher" }
+          ]},
+          { name: "path-module", files: [
+            { num: "01", name: "path-basics", desc: "join, resolve, dirname" },
+            { num: "02", name: "url-vs-path", desc: "import.meta.url, fileURLToPath" }
+          ]},
+          { name: "os-module", files: [
+            { num: "01", name: "os-info", desc: "cpus, platform, freemem" }
+          ]},
+          { name: "events-module", files: [
+            { num: "01", name: "eventemitter", desc: "on, emit, once, off" },
+            { num: "02", name: "custom-events", desc: "Event-driven custom classes" }
+          ]},
+          { name: "http-module", files: [
+            { num: "01", name: "basic-server", desc: "createServer, req, res" },
+            { num: "02", name: "routing", desc: "Manual routing, URL parsing" },
+            { num: "03", name: "handling-json", desc: "Body parsing, Content-Type" }
+          ]}
+        ]
+      },
+      {
+        id: "03", title: "Async JavaScript", tier: "Fundamental", color: "purple", files: 8,
+        subtopics: [
+          { name: "callbacks", files: [
+            { num: "01", name: "what-are-callbacks", desc: "Error-first callback pattern" },
+            { num: "02", name: "callback-hell", desc: "Pyramid of doom, solutions" }
+          ]},
+          { name: "promises", files: [
+            { num: "01", name: "promise-basics", desc: "new Promise, resolve, reject" },
+            { num: "02", name: "promise-chaining", desc: "Chaining, error propagation" },
+            { num: "03", name: "promise-combinators", desc: "all, allSettled, race, any" }
+          ]},
+          { name: "async-await", files: [
+            { num: "01", name: "async-functions", desc: "async keyword, await, return" },
+            { num: "02", name: "error-handling", desc: "try/catch, finally" },
+            { num: "03", name: "top-level-await", desc: "ESM top-level await" }
+          ]}
+        ]
+      },
+      {
+        id: "04", title: "NPM & packages", tier: "Fundamental", color: "purple", files: 8,
+        subtopics: [
+          { name: "npm-basics", files: [
+            { num: "01", name: "package-json", desc: "Fields, scripts, dependencies" },
+            { num: "02", name: "install-packages", desc: "npm install, --save-dev" },
+            { num: "03", name: "npm-scripts", desc: "Custom scripts, pre/post hooks" }
+          ]},
+          { name: "esm-modules", files: [
+            { num: "01", name: "import-export", desc: "Named, default, namespace" },
+            { num: "02", name: "module-resolution", desc: "ESM resolution, package type" },
+            { num: "03", name: "dynamic-import", desc: "import(), lazy loading" }
+          ]},
+          { name: "useful-packages", files: [
+            { num: "01", name: "dotenv", desc: "process.env, .env files" },
+            { num: "02", name: "chalk", desc: "Terminal colors, chalk v5 ESM" },
+            { num: "03", name: "zod", desc: "Schema validation, safeParse" }
+          ]}
+        ]
+      },
+      {
+        id: "05", title: "Express framework", tier: "Applied", color: "blue", files: 8,
+        subtopics: [
+          { name: "getting-started", files: [
+            { num: "01", name: "express-setup", desc: "Install, create app, listen" },
+            { num: "02", name: "routing", desc: "GET/POST/PUT/DELETE, params" },
+            { num: "03", name: "middleware", desc: "What middleware is, use(), next()" }
+          ]},
+          { name: "request-response", files: [
+            { num: "01", name: "req-object", desc: "body, params, query, headers" },
+            { num: "02", name: "res-object", desc: "json, send, status, redirect" },
+            { num: "03", name: "error-handling", desc: "Error middleware, 4-arg signature" }
+          ]},
+          { name: "advanced-express", files: [
+            { num: "01", name: "router", desc: "express.Router, modular routing" },
+            { num: "02", name: "static-files", desc: "express.static, serving assets" },
+            { num: "03", name: "cors", desc: "CORS headers, cors package" }
+          ]}
+        ]
+      },
+      {
+        id: "06", title: "Databases", tier: "Applied", color: "blue", files: 8,
+        subtopics: [
+          { name: "sqlite", files: [
+            { num: "01", name: "better-sqlite3", desc: "Sync SQLite, prepare, run" },
+            { num: "02", name: "migrations", desc: "Simple schema migrations" }
+          ]},
+          { name: "mongodb", files: [
+            { num: "01", name: "mongoose-setup", desc: "Connect, Schema, Model" },
+            { num: "02", name: "crud", desc: "create, find, update, delete" },
+            { num: "03", name: "validation", desc: "Mongoose validators" }
+          ]},
+          { name: "postgres", files: [
+            { num: "01", name: "pg-setup", desc: "node-postgres Pool, query" },
+            { num: "02", name: "parameterized", desc: "SQL injection, $1 params" }
+          ]}
+        ]
+      },
+      {
+        id: "07", title: "Streams & buffers", tier: "Advanced", color: "amber", files: 6,
+        subtopics: [
+          { name: "streams", files: [
+            { num: "01", name: "readable-streams", desc: "createReadStream, data/end" },
+            { num: "02", name: "writable-streams", desc: "createWriteStream, write" },
+            { num: "03", name: "pipe", desc: ".pipe(), pipeline(), errors" },
+            { num: "04", name: "transform-streams", desc: "Transform class, custom" }
+          ]},
+          { name: "buffers", files: [
+            { num: "01", name: "buffer-basics", desc: "Buffer.from, alloc, encoding" },
+            { num: "02", name: "binary-data", desc: "Binary files, hex, base64" }
+          ]}
+        ]
+      },
+      {
+        id: "08", title: "Authentication", tier: "Advanced", color: "amber", files: 5,
+        subtopics: [
+          { name: "jwt", files: [
+            { num: "01", name: "jwt-basics", desc: "Header, payload, signature" },
+            { num: "02", name: "sign-verify", desc: "jsonwebtoken, sign, verify" },
+            { num: "03", name: "auth-middleware", desc: "Protect routes with JWT" }
+          ]},
+          { name: "bcrypt", files: [
+            { num: "01", name: "hashing", desc: "bcrypt.hash, saltRounds" },
+            { num: "02", name: "compare", desc: "bcrypt.compare, login flow" }
+          ]}
+        ]
+      },
+      {
+        id: "09", title: "Testing", tier: "Pro", color: "coral", files: 5,
+        subtopics: [
+          { name: "node-test-runner", files: [
+            { num: "01", name: "test-basics", desc: "Built-in node:test, describe" },
+            { num: "02", name: "assertions", desc: "node:assert, strictEqual" },
+            { num: "03", name: "mocking", desc: "mock.fn, mock.method" }
+          ]},
+          { name: "integration-testing", files: [
+            { num: "01", name: "supertest", desc: "Testing Express routes" },
+            { num: "02", name: "test-database", desc: "In-memory DB for tests" }
+          ]}
+        ]
+      },
+      {
+        id: "10", title: "Deployment", tier: "Pro", color: "coral", files: 6,
+        subtopics: [
+          { name: "environment", files: [
+            { num: "01", name: "env-variables", desc: "NODE_ENV, dotenv, config" },
+            { num: "02", name: "config-module", desc: "Centralised config pattern" }
+          ]},
+          { name: "process-management", files: [
+            { num: "01", name: "pm2", desc: "pm2 start, cluster, monitor" },
+            { num: "02", name: "graceful-shutdown", desc: "SIGTERM, server.close" }
+          ]},
+          { name: "docker", files: [
+            { num: "01", name: "dockerfile", desc: "Node.js multi-stage build" },
+            { num: "02", name: "docker-compose", desc: "Node + Postgres compose" }
+          ]}
+        ]
+      }
+    ];
+
+    const STORAGE_KEY = 'nodejs-guide-progress';
+    let completedFiles = new Set();
+    let activeTier = 'All';
+    let searchTerm = '';
+
+    function loadProgress() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const arr = JSON.parse(stored);
+          completedFiles = new Set(arr);
+        }
+      } catch (e) {
+        console.error('Failed to load progress:', e);
+      }
+    }
+
+    function saveProgress() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedFiles]));
+      } catch (e) {
+        console.error('Failed to save progress:', e);
+      }
+    }
+
+    function updateProgressUI() {
+      const count = completedFiles.size;
+      document.getElementById('completed-count').textContent = count;
+      document.getElementById('progress-text').textContent = `${count} / 75 completed`;
+      const percent = (count / 75) * 100;
+      document.getElementById('progress-fill').style.width = `${percent}%`;
+    }
+
+    function getFileId(sectionId, subtopicName, fileNum) {
+      return `${sectionId}-${subtopicName}-${fileNum}`;
+    }
+
+    function toggleFile(sectionId, subtopicName, fileNum) {
+      const id = getFileId(sectionId, subtopicName, fileNum);
+      if (completedFiles.has(id)) {
+        completedFiles.delete(id);
+      } else {
+        completedFiles.add(id);
+      }
+      saveProgress();
+      updateProgressUI();
+      renderSections();
+    }
+
+    function renderSections() {
+      const container = document.getElementById('sections');
+      container.innerHTML = '';
+      
+      let totalVisible = 0;
+
+      SECTIONS.forEach(section => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = 'section';
+        sectionDiv.dataset.tier = section.tier;
+        
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'section-header';
+        headerDiv.innerHTML = `
+          <span class="section-number">${section.id}</span>
+          <span class="section-dot ${section.color}"></span>
+          <span class="section-title">${section.title}</span>
+          <span class="section-badge ${section.tier}">${section.tier}</span>
+          <span class="section-count">${section.files} files</span>
+          <span class="section-chevron">›</span>
+        `;
+        
+        headerDiv.addEventListener('click', () => {
+          sectionDiv.classList.toggle('open');
+        });
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'section-content';
+        
+        const subtopicsDiv = document.createElement('div');
+        subtopicsDiv.className = 'subtopics';
+        
+        let sectionVisibleFiles = 0;
+        
+        section.subtopics.forEach(subtopic => {
+          const groupDiv = document.createElement('div');
+          groupDiv.className = 'subtopic-group';
+          
+          const label = document.createElement('div');
+          label.className = 'subtopic-label';
+          label.textContent = subtopic.name.replace(/-/g, ' ');
+          groupDiv.appendChild(label);
+          
+          const gridDiv = document.createElement('div');
+          gridDiv.className = 'file-grid';
+          
+          subtopic.files.forEach(file => {
+            const fileId = getFileId(section.id, subtopic.name, file.num);
+            const isDone = completedFiles.has(fileId);
+            
+            const matchesSearch = searchTerm === '' || 
+              file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              file.desc.toLowerCase().includes(searchTerm.toLowerCase());
+            
+            if (matchesSearch) {
+              sectionVisibleFiles++;
+            }
+            
+            const card = document.createElement('div');
+            card.className = `file-card ${isDone ? 'done' : ''}`;
+            card.dataset.fileId = fileId;
+            card.dataset.matchesSearch = matchesSearch;
+            
+            card.innerHTML = `
+              <div class="check-icon">✓</div>
+              <div class="file-num">${section.id}-${subtopic.name}/${file.num}</div>
+              <div class="file-name">${file.name}.md</div>
+              <div class="file-desc">${file.desc}</div>
+            `;
+            
+            card.addEventListener('click', (e) => {
+              e.stopPropagation();
+              toggleFile(section.id, subtopic.name, file.num);
+            });
+            
+            gridDiv.appendChild(card);
+          });
+          
+          groupDiv.appendChild(gridDiv);
+          subtopicsDiv.appendChild(groupDiv);
+        });
+        
+        contentDiv.appendChild(subtopicsDiv);
+        sectionDiv.appendChild(headerDiv);
+        sectionDiv.appendChild(contentDiv);
+        
+        if (activeTier !== 'All' && section.tier !== activeTier) {
+          sectionDiv.classList.add('hidden');
+        } else if (searchTerm && sectionVisibleFiles === 0) {
+          sectionDiv.classList.add('hidden');
+        } else {
+          sectionDiv.classList.add('open');
+        }
+        
+        totalVisible += sectionVisibleFiles;
+        
+        container.appendChild(sectionDiv);
+      });
+      
+      const noResults = document.getElementById('no-results');
+      if (totalVisible === 0 && searchTerm) {
+        noResults.classList.add('visible');
+      } else {
+        noResults.classList.remove('visible');
+      }
+    }
+
+    function setTier(tier) {
+      activeTier = tier;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tier === tier);
+      });
+      renderSections();
+    }
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => setTier(btn.dataset.tier));
+    });
+
+    document.getElementById('search').addEventListener('input', (e) => {
+      searchTerm = e.target.value.toLowerCase();
+      renderSections();
+    });
+
+    document.getElementById('open-all').addEventListener('click', () => {
+      document.querySelectorAll('.section').forEach(s => s.classList.add('open'));
+    });
+
+    document.getElementById('close-all').addEventListener('click', () => {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('open'));
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      if (confirm('Are you sure you want to reset all progress?')) {
+        completedFiles.clear();
+        saveProgress();
+        updateProgressUI();
+        renderSections();
+      }
+    });
+
+    loadProgress();
+    updateProgressUI();
+    renderSections();
+  </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+# Example15.py
+# Topic: Practical Examples with *args and **kwargs
+
+# This file provides practical real-world examples that combine
+# *args, **kwargs, positional-only, and keyword-only parameters.
+
+
+# Flexible logger that can handle any type of logging
+def log(level, message, *tags, **details) -> None:
+    print("[" + level + "]", message)
+    if tags:
+        print("  Tags:", ", ".join("#" + t for t in tags))
+    if details:
+        print("  Details:")
+        for key, value in details.items():
+            print("    " + key + ": " + str(value))
+
+log("INFO", "Application started")
+log("WARNING", "Low memory", "system", usage=75)
+log("ERROR", "Connection failed", "network", code=500, retry=3)
+
+
+# Decorator-like function wrapper
+def execute(name, /, *args, verbose=False, **kwargs) -> None:
+    print("Executing:", name)
+    if args:
+        print("  Args:", args)
+    if kwargs:
+        print("  Kwargs:", kwargs)
+    print("  Verbose:", verbose)
+
+execute("process_data", 1, 2, 3, verbose=True)
+execute("send_email", to="user@example.com", subject="Test")
+
+
+# HTTP request builder
+def build_request(url, /, *paths, method="GET", **params) -> str:
+    full_url = url
+    for path in paths:
+        full_url += "/" + str(path)
+    
+    query_parts = []
+    for key, value in params.items():
+        query_parts.append(str(key) + "=" + str(value))
+    
+    if query_parts:
+        full_url += "?" + "&".join(query_parts)
+    
+    print("Method:", method)
+    print("URL:", full_url)
+    return full_url
+
+build_request("https://api.example.com", "users", "123", method="GET", format="json")
+
+
+# Configuration builder
+def configure(service, /, *features, debug=False, **settings) -> dict:
+    config = {
+        "service": service,
+        "features": features,
+        "debug": debug,
+        "settings": settings
+    }
+    return config
+
+cfg = configure("database", "caching", "logging", debug=True, host="localhost", port=5432)
+print("Config:", cfg)
+
+
+# Event handler with flexible parameters
+def handle_event(event_type, /, *data, priority="normal", **metadata) -> None:
+    print("Event:", event_type)
+    print("Priority:", priority)
+    if data:
+        print("Data:", data)
+    if metadata:
+        print("Metadata:", metadata)
+
+handle_event("user_login", "192.168.1.1", "Chrome", priority="high", user_id=123)
+handle_event("page_view", "/home", "/about")
+
+
+# Command builder
+def build_command(command, /, *args, env=None, cwd=None, **options) -> str:
+    parts = [command]
+    
+    for arg in args:
+        if " " in str(arg):
+            parts.append('"' + str(arg) + '"')
+        else:
+            parts.append(str(arg))
+    
+    for key, value in options.items():
+        if len(key) == 1:
+            parts.append("-" + key)
+            if value is not True:
+                parts.append(str(value))
+        else:
+            parts.append("--" + key + "=" + str(value))
+    
+    result = " ".join(parts)
+    print("Command:", result)
+    return result
+
+build_command("python", "script.py", "--input", "data.csv", "-v", env={"PYTHONPATH": "/lib"})
+
+
+# API router
+def route(path, /, *path_params, method="GET", auth=True, rate_limit=100) -> None:
+    print("Route:", path)
+    print("Method:", method)
+    print("Path params:", path_params)
+    print("Auth required:", auth)
+    print("Rate limit:", rate_limit)
+
+route("/api/users", "123", "profile", method="GET")
+route("/api/login", method="POST", auth=False)
+
+
+# Flexible test runner
+def run_test(test_name, /, *assertions, verbose=True, **test_data) -> None:
+    print("Running:", test_name)
+    print("Assertions:", len(assertions))
+    
+    passed = 0
+    for assertion in assertions:
+        if assertion:
+            passed += 1
+    
+    print("Passed:", passed, "/", len(assertions))
+    
+    if test_data:
+        print("Test data:", test_data)
+
+run_test("test_user_creation", True, True, True, user_name="alice", user_id=1)
+run_test("test_login", False, True, verbose=False)
+
+
+# Flexible data processor
+def process(data_type, /, *values, transform=None, validate=True, **config) -> dict:
+    result = {
+        "type": data_type,
+        "values": values,
+        "transform": transform,
+        "validate": validate,
+        "config": config
+    }
+    return result
+
+processed = process("numbers", 1, 2, 3, 4, 5, transform="square", validate=True, precision=2)
+print("Processed:", processed)
+
+processed2 = process("strings", "a", "b", "c", transform="uppercase")
+print("Processed:", processed2)
+
+
+# Message sender with flexible options
+def send_message(recipient, /, *cc, subject="", body="", **options) -> None:
+    print("To:", recipient)
+    if cc:
+        print("CC:", ", ".join(cc))
+    print("Subject:", subject)
+    print("Body:", body)
+    print("Options:", options)
+
+send_message("user@example.com", "other@example.com", subject="Hello", body="Message text", priority="high")
+
+
+# Flexible query builder
+def build_query(table, /, *fields, where=None, **conditions) -> str:
+    cols = ", ".join(fields) if fields else "*"
+    query = "SELECT " + cols + " FROM " + table
+    
+    where_clauses = []
+    if where:
+        where_clauses.append(where)
+    
+    for key, value in conditions.items():
+        where_clauses.append(key + "=" + str(value))
+    
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
+    
+    return query
+
+sql = build_query("users", "name", "email", where="active=1", age=">18", city="NYC")
+print("SQL:", sql)
+
+
+# Webhook handler
+def handle_webhook(event, /, *payload, signature=None, **headers) -> None:
+    print("Event:", event)
+    print("Payload:", payload)
+    print("Signature:", signature)
+    print("Headers:", headers)
+
+handle_webhook("order.created", 123, 456, signature="abc123", content_type="application/json")
