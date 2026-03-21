@@ -39,4 +39,4 @@ The `courses` directory contains learning materials for various technologies:
 
 Navigate through the folders to access course materials for each topic.
 
-file:///C:/Users/p11x/Desktop/Git%20Repo/courses/index.html
+
