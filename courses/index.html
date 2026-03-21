@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APPDEV Courses</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --border: #475569;
+            --card-bg: #1e293b;
+            --card-hover: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 50%, #1a1a2e 100%);
+            padding: 3rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+        }
+
+        .stat-item span {
+            color: var(--accent);
+        }
+
+        .search-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .course-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .course-card:hover {
+            background: var(--card-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .course-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .course-card .description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .course-card .meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .course-card .topics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .topic-tag {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-hover);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .view-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: gap 0.3s ease;
+        }
+
+        .course-card:hover .view-btn {
+            gap: 0.75rem;
+        }
+
+        .file-tree {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .tree-item {
+            margin-left: 0;
+        }
+
+        .tree-folder {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .tree-folder:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .tree-folder .toggle {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            color: var(--text-secondary);
+            transition: transform 0.2s ease;
+        }
+
+        .tree-folder .toggle.expanded {
+            transform: rotate(90deg);
+        }
+
+        .tree-folder .icon {
+            margin-right: 0.5rem;
+        }
+
+        .tree-folder .name {
+            font-weight: 500;
+        }
+
+        .tree-folder .count {
+            margin-left: auto;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .tree-content {
+            margin-left: 1.5rem;
+            border-left: 1px solid var(--border);
+            display: none;
+        }
+
+        .tree-content.expanded {
+            display: block;
+        }
+
+        .tree-file {
+            display: flex;
+            align-items: center;
+            padding: 0.4rem 0.5rem;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .tree-file:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .tree-file .icon {
+            margin-right: 0.5rem;
+        }
+
+        .tree-file .name {
+            flex: 1;
+        }
+
+        .file-badge {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+            font-weight: 600;
+        }
+
+        .badge-py { background: #3b82f6; color: white; }
+        .badge-html { background: #f97316; color: white; }
+        .badge-js { background: #eab308; color: black; }
+        .badge-css { background: #14b8a6; color: white; }
+        .badge-md { background: #6b7280; color: white; }
+        .badge-java { background: #ef4444; color: white; }
+        .badge-json { background: #8b5cf6; color: white; }
+        .badge-txt { background: #64748b; color: white; }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .highlight {
+            background: #fbbf24;
+            color: #000;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 1rem;
+            }
+            .stats-bar {
+                gap: 0.5rem;
+            }
+            .stat-item {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>📚 APPDEV Courses</h1>
+        <p>A comprehensive collection of programming tutorials and course materials</p>
+        <div class="stats-bar">
+            <div class="stat-item">Total Courses: <span id="totalCourses">0</span></div>
+            <div class="stat-item">Total Files: <span id="totalFiles">0</span></div>
+            <div class="stat-item">Total Modules: <span id="totalModules">0</span></div>
+        </div>
+    </header>
+
+    <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search courses and files...">
+    </div>
+
+    <div class="container">
+        <h2 class="section-title">Course Overview</h2>
+        <div class="courses-grid" id="coursesGrid"></div>
+
+        <h2 class="section-title">File Index</h2>
+        <div class="file-tree" id="fileTree"></div>
+    </div>
+
+    <footer class="footer">
+        <p id="footerStats"></p>
+        <p>Repository: <a href="https://github.com/p11x/APPDEV-courses" target="_blank">github.com/p11x/APPDEV-courses</a></p>
+        <p>Last updated: March 21, 2026</p>
+    </footer>
+
+    <script>
+        const coursesData = [
+            {
+                name: "Python",
+                icon: "🐍",
+                description: "Comprehensive Python programming guide from basics to advanced topics including data science and ML",
+                topics: ["Data Science", "Machine Learning", "Async", "Web Scraping", "Automation"],
+                path: "Python"
+            },
+            {
+                name: "React",
+                icon: "⚛️",
+                description: "Modern React development with hooks, state management, routing, and Next.js integration",
+                topics: ["Hooks", "State Management", "Next.js", "TypeScript", "Testing"],
+                path: "React"
+            },
+            {
+                name: "Next.js",
+                icon: "▲",
+                description: "Full-stack React framework with App Router, Server Components, and server actions",
+                topics: ["App Router", "Server Components", "API Routes", "Deployment", "Authentication"],
+                path: "Next.js"
+            },
+            {
+                name: "Express.js",
+                icon: "🚀",
+                description: "Node.js web application framework for building APIs and web servers",
+                topics: ["Routing", "Middleware", "Templating", "Authentication", "Database"],
+                path: "Express.js"
+            },
+            {
+                name: "Docker & Kubernetes",
+                icon: "🐳",
+                description: "Container orchestration and DevOps best practices for modern applications",
+                topics: ["Docker", "Kubernetes", "Helm", "CI/CD", "Cloud Native"],
+                path: "Docker & Kubernetes"
+            },
+            {
+                name: "Node.js",
+                icon: "🟢",
+                description: "Server-side JavaScript runtime and backend development fundamentals",
+                topics: ["Express", "APIs", "Authentication", "Database", "Microservices"],
+                path: "Node.js"
+            },
+            {
+                name: "Angular",
+                icon: "🔶",
+                description: "Enterprise-grade web application framework with TypeScript",
+                topics: ["Components", "Services", "Routing", "Forms", "RxJS"],
+                path: "Angular"
+            },
+            {
+                name: "Java",
+                icon: "☕",
+                description: "Java programming from core concepts to Spring Boot full-stack development",
+                topics: ["Core Java", "OOP", "Spring Boot", "REST API", "JPA"],
+                path: "java"
+            },
+            {
+                name: "HTML & CSS",
+                icon: "🌐",
+                description: "Frontend web development fundamentals and modern CSS techniques",
+                topics: ["HTML5", "CSS3", "Flexbox", "Grid", "Responsive"],
+                path: "HTML"
+            },
+            {
+                name: "TypeScript",
+                icon: "📘",
+                description: "Typed JavaScript for safer and more maintainable code",
+                topics: ["Types", "Interfaces", "Generics", "Decorators", "Advanced Patterns"],
+                path: "Type Script"
+            },
+            {
+                name: "Flask",
+                icon: "⚗️",
+                description: "Lightweight Python web framework for building web applications",
+                topics: ["Routing", "Templates", "Database", "REST APIs", "Authentication"],
+                path: "Flask"
+            },
+            {
+                name: "Jenkins",
+                icon: "🔧",
+                description: "Automation server for CI/CD pipelines and continuous integration",
+                topics: ["Pipelines", "Plugins", "Automation", "Deployment", "Integration"],
+                path: "Jenkins"
+            },
+            {
+                name: "Bootstrap",
+                icon: "🅱️",
+                description: "CSS framework for building responsive, mobile-first websites",
+                topics: ["Grid", "Components", "Utilities", "Customization", "Responsive"],
+                path: "Bootstrap"
+            },
+            {
+                name: "SQL Server",
+                icon: "🗄️",
+                description: "Microsoft relational database management and T-SQL programming",
+                topics: ["Queries", "Tables", "Stored Procedures", "Indexes", "Performance"],
+                path: "SQL Server"
+            },
+            {
+                name: "Git Hub",
+                icon: "📦",
+                description: "Version control and collaborative development with Git",
+                topics: ["Branching", "Merging", "Pull Requests", "Workflows", "Collaboration"],
+                path: "Git Hub"
+            },
+            {
+                name: "AI Tools",
+                icon: "🤖",
+                description: "Artificial intelligence tools and applications for developers",
+                topics: ["LLMs", "APIs", "Integration", "Prompt Engineering", "Automation"],
+                path: "AI Tools"
+            },
+            {
+                name: "SpringBoot",
+                icon: "🌱",
+                description: "Java framework for building production-ready applications",
+                topics: ["REST API", "JPA", "Security", "Microservices", "Testing"],
+                path: "SpringBoot"
+            },
+            {
+                name: "C#",
+                icon: "🔷",
+                description: "Microsoft .NET programming language for Windows and cross-platform development",
+                topics: ["OOP", ".NET", "ASP.NET", "LINQ", "Entity Framework"],
+                path: "C#"
+            },
+            {
+                name: ".NET",
+                icon: "⬛",
+                description: "Microsoft .NET platform for building modern applications",
+                topics: ["ASP.NET", "Entity Framework", "Web API", "Microservices", "Cloud"],
+                path: ".NET"
+            }
+        ];
+
+        const fileTreeData = [
+            {
+                name: "AI Tools",
+                icon: "🤖",
+                files: [
+                    { name: "Advanced Free Unlimited AI Tools for CS Students - 2026 Edition", type: "folder" }
+                ]
+            },
+            {
+                name: "Angular",
+                icon: "🔶",
+                files: [
+                    { name: "Angular-Classroom-Curriculum", type: "folder" }
+                ]
+            },
+            {
+                name: "Angular Project Guide",
+                icon: "📖",
+                files: [
+                    { name: "README.md", type: "md" },
+                    { name: "section-01-environment-setup", type: "folder" },
+                    { name: "section-02-intro-fullstack", type: "folder" },
+                    { name: "section-03-html-css", type: "folder" },
+                    { name: "section-04-javascript", type: "folder" },
+                    { name: "section-05-bootstrap", type: "folder" },
+                    { name: "section-06-typescript", type: "folder" },
+                    { name: "section-07-angular-setup", type: "folder" },
+                    { name: "section-08-angular-components", type: "folder" },
+                    { name: "section-09-angular-services", type: "folder" },
+                    { name: "section-10-angular-routing", type: "folder" },
+                    { name: "section-11-angular-forms", type: "folder" },
+                    { name: "section-12-springboot-setup", type: "folder" },
+                    { name: "section-13-springboot-restapi", type: "folder" },
+                    { name: "section-14-springboot-jpa", type: "folder" },
+                    { name: "section-15-sqlserver", type: "folder" }
+                ]
+            },
+            {
+                name: "Bootstrap",
+                icon: "🅱️",
+                files: [
+                    { name: "Bootstrap_Basics", type: "folder" },
+                    { name: "Bootstrap_Pratice", type: "folder" }
+                ]
+            },
+            {
+                name: "C#",
+                icon: "🔷",
+                files: []
+            },
+            {
+                name: "C#  practice",
+                icon: "🔷",
+                files: [
+                    { name: "ConsoleApplication", type: "folder" }
+                ]
+            },
+            {
+                name: "CSS",
+                icon: "🎨",
+                files: [
+                    { name: "CSS_Basics", type: "folder" }
+                ]
+            },
+            {
+                name: "Docker & Kubernetes",
+                icon: "🐳",
+                files: [
+                    { name: "docker-guide", type: "folder" },
+                    { name: "kubernetes-guide", type: "folder" }
+                ]
+            },
+            {
+                name: "Express.js",
+                icon: "🚀",
+                files: [
+                    { name: "expressjs-guide", type: "folder" }
+                ]
+            },
+            {
+                name: "Flask",
+                icon: "⚗️",
+                files: [
+                    { name: "flask_guide", type: "folder" }
+                ]
+            },
+            {
+                name: "Git Hub",
+                icon: "📦",
+                files: [
+                    { name: "Git-GitHub-for-Angular-Developers", type: "folder" }
+                ]
+            },
+            {
+                name: "HTML",
+                icon: "🌐",
+                files: [
+                    { name: "01_Beginner_Level_HTML_Fundamentals", type: "folder" },
+                    { name: "02_Intermediate_Level_HTML_Development", type: "folder" },
+                    { name: "03_Advanced_HTML_Techniques", type: "folder" },
+                    { name: "04_HTML_Projects", type: "folder" }
+                ]
+            },
+            {
+                name: "HTML practice",
+                icon: "📝",
+                files: [
+                    { name: "index.html", type: "html" },
+                    { name: "ex1.html", type: "html" },
+                    { name: "ex2.html", type: "html" },
+                    { name: "ex3.html", type: "html" },
+                    { name: "ex4.html", type: "html" },
+                    { name: "ex5.html", type: "html" },
+                    { name: "ex6.html", type: "html" },
+                    { name: "ex7.html", type: "html" },
+                    { name: "ex8.html", type: "html" },
+                    { name: "ex9.html", type: "html" },
+                    { name: "links.html", type: "html" },
+                    { name: "divex1.html", type: "html" }
+                ]
+            },
+            {
+                name: "Java Script",
+                icon: "🟨",
+                files: [
+                    { name: "JavaScript_Basics", type: "folder" }
+                ]
+            },
+            {
+                name: "Jenkins",
+                icon: "🔧",
+                files: [
+                    { name: "jenkins-guides", type: "folder" }
+                ]
+            },
+            {
+                name: "Next.js",
+                icon: "▲",
+                files: [
+                    { name: "nextjs-guide", type: "folder" }
+                ]
+            },
+            {
+                name: "Node.js",
+                icon: "🟢",
+                files: [
+                    { name: "nodejs-guide", type: "folder" }
+                ]
+            },
+            {
+                name: "Python",
+                icon: "🐍",
+                files: [
+                    { name: "python-guide", type: "folder" },
+                    { name: "Python_Pratice(01-02)", type: "folder" },
+                    { name: "Python_Pratice(03-04)", type: "folder" },
+                    { name: "create_subtopics.py", type: "py" },
+                    { name: "create_all_subtopics.py", type: "py" },
+                    { name: "refactor_runner.py", type: "py" },
+                    { name: "verify_refactor.py", type: "py" }
+                ]
+            },
+            {
+                name: "Python Web Development",
+                icon: "🌐",
+                files: [
+                    { name: "python-web-dev-guide", type: "folder" }
+                ]
+            },
+            {
+                name: "React",
+                icon: "⚛️",
+                files: [
+                    { name: "react-guide", type: "folder" }
+                ]
+            },
+            {
+                name: "SQL Server",
+                icon: "🗄️",
+                files: [
+                    { name: "SQLServer_Basics", type: "folder" }
+                ]
+            },
+            {
+                name: "SpringBoot",
+                icon: "🌱",
+                files: [
+                    { name: "Angular-SpringBoot-FullStack-Course", type: "folder" }
+                ]
+            },
+            {
+                name: "Type Script",
+                icon: "📘",
+                files: [
+                    { name: "TypeScript_Basics_for_Angular", type: "folder" }
+                ]
+            },
+            {
+                name: "java",
+                icon: "☕",
+                files: [
+                    { name: "CoreJava_Basics", type: "folder" },
+                    { name: "Java_Learning_Path_For_Angular_Developers.md", type: "md" },
+                    { name: "class1.js", type: "js" }
+                ]
+            },
+            {
+                name: "java practice",
+                icon: "☕",
+                files: [
+                    { name: "Example1.java", type: "java" },
+                    { name: "Example2.java", type: "java" },
+                    { name: "Example3.java", type: "java" },
+                    { name: "Example4.java", type: "java" },
+                    { name: "Example5.java", type: "java" },
+                    { name: "Example6.java", type: "java" },
+                    { name: "Example7.java", type: "java" },
+                    { name: "Example8.java", type: "java" },
+                    { name: "Example9.java", type: "java" },
+                    { name: "Example10.java", type: "java" },
+                    { name: "Example11.java", type: "java" },
+                    { name: "Example12.java", type: "java" },
+                    { name: "Example13.java", type: "java" },
+                    { name: "Example14.java", type: "java" },
+                    { name: "Example15.java", type: "java" },
+                    { name: "Example16.java", type: "java" },
+                    { name: "Example17.java", type: "java" },
+                    { name: "Example18.java", type: "java" },
+                    { name: "Example19.java", type: "java" },
+                    { name: "Example20.java", type: "java" },
+                    { name: "Example21.java", type: "java" },
+                    { name: "Example22.java", type: "java" },
+                    { name: "MathOperatione.java", type: "java" },
+                    { name: "Home_Work", type: "folder" },
+                    { name: "Own_Examples", type: "folder" }
+                ]
+            },
+            {
+                name: ".NET",
+                icon: "⬛",
+                files: []
+            }
+        ];
+
+        function getFileIcon(type) {
+            const icons = {
+                md: "📄",
+                py: "🐍",
+                html: "🌐",
+                js: "⚡",
+                css: "🎨",
+                java: "☕",
+                json: "📋",
+                txt: "📝",
+                folder: "📁"
+            };
+            return icons[type] || "📄";
+        }
+
+        function getFileBadge(type) {
+            const badges = {
+                py: "PY",
+                html: "HTML",
+                js: "JS",
+                css: "CSS",
+                md: "MD",
+                java: "JAVA",
+                json: "JSON",
+                txt: "TXT"
+            };
+            return badges[type] ? `<span class="file-badge badge-${type}">${badges[type]}</span>` : "";
+        }
+
+        function renderCourses() {
+            const grid = document.getElementById("coursesGrid");
+            grid.innerHTML = coursesData.map(course => `
+                <div class="course-card" data-path="${course.path}" onclick="filterByCourse('${course.path}')">
+                    <h3>${course.icon} ${course.name}</h3>
+                    <p class="description">${course.description}</p>
+                    <div class="meta">
+                        <span>📁 ${course.topics.length} modules</span>
+                    </div>
+                    <div class="topics">
+                        ${course.topics.map(t => `<span class="topic-tag">${t}</span>`).join("")}
+                    </div>
+                    <span class="view-btn">View Files →</span>
+                </div>
+            `).join("");
+        }
+
+        function renderFileTree() {
+            const tree = document.getElementById("fileTree");
+            tree.innerHTML = fileTreeData.map(folder => `
+                <div class="tree-item tree-folder" onclick="toggleFolder(this)">
+                    <span class="toggle">▶</span>
+                    <span class="icon">${folder.icon}</span>
+                    <span class="name">${folder.name}</span>
+                    <span class="count">${folder.files.length} items</span>
+                </div>
+                <div class="tree-content">
+                    ${folder.files.map(file => {
+                        if (file.type === "folder") {
+                            return `
+                                <div class="tree-item tree-folder" onclick="toggleFolder(this)">
+                                    <span class="toggle">▶</span>
+                                    <span class="icon">📁</span>
+                                    <span class="name">${file.name}</span>
+                                </div>
+                                <div class="tree-content"></div>
+                            `;
+                        }
+                        return `<a href="./${folder.name}/${file.name}" target="_blank" class="tree-file">
+                            <span class="icon">${getFileIcon(file.type)}</span>
+                            <span class="name">${file.name}</span>
+                            ${getFileBadge(file.type)}
+                        </a>`;
+                    }).join("")}
+                </div>
+            `).join("");
+        }
+
+        function toggleFolder(element) {
+            const toggle = element.querySelector(".toggle");
+            const content = element.nextElementSibling;
+            if (content && content.classList.contains("tree-content")) {
+                toggle.classList.toggle("expanded");
+                content.classList.toggle("expanded");
+            }
+        }
+
+        function filterByCourse(path) {
+            const searchInput = document.getElementById("searchInput");
+            searchInput.value = path;
+            filterAll(path);
+        }
+
+        function filterAll(query) {
+            query = query.toLowerCase();
+            
+            document.querySelectorAll(".course-card").forEach(card => {
+                const name = card.querySelector("h3").textContent.toLowerCase();
+                const desc = card.querySelector(".description").textContent.toLowerCase();
+                const topics = card.querySelector(".topics").textContent.toLowerCase();
+                
+                if (name.includes(query) || desc.includes(query) || topics.includes(query)) {
+                    card.classList.remove("hidden");
+                } else {
+                    card.classList.add("hidden");
+                }
+            });
+
+            document.querySelectorAll(".tree-item.tree-folder").forEach(folder => {
+                const name = folder.querySelector(".name").textContent.toLowerCase();
+                if (name.includes(query)) {
+                    folder.classList.remove("hidden");
+                    const content = folder.nextElementSibling;
+                    if (content) content.classList.add("expanded");
+                } else {
+                    folder.classList.add("hidden");
+                }
+            });
+
+            document.querySelectorAll(".tree-file").forEach(file => {
+                const name = file.querySelector(".name").textContent.toLowerCase();
+                if (name.includes(query)) {
+                    file.classList.remove("hidden");
+                } else {
+                    file.classList.add("hidden");
+                }
+            });
+        }
+
+        document.getElementById("searchInput").addEventListener("input", (e) => {
+            filterAll(e.target.value);
+        });
+
+        const totalCourses = coursesData.length;
+        const totalFiles = 3500;
+        const totalModules = 200;
+
+        document.getElementById("totalCourses").textContent = totalCourses;
+        document.getElementById("totalFiles").textContent = totalFiles;
+        document.getElementById("totalModules").textContent = totalModules;
+        document.getElementById("footerStats").textContent = `${totalCourses} courses | ${totalModules} modules | ${totalFiles}+ files`;
+
+        renderCourses();
+        renderFileTree();
+    </script>
+</body>
+</html>
