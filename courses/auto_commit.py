@@ -37,7 +37,7 @@ def load_config():
         logger.warning(f"Config file {CONFIG_FILE} not found, using defaults")
         return {
             "watched_directory": ".",
-            "debounce_seconds": 3,
+            "debounce_seconds": 3600,
             "ignored_patterns": [".git", "__pycache__", "*.pyc", ".DS_Store", "auto_commit.log"],
             "branch": "master",
             "auto_push": True,
