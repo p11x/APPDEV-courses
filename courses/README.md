@@ -178,6 +178,31 @@ Press `Ctrl + C` in the terminal to stop the watcher.
 
 ---
 
+### 🔁 Run as Background Service (Auto-start on Boot)
+
+Configure the watcher to run automatically in the background on system startup:
+
+| OS      | Setup Command                        | Remove Command                          |
+|---------|--------------------------------------|-----------------------------------------|
+| Windows | `powershell setup_windows_service.ps1` | `powershell remove_windows_service.ps1`   |
+| Linux   | `bash setup_linux_service.sh`          | `bash remove_linux_service.sh`            |
+| Mac     | `bash setup_mac_service.sh`            | `bash remove_mac_service.sh`              |
+| Any OS  | `python setup_autostart.py`            | (run platform-specific remove script)    |
+
+**Features:**
+- 🔄 Auto-starts on every system boot/login
+- 📄 Logs are saved to `auto_commit.log`
+- ♻️ Service restarts automatically if it crashes
+- 🛡️ Runs in the background without showing a terminal window
+
+**Quick One-Command Setup:**
+```bash
+# Auto-detects OS and configures
+python setup_autostart.py
+```
+
+---
+
 ## 🛠️ Tech Stack
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
