@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_10_Animation_Security.html                               -->
+<!-- Secure Animation Patterns with Bootstrap 5                     -->
+<!-- Covers: XSS prevention in animations, CSP compliance,          -->
+<!--         safe dynamic style injection, sanitize animation input, -->
+<!--         avoiding eval, secure animation libraries               -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_01_10 - Animation Security</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        @keyframes slideIn { from { opacity:0; transform:translateX(-30px); } to { opacity:1; transform:translateX(0); } }
+
+        .secure-card {
+            animation: slideIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .code-block {
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            overflow-x: auto;
+        }
+        .code-good { border-left: 4px solid #198754; }
+        .code-bad { border-left: 4px solid #dc3545; }
+
+        .vulnerability-badge {
+            font-size: 0.7rem;
+            vertical-align: middle;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .secure-card { animation: none !important; opacity: 1 !important; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">Animation Security</h1>
+                <p class="lead text-muted">
+                    Preventing XSS, ensuring CSP compliance, and safely handling dynamic animation values.
+                </p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: XSS VIA STYLE INJECTION                           -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. XSS via Style Injection</h2>
+            <div class="alert alert-danger">
+                <strong>Vulnerability:</strong> Injecting user input directly into <code>style</code> attributes
+                or <code>&lt;style&gt;</code> blocks can execute malicious code via <code>expression()</code>,
+                <code>url(javascript:...)</code>, or <code>@import</code>.
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-danger">&#10060; Vulnerable Code</h6>
+                    <div class="code-block code-bad">
+// NEVER DO THIS — user input in style
+el.style.cssText = userInput;
+el.setAttribute('style', userInput);
+styleTag.innerHTML = userInput;
+
+// attacker input:
+// "background:url(javascript:alert(1))"
+// "width:expression(alert(1))"
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-success">&#9989; Secure Code</h6>
+                    <div class="code-block code-good">
+// SAFE: Use CSS custom properties
+el.style.setProperty('--user-color', sanitize(color));
+
+// SAFE: Use classList for predefined styles
+el.classList.add('animate-slide-in');
+
+// SAFE: Whitelist allowed values
+const allowed = ['red','blue','green'];
+if (allowed.includes(userInput)) {
+    el.style.color = userInput;
+}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: CSP COMPLIANCE                                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Content Security Policy (CSP) Compliance</h2>
+            <div class="alert alert-info">
+                <strong>CSP</strong> can block inline styles and scripts. Use nonce-based or hash-based CSP
+                to allow specific animations while blocking injection attacks.
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>CSP Header (Restrictive)</h6>
+                    <div class="code-block code-good">
+Content-Security-Policy:
+  default-src 'self';
+  style-src 'self'
+    https://cdn.jsdelivr.net
+    'nonce-abc123';
+  script-src 'self'
+    https://cdn.jsdelivr.net
+    'nonce-abc123';
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6>Using Nonces for Inline Styles</h6>
+                    <div class="code-block code-good">
+&lt;!-- Server generates unique nonce --&gt;
+&lt;style nonce="abc123"&gt;
+  .animated { animation: fadeIn 0.5s; }
+&lt;/style&gt;
+
+&lt;!-- Each request gets a fresh nonce --&gt;
+&lt;script nonce="abc123"&gt;
+  el.style.animation = 'fadeIn 0.5s';
+&lt;/script&gt;
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: SAFE DYNAMIC STYLE INJECTION                       -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Safe Dynamic Style Injection</h2>
+            <p class="text-muted">Interactive demo: safely set animation values with validation.</p>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6>Safe Animation Configurator</h6>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label small">Duration (ms)</label>
+                            <input type="number" class="form-control" id="safeDuration" value="500" min="100" max="5000">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Easing</label>
+                            <select class="form-select" id="safeEasing">
+                                <option value="ease">ease</option>
+                                <option value="linear">linear</option>
+                                <option value="ease-in-out">ease-in-out</option>
+                                <option value="cubic-bezier(0.68,-0.55,0.27,1.55)">bounce</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Color</label>
+                            <select class="form-select" id="safeColor">
+                                <option value="#0d6efd">Blue</option>
+                                <option value="#198754">Green</option>
+                                <option value="#dc3545">Red</option>
+                                <option value="#ffc107">Yellow</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" id="applySafeAnimBtn">Apply</button>
+                        </div>
+                    </div>
+                    <div class="bg-light p-4 rounded text-center" id="safeAnimTarget" style="transition: all 0.3s ease">
+                        Animation Target
+                    </div>
+                    <div class="mt-2" id="safeAnimLog"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: INPUT VALIDATION FOR ANIMATIONS                    -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Input Validation for Animation Parameters</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <h6 class="text-danger">Validators Needed</h6>
+                            <ul class="small mb-0">
+                                <li><strong>Durations:</strong> Must be positive number with 's' or 'ms' unit</li>
+                                <li><strong>Colors:</strong> Whitelist hex/rgb or use predefined classes</li>
+                                <li><strong>Easing:</strong> Whitelist known timing functions</li>
+                                <li><strong>Transforms:</strong> Parse and validate each function</li>
+                                <li><strong>CSS variables:</strong> Only set custom properties, not standard props</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6>Validation Functions</h6>
+                    <div class="code-block code-good">
+function sanitizeDuration(val) {
+    const num = parseFloat(val);
+    if (isNaN(num) || num < 0 || num > 10) {
+        return '0.3s'; // safe default
+    }
+    return num + 's';
+}
+
+function sanitizeColor(val) {
+    const allowed = [
+        '#0d6efd','#198754','#dc3545',
+        '#ffc107','#0dcaf0'
+    ];
+    return allowed.includes(val)
+        ? val : '#0d6efd';
+}
+
+function sanitizeEasing(val) {
+    const allowed = [
+        'ease','linear','ease-in',
+        'ease-out','ease-in-out'
+    ];
+    return allowed.includes(val)
+        ? val : 'ease';
+}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: CSS CUSTOM PROPERTIES (SAFE)                       -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. CSS Custom Properties — The Safe Way</h2>
+            <div class="alert alert-success">
+                CSS custom properties (variables) are the safest way to inject dynamic values into CSS.
+                They cannot execute code and are inherently safe from injection attacks.
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card secure-card text-center" style="animation-delay:0.1s">
+                        <div class="card-body">
+                            <div class="bg-primary text-white p-3 rounded"
+                                 style="--anim-speed: 0.5s; animation: fadeIn var(--anim-speed) ease-out">
+                                Speed: 0.5s
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card secure-card text-center" style="animation-delay:0.2s">
+                        <div class="card-body">
+                            <div class="bg-success text-white p-3 rounded"
+                                 style="--anim-speed: 1s; animation: fadeIn var(--anim-speed) ease-out">
+                                Speed: 1s
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card secure-card text-center" style="animation-delay:0.3s">
+                        <div class="card-body">
+                            <div class="bg-danger text-white p-3 rounded"
+                                 style="--anim-speed: 2s; animation: fadeIn var(--anim-speed) ease-out">
+                                Speed: 2s
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="code-block code-good mt-3">
+/* Safe: CSS variables in animation */
+.element {
+    animation: slideIn var(--speed, 0.5s) var(--easing, ease-out);
+}
+
+/* JS: Only sets custom properties (safe) */
+el.style.setProperty('--speed', validatedDuration);
+el.style.setProperty('--easing', validatedEasing);
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: SECURITY CHECKLIST                                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Animation Security Checklist</h2>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Never inject user input directly into style attributes</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Use CSS custom properties for dynamic values</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Whitelist all allowed animation parameter values</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Validate duration, easing, and color inputs</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Use nonce-based CSP for inline styles/scripts</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Avoid eval(), new Function(), innerHTML for animation code</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Sanitize URL values (no javascript: protocol)</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Use classList instead of cssText for style changes</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Audit third-party animation libraries for injection risks</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Use Subresource Integrity (SRI) for CDN resources</label></div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 7: SRI HASHES                                         -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Subresource Integrity (SRI)</h2>
+            <div class="alert alert-warning">
+                Always use SRI hashes for CDN resources to prevent tampering.
+            </div>
+            <div class="code-block code-good">
+&lt;link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p2CzPaCk5RlXwN2⌯f5Gpj2ᵥ0zZx3"
+  crossorigin="anonymous"&gt;
+
+&lt;script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+  crossorigin="anonymous"&gt;&lt;/script&gt;
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ----------------------------------------------------------- */
+        /* SAFE ANIMATION CONFIGURATOR                                 */
+        /* Demonstrates validated input handling for animation params  */
+        /* ----------------------------------------------------------- */
+
+        /* Validation functions — whitelist approach */
+        function sanitizeDuration(val) {
+            const num = parseFloat(val);
+            if (isNaN(num) || num < 100 || num > 5000) return 500;
+            return Math.round(num);
+        }
+
+        function sanitizeEasing(val) {
+            const allowed = ['ease', 'linear', 'ease-in-out',
+                             'cubic-bezier(0.68,-0.55,0.27,1.55)'];
+            return allowed.includes(val) ? val : 'ease';
+        }
+
+        function sanitizeColor(val) {
+            /* Strict hex color validation */
+            if (/^#[0-9a-fA-F]{6}$/.test(val)) return val;
+            return '#0d6efd';
+        }
+
+        document.getElementById('applySafeAnimBtn').addEventListener('click', function () {
+            const duration = sanitizeDuration(document.getElementById('safeDuration').value);
+            const easing = sanitizeEasing(document.getElementById('safeEasing').value);
+            const color = sanitizeColor(document.getElementById('safeColor').value);
+
+            const target = document.getElementById('safeAnimTarget');
+
+            /* Safe: using CSS custom properties */
+            target.style.setProperty('--safe-duration', duration + 'ms');
+            target.style.setProperty('--safe-easing', easing);
+            target.style.setProperty('--safe-color', color);
+
+            /* Safe: using setProperty for valid CSS */
+            target.style.transition = `all ${duration}ms ${easing}`;
+            target.style.backgroundColor = color;
+            target.style.transform = 'scale(1.05)';
+
+            /* Log what was applied */
+            document.getElementById('safeAnimLog').innerHTML =
+                `<div class="alert alert-success py-2 small mb-0">
+                    <strong>Applied (validated):</strong>
+                    duration=${duration}ms,
+                    easing=${easing},
+                    color=${color}
+                </div>`;
+
+            /* Reset after animation */
+            setTimeout(function () {
+                target.style.transform = 'scale(1)';
+            }, duration + 100);
+        });
+    </script>
+</body>
+</html>

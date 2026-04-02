@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_04_02: Vue Bootstrap Integration                            -->
+<!-- Demonstrates Vue 3 Bootstrap patterns, Composition API,       -->
+<!-- reactive data binding, BootstrapVue-Next component patterns   -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport meta ensures mobile-first responsive scaling -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue Bootstrap Integration</title>
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Vue 3 CDN - global build for template compilation -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body class="bg-light">
+    <!-- ============================================================= -->
+    <!-- Vue mount point: Vue app attaches to this element via #app    -->
+    <!-- ============================================================= -->
+    <div id="app">
+        <!-- Bootstrap container for responsive layout -->
+        <div class="container py-5">
+            <!-- Page header section -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold text-success">Vue 3 + Bootstrap 5</h1>
+                <p class="lead text-muted">Composition API, Reactive Data, and Directives</p>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- v-model: Two-way data binding directive                       -->
+            <!-- Binds input value to reactive state automatically             -->
+            <!-- ============================================================= -->
+            <div class="alert alert-success" role="alert">
+                <strong>v-model Demo:</strong> {{ message }}
+            </div>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Vue Two-Way Binding (v-model)</h5>
+                </div>
+                <div class="card-body">
+                    <!-- v-model creates two-way binding between input and message ref -->
+                    <input type="text" class="form-control mb-2" v-model="message" placeholder="Type something...">
+                    <p class="text-muted">Characters: {{ message.length }}</p>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- Counter: Demonstrates ref() for reactive primitives           -->
+            <!-- ref() wraps a value in a reactive object with .value access   -->
+            <!-- ============================================================= -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Vue Counter (ref)</h5>
+                </div>
+                <div class="card-body text-center">
+                    <!-- Computed badge variant based on count value -->
+                    <p class="display-4">
+                        Count: <span class="badge" :class="badgeClass">{{ count }}</span>
+                    </p>
+                    <!-- Event handlers use @ shorthand for v-on -->
+                    <div class="btn-group">
+                        <button class="btn btn-outline-danger" @click="count--">- Decrement</button>
+                        <button class="btn btn-outline-secondary" @click="count = 0">Reset</button>
+                        <button class="btn btn-outline-success" @click="count++">+ Increment</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- Todo List: Demonstrates reactive arrays, v-for, v-if          -->
+            <!-- v-for iterates over arrays, v-if conditionally renders        -->
+            <!-- ============================================================= -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Vue Todo List (reactive array, v-for)</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Form with @submit.prevent to prevent page reload -->
+                    <form @submit.prevent="addTodo" class="mb-3">
+                        <div class="input-group">
+                            <!-- v-model binds input to newTodo ref -->
+                            <input type="text" class="form-control" v-model="newTodo" placeholder="Add a todo...">
+                            <button class="btn btn-warning" type="submit">Add</button>
+                        </div>
+                    </form>
+                    <!-- Bootstrap list group with Vue list rendering -->
+                    <ul class="list-group">
+                        <!-- v-for requires :key for efficient DOM diffing -->
+                        <!-- :class binds classes dynamically based on item state -->
+                        <li v-for="todo in todos" :key="todo.id"
+                            class="list-group-item d-flex justify-content-between align-items-center"
+                            :class="{ 'list-group-item-success': todo.completed }">
+                            <!-- @click toggles completion status -->
+                            <span @click="todo.completed = !todo.completed"
+                                  :style="{ textDecoration: todo.completed ? 'line-through' : 'none', cursor: 'pointer' }">
+                                {{ todo.text }}
+                            </span>
+                            <button class="btn btn-sm btn-outline-danger" @click="removeTodo(todo.id)">Remove</button>
+                        </li>
+                    </ul>
+                    <!-- v-if conditionally renders based on computed property -->
+                    <p v-if="completedCount > 0" class="mt-2 text-success">
+                        {{ completedCount }} of {{ todos.length }} completed
+                    </p>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- Tabs Component: Demonstrates Vue conditional rendering        -->
+            <!-- v-show toggles display without removing from DOM              -->
+            <!-- ============================================================= -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Vue Dynamic Tabs (v-show)</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Bootstrap nav-tabs styled dynamically -->
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item" v-for="tab in tabs" :key="tab.id">
+                            <!-- :class binds active state based on currentTab -->
+                            <a class="nav-link" :class="{ active: currentTab === tab.id }"
+                               href="#" @click.prevent="currentTab = tab.id">
+                                {{ tab.label }}
+                            </a>
+                        </li>
+                    </ul>
+                    <!-- v-show keeps element in DOM but toggles visibility -->
+                    <div v-for="tab in tabs" :key="tab.id" v-show="currentTab === tab.id">
+                        <div class="p-3 bg-light rounded">
+                            <h6>{{ tab.label }}</h6>
+                            <p>{{ tab.content }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- Lifecycle Demo: Shows mounted, watch effects                 -->
+            <!-- ============================================================= -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Vue Watchers & Computed</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control mb-2" v-model="firstName">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control mb-2" v-model="lastName">
+                        </div>
+                    </div>
+                    <!-- Computed property auto-updates when dependencies change -->
+                    <div class="alert alert-info mt-2">
+                        <strong>Computed Full Name:</strong> {{ fullName }}
+                    </div>
+                    <!-- Watch log displays side effects -->
+                    <div class="alert alert-secondary">
+                        <strong>Watch Log:</strong> {{ watchLog }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- BootstrapVue Component Reference                             -->
+            <!-- Maps standard Bootstrap to Vue component equivalents         -->
+            <!-- ============================================================= -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">BootstrapVue-Next Component Mapping</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr><th>Bootstrap HTML</th><th>BootstrapVue-Next</th><th>Vue Directive</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>&lt;button class="btn"&gt;</td><td>&lt;BButton&gt;</td><td>:variant="'primary'"</td></tr>
+                            <tr><td>&lt;div class="modal"&gt;</td><td>&lt;BModal&gt;</td><td>v-model="showModal"</td></tr>
+                            <tr><td>&lt;table class="table"&gt;</td><td>&lt;BTable&gt;</td><td>:items="array"</td></tr>
+                            <tr><td>&lt;nav class="navbar"&gt;</td><td>&lt;BNavbar&gt;</td><td>toggleable="lg"</td></tr>
+                            <tr><td>&lt;div class="alert"&gt;</td><td>&lt;BAlert&gt;</td><td>:model-value="true"</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- Vue 3 Composition API Application                            -->
+    <!-- Uses createApp() with setup() function for reactive state     -->
+    <!-- ============================================================= -->
+    <script>
+        <!-- Destructure Vue Composition API functions from global Vue object -->
+        const { createApp, ref, reactive, computed, watch, onMounted } = Vue;
+
+        <!-- createApp defines the root Vue component with setup() -->
+        const app = createApp({
+            <!-- setup() runs before component mounts, returns reactive data -->
+            setup() {
+                <!-- ============================================================= -->
+                <!-- ref(): Creates a reactive reference for primitive values       -->
+                <!-- Access value via .value in JS, auto-unwraps in templates       -->
+                <!-- ============================================================= -->
+                const message = ref('Hello from Vue 3 Composition API!');
+                const count = ref(0);
+                const newTodo = ref('');
+                const firstName = ref('John');
+                const lastName = ref('Doe');
+                const currentTab = ref('overview');
+                const watchLog = ref('No changes yet');
+
+                <!-- ============================================================= -->
+                <!-- reactive(): Creates a reactive object for complex state        -->
+                <!-- Better than multiple refs for related state properties         -->
+                <!-- ============================================================= -->
+                const todos = reactive([
+                    { id: 1, text: 'Learn Vue Composition API', completed: false },
+                    { id: 2, text: 'Master Bootstrap 5 utilities', completed: true },
+                    { id: 3, text: 'Build Vue-Bootstrap project', completed: false },
+                ]);
+
+                <!-- Tab data for dynamic tab component -->
+                const tabs = reactive([
+                    { id: 'overview', label: 'Overview', content: 'Vue 3 Composition API provides a flexible way to organize component logic using imported functions rather than declaring options.' },
+                    { id: 'features', label: 'Features', content: 'Key features include ref, reactive, computed, watch, onMounted, and the ability to extract reusable composables.' },
+                    { id: 'bootstrap', label: 'Bootstrap', content: 'BootstrapVue-Next provides Vue 3 compatible components that wrap Bootstrap 5 with reactive props and events.' },
+                ]);
+
+                <!-- ============================================================= -->
+                <!-- computed(): Derives values from reactive state                 -->
+                <!-- Auto-updates when dependencies change, cached until deps change -->
+                <!-- ============================================================= -->
+                const badgeClass = computed(() => {
+                    if (count.value > 0) return 'bg-success';
+                    if (count.value < 0) return 'bg-danger';
+                    return 'bg-secondary';
+                });
+
+                <!-- Computed property combining firstName and lastName -->
+                const fullName = computed(() => `${firstName.value} ${lastName.value}`);
+
+                <!-- Count completed todos using computed filter -->
+                const completedCount = computed(() =>
+                    todos.filter(t => t.completed).length
+                );
+
+                <!-- ============================================================= -->
+                <!-- watch(): Observes reactive sources and runs callback           -->
+                <!-- Fires only when the watched value actually changes             -->
+                <!-- ============================================================= -->
+                watch([firstName, lastName], ([newFirst, newLast], [oldFirst, oldLast]) => {
+                    watchLog.value = `Changed from "${oldFirst} ${oldLast}" to "${newFirst} ${newLast}"`;
+                });
+
+                <!-- ============================================================= -->
+                <!-- onMounted(): Lifecycle hook runs after component is mounted    -->
+                <!-- Ideal for DOM-dependent operations, API calls                  -->
+                <!-- ============================================================= -->
+                onMounted(() => {
+                    console.log('Vue app mounted - Bootstrap styles applied');
+                });
+
+                <!-- Methods for todo operations -->
+                const addTodo = () => {
+                    if (!newTodo.value.trim()) return;
+                    todos.push({ id: Date.now(), text: newTodo.value, completed: false });
+                    newTodo.value = '';
+                };
+
+                const removeTodo = (id) => {
+                    const index = todos.findIndex(t => t.id === id);
+                    if (index !== -1) todos.splice(index, 1);
+                };
+
+                <!-- Return all reactive data and methods for template access -->
+                return {
+                    message, count, newTodo, todos,
+                    firstName, lastName, fullName,
+                    currentTab, tabs, watchLog,
+                    badgeClass, completedCount,
+                    addTodo, removeTodo,
+                };
+            }
+        });
+
+        <!-- Mount Vue app to the #app element -->
+        app.mount('#app');
+    </script>
+
+    <!-- Bootstrap 5.3.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

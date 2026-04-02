@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 06_02_04_PWA_Caching_Strategies.html                          -->
+<!-- PWA Caching Strategies with Bootstrap 5                      -->
+<!-- Covers: Cache-first, network-first, stale-while-revalidate,  -->
+<!-- runtime caching, cache expiration                            -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d6efd">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>PWA Caching Strategies | Bootstrap 5</title>
+    <style>
+        .pwa-card { border-left: 4px solid #0d6efd; transition: transform 0.3s ease; }
+        .pwa-card:hover { transform: translateY(-3px); }
+        .strategy-badge { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">&#128230; Caching Strategies</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#strategies">Strategies</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#runtime">Runtime</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#expiration">Expiration</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#comparison">Comparison</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-primary text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">Caching Strategies</h1>
+            <p class="lead">Master the art of caching in Progressive Web Apps. Choose the right strategy for each type of resource.</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- Section 1: Core Strategies -->
+        <section id="strategies" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128203; Core Caching Strategies</h2>
+
+            <div class="row g-4">
+                <!-- Cache-First -->
+                <div class="col-lg-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header bg-success text-white">
+                            <span class="strategy-badge">&#128230;</span>
+                            Cache-First (Cache Falling Back to Network)
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Flow:</strong> Check cache first. If found, return it. If not, fetch from network, cache the response, then return it.</p>
+                            <p><strong>Best for:</strong> Static assets (CSS, JS, images, fonts) that rarely change.</p>
+                            <pre class="mb-0"><code>// Cache-First Strategy
+const cacheFirst = async (request) => {
+    // Step 1: Check cache
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+        return cachedResponse;
+    }
+
+    // Step 2: Fetch from network
+    try {
+        const networkResponse = await fetch(request);
+        // Step 3: Cache for next time
+        const cache = await caches.open('dynamic-v1');
+        cache.put(request, networkResponse.clone());
+        return networkResponse;
+    } catch (error) {
+        // Step 4: Offline fallback
+        return caches.match('/offline.html');
+    }
+};</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network-First -->
+                <div class="col-lg-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header bg-info text-white">
+                            <span class="strategy-badge">&#127760;</span>
+                            Network-First (Network Falling Back to Cache)
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Flow:</strong> Try network first. If successful, update cache and return. If offline, return cached version.</p>
+                            <p><strong>Best for:</strong> Dynamic content that needs freshness (API responses, news, data).</p>
+                            <pre class="mb-0"><code>// Network-First Strategy
+const networkFirst = async (request) => {
+    try {
+        // Step 1: Try network
+        const networkResponse = await fetch(request);
+        // Step 2: Update cache
+        const cache = await caches.open('dynamic-v1');
+        cache.put(request, networkResponse.clone());
+        return networkResponse;
+    } catch (error) {
+        // Step 3: Fall back to cache
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
+        // Step 4: Offline fallback
+        return caches.match('/offline.html');
+    }
+};</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stale-While-Revalidate -->
+                <div class="col-lg-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <span class="strategy-badge">&#9889;</span>
+                            Stale-While-Revalidate
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Flow:</strong> Serve cached version immediately, then fetch from network in background to update cache for next visit.</p>
+                            <p><strong>Best for:</strong> Content where speed matters more than absolute freshness.</p>
+                            <pre class="mb-0"><code>// Stale-While-Revalidate Strategy
+const staleWhileRevalidate = async (request) => {
+    // Step 1: Open cache
+    const cache = await caches.open('dynamic-v1');
+
+    // Step 2: Get cached response
+    const cachedResponse = await cache.match(request);
+
+    // Step 3: Fetch in background (don't await)
+    const fetchPromise = fetch(request).then(
+        networkResponse => {
+            cache.put(request, networkResponse.clone());
+            return networkResponse;
+        }
+    );
+
+    // Step 4: Return cached immediately, or wait for network
+    return cachedResponse || fetchPromise;
+};</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network-Only -->
+                <div class="col-lg-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header bg-danger text-white">
+                            <span class="strategy-badge">&#10060;</span>
+                            Network-Only
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Flow:</strong> Always fetch from network, never use cache. Fails completely when offline.</p>
+                            <p><strong>Best for:</strong> Real-time data that must never be stale (live prices, chat).</p>
+                            <pre class="mb-0"><code>// Network-Only Strategy
+const networkOnly = async (request) => {
+    try {
+        return await fetch(request);
+    } catch (error) {
+        // Return error response when offline
+        return new Response(
+            JSON.stringify({ error: 'Offline' }),
+            {
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+            }
+        );
+    }
+};</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Runtime Caching -->
+        <section id="runtime" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#9881; Runtime Caching Configuration</h2>
+
+            <div class="card pwa-card">
+                <div class="card-header bg-dark text-white"><code>Workbox-Style Runtime Caching Config</code></div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>// Runtime caching configuration (Workbox-compatible pattern)
+// Different strategies for different resource types
+
+const runtimeCacheConfig = [
+    // Cache Google Fonts stylesheets
+    {
+        urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+        handler: 'StaleWhileRevalidate',
+        options: {
+            cacheName: 'google-fonts-stylesheets',
+        }
+    },
+    // Cache Google Fonts webfonts
+    {
+        urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+        handler: 'CacheFirst',
+        options: {
+            cacheName: 'google-fonts-webfonts',
+            expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+            }
+        }
+    },
+    // Cache images with CacheFirst
+    {
+        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+        handler: 'CacheFirst',
+        options: {
+            cacheName: 'images',
+            expiration: {
+                maxEntries: 60,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+            }
+        }
+    },
+    // API calls with NetworkFirst
+    {
+        urlPattern: /\/api\//,
+        handler: 'NetworkFirst',
+        options: {
+            cacheName: 'api-responses',
+            networkTimeoutSeconds: 3, // Fall back to cache after 3s
+            expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 1 day
+            }
+        }
+    },
+    // CSS and JS with StaleWhileRevalidate
+    {
+        urlPattern: /\.(?:css|js)$/,
+        handler: 'StaleWhileRevalidate',
+        options: {
+            cacheName: 'static-resources',
+        }
+    }
+];</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Cache Expiration -->
+        <section id="expiration" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128337; Cache Expiration & Cleanup</h2>
+
+            <div class="card pwa-card">
+                <div class="card-header bg-dark text-white"><code>Cache Expiration Plugin</code></div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>// Custom cache expiration implementation
+// Limits cache size and entry age
+
+class CacheExpirationPlugin {
+    constructor(config) {
+        this.maxEntries = config.maxEntries || 50;
+        this.maxAgeSeconds = config.maxAgeSeconds || 86400; // 1 day
+    }
+
+    // Clean up expired and excess entries
+    async cleanup(cacheName) {
+        const cache = await caches.open(cacheName);
+        const requests = await cache.keys();
+        const now = Date.now();
+
+        // Get all entries with timestamps
+        const entries = await Promise.all(
+            requests.map(async request => {
+                const response = await cache.match(request);
+                const dateHeader = response.headers.get('sw-fetched-on');
+                return {
+                    request,
+                    timestamp: dateHeader ? parseInt(dateHeader) : 0
+                };
+            })
+        );
+
+        // Delete expired entries
+        for (const entry of entries) {
+            const age = (now - entry.timestamp) / 1000;
+            if (age > this.maxAgeSeconds) {
+                await cache.delete(entry.request);
+            }
+        }
+
+        // Delete oldest entries if over maxEntries
+        const remaining = await cache.keys();
+        if (remaining.length > this.maxEntries) {
+            const sorted = entries.sort((a, b) => a.timestamp - b.timestamp);
+            const toDelete = sorted.slice(0, remaining.length - this.maxEntries);
+            for (const entry of toDelete) {
+                await cache.delete(entry.request);
+            }
+        }
+    }
+}
+
+// Usage: clean up periodically
+const expiration = new CacheExpirationPlugin({
+    maxEntries: 50,
+    maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
+});
+expiration.cleanup('dynamic-cache');</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Strategy Comparison -->
+        <section id="comparison" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128202; Strategy Comparison</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Strategy</th>
+                            <th>Speed</th>
+                            <th>Freshness</th>
+                            <th>Offline</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Cache-First</strong></td>
+                            <td><span class="badge bg-success">Fastest</span></td>
+                            <td><span class="badge bg-warning">May be stale</span></td>
+                            <td><span class="badge bg-success">Full support</span></td>
+                            <td>Static assets, icons, fonts</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Network-First</strong></td>
+                            <td><span class="badge bg-warning">Depends on network</span></td>
+                            <td><span class="badge bg-success">Always fresh</span></td>
+                            <td><span class="badge bg-info">Cache fallback</span></td>
+                            <td>API data, user content</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stale-While-Revalidate</strong></td>
+                            <td><span class="badge bg-success">Fast</span></td>
+                            <td><span class="badge bg-info">Updates in background</span></td>
+                            <td><span class="badge bg-info">Cache fallback</span></td>
+                            <td>Images, non-critical data</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Network-Only</strong></td>
+                            <td><span class="badge bg-danger">Slowest</span></td>
+                            <td><span class="badge bg-success">Always fresh</span></td>
+                            <td><span class="badge bg-danger">No support</span></td>
+                            <td>Real-time, critical operations</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cache-Only</strong></td>
+                            <td><span class="badge bg-success">Fastest</span></td>
+                            <td><span class="badge bg-danger">Frozen</span></td>
+                            <td><span class="badge bg-success">Full support</span></td>
+                            <td>Precached app shell</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-primary mt-3">
+                <strong>&#128161; Rule of Thumb:</strong> Use Cache-First for static assets, Network-First for API data, Stale-While-Revalidate for images, and Network-Only for real-time features.
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="text-muted mb-0">PWA Caching Strategies Module | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

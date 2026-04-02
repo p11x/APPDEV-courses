@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<!-- Accessible forms: proper use of labels, ARIA attributes, fieldsets, and legends -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Accessibility Patterns - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-section { margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 0.5rem; }
+        /* Focus visible outline for keyboard navigation demonstration */
+        .demo-section :focus-visible { outline: 3px solid #0d6efd; outline-offset: 2px; }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Form Accessibility Patterns</h1>
+                <p class="lead text-muted">Building accessible forms with proper labels, ARIA attributes, fieldsets, legends, and screen reader support.</p>
+                <hr>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Label Associations -->
+        <!-- Every form control MUST have an associated label for accessibility -->
+        <section class="demo-section" id="labels">
+            <h2 class="h4 mb-3">1. Label Associations</h2>
+
+            <form>
+                <!-- METHOD 1: Explicit label with for/id matching -->
+                <!-- The for attribute must match the input's id exactly -->
+                <div class="mb-3">
+                    <!-- Screen readers announce this label when the input receives focus -->
+                    <label for="explicitLabel" class="form-label">Explicit Label (for/id match)</label>
+                    <input type="text" class="form-control" id="explicitLabel">
+                    <div class="form-text">Clicking the label focuses the input. Screen readers announce the label text.</div>
+                </div>
+
+                <!-- METHOD 2: Implicit label (wrapping) -->
+                <!-- The input is nested inside the label element -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        Implicit Label (input inside label)
+                        <input type="text" class="form-control" aria-describedby="implicitHelp">
+                    </label>
+                    <div class="form-text" id="implicitHelp">Association is automatic when input is inside label.</div>
+                </div>
+
+                <!-- METHOD 3: aria-label (no visible label) -->
+                <!-- Use only when a visible label is not possible (e.g., icon-only inputs) -->
+                <div class="mb-3">
+                    <!-- aria-label provides accessible name without visible text -->
+                    <input type="search" class="form-control" aria-label="Search the website" placeholder="Search...">
+                    <div class="form-text">aria-label is used when no visible label exists (e.g., icon buttons).</div>
+                </div>
+
+                <!-- METHOD 4: aria-labelledby (reference another element) -->
+                <!-- Points to an element's id that serves as the label -->
+                <div class="mb-3">
+                    <h5 id="sectionHeading">Billing Address</h5>
+                    <!-- aria-labelledby takes a space-separated list of id references -->
+                    <input type="text" class="form-control" aria-labelledby="sectionHeading">
+                    <div class="form-text">aria-labelledby references an existing element as the label.</div>
+                </div>
+
+                <!-- Labels for non-text controls -->
+                <div class="mb-3">
+                    <!-- File inputs also need labels -->
+                    <label for="fileLabel" class="form-label">Upload Document</label>
+                    <input class="form-control" type="file" id="fileLabel" aria-describedby="fileHelp">
+                    <div class="form-text" id="fileHelp">Accepted formats: PDF, DOC, DOCX. Max 5MB.</div>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 2: ARIA Descriptions -->
+        <!-- aria-describedby connects supplementary text to form controls -->
+        <section class="demo-section" id="aria-descriptions">
+            <h2 class="h4 mb-3">2. ARIA Descriptions</h2>
+
+            <form>
+                <div class="mb-3">
+                    <label for="descPassword" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="descPassword" aria-describedby="passwordHelp passwordRequirements">
+                    <!-- Multiple aria-describedby references (space-separated ids) -->
+                    <div class="form-text" id="passwordHelp">Choose a strong password.</div>
+                    <ul class="form-text" id="passwordRequirements">
+                        <li>At least 8 characters</li>
+                        <li>Include uppercase and lowercase</li>
+                        <li>Include at least one number</li>
+                    </ul>
+                </div>
+
+                <!-- aria-describedby with validation feedback -->
+                <div class="mb-3">
+                    <label for="descEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control is-invalid" id="descEmail" aria-describedby="emailHelp emailError" aria-invalid="true">
+                    <div class="form-text" id="emailHelp">We'll use this for account recovery.</div>
+                    <!-- aria-invalid="true" tells screen readers the field has an error -->
+                    <div class="invalid-feedback" id="emailError">Please enter a valid email address.</div>
+                </div>
+
+                <!-- aria-errormessage as alternative to aria-describedby for errors -->
+                <div class="mb-3">
+                    <label for="descUsername" class="form-label">Username</label>
+                    <!-- aria-errormessage points to error element (shown only when invalid) -->
+                    <input type="text" class="form-control is-invalid" id="descUsername" aria-errormessage="usernameError" aria-invalid="true">
+                    <div class="invalid-feedback" id="usernameError">Username is already taken.</div>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 3: Fieldset and Legend -->
+        <!-- Fieldset groups related controls; legend provides the group name -->
+        <section class="demo-section" id="fieldset-legend">
+            <h2 class="h4 mb-3">3. Fieldset and Legend</h2>
+
+            <form>
+                <!-- Fieldset groups radio buttons; legend names the group -->
+                <fieldset class="border p-3 mb-3 rounded">
+                    <!-- Legend is REQUIRED for fieldset accessibility -->
+                    <!-- Screen readers announce the legend before each control in the fieldset -->
+                    <legend class="float-none w-auto fs-6 px-2">Subscription Plan</legend>
+                    <!-- Legend styling: float-none w-auto makes it fit within the border -->
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="plan" id="planFree" value="free">
+                        <label class="form-check-label" for="planFree">Free - $0/month</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="plan" id="planBasic" value="basic">
+                        <label class="form-check-label" for="planBasic">Basic - $9/month</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="plan" id="planPro" value="pro">
+                        <label class="form-check-label" for="planPro">Pro - $29/month</label>
+                    </div>
+                </fieldset>
+
+                <!-- Fieldset with checkboxes (like a "select all that apply" question) -->
+                <fieldset class="border p-3 mb-3 rounded">
+                    <legend class="float-none w-auto fs-6 px-2">Notification Preferences</legend>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="notifEmail" value="email" checked>
+                        <label class="form-check-label" for="notifEmail">Email notifications</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="notifSms" value="sms">
+                        <label class="form-check-label" for="notifSms">SMS notifications</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="notifPush" value="push" checked>
+                        <label class="form-check-label" for="notifPush">Push notifications</label>
+                    </div>
+                </fieldset>
+
+                <!-- Disabled fieldset disables all controls within -->
+                <fieldset class="border p-3 mb-3 rounded" disabled>
+                    <legend class="float-none w-auto fs-6 px-2 text-muted">Disabled Section</legend>
+                    <div class="mb-3">
+                        <label for="disabledFs" class="form-label">Disabled Input</label>
+                        <input type="text" class="form-control" id="disabledFs" placeholder="Cannot edit">
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="disabledCb">
+                        <label class="form-check-label" for="disabledCb">Disabled checkbox</label>
+                    </div>
+                </fieldset>
+            </form>
+        </section>
+
+        <!-- SECTION 4: ARIA Roles and Properties for Forms -->
+        <!-- ARIA roles help assistive technology understand form structure -->
+        <section class="demo-section" id="aria-roles">
+            <h2 class="h4 mb-3">4. ARIA Roles and Properties</h2>
+
+            <form>
+                <!-- role="group" groups related controls without using fieldset -->
+                <div class="mb-3" role="group" aria-labelledby="addressGroupLabel">
+                    <!-- aria-labelledby points to the group heading -->
+                    <h5 id="addressGroupLabel">Mailing Address</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label for="arStreet" class="form-label">Street</label>
+                            <input type="text" class="form-control" id="arStreet">
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label for="arCity" class="form-label">City</label>
+                            <input type="text" class="form-control" id="arCity">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- aria-required="true" indicates required fields -->
+                <div class="mb-3">
+                    <label for="arRequired" class="form-label">
+                        Required Field
+                        <!-- Visual indicator for sighted users -->
+                        <span class="text-danger" aria-hidden="true">*</span>
+                    </label>
+                    <!-- aria-required tells screen readers this field must be filled -->
+                    <input type="text" class="form-control" id="arRequired" aria-required="true" required>
+                </div>
+
+                <!-- aria-disabled vs disabled attribute -->
+                <div class="mb-3">
+                    <label for="arDisabled" class="form-label">ARIA Disabled (focusable but non-interactive)</label>
+                    <!-- aria-disabled keeps element in tab order but prevents interaction -->
+                    <input type="text" class="form-control" id="arDisabled" aria-disabled="true" value="aria-disabled" tabindex="-1">
+                    <div class="form-text">aria-disabled allows focus but prevents interaction. Use for custom disabled states.</div>
+                </div>
+
+                <!-- aria-readonly for custom read-only implementations -->
+                <div class="mb-3">
+                    <label for="arReadonly" class="form-label">ARIA Readonly</label>
+                    <input type="text" class="form-control" id="arReadonly" aria-readonly="true" value="Cannot modify this">
+                </div>
+
+                <!-- aria-haspopup for inputs that trigger popups -->
+                <div class="mb-3">
+                    <label for="arPopup" class="form-label">Date Picker (triggers dialog)</label>
+                    <!-- aria-haspopup="dialog" tells screen readers this opens a dialog -->
+                    <input type="text" class="form-control" id="arPopup" aria-haspopup="dialog" placeholder="Click to open date picker">
+                </div>
+
+                <!-- aria-expanded for collapsible sections -->
+                <div class="mb-3">
+                    <label for="arExpanded" class="form-label">Advanced Options</label>
+                    <!-- aria-expanded communicates open/closed state -->
+                    <button class="btn btn-outline-secondary btn-sm" type="button" aria-expanded="false" aria-controls="advancedOpts" id="toggleAdvanced">
+                        Show Advanced
+                    </button>
+                    <div class="collapse mt-2" id="advancedOpts">
+                        <div class="card card-body">
+                            <label for="arTimeout" class="form-label">Timeout (seconds)</label>
+                            <input type="number" class="form-control" id="arTimeout" value="30">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 5: Screen Reader Only Content -->
+        <!-- .visually-hidden class hides content visually but keeps it for screen readers -->
+        <section class="demo-section" id="sr-only">
+            <h2 class="h4 mb-3">5. Screen Reader Content</h2>
+
+            <form>
+                <!-- Visually hidden labels for icon-only buttons -->
+                <div class="mb-3">
+                    <label for="srSearch" class="visually-hidden">Search</label>
+                    <div class="input-group">
+                        <input type="search" class="form-control" id="srSearch" placeholder="Search...">
+                        <!-- .visually-hidden provides context for screen readers on icon buttons -->
+                        <button class="btn btn-primary" type="button">
+                            <span aria-hidden="true">🔍</span>
+                            <span class="visually-hidden">Submit search</span>
+                        </button>
+                    </div>
+                    <div class="form-text">visually-hidden class hides text visually but keeps it for screen readers.</div>
+                </div>
+
+                <!-- aria-hidden hides decorative elements from screen readers -->
+                <div class="mb-3">
+                    <label for="srStar" class="form-label">Rating</label>
+                    <div>
+                        <!-- aria-hidden="true" hides decorative icons from screen readers -->
+                        <span aria-hidden="true">⭐⭐⭐⭐⭐</span>
+                        <!-- Screen reader-only rating text -->
+                        <span class="visually-hidden">5 out of 5 stars</span>
+                    </div>
+                    <input type="range" class="form-range" id="srStar" min="1" max="5" value="5" aria-label="Rating from 1 to 5">
+                </div>
+
+                <!-- Live regions for dynamic content announcements -->
+                <div class="mb-3">
+                    <label for="srLive" class="form-label">Character Counter</label>
+                    <textarea class="form-control" id="srLive" rows="2" maxlength="100"></textarea>
+                    <!-- aria-live="polite" announces changes without interrupting -->
+                    <!-- aria-live="assertive" interrupts immediately (use sparingly) -->
+                    <div class="form-text" aria-live="polite" aria-atomic="true">
+                        <span id="srCharCount">100</span> characters remaining
+                    </div>
+                </div>
+
+                <!-- aria-busy for loading states -->
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary" id="srLoadingBtn" aria-busy="false">
+                        <span class="spinner-border spinner-border-sm d-none" id="srSpinner" role="status"></span>
+                        <span id="srBtnText">Submit</span>
+                    </button>
+                    <!-- aria-live region announces when loading completes -->
+                    <div aria-live="polite" class="mt-2" id="srStatus"></div>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 6: Keyboard Navigation -->
+        <!-- Forms must be fully navigable with keyboard alone -->
+        <section class="demo-section" id="keyboard-nav">
+            <h2 class="h4 mb-3">6. Keyboard Navigation</h2>
+
+            <form>
+                <!-- Tab order follows DOM order by default -->
+                <div class="mb-3">
+                    <label for="kn1" class="form-label">First in Tab Order</label>
+                    <input type="text" class="form-control" id="kn1" placeholder="Tab to next">
+                </div>
+                <div class="mb-3">
+                    <label for="kn2" class="form-label">Second in Tab Order</label>
+                    <input type="text" class="form-control" id="kn2" placeholder="Tab to next">
+                </div>
+
+                <!-- tabindex="0" adds element to natural tab order -->
+                <div class="mb-3">
+                    <label for="kn3" class="form-label">Third in Tab Order</label>
+                    <input type="text" class="form-control" id="kn3" tabindex="0" placeholder="Default tab order">
+                </div>
+
+                <!-- tabindex="-1" removes from tab order but allows programmatic focus -->
+                <div class="mb-3">
+                    <label for="kn4" class="form-label">Skipped in Tab Order (focusable via JS only)</label>
+                    <input type="text" class="form-control" id="kn4" tabindex="-1" placeholder="Cannot tab here">
+                </div>
+
+                <!-- tabindex="1" forces element to be first (AVOID - breaks natural order) -->
+                <div class="mb-3">
+                    <label for="kn5" class="form-label">Custom Tab Index (use sparingly)</label>
+                    <input type="text" class="form-control" id="kn5" tabindex="1" placeholder="Forced first in tab order">
+                    <div class="form-text">Avoid positive tabindex values. They break natural reading order.</div>
+                </div>
+
+                <!-- Skip navigation link pattern -->
+                <div class="mb-3">
+                    <a href="#mainContent" class="visually-hidden-focusable btn btn-outline-primary mb-2">Skip to main content</a>
+                    <div class="form-text">visually-hidden-focusable is visible only when focused (skip link pattern).</div>
+                </div>
+
+                <!-- Keyboard shortcuts information -->
+                <div class="mb-3">
+                    <p class="form-text">
+                        <strong>Keyboard tips:</strong> Use <kbd>Tab</kbd> to move forward, <kbd>Shift+Tab</kbd> backward,
+                        <kbd>Space</kbd> to toggle checkboxes, <kbd>Enter</kbd> to submit, <kbd>Escape</kbd> to close popups.
+                    </p>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 7: Error Announcements -->
+        <!-- Properly announce validation errors to screen readers -->
+        <section class="demo-section" id="error-announcements">
+            <h2 class="h4 mb-3">7. Error Announcements</h2>
+
+            <form novalidate id="errorForm">
+                <!-- Alert role for error summary (WCAG best practice) -->
+                <!-- role="alert" makes screen readers announce immediately -->
+                <div class="alert alert-danger d-none" role="alert" id="errorSummary">
+                    <strong>There are errors in the form:</strong>
+                    <ul id="errorList" class="mb-0 mt-2"></ul>
+                </div>
+
+                <div class="mb-3">
+                    <label for="errName" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="errName" aria-describedby="errNameError" required>
+                    <div class="invalid-feedback" id="errNameError">Name is required. Please enter your full name.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="errEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="errEmail" aria-describedby="errEmailError" required>
+                    <div class="invalid-feedback" id="errEmailError">Please enter a valid email address (e.g., user@example.com).</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="errPhone" class="form-label">Phone</label>
+                    <input type="tel" class="form-control" id="errPhone" pattern="\d{10}" aria-describedby="errPhoneError">
+                    <div class="invalid-feedback" id="errPhoneError">Please enter a 10-digit phone number.</div>
+                </div>
+
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
+        </section>
+
+        <!-- SECTION 8: Color and Contrast -->
+        <!-- Ensure form elements meet WCAG color contrast requirements -->
+        <section class="demo-section" id="color-contrast">
+            <h2 class="h4 mb-3">8. Color and Contrast</h2>
+
+            <form>
+                <!-- Don't rely solely on color to convey information -->
+                <div class="mb-3">
+                    <label for="ccRequired" class="form-label">
+                        Required Field
+                        <!-- Icon + color: asterisk indicates required (not just red color) -->
+                        <span class="text-danger" aria-hidden="true">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="ccRequired" required aria-required="true">
+                    <div class="form-text">Red asterisk + aria-required (not just color alone).</div>
+                </div>
+
+                <!-- Validation feedback uses color AND text + icons -->
+                <div class="mb-3">
+                    <label for="ccValid" class="form-label">Valid Input</label>
+                    <input type="text" class="form-control is-valid" id="ccValid" value="Correct" aria-describedby="ccValidFeedback">
+                    <!-- Text message + green color + checkmark icon -->
+                    <div class="valid-feedback" id="ccValidFeedback">This field is valid. ✓</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="ccInvalid" class="form-label">Invalid Input</label>
+                    <input type="text" class="form-control is-invalid" id="ccInvalid" value="Wrong" aria-describedby="ccInvalidFeedback" aria-invalid="true">
+                    <!-- Text message + red color + X icon -->
+                    <div class="invalid-feedback" id="ccInvalidFeedback">This field has an error. Please fix it.</div>
+                </div>
+
+                <!-- Disabled controls should still be readable -->
+                <div class="mb-3">
+                    <label for="ccDisabled" class="form-label text-muted">Disabled (sufficient contrast)</label>
+                    <input type="text" class="form-control" id="ccDisabled" value="Disabled" disabled>
+                    <div class="form-text">Disabled elements should still have readable text.</div>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================
+        // Character counter with aria-live announcement
+        // ============================================
+        const srLive = document.getElementById('srLive');
+        const srCharCount = document.getElementById('srCharCount');
+        srLive.addEventListener('input', function() {
+            const remaining = 100 - this.value.length;
+            srCharCount.textContent = remaining;
+        });
+
+        // ============================================
+        // Loading button with aria-busy
+        // ============================================
+        const loadingBtn = document.getElementById('srLoadingBtn');
+        loadingBtn.addEventListener('click', function() {
+            // Set aria-busy to announce loading state
+            this.setAttribute('aria-busy', 'true');
+            document.getElementById('srSpinner').classList.remove('d-none');
+            document.getElementById('srBtnText').textContent = 'Loading...';
+
+            setTimeout(() => {
+                this.setAttribute('aria-busy', 'false');
+                document.getElementById('srSpinner').classList.add('d-none');
+                document.getElementById('srBtnText').textContent = 'Submit';
+                // Announce completion to screen readers
+                document.getElementById('srStatus').textContent = 'Form submitted successfully.';
+            }, 2000);
+        });
+
+        // ============================================
+        // Expandable section with aria-expanded toggle
+        // ============================================
+        const toggleBtn = document.getElementById('toggleAdvanced');
+        toggleBtn.addEventListener('click', function() {
+            const expanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', !expanded);
+            this.textContent = expanded ? 'Show Advanced' : 'Hide Advanced';
+        });
+
+        // ============================================
+        // Error form with announcements
+        // ============================================
+        const errorForm = document.getElementById('errorForm');
+        errorForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const errors = [];
+            const inputs = errorForm.querySelectorAll('input[required], input[pattern]');
+
+            inputs.forEach(function(input) {
+                if (!input.checkValidity()) {
+                    input.classList.add('is-invalid');
+                    input.setAttribute('aria-invalid', 'true');
+                    // Collect error messages for summary
+                    const label = errorForm.querySelector('label[for="' + input.id + '"]');
+                    errors.push((label ? label.textContent : input.id) + ': ' + input.validationMessage);
+                } else {
+                    input.classList.remove('is-invalid');
+                    input.removeAttribute('aria-invalid');
+                }
+            });
+
+            const errorSummary = document.getElementById('errorSummary');
+            const errorList = document.getElementById('errorList');
+
+            if (errors.length > 0) {
+                // Show error summary (role="alert" announces immediately)
+                errorSummary.classList.remove('d-none');
+                errorList.innerHTML = errors.map(function(e) { return '<li>' + e + '</li>'; }).join('');
+                // Focus the first invalid field
+                errorForm.querySelector('.is-invalid').focus();
+            } else {
+                errorSummary.classList.add('d-none');
+                alert('Form submitted successfully!');
+            }
+        });
+    </script>
+</body>
+</html>

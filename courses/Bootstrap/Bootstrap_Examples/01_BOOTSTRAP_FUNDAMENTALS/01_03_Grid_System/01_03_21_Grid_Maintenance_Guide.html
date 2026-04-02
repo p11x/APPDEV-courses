@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 01_03_21 - Grid Maintenance Guide                              -->
+<!-- Covers long-term maintenance patterns for Bootstrap grids:    -->
+<!-- code organization, naming conventions, documentation,         -->
+<!-- refactoring strategies, and upgrade planning.                 -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Maintenance Guide - Bootstrap 5</title>
+
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .grid-item {
+            padding: 1rem;
+            background-color: #e7f1ff;
+            border: 1px solid #86b7fe;
+            border-radius: 0.375rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .section-divider {
+            margin: 2rem 0;
+            padding: 1rem 0;
+            border-top: 2px solid #dee2e6;
+        }
+        .code-block {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        .code-block .comment { color: #6a9955; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+
+        /* Anti-pattern highlighting */
+        .anti-pattern {
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            position: relative;
+        }
+        .anti-pattern::before {
+            content: "AVOID";
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .best-practice {
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            position: relative;
+        }
+        .best-practice::before {
+            content: "RECOMMENDED";
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #198754;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-3">Grid Maintenance Guide</h1>
+        <p class="lead text-muted">
+            Long-term maintenance patterns, naming conventions, refactoring strategies, and upgrade planning for Bootstrap grids.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: FILE ORGANIZATION                                  -->
+        <!-- Structure your grid styles for maintainability               -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">1. File Organization</h2>
+            <p class="text-muted mb-3">
+                Organize grid-related code into logical, maintainable file structures.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Recommended Sass Structure</h5>
+                    <div class="code-block">
+src/<br>
+├── scss/<br>
+│   ├── abstracts/<br>
+│   │   ├── _variables.scss    <span class="comment"># Grid overrides</span><br>
+│   │   ├── _mixins.scss       <span class="comment"># Custom grid mixins</span><br>
+│   │   └── _functions.scss    <span class="comment"># Grid helpers</span><br>
+│   ├── layout/<br>
+│   │   ├── _grid.scss         <span class="comment"># Custom grid styles</span><br>
+│   │   ├── _container.scss    <span class="comment"># Container overrides</span><br>
+│   │   ├── _header.scss<br>
+│   │   ├── _sidebar.scss<br>
+│   │   └── _footer.scss<br>
+│   ├── components/<br>
+│   │   ├── _card-grid.scss    <span class="comment"># Card grid patterns</span><br>
+│   │   ├── _dashboard.scss    <span class="comment"># Dashboard grid</span><br>
+│   │   └── _gallery.scss      <span class="comment"># Image gallery grid</span><br>
+│   └── main.scss              <span class="comment"># Import all</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>main.scss Import Order</h5>
+                    <div class="code-block">
+<span class="comment">// 1. Bootstrap functions (required first)</span><br>
+<span class="keyword">@import</span> <span class="string">"bootstrap/scss/functions"</span>;<br><br>
+<span class="comment">// 2. Custom variables (overrides)</span><br>
+<span class="keyword">@import</span> <span class="string">"abstracts/variables"</span>;<br><br>
+<span class="comment">// 3. Bootstrap variables</span><br>
+<span class="keyword">@import</span> <span class="string">"bootstrap/scss/variables"</span>;<br><br>
+<span class="comment">// 4. Bootstrap & custom mixins</span><br>
+<span class="keyword">@import</span> <span class="string">"bootstrap/scss/mixins"</span>;<br>
+<span class="keyword">@import</span> <span class="string">"abstracts/mixins"</span>;<br><br>
+<span class="comment">// 5. Bootstrap grid</span><br>
+<span class="keyword">@import</span> <span class="string">"bootstrap/scss/grid"</span>;<br><br>
+<span class="comment">// 6. Custom layout styles</span><br>
+<span class="keyword">@import</span> <span class="string">"layout/grid"</span>;<br>
+<span class="keyword">@import</span> <span class="string">"layout/header"</span>;<br>
+<span class="keyword">@import</span> <span class="string">"layout/sidebar"</span>;
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: NAMING CONVENTIONS                                 -->
+        <!-- Consistent naming makes grid code self-documenting           -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">2. Naming Conventions</h2>
+            <p class="text-muted mb-3">
+                Use consistent, descriptive naming for custom grid classes and Sass variables.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Custom Grid Class Naming</h5>
+                    <div class="code-block">
+<span class="comment">/* Layout-level grid classes */</span><br>
+.<span class="string">l-dashboard</span> { }     <span class="comment">/* Layout: dashboard */</span><br>
+.<span class="string">l-content-grid</span> { }  <span class="comment">/* Layout: content grid */</span><br><br>
+<span class="comment">/* Component grid classes */</span><br>
+.<span class="string">c-card-grid</span> { }     <span class="comment">/* Component: card grid */</span><br>
+.<span class="string">c-product-grid</span> { }  <span class="comment">/* Component: product grid */</span><br><br>
+<span class="comment">/* Responsive modifiers */</span><br>
+.<span class="string">l-dashboard--mobile</span> { }   <span class="comment">/* Mobile variant */</span><br>
+.<span class="string">l-dashboard--desktop</span> { }  <span class="comment">/* Desktop variant */</span><br><br>
+<span class="comment">/* State modifiers */</span><br>
+.<span class="string">c-card-grid--loading</span> { }  <span class="comment">/* Loading state */</span><br>
+.<span class="string">c-card-grid--empty</span> { }    <span class="comment">/* Empty state */</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Variable Naming</h5>
+                    <div class="code-block">
+<span class="comment">// Grid configuration variables</span><br>
+<span class="property">$grid-columns</span>: <span class="keyword">12</span>;<br>
+<span class="property">$grid-gutter-width</span>: <span class="keyword">1.5rem</span>;<br><br>
+<span class="comment">// Project-specific grid variables</span><br>
+<span class="property">$dashboard-sidebar-width</span>: <span class="keyword">280px</span>;<br>
+<span class="property">$dashboard-header-height</span>: <span class="keyword">64px</span>;<br>
+<span class="property">$card-grid-min-width</span>: <span class="keyword">300px</span>;<br>
+<span class="property">$content-max-width</span>: <span class="keyword">1200px</span>;<br><br>
+<span class="comment">// Breakpoint aliases</span><br>
+<span class="property">$bp-mobile</span>: <span class="keyword">576px</span>;<br>
+<span class="property">$bp-tablet</span>: <span class="keyword">768px</span>;<br>
+<span class="property">$bp-desktop</span>: <span class="keyword">992px</span>;<br>
+<span class="property">$bp-wide</span>: <span class="keyword">1200px</span>;<br><br>
+<span class="comment">// Spacing scale (consistent gutters)</span><br>
+<span class="property">$gutter-sm</span>: <span class="keyword">0.5rem</span>;<br>
+<span class="property">$gutter-md</span>: <span class="keyword">1rem</span>;<br>
+<span class="property">$gutter-lg</span>: <span class="keyword">1.5rem</span>;<br>
+<span class="property">$gutter-xl</span>: <span class="keyword">2rem</span>;
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: COMMON ANTI-PATTERNS TO REFACTOR                  -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">3. Anti-Patterns to Refactor</h2>
+            <p class="text-muted mb-3">
+                Common grid anti-patterns and their maintainable replacements.
+            </p>
+
+            <div class="row mb-4">
+                <!-- Anti-pattern 1: Magic numbers -->
+                <div class="col-md-6">
+                    <div class="anti-pattern mb-3">
+                        <div class="code-block">
+<span class="comment">/* Hardcoded pixel values */</span><br>
+.dashboard {<br>
+&nbsp;&nbsp;padding: <span class="keyword">23px</span>;<br>
+&nbsp;&nbsp;margin: <span class="keyword">17px</span>;<br>
+&nbsp;&nbsp;width: <span class="keyword">calc(100% - 312px)</span>;<br>
+}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="best-practice mb-3">
+                        <div class="code-block">
+<span class="comment">/* Use Bootstrap variables and spacing scale */</span><br>
+.dashboard {<br>
+&nbsp;&nbsp;<span class="keyword">@extend</span> .p-4;       <span class="comment">/* 1.5rem */</span><br>
+&nbsp;&nbsp;<span class="keyword">@extend</span> .mb-3;       <span class="comment">/* 1rem */</span><br>
+&nbsp;&nbsp;width: <span class="fn">calc</span>(100% - var(--sidebar-width));<br>
+}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <!-- Anti-pattern 2: Deep nesting -->
+                <div class="col-md-6">
+                    <div class="anti-pattern mb-3">
+                        <div class="code-block">
+<span class="comment">/* Overly nested grid selectors */</span><br>
+.dashboard .main .content<br>
+&nbsp;&nbsp;.row .col-md-8 .widget<br>
+&nbsp;&nbsp;.row .col-md-6 .card<br>
+&nbsp;&nbsp;.card-body {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;font-size: <span class="keyword">14px</span>;<br>
+&nbsp;&nbsp;}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="best-practice mb-3">
+                        <div class="code-block">
+<span class="comment">/* Flat, maintainable selectors */</span><br>
+.widget-card {<br>
+&nbsp;&nbsp;font-size: <span class="keyword">14px</span>;<br>
+}<br><br>
+<span class="comment">/* Or use Bootstrap utilities */</span><br>
+&lt;div class=<span class="string">"col-md-6"</span>&gt;<br>
+&nbsp;&nbsp;&lt;div class=<span class="string">"card fs-6"</span>&gt;...&lt;/div&gt;<br>
+&lt;/div&gt;
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <!-- Anti-pattern 3: Inline styles -->
+                <div class="col-md-6">
+                    <div class="anti-pattern mb-3">
+                        <div class="code-block">
+<span class="comment">&lt;!-- Inline styles are unmaintainable --&gt;</span><br>
+&lt;div class=<span class="string">"row"</span><br>
+&nbsp;&nbsp;&nbsp;style=<span class="string">"display:flex; flex-wrap:wrap;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;margin:0 -15px; padding:20px"</span>&gt;
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="best-practice mb-3">
+                        <div class="code-block">
+<span class="comment">&lt;!-- Use Bootstrap utility classes --&gt;</span><br>
+&lt;div class=<span class="string">"row gx-3 p-3"</span>&gt;<br>
+&nbsp;&nbsp;&lt;div class=<span class="string">"col-md-6"</span>&gt;...&lt;/div&gt;<br>
+&lt;/div&gt;<br><br>
+<span class="comment">&lt;!-- Or semantic custom classes --&gt;</span><br>
+&lt;div class=<span class="string">"dashboard-grid"</span>&gt;...&lt;/div&gt;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: REUSABLE GRID PATTERNS (SASS MIXINS)              -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">4. Reusable Grid Patterns</h2>
+            <p class="text-muted mb-3">
+                Create Sass mixins for frequently-used grid patterns.
+            </p>
+
+            <div class="code-block">
+<span class="comment">/**
+ * Auto-fill grid: responsive columns without media queries.
+ * @param {length} $min-width - Minimum column width
+ * @param {length} $gap - Gap between items
+ */</span>
+<span class="keyword">@mixin</span> auto-grid($min-width: <span class="keyword">250px</span>, $gap: <span class="keyword">1rem</span>) {
+&nbsp;&nbsp;display: grid;
+&nbsp;&nbsp;grid-template-columns: repeat(auto-fill, minmax($min-width, <span class="keyword">1fr</span>));
+&nbsp;&nbsp;gap: $gap;
+}
+
+<span class="comment">/**
+ * Responsive dashboard layout.
+ * Sidebar collapses on mobile.
+ */</span>
+<span class="keyword">@mixin</span> dashboard-layout($sidebar-width: <span class="keyword">280px</span>) {
+&nbsp;&nbsp;display: grid;
+&nbsp;&nbsp;grid-template-columns: $sidebar-width <span class="keyword">1fr</span>;
+&nbsp;&nbsp;grid-template-rows: auto <span class="keyword">1fr</span>;
+&nbsp;&nbsp;min-height: <span class="keyword">100vh</span>;
+
+&nbsp;&nbsp;<span class="keyword">@media</span> (max-width: <span class="keyword">767px</span>) {
+&nbsp;&nbsp;&nbsp;&nbsp;grid-template-columns: <span class="keyword">1fr</span>;
+&nbsp;&nbsp;}
+}
+
+<span class="comment">/**
+ * Equal-height card grid using Bootstrap classes.
+ */</span>
+<span class="keyword">@mixin</span> card-grid($columns: <span class="keyword">3</span>) {
+&nbsp;&nbsp;<span class="keyword">@extend</span> .row;
+&nbsp;&nbsp;<span class="keyword">@extend</span> .g-4;
+
+&nbsp;&nbsp;&gt; * {
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">@extend</span> .col-md-#{<span class="keyword">12</span> / $columns};
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">@extend</span> .mb-4;
+&nbsp;&nbsp;}
+}
+            </div>
+
+            <!-- Visual demo of auto-grid mixin -->
+            <h5 class="mt-4">auto-grid() mixin result</h5>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="grid-item"><strong>Auto 1</strong></div>
+                <div class="grid-item"><strong>Auto 2</strong></div>
+                <div class="grid-item"><strong>Auto 3</strong></div>
+                <div class="grid-item"><strong>Auto 4</strong></div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: VERSION UPGRADE STRATEGY                          -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">5. Bootstrap Version Upgrade Strategy</h2>
+            <p class="text-muted mb-3">
+                Plan for Bootstrap upgrades by isolating grid customizations.
+            </p>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <strong>Step 1: Audit</strong>
+                        </div>
+                        <div class="card-body">
+                            <ul class="small">
+                                <li>List all grid class usages</li>
+                                <li>Find deprecated classes</li>
+                                <li>Check custom Sass overrides</li>
+                                <li>Test in all breakpoints</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <strong>Step 2: Migrate</strong>
+                        </div>
+                        <div class="card-body">
+                            <ul class="small">
+                                <li>Update CDN links (or npm package)</li>
+                                <li>Rename changed classes</li>
+                                <li>Update Sass variable names</li>
+                                <li>Run visual regression tests</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <strong>Step 3: Validate</strong>
+                        </div>
+                        <div class="card-body">
+                            <ul class="small">
+                                <li>Cross-browser testing</li>
+                                <li>Responsive layout verification</li>
+                                <li>Accessibility audit</li>
+                                <li>Performance benchmarking</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Migration reference table -->
+            <h5 class="mt-4">Common Migration Changes</h5>
+            <table class="table table-bordered table-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Bootstrap 4</th>
+                        <th>Bootstrap 5</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>mr-auto</code></td>
+                        <td><code>me-auto</code></td>
+                        <td>Logical property rename</td>
+                    </tr>
+                    <tr>
+                        <td><code>ml-auto</code></td>
+                        <td><code>ms-auto</code></td>
+                        <td>Logical property rename</td>
+                    </tr>
+                    <tr>
+                        <td><code>pl-3</code></td>
+                        <td><code>ps-3</code></td>
+                        <td>Logical property rename</td>
+                    </tr>
+                    <tr>
+                        <td><code>pr-3</code></td>
+                        <td><code>pe-3</code></td>
+                        <td>Logical property rename</td>
+                    </tr>
+                    <tr>
+                        <td><code>float-left</code></td>
+                        <td><code>float-start</code></td>
+                        <td>Logical property rename</td>
+                    </tr>
+                    <tr>
+                        <td><code>float-right</code></td>
+                        <td><code>float-end</code></td>
+                        <td>Logical property rename</td>
+                    </tr>
+                    <tr>
+                        <td><code>card-deck</code></td>
+                        <td>Use grid classes</td>
+                        <td>Removed in BS5</td>
+                    </tr>
+                    <tr>
+                        <td><code>media</code></td>
+                        <td>Use flex utilities</td>
+                        <td>Removed in BS5</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: DOCUMENTATION BEST PRACTICES                      -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">6. Documentation Best Practices</h2>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Sass Documentation</h5>
+                    <div class="code-block">
+<span class="comment">/**
+ * Dashboard 2-column layout.
+ *
+ * Creates a fixed sidebar + fluid main content area.
+ * Sidebar collapses to offcanvas on mobile.
+ *
+ * Structure:
+ *   .dashboard-layout
+ *     ├── .dashboard-sidebar (fixed width)
+ *     └── .dashboard-main (fluid width)
+ *
+ * Breakpoints:
+ *   - Mobile: single column, sidebar hidden
+ *   - Tablet+: 280px sidebar + fluid main
+ *
+ * @example
+ *   &lt;div class="dashboard-layout"&gt;
+ *     &lt;aside class="dashboard-sidebar"&gt;...&lt;/aside&gt;
+ *     &lt;main class="dashboard-main"&gt;...&lt;/main&gt;
+ *   &lt;/div&gt;
+ */</span>
+.dashboard-layout {
+&nbsp;&nbsp;<span class="keyword">@include</span> dashboard-layout(<span class="keyword">280px</span>);
+}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>HTML Documentation</h5>
+                    <div class="code-block">
+<span class="comment">&lt;!--
+  Product Grid - 3-column responsive layout
+
+  Behavior:
+  - Mobile: single column stack
+  - Tablet: 2 columns
+  - Desktop: 3 columns
+
+  Dependencies:
+  - Bootstrap 5 grid system
+  - Product card component
+
+  Data attributes:
+  - data-grid="products" - identifies grid
+  - data-count="12" - item count for pagination
+--&gt;</span>
+&lt;div
+&nbsp;&nbsp;class=<span class="string">"row g-4"</span>
+&nbsp;&nbsp;data-grid=<span class="string">"products"</span>
+&nbsp;&nbsp;data-count=<span class="string">"12"</span>
+&gt;
+&nbsp;&nbsp;&lt;div class=<span class="string">"col-12 col-md-6 col-lg-4"</span>&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">&lt;!-- Product card component --&gt;</span>
+&nbsp;&nbsp;&lt;/div&gt;
+&lt;/div&gt;
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7: MAINTENANCE CHECKLIST                             -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">7. Maintenance Checklist</h2>
+
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <strong>Weekly</strong>
+                        </div>
+                        <div class="card-body small">
+                            <ul>
+                                <li>Review PR grid changes</li>
+                                <li>Check for inline styles</li>
+                                <li>Verify responsive behavior</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <strong>Monthly</strong>
+                        </div>
+                        <div class="card-body small">
+                            <ul>
+                                <li>Run visual regression tests</li>
+                                <li>Audit unused grid classes</li>
+                                <li>Review custom Sass</li>
+                                <li>Test across browsers</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning">
+                            <strong>Quarterly</strong>
+                        </div>
+                        <div class="card-body small">
+                            <ul>
+                                <li>Check Bootstrap updates</li>
+                                <li>Accessibility audit</li>
+                                <li>Performance review</li>
+                                <li>Refactor anti-patterns</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-danger text-white">
+                            <strong>Yearly</strong>
+                        </div>
+                        <div class="card-body small">
+                            <ul>
+                                <li>Major version upgrade</li>
+                                <li>Full codebase audit</li>
+                                <li>Documentation refresh</li>
+                                <li>Team training update</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="mt-4 mb-5 pt-3 border-top">
+            <p class="text-muted text-center">
+                <small>Grid Maintenance Guide - Bootstrap 5.3.3</small>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

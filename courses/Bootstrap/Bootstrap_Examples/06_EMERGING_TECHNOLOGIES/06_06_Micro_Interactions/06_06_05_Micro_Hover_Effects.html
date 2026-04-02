@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<!-- ====================================================================
+     06_06_05_Micro_Hover_Effects.html
+     
+     PURPOSE: Hover effect micro interactions with Bootstrap
+     TOPICS:  Card hovers, button effects, image overlays,
+              tooltip enhancements, link animations, focus effects
+     
+     Hover effects provide visual affordance - they tell users
+     "this is interactive." They should be subtle, fast, and
+     always have a non-hover fallback for touch devices.
+     ==================================================================== -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro Hover Effects - Bootstrap Mastery</title>
+    
+    <link 
+        rel="stylesheet" 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aVf636N"
+        crossorigin="anonymous">
+    
+    <style>
+        /* ==============================================================
+           HOVER EFFECT FOUNDATIONS
+           
+           All hover effects use CSS transitions for smooth animation.
+           Timing: 150-250ms is ideal for hover feedback.
+           
+           IMPORTANT: Hover effects should also work on :focus for
+           keyboard accessibility. Use :focus-visible for keyboard-only
+           focus styles that don't trigger on click.
+           ============================================================== */
+        
+        /* ==============================================================
+           1. CARD LIFT EFFECT
+           
+           Card rises on hover with enhanced shadow.
+           Creates a sense of depth and interactivity.
+           ============================================================== */
+        .card-lift {
+            transition: transform 200ms ease, box-shadow 200ms ease;
+        }
+        
+        .card-lift:hover,
+        .card-lift:focus-within {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* ==============================================================
+           2. CARD ZOOM EFFECT
+           
+           Image inside card zooms slightly on hover.
+           Draws attention to image-based cards (products, galleries).
+           ============================================================== */
+        .card-zoom .card-img-wrapper {
+            overflow: hidden; /* Clips the zoomed image */
+        }
+        
+        .card-zoom img {
+            transition: transform 300ms ease;
+        }
+        
+        .card-zoom:hover img {
+            transform: scale(1.08);
+        }
+        
+        /* ==============================================================
+           3. BORDER GLOW EFFECT
+           
+           Subtle colored border appears on hover.
+           Works well for cards, list items, and interactive areas.
+           ============================================================== */
+        .border-glow {
+            border: 2px solid transparent;
+            transition: border-color 200ms ease, box-shadow 200ms ease;
+        }
+        
+        .border-glow:hover,
+        .border-glow:focus-within {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+        }
+        
+        /* ==============================================================
+           4. SLIDE REVEAL EFFECT
+           
+           Hidden content slides up from bottom on hover.
+           Common pattern for image overlays and card footers.
+           ============================================================== */
+        .slide-reveal {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-reveal .slide-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: white;
+            padding: 2rem 1rem 1rem;
+            transform: translateY(100%);
+            transition: transform 250ms ease;
+        }
+        
+        .slide-reveal:hover .slide-overlay,
+        .slide-reveal:focus-within .slide-overlay {
+            transform: translateY(0);
+        }
+        
+        /* ==============================================================
+           5. ICON ROTATE ON HOVER
+           
+           Icons rotate or transform on parent hover.
+           Common for arrows, chevrons, and action icons.
+           ============================================================== */
+        .icon-rotate .icon {
+            transition: transform 200ms ease;
+            display: inline-block;
+        }
+        
+        .icon-rotate:hover .icon {
+            transform: rotate(90deg);
+        }
+        
+        .icon-slide-right .icon {
+            transition: transform 200ms ease;
+            display: inline-block;
+        }
+        
+        .icon-slide-right:hover .icon {
+            transform: translateX(4px);
+        }
+        
+        /* ==============================================================
+           6. UNDERLINE ANIMATION
+           
+           Link underline grows from center on hover.
+           More elegant than instant underline appearance.
+           ============================================================== */
+        .link-underline-animated {
+            position: relative;
+            text-decoration: none;
+        }
+        
+        .link-underline-animated::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: currentColor;
+            transition: width 200ms ease, left 200ms ease;
+        }
+        
+        .link-underline-animated:hover::after,
+        .link-underline-animated:focus-visible::after {
+            width: 100%;
+            left: 0;
+        }
+        
+        /* ==============================================================
+           7. BUTTON FILL EFFECT
+           
+           Background fills from one side on hover.
+           Creates an engaging transition without changing size.
+           ============================================================== */
+        .btn-fill-effect {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            transition: color 200ms ease;
+        }
+        
+        .btn-fill-effect::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: currentColor;
+            opacity: 0.1;
+            transition: width 250ms ease;
+            z-index: -1;
+        }
+        
+        .btn-fill-effect:hover::before,
+        .btn-fill-effect:focus-visible::before {
+            width: 100%;
+        }
+        
+        /* ==============================================================
+           8. IMAGE OVERLAY WITH ICON
+           
+           Dark overlay with action icon appears on image hover.
+           Standard pattern for image galleries and media cards.
+           ============================================================== */
+        .img-overlay {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .img-overlay img {
+            transition: filter 250ms ease;
+        }
+        
+        .img-overlay .overlay-content {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 250ms ease;
+        }
+        
+        .img-overlay:hover img,
+        .img-overlay:focus-within img {
+            filter: brightness(0.7);
+        }
+        
+        .img-overlay:hover .overlay-content,
+        .img-overlay:focus-within .overlay-content {
+            opacity: 1;
+        }
+        
+        .overlay-content .icon-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transform: scale(0.5);
+            transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .img-overlay:hover .overlay-content .icon-circle {
+            transform: scale(1);
+        }
+        
+        /* ==============================================================
+           9. LIST ITEM HIGHLIGHT
+           
+           Entire row highlights on hover with left accent bar.
+           Common for navigation lists, settings, file browsers.
+           ============================================================== */
+        .list-highlight .list-group-item {
+            transition: background-color 150ms ease, border-color 150ms ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .list-highlight .list-group-item:hover,
+        .list-highlight .list-group-item:focus {
+            background-color: #f8f9fa;
+            border-left-color: #0d6efd;
+        }
+        
+        /* ==============================================================
+           10. FOCUS-VISIBLE STYLES
+           
+           Keyboard-only focus styles that don't appear on mouse click.
+           This is the modern approach to accessible focus indicators.
+           ============================================================== */
+        .focus-ring-visible:focus-visible {
+            outline: 2px solid #0d6efd;
+            outline-offset: 2px;
+        }
+        
+        /* ==============================================================
+           TOUCH DEVICE FALLBACK
+           
+           @media (hover: none) targets devices without hover capability.
+           Disable hover effects on touch devices to prevent "sticky" hovers.
+           ============================================================== */
+        @media (hover: none) {
+            .card-lift:hover {
+                transform: none;
+            }
+            
+            .card-zoom:hover img {
+                transform: none;
+            }
+            
+            .slide-reveal .slide-overlay {
+                transform: translateY(0);
+            }
+        }
+        
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Demo helper */
+        .demo-card-img {
+            height: 180px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">🖱️ Hover Effects</a>
+        </div>
+    </nav>
+
+    <header class="bg-dark text-white py-5">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Micro Hover Effects</h1>
+            <p class="lead">Interactive hover patterns with touch device fallbacks</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- 1. Card Lift -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Card Lift Effect</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card card-lift" tabindex="0">
+                        <div class="demo-card-img" style="background:linear-gradient(135deg,#667eea,#764ba2)">🚀</div>
+                        <div class="card-body">
+                            <h5 class="card-title">Lift on Hover</h5>
+                            <p class="card-text small text-muted">Card rises with enhanced shadow.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-lift" tabindex="0">
+                        <div class="demo-card-img" style="background:linear-gradient(135deg,#f093fb,#f5576c)">⚡</div>
+                        <div class="card-body">
+                            <h5 class="card-title">Interactive Card</h5>
+                            <p class="card-text small text-muted">Tab-focusable for keyboard users.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-lift" tabindex="0">
+                        <div class="demo-card-img" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">🎨</div>
+                        <div class="card-body">
+                            <h5 class="card-title">Depth Effect</h5>
+                            <p class="card-text small text-muted">Shadow creates visual depth.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Card Zoom -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Image Zoom on Hover</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card card-zoom">
+                        <div class="card-img-wrapper">
+                            <div class="demo-card-img" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)">🏔️</div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">Mountain View</h5>
+                            <p class="card-text small">Image zooms subtly on hover.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-zoom">
+                        <div class="card-img-wrapper">
+                            <div class="demo-card-img" style="background:linear-gradient(135deg,#ffecd2,#fcb69f)">🌊</div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">Ocean Breeze</h5>
+                            <p class="card-text small">Overflow hidden clips the zoom.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-zoom">
+                        <div class="card-img-wrapper">
+                            <div class="demo-card-img" style="background:linear-gradient(135deg,#a1c4fd,#c2e9fb)">🌲</div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">Forest Trail</h5>
+                            <p class="card-text small">300ms transition for smooth feel.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Border Glow -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Border Glow Effect</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card border-glow p-3" tabindex="0">
+                        <h6>Hover for Glow</h6>
+                        <p class="small text-muted mb-0">Blue border + soft shadow appears.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-glow p-3" tabindex="0">
+                        <h6>Interactive Area</h6>
+                        <p class="small text-muted mb-0">Works with keyboard focus too.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-glow p-3" tabindex="0">
+                        <h6>Click Me</h6>
+                        <p class="small text-muted mb-0">Focus-within keeps glow when clicked.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Slide Reveal -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Slide Reveal Overlay</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="slide-reveal rounded overflow-hidden" style="height:250px" tabindex="0">
+                        <div class="demo-card-img h-100" style="background:linear-gradient(135deg,#667eea,#764ba2)">📸</div>
+                        <div class="slide-overlay">
+                            <h5>Photo Gallery</h5>
+                            <p class="small mb-2">Overlay slides up from bottom on hover.</p>
+                            <button class="btn btn-light btn-sm">View Album</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="slide-reveal rounded overflow-hidden" style="height:250px" tabindex="0">
+                        <div class="demo-card-img h-100" style="background:linear-gradient(135deg,#f093fb,#f5576c)">🎵</div>
+                        <div class="slide-overlay">
+                            <h5>Playlist</h5>
+                            <p class="small mb-2">Hidden content revealed on interaction.</p>
+                            <button class="btn btn-light btn-sm">Play Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Icon Animations -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Icon Animations</h2>
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action icon-rotate d-flex justify-content-between align-items-center">
+                    Settings
+                    <span class="icon">⚙️</span>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action icon-slide-right d-flex justify-content-between align-items-center">
+                    View All Products
+                    <span class="icon">→</span>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action icon-slide-right d-flex justify-content-between align-items-center">
+                    Download Report
+                    <span class="icon">↓</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- 6. Underline Animation -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Animated Link Underlines</h2>
+            <nav class="nav gap-4">
+                <a href="#" class="nav-link link-underline-animated text-dark fw-semibold">Home</a>
+                <a href="#" class="nav-link link-underline-animated text-dark fw-semibold">Products</a>
+                <a href="#" class="nav-link link-underline-animated text-dark fw-semibold">About</a>
+                <a href="#" class="nav-link link-underline-animated text-dark fw-semibold">Contact</a>
+            </nav>
+        </section>
+
+        <!-- 7. Image Overlay -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Image Overlay with Action</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="img-overlay rounded" tabindex="0">
+                        <div class="demo-card-img" style="height:200px;background:linear-gradient(135deg,#11998e,#38ef7d)">🖼️</div>
+                        <div class="overlay-content">
+                            <div class="icon-circle">🔍</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="img-overlay rounded" tabindex="0">
+                        <div class="demo-card-img" style="height:200px;background:linear-gradient(135deg,#fc4a1a,#f7b733)">📷</div>
+                        <div class="overlay-content">
+                            <div class="icon-circle">❤️</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="img-overlay rounded" tabindex="0">
+                        <div class="demo-card-img" style="height:200px;background:linear-gradient(135deg,#8E2DE2,#4A00E0)">🎬</div>
+                        <div class="overlay-content">
+                            <div class="icon-circle">▶</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. List Highlight -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. List Item Highlight</h2>
+            <div class="list-group list-highlight">
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                    <span class="badge bg-primary rounded-pill">12</span>
+                    <div>
+                        <strong>Inbox</strong>
+                        <div class="small text-muted">You have 12 unread messages</div>
+                    </div>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                    <span class="badge bg-success rounded-pill">3</span>
+                    <div>
+                        <strong>Orders</strong>
+                        <div class="small text-muted">3 orders shipped today</div>
+                    </div>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+                    <span class="badge bg-warning rounded-pill">!</span>
+                    <div>
+                        <strong>Alerts</strong>
+                        <div class="small text-muted">System notification pending</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- 9. Button Fill Effects -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">9. Button Fill Effects</h2>
+            <div class="d-flex gap-3 flex-wrap">
+                <button class="btn btn-outline-primary btn-fill-effect focus-ring-visible">Primary</button>
+                <button class="btn btn-outline-success btn-fill-effect focus-ring-visible">Success</button>
+                <button class="btn btn-outline-danger btn-fill-effect focus-ring-visible">Danger</button>
+                <button class="btn btn-outline-dark btn-fill-effect focus-ring-visible">Dark</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">Micro Hover Effects - Bootstrap Mastery Ecosystem</p>
+            <small class="text-muted">06_06_05_Micro_Hover_Effects.html</small>
+        </div>
+    </footer>
+
+    <script 
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLSfVQmvFPwCq8mFpDrNvbTNpsMxMXJLZl1FTERFBzNEk9"
+        crossorigin="anonymous">
+    </script>
+</body>
+</html>

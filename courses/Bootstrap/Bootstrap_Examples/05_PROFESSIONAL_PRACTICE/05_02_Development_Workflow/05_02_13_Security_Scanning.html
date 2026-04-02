@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     05_02_13_Security_Scanning.html
+     Topic: npm audit, Snyk, SAST, Dependency Scanning
+     ============================================================
+     Security scanning identifies vulnerabilities in code
+     and dependencies. Automated scanning in CI/CD prevents
+     known vulnerabilities from reaching production.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Scanning - Bootstrap Development Workflow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .config-block {
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.82rem;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.5;
+        }
+        .severity-critical { border-left: 4px solid #dc3545; }
+        .severity-high { border-left: 4px solid #fd7e14; }
+        .severity-moderate { border-left: 4px solid #ffc107; }
+        .severity-low { border-left: 4px solid #198754; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Security</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="#npm-audit">npm audit</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#snyk">Snyk</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#sast">SAST</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#ci">CI Integration</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Security Scanning</h1>
+            <p class="lead">npm audit, Snyk, SAST, and dependency vulnerability scanning for Bootstrap projects.</p>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#" class="text-white-50">Workflow</a></li>
+                    <li class="breadcrumb-item active text-white">Security</li>
+                </ol>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- SECTION 1: NPM AUDIT -->
+        <section id="npm-audit" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">1. npm audit</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Running npm audit</h5>
+                    <div class="config-block">
+<span class="comment"># Basic audit - shows vulnerabilities</span>
+npm audit
+
+<span class="comment"># JSON output for CI processing</span>
+npm audit --json > audit-results.json
+
+<span class="comment"># Show only critical/high vulnerabilities</span>
+npm audit --audit-level=high
+
+<span class="comment"># Auto-fix vulnerabilities</span>
+npm audit fix
+
+<span class="comment"># Force fix (may include breaking changes)</span>
+npm audit fix --force
+
+<span class="comment"># Dry run - see what would change</span>
+npm audit fix --dry-run</div>
+
+                    <h5 class="mt-4 mb-3">Audit Report Example</h5>
+                    <div class="card severity-critical mb-2">
+                        <div class="card-body py-2">
+                            <strong class="text-danger">Critical</strong>
+                            <code class="ms-2">lodash &lt; 4.17.21</code>
+                            <p class="mb-0 small text-muted">Prototype Pollution</p>
+                        </div>
+                    </div>
+                    <div class="card severity-high mb-2">
+                        <div class="card-body py-2">
+                            <strong style="color:#fd7e14">High</strong>
+                            <code class="ms-2">node-fetch &lt; 2.6.7</code>
+                            <p class="mb-0 small text-muted">Information Exposure</p>
+                        </div>
+                    </div>
+                    <div class="card severity-moderate mb-2">
+                        <div class="card-body py-2">
+                            <strong class="text-warning">Moderate</strong>
+                            <code class="ms-2">postcss &lt; 8.4.31</code>
+                            <p class="mb-0 small text-muted">Line Return Parsing</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">CI Integration</h5>
+                    <div class="config-block">
+<span class="comment"># npm scripts for auditing</span>
+{
+  <span class="string">"scripts"</span>: {
+    <span class="string">"audit"</span>: <span class="string">"npm audit"</span>,
+    <span class="string">"audit:fix"</span>: <span class="string">"npm audit fix"</span>,
+    <span class="string">"audit:ci"</span>: <span class="string">"npm audit --audit-level=high"</span>,
+    <span class="string">"audit:json"</span>: <span class="string">"npm audit --json > reports/audit.json"</span>
+  }
+}</div>
+
+                    <h5 class="mt-4 mb-3">GitHub Actions</h5>
+                    <div class="config-block">
+<span class="comment"># .github/workflows/security.yml</span>
+name: Security Audit
+on:
+  schedule:
+    - cron: <span class="string">'0 8 * * 1'</span>  <span class="comment"># Weekly Monday 8am</span>
+  push:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      <span class="comment"># Fail if high/critical found</span></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 2: SNYK -->
+        <section id="snyk" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">2. Snyk Security</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Snyk CLI</h5>
+                    <div class="config-block">
+<span class="comment"># Install Snyk</span>
+npm install -g snyk
+
+<span class="comment"># Authenticate</span>
+snyk auth
+
+<span class="comment"># Test for vulnerabilities</span>
+snyk test
+
+<span class="comment"># Test specific severity</span>
+snyk test --severity-threshold=high
+
+<span class="comment"># Monitor project (sends to dashboard)</span>
+snyk monitor
+
+<span class="comment"># Fix vulnerabilities</span>
+snyk fix
+
+<span class="comment"># Test and ignore specific vuln</span>
+snyk ignore --id=<span class="string">"SNYK-JS-LODASH-567746"</span></div>
+
+                    <h5 class="mt-4 mb-3">.snyk Policy File</h5>
+                    <div class="config-block">
+<span class="comment"># .snyk</span>
+version: v1.25.0
+ignore: {}
+patch: {}
+language-settings:
+  javascript:
+    <span class="comment"># Ignore specific vulnerability for 30 days</span>
+    ignore:
+      SNYK-JS-LODASH-567746:
+        - <span class="string">'*'</span>:
+            reason: <span class="string">'Not exploitable in our context'</span>
+            expires: 2025-12-31T00:00:00.000Z</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Snyk GitHub Action</h5>
+                    <div class="config-block">
+<span class="comment"># .github/workflows/snyk.yml</span>
+name: Snyk Security
+on: [push, pull_request]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+      
+      <span class="comment"># Or use Snyk CLI directly</span>
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx snyk test --severity-threshold=high
+      - run: npx snyk monitor</div>
+
+                    <h5 class="mt-4 mb-3">Snyk vs npm audit</h5>
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-dark">
+                            <tr><th>Feature</th><th>npm audit</th><th>Snyk</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Cost</td><td>Free</td><td>Free tier available</td></tr>
+                            <tr><td>DB Coverage</td><td>npm advisory</td><td>Larger database</td></tr>
+                            <tr><td>Auto-fix</td><td>Basic</td><td>Smart fixes</td></tr>
+                            <tr><td>Dashboard</td><td>No</td><td>Yes</td></tr>
+                            <tr><td>License check</td><td>No</td><td>Yes</td></tr>
+                            <tr><td>Container scan</td><td>No</td><td>Yes</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 3: SAST -->
+        <section id="sast" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">3. Static Analysis (SAST)</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Security-Focused ESLint Rules</h5>
+                    <div class="config-block">
+npm install --save-dev eslint-plugin-security
+
+<span class="comment">// eslint.config.js</span>
+<span class="keyword">import</span> security <span class="keyword">from</span> <span class="string">'eslint-plugin-security'</span>;
+
+<span class="keyword">export default</span> [
+  {
+    plugins: { security },
+    rules: {
+      <span class="comment">// Detect unsafe regular expressions</span>
+      <span class="string">'security/detect-unsafe-regex'</span>: <span class="string">'error'</span>,
+      <span class="comment">// Detect eval() usage</span>
+      <span class="string">'security/detect-eval-with-expression'</span>: <span class="string">'error'</span>,
+      <span class="comment">// Detect non-literal require()</span>
+      <span class="string">'security/detect-non-literal-require'</span>: <span class="string">'warn'</span>,
+      <span class="comment">// Detect object injection</span>
+      <span class="string">'security/detect-object-injection'</span>: <span class="string">'warn'</span>,
+      <span class="comment">// Detect possible timing attacks</span>
+      <span class="string">'security/detect-possible-timing-attacks'</span>: <span class="string">'warn'</span>,
+      <span class="comment">// Detect XSS in HTML</span>
+      <span class="string">'security/detect-bidi-characters'</span>: <span class="string">'error'</span>,
+    },
+  },
+];</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Secret Detection</h5>
+                    <div class="config-block">
+<span class="comment"># detect-secrets - find hardcoded secrets</span>
+pip install detect-secrets
+
+<span class="comment"># Create baseline</span>
+detect-secrets scan > .secrets.baseline
+
+<span class="comment"># Scan for new secrets</span>
+detect-secrets scan --baseline .secrets.baseline
+
+<span class="comment"># Pre-commit hook integration</span>
+<span class="comment"># .husky/pre-commit</span>
+detect-secrets-hook .secrets.baseline</div>
+
+                    <h5 class="mt-4 mb-3">Security Checklist</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item">No hardcoded API keys or secrets</li>
+                        <li class="list-group-item">No <code>eval()</code> or <code>innerHTML</code> with user input</li>
+                        <li class="list-group-item">All dependencies audited</li>
+                        <li class="list-group-item">Content Security Policy configured</li>
+                        <li class="list-group-item">HTTPS enforced in production</li>
+                        <li class="list-group-item">XSS protection headers set</li>
+                        <li class="list-group-item">CORS properly configured</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 4: CI INTEGRATION -->
+        <section id="ci" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">4. Complete Security CI Pipeline</h2>
+            
+            <div class="config-block">
+<span class="comment"># .github/workflows/security.yml</span>
+name: Security Scanning
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: <span class="string">'0 6 * * 1'</span>  <span class="comment"># Weekly Monday 6am</span>
+
+jobs:
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      - run: npm ci
+      - name: npm audit
+        run: npm audit --audit-level=high
+      - name: Snyk test
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  secret-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+
+  code-scan:
+    name: Code Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: ESLint Security
+        run: npx eslint src/ --config eslint.config.js
+
+  license-scan:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Check licenses
+        run: npx license-checker --failOn <span class="string">"GPL-3.0;AGPL-3.0"</span></div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="text-muted mb-0">Bootstrap 5.3.3 Development Workflow - Module 05_02_13</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ========================================== -->
+    <!-- 02_01_04: Button Performance Optimization   -->
+    <!-- Render performance, CSS efficiency, DOM     -->
+    <!-- optimization, paint reduction              -->
+    <!-- ========================================== -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02_01_04 - Button Performance Optimization</title>
+
+    <!-- Preload critical resources for faster rendering -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" as="style">
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ========================================== */
+        /* PERFORMANCE OPTIMIZATION CSS               */
+        /* ========================================== */
+
+        /* GPU-accelerated transforms for animations */
+        /* Using transform instead of margin/padding avoids layout reflow */
+        .btn-gpu-accelerated {
+            /* will-change hints browser to optimize this element */
+            will-change: transform;
+            /* Force GPU layer creation */
+            transform: translateZ(0);
+            transition: transform 0.15s ease;
+        }
+        .btn-gpu-accelerated:hover {
+            /* translateY is GPU-composited, doesn't trigger layout */
+            transform: translateY(-2px) translateZ(0);
+        }
+        .btn-gpu-accelerated:active {
+            transform: translateY(0) translateZ(0);
+        }
+
+        /* Efficient box-shadow: used instead of border for hover effects */
+        /* Shadows are composited on GPU, borders trigger layout */
+        .btn-shadow-optimize {
+            box-shadow: none;
+            transition: box-shadow 0.15s ease;
+        }
+        .btn-shadow-optimize:hover {
+            /* Single shadow property, no layout shift */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Contain layout for button groups with many items */
+        .btn-group-contain {
+            /* contain: tells browser this element's internals don't affect outside */
+            contain: layout style;
+        }
+
+        /* CSS custom properties for efficient theming */
+        :root {
+            --btn-primary-bg: #0d6efd;
+            --btn-primary-hover: #0b5ed7;
+            --btn-transition-duration: 0.15s;
+        }
+
+        .btn-css-var {
+            background-color: var(--btn-primary-bg);
+            border-color: var(--btn-primary-bg);
+            transition: background-color var(--btn-transition-duration) ease;
+        }
+        .btn-css-var:hover {
+            background-color: var(--btn-primary-hover);
+            border-color: var(--btn-primary-hover);
+        }
+
+        /* Efficient skeleton loading with single gradient */
+        .btn-skeleton {
+            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s infinite linear;
+        }
+        @keyframes skeleton-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Efficient ripple effect using pseudo-element */
+        .btn-ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-ripple::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.3) 10%, transparent 10%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10);
+            opacity: 0;
+            transition: transform 0.5s, opacity 0.5s;
+        }
+        .btn-ripple:active::after {
+            transform: scale(0);
+            opacity: 1;
+            transition: 0s;
+        }
+
+        /* Efficient batch-rendered button list */
+        .btn-batch-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            /* contain prevents reflow of parent when children change */
+            contain: layout;
+        }
+
+        /* Reduced motion: respect user preference */
+        @media (prefers-reduced-motion: reduce) {
+            .btn-gpu-accelerated,
+            .btn-shadow-optimize,
+            .btn-ripple::after {
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold text-primary mb-4">Button Performance Optimization</h1>
+        <p class="lead text-muted mb-5">
+            Techniques for efficient button rendering, CSS optimization, and paint reduction.
+        </p>
+
+        <!-- ========================================== -->
+        <!-- SECTION 1: GPU-ACCELERATED ANIMATIONS      -->
+        /* Using transform/opacity for animations     */
+        /* avoids layout reflow and paint cycles.     */
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. GPU-Accelerated Hover Effects</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    These buttons use <code>transform</code> instead of <code>margin/padding</code> changes
+                    on hover. Transform is GPU-composited and does not trigger layout reflow.
+                </p>
+                <!-- GPU-accelerated button: transform only, no layout shift -->
+                <button type="button" class="btn btn-primary btn-gpu-accelerated me-2">
+                    GPU Hover (lift)
+                </button>
+                <!-- Shadow-based hover: also GPU composited -->
+                <button type="button" class="btn btn-outline-primary btn-shadow-optimize me-2">
+                    Shadow Hover
+                </button>
+                <!-- CSS custom property button -->
+                <button type="button" class="btn btn-css-var text-white me-2">
+                    CSS Variable Themed
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 2: CONTAIN PROPERTY                -->
+        <!-- CSS contain isolates rendering of button  -->
+        <!-- groups, preventing cascading reflows.      -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. CSS Contain for Button Groups</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    The <code>contain: layout style</code> property tells the browser that changes
+                    inside the group won't affect elements outside it.
+                </p>
+                <!-- Large button group with containment -->
+                <div class="btn-group-contain btn-group" role="group">
+                    <button type="button" class="btn btn-primary">1</button>
+                    <button type="button" class="btn btn-primary">2</button>
+                    <button type="button" class="btn btn-primary">3</button>
+                    <button type="button" class="btn btn-primary">4</button>
+                    <button type="button" class="btn btn-primary">5</button>
+                    <button type="button" class="btn btn-primary">6</button>
+                    <button type="button" class="btn btn-primary">7</button>
+                    <button type="button" class="btn btn-primary">8</button>
+                    <button type="button" class="btn btn-primary">9</button>
+                    <button type="button" class="btn btn-primary">10</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 3: EFFICIENT RIPPLE EFFECT        -->
+        <!-- Material Design-style ripple using CSS    -->
+        <!-- only - no JavaScript animation frames.    -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Efficient Ripple Effect (CSS-Only)</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    Click these buttons to see the ripple. Pure CSS implementation using
+                    <code>::after</code> pseudo-element and <code>radial-gradient</code>.
+                </p>
+                <button type="button" class="btn btn-primary btn-ripple me-2">Ripple Primary</button>
+                <button type="button" class="btn btn-success btn-ripple me-2">Ripple Success</button>
+                <button type="button" class="btn btn-danger btn-ripple me-2">Ripple Danger</button>
+                <button type="button" class="btn btn-outline-dark btn-ripple">Ripple Outline</button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 4: EFFICIENT EVENT DELEGATION      -->
+        <!-- Instead of attaching listeners to each    -->
+        <!-- button, use one listener on parent.        -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Event Delegation (Fewer Event Listeners)</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    One event listener on the container handles all button clicks.
+                    Reduces memory usage and improves initialization time.
+                </p>
+                <!-- Container with single delegated click handler -->
+                <div id="delegatedButtons" class="btn-batch-list">
+                    <button type="button" class="btn btn-outline-primary" data-action="save">Save</button>
+                    <button type="button" class="btn btn-outline-success" data-action="approve">Approve</button>
+                    <button type="button" class="btn btn-outline-danger" data-action="delete">Delete</button>
+                    <button type="button" class="btn btn-outline-warning" data-action="archive">Archive</button>
+                    <button type="button" class="btn btn-outline-info" data-action="share">Share</button>
+                    <button type="button" class="btn btn-outline-secondary" data-action="print">Print</button>
+                </div>
+                <div id="delegatedResult" class="mt-2 text-muted small"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 5: BATCH DOM UPDATES              -->
+        <!-- Creating many buttons efficiently using   -->
+        <!-- DocumentFragment and requestAnimationFrame -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Batch DOM Rendering</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    Buttons are rendered using DocumentFragment to minimize reflows.
+                    All elements are created off-DOM then appended in one operation.
+                </p>
+                <button class="btn btn-primary mb-3" onclick="renderBatchButtons()">
+                    Render 50 Buttons (Batch Mode)
+                </button>
+                <button class="btn btn-secondary mb-3 ms-2" onclick="renderSlowButtons()">
+                    Render 50 Buttons (Naive Mode)
+                </button>
+                <div id="batchContainer" class="btn-batch-list"></div>
+                <div id="renderTime" class="mt-2 text-muted small"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 6: PASSIVE EVENT LISTENERS        -->
+        <!-- Using passive listeners for scroll/touch  -->
+        <!-- events to improve scroll performance.     -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Passive Touch Event Listeners</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    Touch event listeners on buttons use <code>{ passive: true }</code> to
+                    tell the browser they won't call <code>preventDefault()</code>, enabling smoother scrolling.
+                </p>
+                <button type="button" class="btn btn-primary btn-lg" id="passiveTouchBtn">
+                    Touch Me (Passive Listener)
+                </button>
+                <div id="touchInfo" class="mt-2 text-muted small"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 7: CSS CONTAINMENT FOR SKELETONS  -->
+        <!-- Skeleton loading states using efficient   -->
+        <!-- CSS animations.                           -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Skeleton Loading States</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    Skeleton buttons use a single gradient animation. The browser can
+                    optimize this as a paint-only operation.
+                </p>
+                <button type="button" class="btn btn-skeleton me-2" style="width:100px; height:38px; border:none; border-radius:4px;" disabled></button>
+                <button type="button" class="btn btn-skeleton me-2" style="width:140px; height:38px; border:none; border-radius:4px;" disabled></button>
+                <button type="button" class="btn btn-skeleton" style="width:80px; height:38px; border:none; border-radius:4px;" disabled></button>
+
+                <div class="mt-3">
+                    <button class="btn btn-primary" onclick="toggleSkeletons()">Toggle Skeleton / Real</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 8: REDUCED MOTION SUPPORT        -->
+        <!-- Respecting prefers-reduced-motion media   -->
+        <!-- query for users who prefer less animation. -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Reduced Motion Support</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    All animations in this page respect <code>prefers-reduced-motion: reduce</code>.
+                    Users with this OS setting see no animated transitions.
+                </p>
+                <button type="button" class="btn btn-primary btn-gpu-accelerated me-2">
+                    Animated (respects reduced motion)
+                </button>
+                <span class="badge bg-info" id="motionStatus">Checking...</span>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 9: MEMORY-EFFICIENT TOGGLE STATES -->
+        <!-- Using CSS classes instead of inline styles -->
+        <!-- for better memory and rendering efficiency. -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">9. Memory-Efficient State Management</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    State changes use CSS class toggling (<code>classList.toggle</code>)
+                    instead of inline style manipulation. This is more memory-efficient
+                    and allows the browser to cache style computations.
+                </p>
+                <!-- Efficient toggle using CSS classes -->
+                <div class="btn-group" role="group" id="efficientToggle">
+                    <button type="button" class="btn btn-outline-primary" data-value="small">S</button>
+                    <button type="button" class="btn btn-outline-primary active" data-value="medium">M</button>
+                    <button type="button" class="btn btn-outline-primary" data-value="large">L</button>
+                </div>
+                <span class="ms-2 text-muted small" id="toggleValue">Selected: medium</span>
+            </div>
+        </section>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        /* ========================================== */
+        /* PERFORMANCE-OPTIMIZED JAVASCRIPT           */
+        /* ========================================== */
+
+        /* Event delegation: single listener handles all buttons */
+        document.getElementById('delegatedButtons').addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-action');
+            document.getElementById('delegatedResult').textContent =
+                'Action triggered via delegation: ' + action + ' (no individual listener attached)';
+        });
+
+        /* Batch rendering using DocumentFragment */
+        function renderBatchButtons() {
+            const container = document.getElementById('batchContainer');
+            container.innerHTML = '';
+            const start = performance.now();
+
+            /* Create DocumentFragment - all elements built off-DOM */
+            const fragment = document.createDocumentFragment();
+            for (let i = 1; i <= 50; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-outline-primary';
+                btn.textContent = i;
+                fragment.appendChild(btn);
+            }
+
+            /* Single DOM append - only one reflow */
+            container.appendChild(fragment);
+            const elapsed = (performance.now() - start).toFixed(2);
+            document.getElementById('renderTime').textContent =
+                'Batch render: ' + elapsed + 'ms (50 buttons, 1 DOM operation)';
+        }
+
+        /* Naive rendering: appending each button individually */
+        function renderSlowButtons() {
+            const container = document.getElementById('batchContainer');
+            container.innerHTML = '';
+            const start = performance.now();
+
+            for (let i = 1; i <= 50; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-outline-secondary';
+                btn.textContent = i;
+                /* Each appendChild triggers a potential reflow */
+                container.appendChild(btn);
+            }
+            const elapsed = (performance.now() - start).toFixed(2);
+            document.getElementById('renderTime').textContent =
+                'Naive render: ' + elapsed + 'ms (50 buttons, 50 DOM operations)';
+        }
+
+        /* Passive touch listener for scroll performance */
+        const touchBtn = document.getElementById('passiveTouchBtn');
+        if (touchBtn) {
+            touchBtn.addEventListener('touchstart', function(e) {
+                document.getElementById('touchInfo').textContent =
+                    'Touch detected (passive listener - no scroll jank)';
+            }, { passive: true });
+        }
+
+        /* Toggle skeleton loading demo */
+        let skeletonsVisible = true;
+        function toggleSkeletons() {
+            const container = document.querySelectorAll('.btn-skeleton');
+            skeletonsVisible = !skeletonsVisible;
+            container.forEach(btn => {
+                if (skeletonsVisible) {
+                    btn.style.width = btn.style.width;
+                    btn.disabled = true;
+                    btn.className = 'btn btn-skeleton me-2';
+                } else {
+                    btn.disabled = false;
+                    btn.className = 'btn btn-primary me-2';
+                    btn.textContent = 'Loaded';
+                }
+            });
+        }
+
+        /* Efficient state toggle using classList */
+        document.getElementById('efficientToggle').addEventListener('click', function(e) {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            this.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('toggleValue').textContent =
+                'Selected: ' + btn.getAttribute('data-value');
+        });
+
+        /* Check reduced motion preference */
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.getElementById('motionStatus').textContent = 'Reduced motion: ENABLED';
+            document.getElementById('motionStatus').className = 'badge bg-warning';
+        } else {
+            document.getElementById('motionStatus').textContent = 'Reduced motion: DISABLED (full animations)';
+            document.getElementById('motionStatus').className = 'badge bg-success';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_03_01_CSS_Grid_Advanced.html                                 -->
+<!-- Advanced CSS Grid: subgrid, named areas, auto-fit/fill         -->
+<!-- Bootstrap 5.3.3 + Modern CSS Grid Layout Techniques            -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <!-- Standard HTML5 meta charset for encoding -->
+    <meta charset="UTF-8">
+
+    <!-- Viewport meta tag ensures proper responsive behavior on all devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Page title describing the lesson content -->
+    <title>06_03_01 - Advanced CSS Grid</title>
+
+    <!-- Bootstrap 5.3.3 CSS from CDN for base styling and grid utilities -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Internal styles demonstrating advanced CSS Grid features -->
+    <style>
+        /* ============================================================= */
+        /* CSS GRID NAMED AREAS                                            */
+        /* grid-template-areas allows you to name grid cells and create   */
+        /* visual layout maps directly in CSS. This makes complex layouts */
+        /* readable and maintainable.                                      */
+        /* ============================================================= */
+
+        /* Container with named grid areas for a classic page layout */
+        .grid-layout {
+            /* Define the grid container */
+            display: grid;
+
+            /* Create 3 columns: sidebar (250px), main (1fr), aside (200px) */
+            grid-template-columns: 250px 1fr 200px;
+
+            /* Create rows: header (auto), content (1fr), footer (auto) */
+            grid-template-rows: auto 1fr auto;
+
+            /* Name each cell area for semantic layout mapping */
+            grid-template-areas:
+                "header  header  header"
+                "sidebar main    aside"
+                "footer  footer  footer";
+
+            /* Minimum height to fill viewport */
+            min-height: 400px;
+
+            /* Gap between grid cells (replaces old grid-gap) */
+            gap: 16px;
+        }
+
+        /* Assign each child to its named area */
+        .grid-header { grid-area: header; }
+        .grid-sidebar { grid-area: sidebar; }
+        .grid-main { grid-area: main; }
+        .grid-aside { grid-area: aside; }
+        .grid-footer { grid-area: footer; }
+
+        /* ============================================================= */
+        /* AUTO-FIT AND AUTO-FILL                                          */
+        /* auto-fit collapses empty tracks to zero width and expands      */
+        /* remaining tracks to fill space. auto-fill keeps empty tracks   */
+        /* at their minimum size. minmax() sets flexible sizing bounds.   */
+        /* ============================================================= */
+
+        /* auto-fit: cards stretch to fill available space */
+        .grid-auto-fit {
+            /* Each column is at least 200px, grows equally to fill row */
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            display: grid;
+            gap: 16px;
+        }
+
+        /* auto-fill: preserves empty column slots when items don't fill */
+        .grid-auto-fill {
+            /* Same as auto-fit but keeps empty tracks visible */
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            display: grid;
+            gap: 16px;
+        }
+
+        /* ============================================================= */
+        /* CSS SUBGRID                                                     */
+        /* Subgrid allows a nested grid to align with its parent grid's   */
+        /* rows and/or columns. This solves the long-standing problem of  */
+        /* aligning content across sibling grid children.                 */
+        /* ============================================================= */
+
+        /* Parent grid with 4 columns */
+        .grid-parent {
+            display: grid;
+            /* 4 equal columns with 16px gaps */
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        /* Child grid that inherits parent's column tracks */
+        .grid-child-subgrid {
+            /* Span all 4 parent columns and use subgrid for columns */
+            grid-column: span 4;
+
+            /* Use subgrid for columns so inner items align with parent */
+            display: grid;
+            grid-template-columns: subgrid;
+
+            /* Define own rows (not inherited from parent) */
+            grid-template-rows: auto 1fr auto;
+        }
+
+        /* ============================================================= */
+        /* ADVANCED GRID TECHNIQUES                                        */
+        /* ============================================================= */
+
+        /* Dense packing: grid auto-placement algorithm fills holes */
+        .grid-dense {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: minmax(80px, auto);
+
+            /* dense = fill in earlier holes when placing later items */
+            grid-auto-flow: dense;
+            gap: 12px;
+        }
+
+        /* Spanning items in a dense grid */
+        .span-2-col { grid-column: span 2; }
+        .span-2-row { grid-row: span 2; }
+
+        /* ============================================================= */
+        /* RESPONSIVE GRID WITH CONTAINER-TYPE CLASSES                    */
+        /* ============================================================= */
+
+        /* Stack columns on small screens using media query */
+        @media (max-width: 768px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "header"
+                    "main"
+                    "sidebar"
+                    "aside"
+                    "footer";
+            }
+
+            .grid-parent {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .grid-child-subgrid {
+                grid-column: span 2;
+                grid-template-columns: subgrid;
+            }
+        }
+
+        /* ============================================================= */
+        /* VISUAL STYLING                                                  */
+        /* ============================================================= */
+
+        /* Color-coded grid items for visual clarity */
+        .grid-layout > * {
+            padding: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        /* Card styling for auto-fit/auto-fill examples */
+        .grid-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.1rem;
+            transition: transform 0.2s ease;
+        }
+
+        /* Hover effect on cards */
+        .grid-card:hover {
+            transform: translateY(-4px);
+        }
+
+        /* Subgrid child styling */
+        .subgrid-item {
+            background: #e9ecef;
+            border: 2px dashed #adb5bd;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        /* Dense grid item colors */
+        .dense-item {
+            background: #20c997;
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            padding: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Bootstrap container for page padding and max-width -->
+    <div class="container py-5">
+
+        <!-- Page header section -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <!-- Main heading for the lesson -->
+                <h1 class="display-4 fw-bold text-primary">Advanced CSS Grid</h1>
+                <!-- Subtitle explaining the topic -->
+                <p class="lead text-muted">Named areas, auto-fit/fill, subgrid, and dense packing</p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: NAMED GRID AREAS                                     -->
+        <!-- Grid-template-areas provide a visual map of your layout.       -->
+        <!-- Each named area can be assigned to child elements via the      -->
+        <!-- grid-area property, making layouts intuitive and readable.     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">1. Named Grid Areas</h2>
+            <p class="text-muted mb-3">
+                <code>grid-template-areas</code> creates a visual ASCII map of your layout.
+                Each string represents a row, and each word names a cell area.
+            </p>
+
+            <!-- Grid container using named areas -->
+            <div class="grid-layout">
+                <!-- Header spans all 3 columns -->
+                <div class="grid-header bg-primary text-white">Header (3 columns)</div>
+                <!-- Left sidebar column -->
+                <div class="grid-sidebar bg-warning">Sidebar</div>
+                <!-- Main content area -->
+                <div class="grid-main bg-light border">Main Content</div>
+                <!-- Right aside column -->
+                <div class="grid-aside bg-info text-white">Aside</div>
+                <!-- Footer spans all 3 columns -->
+                <div class="grid-footer bg-dark text-white">Footer (3 columns)</div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: AUTO-FIT VS AUTO-FILL                                -->
+        <!-- Both create responsive grids without media queries.            -->
+        <!-- auto-fit: collapses empty tracks to 0 and stretches items.     -->
+        <!-- auto-fill: keeps empty tracks at minimum width.                -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">2. Auto-Fit vs Auto-Fill</h2>
+
+            <div class="row">
+                <!-- auto-fit demonstration -->
+                <div class="col-md-6 mb-4">
+                    <h4 class="h5">Auto-Fit (items stretch to fill)</h4>
+                    <p class="text-muted small">
+                        <code>repeat(auto-fit, minmax(200px, 1fr))</code> - empty tracks collapse.
+                    </p>
+                    <!-- Only 3 items but columns will stretch to fill -->
+                    <div class="grid-auto-fit">
+                        <div class="grid-card">Card 1</div>
+                        <div class="grid-card">Card 2</div>
+                        <div class="grid-card">Card 3</div>
+                    </div>
+                </div>
+
+                <!-- auto-fill demonstration -->
+                <div class="col-md-6 mb-4">
+                    <h4 class="h5">Auto-Fill (keeps empty tracks)</h4>
+                    <p class="text-muted small">
+                        <code>repeat(auto-fill, minmax(200px, 1fr))</code> - empty tracks persist.
+                    </p>
+                    <!-- Same 3 items but empty column tracks are preserved -->
+                    <div class="grid-auto-fill">
+                        <div class="grid-card">Card 1</div>
+                        <div class="grid-card">Card 2</div>
+                        <div class="grid-card">Card 3</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: CSS SUBGRID                                          -->
+        <!-- Subgrid allows nested grids to inherit track definitions from  -->
+        <!-- their parent. This enables precise alignment of content across -->
+        <!-- sibling containers without duplicating column definitions.     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">3. CSS Subgrid</h2>
+            <p class="text-muted mb-3">
+                <code>grid-template-columns: subgrid</code> aligns nested grid items with parent columns.
+            </p>
+
+            <!-- Parent grid with 4 columns -->
+            <div class="grid-parent">
+                <!-- Row labels in parent grid -->
+                <div class="subgrid-item bg-secondary text-white">Col 1</div>
+                <div class="subgrid-item bg-secondary text-white">Col 2</div>
+                <div class="subgrid-item bg-secondary text-white">Col 3</div>
+                <div class="subgrid-item bg-secondary text-white">Col 4</div>
+
+                <!-- Child grid using subgrid for column alignment -->
+                <div class="grid-child-subgrid">
+                    <div class="subgrid-item" style="background:#ffc107;">Sub A</div>
+                    <div class="subgrid-item" style="background:#fd7e14;">Sub B</div>
+                    <div class="subgrid-item" style="background:#e83e8c;">Sub C</div>
+                    <div class="subgrid-item" style="background:#6f42c1;">Sub D</div>
+                    <!-- Second row of the subgrid -->
+                    <div class="subgrid-item" style="background:#20c997;">Sub E</div>
+                    <div class="subgrid-item" style="background:#0dcaf0;">Sub F</div>
+                    <div class="subgrid-item" style="background:#0d6efd;">Sub G</div>
+                    <div class="subgrid-item" style="background:#6610f2;">Sub H</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: DENSE PACKING                                        -->
+        <!-- grid-auto-flow: dense tells the algorithm to backfill earlier  -->
+        <!-- holes with smaller items that appear later in the DOM order.   -->
+        <!-- This creates more compact layouts but may change visual order. -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">4. Dense Auto-Placement</h2>
+            <p class="text-muted mb-3">
+                <code>grid-auto-flow: dense</code> fills gaps in the grid with items that fit.
+            </p>
+
+            <!-- Dense packing grid -->
+            <div class="grid-dense">
+                <!-- Wide item spanning 2 columns -->
+                <div class="dense-item span-2-col" style="background:#e74c3c;">Wide 1</div>
+                <div class="dense-item">Small</div>
+                <div class="dense-item">Small</div>
+                <!-- Tall item spanning 2 rows -->
+                <div class="dense-item span-2-row" style="background:#3498db;">Tall</div>
+                <div class="dense-item">Small</div>
+                <div class="dense-item">Small</div>
+                <div class="dense-item">Small</div>
+                <!-- Another wide item -->
+                <div class="dense-item span-2-col" style="background:#e74c3c;">Wide 2</div>
+                <div class="dense-item">Small</div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: GRID TEMPLATE FUNCTION                               -->
+        <!-- The minmax() function sets flexible track sizes. Combined with -->
+        <!-- fit-content() and clamp(), you can create fully fluid grids.   -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">5. Advanced Track Sizing</h2>
+            <p class="text-muted mb-3">
+                <code>minmax()</code>, <code>fit-content()</code>, and <code>clamp()</code> for flexible tracks.
+            </p>
+
+            <!-- Grid demonstrating various sizing functions -->
+            <div style="display:grid; grid-template-columns: fit-content(150px) minmax(100px, 2fr) 1fr; gap:12px;">
+                <div class="grid-card" style="background:linear-gradient(135deg,#f093fb,#f5576c);">
+                    fit-content(150px)
+                </div>
+                <div class="grid-card" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">
+                    minmax(100px, 2fr)
+                </div>
+                <div class="grid-card" style="background:linear-gradient(135deg,#43e97b,#38f9d7);">
+                    1fr
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap 5.3.3 JS Bundle (includes Popper.js) for interactive components -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

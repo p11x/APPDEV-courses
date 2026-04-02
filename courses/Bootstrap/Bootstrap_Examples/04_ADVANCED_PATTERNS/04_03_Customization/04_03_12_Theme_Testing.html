@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         04_03_12 - Theme Testing
+         ============================================
+         Testing custom themes:
+         - Visual regression testing
+         - Contrast checking tools
+         - Component testing patterns
+         - Cross-browser testing
+         - Accessibility testing
+         ============================================ -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Testing Custom Themes</title>
+
+    <style>
+        /* ============================================
+           TESTING UTILITY CLASSES
+           ============================================ */
+
+        :root {
+            --test-primary: #4f46e5;
+            --test-success: #059669;
+            --test-danger: #dc2626;
+        }
+
+        /* Test output styling */
+        .test-pass {
+            background: #d1fae5;
+            border-left: 4px solid #059669;
+            color: #065f46;
+        }
+
+        .test-fail {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            color: #991b1b;
+        }
+
+        .test-warn {
+            background: #fef3c7;
+            border-left: 4px solid #d97706;
+            color: #92400e;
+        }
+
+        .test-result {
+            padding: 0.75rem 1rem;
+            border-radius: 0 0.375rem 0.375rem 0;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .test-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        /* Visual regression comparison */
+        .vrt-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .vrt-panel {
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .vrt-panel.baseline {
+            background: #f8f9fa;
+        }
+
+        .vrt-panel.current {
+            background: white;
+        }
+
+        .vrt-label {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+        }
+
+        .vrt-label.baseline { background: #e2e8f0; color: #475569; }
+        .vrt-label.current { background: #dbeafe; color: #1e40af; }
+
+        /* Test runner output */
+        .test-runner-output {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8125rem;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .test-runner-output .pass { color: #4ec9b0; }
+        .test-runner-output .fail { color: #f44747; }
+        .test-runner-output .info { color: #569cd6; }
+        .test-runner-output .time { color: #6a9955; }
+
+        /* Color grid for contrast testing */
+        .contrast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .contrast-cell {
+            padding: 1rem;
+            border-radius: 0.375rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 0.5rem;
+        }
+
+        .checklist-item:hover {
+            background: #f9fafb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Theme Testing</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="py-5 text-center bg-light">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Testing Custom Themes</h1>
+            <p class="lead text-muted">
+                Visual regression, contrast checking, and component testing patterns.
+            </p>
+        </div>
+    </section>
+
+    <!-- Test categories -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Testing Categories</h2>
+            <div class="row g-4">
+                <div class="col-md-3 col-6">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="fs-1 mb-2">&#128065;</div>
+                            <h5>Visual</h5>
+                            <p class="small text-muted">Screenshot comparison across versions</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="fs-1 mb-2">&#127912;</div>
+                            <h5>Contrast</h5>
+                            <p class="small text-muted">WCAG ratio verification</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="fs-1 mb-2">&#128260;</div>
+                            <h5>Cross-Browser</h5>
+                            <p class="small text-muted">Multi-browser rendering</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="fs-1 mb-2">&#9851;</div>
+                            <h5>Accessibility</h5>
+                            <p class="small text-muted">Screen reader & keyboard testing</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Visual regression testing -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Visual Regression Testing</h2>
+            <p class="text-muted mb-4">
+                Compare baseline (expected) vs current (actual) rendering.
+                Differences are highlighted in red.
+            </p>
+
+            <h5 class="mb-3">Button Component Comparison</h5>
+            <div class="vrt-container mb-4">
+                <div class="vrt-panel baseline">
+                    <span class="vrt-label baseline">Baseline</span>
+                    <button class="btn btn-primary me-2">Primary</button>
+                    <button class="btn btn-secondary me-2">Secondary</button>
+                    <button class="btn btn-success">Success</button>
+                </div>
+                <div class="vrt-panel current">
+                    <span class="vrt-label current">Current</span>
+                    <button class="btn btn-primary me-2">Primary</button>
+                    <button class="btn btn-secondary me-2">Secondary</button>
+                    <button class="btn btn-success">Success</button>
+                </div>
+            </div>
+
+            <h5 class="mb-3">Card Component Comparison</h5>
+            <div class="vrt-container">
+                <div class="vrt-panel baseline">
+                    <span class="vrt-label baseline">Baseline</span>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Test Card</h5>
+                            <p class="card-text small">Card body text content.</p>
+                            <a href="#" class="btn btn-primary btn-sm">Action</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="vrt-panel current">
+                    <span class="vrt-label current">Current</span>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Test Card</h5>
+                            <p class="card-text small">Card body text content.</p>
+                            <a href="#" class="btn btn-primary btn-sm">Action</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contrast testing -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Contrast Testing Grid</h2>
+            <p class="text-muted mb-4">
+                All color combinations tested for WCAG compliance.
+            </p>
+            <div class="contrast-grid">
+                <div class="contrast-cell" style="background:#4f46e5;color:#fff">
+                    <strong>Primary / White</strong>
+                    <div class="small">7.2:1 - AAA</div>
+                </div>
+                <div class="contrast-cell" style="background:#fff;color:#4f46e5;border:1px solid #dee2e6">
+                    <strong>White / Primary</strong>
+                    <div class="small">7.2:1 - AAA</div>
+                </div>
+                <div class="contrast-cell" style="background:#059669;color:#fff">
+                    <strong>Success / White</strong>
+                    <div class="small">4.6:1 - AA</div>
+                </div>
+                <div class="contrast-cell" style="background:#dc2626;color:#fff">
+                    <strong>Danger / White</strong>
+                    <div class="small">4.5:1 - AA</div>
+                </div>
+                <div class="contrast-cell" style="background:#1a1a1a;color:#fff">
+                    <strong>Dark / White</strong>
+                    <div class="small">17.4:1 - AAA</div>
+                </div>
+                <div class="contrast-cell" style="background:#f8f9fa;color:#1a1a1a">
+                    <strong>Light / Dark</strong>
+                    <div class="small">16.8:1 - AAA</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Test runner output -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Sample Test Runner Output</h2>
+            <div class="test-runner-output">
+<span class="info">PASS</span> src/theme/colors.test.js
+  <span class="pass">&#10003;</span> primary color meets AA contrast on white <span class="time">(3ms)</span>
+  <span class="pass">&#10003;</span> success color meets AA contrast on white <span class="time">(2ms)</span>
+  <span class="pass">&#10003;</span> danger color meets AA contrast on white <span class="time">(1ms)</span>
+  <span class="pass">&#10003;</span> dark text on light bg meets AAA <span class="time">(2ms)</span>
+
+<span class="info">PASS</span> src/theme/variables.test.js
+  <span class="pass">&#10003;</span> all CSS custom properties are defined <span class="time">(5ms)</span>
+  <span class="pass">&#10003;</span> primary-rgb matches primary hex <span class="time">(3ms)</span>
+  <span class="pass">&#10003;</span> font stack includes fallbacks <span class="time">(2ms)</span>
+
+<span class="info">PASS</span> src/theme/components.test.js
+  <span class="pass">&#10003;</span> buttons have visible focus ring <span class="time">(8ms)</span>
+  <span class="pass">&#10003;</span> cards use consistent border-radius <span class="time">(4ms)</span>
+  <span class="pass">&#10003;</span> form inputs have min-height 44px <span class="time">(3ms)</span>
+
+<span class="fail">FAIL</span> src/theme/responsive.test.js
+  <span class="fail">&#10005;</span> container max-width at xxl breakpoint <span class="time">(6ms)</span>
+    Expected: 1440px, Received: 1320px
+
+<span class="info">Tests:</span> 11 passed, 1 failed, 12 total
+<span class="info">Time:</span>  1.247s
+            </div>
+        </div>
+    </section>
+
+    <!-- Test checklist -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Theme Testing Checklist</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h5>Visual Tests</h5>
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-check-input mt-1" checked>
+                        <div>
+                            <strong>Screenshot comparison</strong>
+                            <p class="small text-muted mb-0">Compare baseline vs current component renders</p>
+                        </div>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-check-input mt-1" checked>
+                        <div>
+                            <strong>Color consistency</strong>
+                            <p class="small text-muted mb-0">Verify all components use theme variables</p>
+                        </div>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-check-input mt-1" checked>
+                        <div>
+                            <strong>Typography scale</strong>
+                            <p class="small text-muted mb-0">Check font sizes follow the type scale</p>
+                        </div>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-check-input mt-1">
+                        <div>
+                            <strong>Spacing consistency</strong>
+                            <p class="small text-muted mb-0">Verify spacing follows design system</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Functional Tests</h5>
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-check-input mt-1" checked>
+                        <div>
+                            <strong>Theme switching</strong>
+                            <p class="small text-muted mb-0">Verify all components update on theme change</p>
+                        </div>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-check-input mt-1" checked>
+                        <div>
+                            <strong>localStorage persistence</strong>
+                            <p class="small text-muted mb-0">Theme preference survives page reload</p>
+                        </div>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-check-input mt-1" checked>
+                        <div>
+                            <strong>CSS variable inheritance</strong>
+                            <p class="small text-muted mb-0">Scoped variables override correctly</p>
+                        </div>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-check-input mt-1">
+                        <div>
+                            <strong>Print stylesheet</strong>
+                            <p class="small text-muted mb-0">Theme renders correctly in print</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Automated test examples -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Automated Test Examples</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Contrast Test (JavaScript)</h5>
+                            <pre class="bg-dark text-light p-3 rounded small"><code>// Test custom colors meet WCAG AA
+function getLuminance(r, g, b) {
+  const [rs, gs, bs] = [r, g, b]
+    .map(c => c / 255 <= 0.03928
+      ? c / 255 / 12.92
+      : Math.pow((c / 255 + 0.055)
+          / 1.055, 2.4));
+  return 0.2126 * rs + 0.7152 * gs
+       + 0.0722 * bs;
+}
+
+function contrastRatio(l1, l2) {
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05)
+       / (darker + 0.05);
+}
+
+// Assert primary meets AA
+expect(contrastRatio(
+  getLuminance(255,255,255),
+  getLuminance(79, 70, 229)
+)).toBeGreaterThan(4.5);</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>CSS Variable Test (JavaScript)</h5>
+                            <pre class="bg-dark text-light p-3 rounded small"><code>// Test all theme variables are defined
+const requiredVars = [
+  '--bs-primary',
+  '--bs-secondary',
+  '--bs-success',
+  '--bs-body-bg',
+  '--bs-body-color',
+  '--bs-font-sans-serif',
+  '--bs-border-radius',
+];
+
+const styles = getComputedStyle(
+  document.documentElement
+);
+
+requiredVars.forEach(varName => {
+  const value = styles
+    .getPropertyValue(varName)
+    .trim();
+  expect(value).not.toBe('');
+});
+
+// Test variable is valid color
+const primary = styles
+  .getPropertyValue('--bs-primary')
+  .trim();
+expect(primary).toMatch(
+  /^#[0-9a-f]{6}$/i
+);</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Test results summary -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Test Results Summary</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card test-pass border-0">
+                        <div class="card-body text-center">
+                            <div class="display-4 fw-bold" style="color:#065f46">11</div>
+                            <div>Passed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card test-fail border-0">
+                        <div class="card-body text-center">
+                            <div class="display-4 fw-bold" style="color:#991b1b">1</div>
+                            <div>Failed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card test-warn border-0">
+                        <div class="card-body text-center">
+                            <div class="display-4 fw-bold" style="color:#92400e">2</div>
+                            <div>Skipped</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testing tools reference -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Testing Tools Reference</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr><th>Tool</th><th>Purpose</th><th>Type</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>BackstopJS</td><td>Visual regression testing</td><td>Automated</td></tr>
+                        <tr><td>Chromatic</td><td>Storybook visual testing</td><td>Cloud</td></tr>
+                        <tr><td>axe-core</td><td>Accessibility testing</td><td>Automated</td></tr>
+                        <tr><td>WebAIM Contrast Checker</td><td>Color contrast verification</td><td>Manual</td></tr>
+                        <tr><td>BrowserStack</td><td>Cross-browser testing</td><td>Cloud</td></tr>
+                        <tr><td>Lighthouse</td><td>Performance + a11y audit</td><td>Built-in</td></tr>
+                        <tr><td>Pa11y</td><td>Accessibility CI testing</td><td>CLI</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Theme Testing Demo</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

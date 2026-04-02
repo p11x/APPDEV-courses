@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================
+         API Integration Complete Guide - Bootstrap 5
+         
+         This file demonstrates a comprehensive CRUD application
+         integrating REST APIs using Bootstrap 5 components.
+         
+         Topics covered:
+         1. Fetch API for HTTP requests (GET, POST, PUT, DELETE)
+         2. Data tables with sorting and filtering
+         3. Modal forms for create/edit operations
+         4. Toast notifications for user feedback
+         5. Loading states and error handling
+         6. Pagination controls
+         7. Search functionality
+         8. Export data to CSV
+         9. All concepts combined into one app
+         
+         API used: JSONPlaceholder (https://jsonplaceholder.typicode.com)
+         ============================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integration Complete Guide - Bootstrap 5</title>
+
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================
+           Custom Styles
+           
+           Additional styles to complement Bootstrap defaults.
+           Bootstrap handles most layout/spacing; we add only
+           what Bootstrap does not provide out of the box.
+           ============================================================ */
+
+        /* Smooth transitions for interactive elements */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Sortable column headers show pointer cursor */
+        .sortable { cursor: pointer; user-select: none; }
+        .sortable:hover { background-color: rgba(0,0,0,0.04); }
+
+        /* Sort indicator icons */
+        .sort-icon { font-size: 0.75rem; margin-left: 4px; opacity: 0.4; }
+        .sort-icon.active { opacity: 1; }
+
+        /* Loading overlay covers the table while data is fetched */
+        .loading-overlay {
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0.85);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10;
+        }
+
+        /* Table container needs position:relative for overlay */
+        .table-container { position: relative; }
+
+        /* Row highlight during update animation */
+        .row-updated { animation: rowFlash 0.6s ease; }
+        @keyframes rowFlash {
+            0%   { background-color: #d1e7dd; }
+            100% { background-color: transparent; }
+        }
+
+        /* Skeleton loading placeholder for rows */
+        .skeleton-row td {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            color: transparent !important;
+        }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- ============================================================
+         NAVBAR
+         ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <!-- Brand icon using Bootstrap Icons via Unicode -->
+                &#x1F4E1; API Integration Guide
+            </a>
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#app-section">Application</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#concepts-section">Key Concepts</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#reference-section">API Reference</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+         HERO / HEADER SECTION
+         ============================================================ -->
+    <header class="bg-primary text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold">API Integration Complete Guide</h1>
+            <p class="lead mt-3 mb-0">
+                A full CRUD application demonstrating REST API calls, data tables,
+                sorting, filtering, pagination, modals, toasts, search, and export.
+            </p>
+            <p class="mt-2 opacity-75">
+                Using <strong>JSONPlaceholder</strong> as a mock REST API &mdash;
+                powered by <strong>Bootstrap 5.3.3</strong>
+            </p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- ============================================================
+             SECTION 1: KEY CONCEPTS CARDS
+             
+             Before diving into the app, show the learner the core
+             concepts that the application demonstrates.
+             ============================================================ -->
+        <section id="concepts-section" class="mb-5">
+            <h2 class="mb-4">Key Concepts Demonstrated</h2>
+            <div class="row g-4">
+
+                <!-- Concept: Fetch API -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">1. Fetch API</h5>
+                            <p class="card-text">
+                                Modern <code>fetch()</code> with async/await for
+                                GET, POST, PUT, and DELETE requests to a REST endpoint.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concept: CRUD Operations -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">2. CRUD Operations</h5>
+                            <p class="card-text">
+                                Create, Read, Update, Delete resources through modal forms
+                                and inline action buttons.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concept: Data Table -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">3. Data Table</h5>
+                            <p class="card-text">
+                                Dynamic table with column sorting, client-side filtering,
+                                and responsive layout using Bootstrap table classes.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concept: Modals -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">4. Modal Forms</h5>
+                            <p class="card-text">
+                                Bootstrap modals serve as create/edit dialogs with
+                                form validation and submission handling.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concept: Toasts -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">5. Toast Notifications</h5>
+                            <p class="card-text">
+                                Non-intrusive toast messages inform users of success,
+                                errors, and other events in real time.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concept: Pagination -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-secondary">6. Pagination</h5>
+                            <p class="card-text">
+                                Client-side pagination controls slice the dataset and
+                                render page buttons dynamically.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concept: Search -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-dark">7. Search</h5>
+                            <p class="card-text">
+                                Real-time search filters the table by matching input
+                                against multiple fields simultaneously.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concept: Export -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">8. Export CSV</h5>
+                            <p class="card-text">
+                                Convert the current dataset to CSV format and trigger
+                                a browser download for offline use.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concept: Error Handling -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">9. Error Handling</h5>
+                            <p class="card-text">
+                                Try/catch blocks, HTTP status checks, and user-friendly
+                                error messages ensure a resilient application.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 2: FULL CRUD APPLICATION
+             
+             This is the main interactive section of the file.
+             It combines every concept into a single working app.
+             ============================================================ -->
+        <section id="app-section" class="mb-5">
+            <h2 class="mb-4">Interactive CRUD Application</h2>
+
+            <!-- ----------------------------------------------------------
+                 TOOLBAR: Search, Add New, Export
+                 ---------------------------------------------------------- -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+
+                        <!-- Search input with debounce -->
+                        <div class="col-md-4">
+                            <label for="searchInput" class="form-label fw-semibold">
+                                Search
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">&#128269;</span>
+                                <input type="text" id="searchInput" class="form-control"
+                                       placeholder="Search by title, body, or ID...">
+                                <!-- Clear button resets search -->
+                                <button class="btn btn-outline-secondary" type="button"
+                                        id="clearSearchBtn" title="Clear search">
+                                    &times;
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Items-per-page selector -->
+                        <div class="col-md-2">
+                            <label for="perPageSelect" class="form-label fw-semibold">
+                                Per page
+                            </label>
+                            <select id="perPageSelect" class="form-select">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div class="col-md-6 text-end">
+                            <!-- Opens the create modal -->
+                            <button class="btn btn-primary me-2" id="addNewBtn">
+                                + Add New Post
+                            </button>
+                            <!-- Exports current data to CSV -->
+                            <button class="btn btn-outline-success me-2" id="exportCsvBtn">
+                                &#x1F4C4; Export CSV
+                            </button>
+                            <!-- Reloads data from API -->
+                            <button class="btn btn-outline-secondary" id="reloadBtn">
+                                &#x21BB; Reload
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ----------------------------------------------------------
+                 DATA TABLE
+                 position-relative allows the loading overlay to cover it.
+                 ---------------------------------------------------------- -->
+            <div class="card shadow-sm">
+                <div class="card-body p-0 table-container">
+
+                    <!-- Loading overlay (hidden by default, shown during fetch) -->
+                    <div class="loading-overlay d-none" id="loadingOverlay">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 mb-0 text-muted">Loading data...</p>
+                        </div>
+                    </div>
+
+                    <!-- Responsive table wrapper -->
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0 align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <!-- Each header is clickable for sorting -->
+                                    <th class="sortable" data-sort="id" style="width:80px;">
+                                        ID <span class="sort-icon">&#8645;</span>
+                                    </th>
+                                    <th class="sortable" data-sort="userId" style="width:100px;">
+                                        User <span class="sort-icon">&#8645;</span>
+                                    </th>
+                                    <th class="sortable" data-sort="title">
+                                        Title <span class="sort-icon">&#8645;</span>
+                                    </th>
+                                    <th class="sortable" data-sort="body">
+                                        Body <span class="sort-icon">&#8645;</span>
+                                    </th>
+                                    <th style="width:150px;" class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <!-- tbody is populated dynamically by JavaScript -->
+                            <tbody id="tableBody">
+                                <!-- Rows inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ----------------------------------------------------------
+                     PAGINATION FOOTER
+                     
+                     Dynamically generated page buttons go inside #pagination.
+                     Info text shows "Showing X to Y of Z entries".
+                     ---------------------------------------------------------- -->
+                <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <small class="text-muted" id="paginationInfo">
+                        Showing 0 to 0 of 0 entries
+                    </small>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="pagination">
+                            <!-- Page buttons inserted here -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 3: API REFERENCE TABLE
+             
+             Static reference showing the JSONPlaceholder endpoints
+             used in this application.
+             ============================================================ -->
+        <section id="reference-section" class="mb-5">
+            <h2 class="mb-4">API Reference (JSONPlaceholder)</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                            <th>Request Body</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td><code>/posts</code></td>
+                            <td>Retrieve all posts</td>
+                            <td>&mdash;</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-success">GET</span></td>
+                            <td><code>/posts/:id</code></td>
+                            <td>Retrieve a single post</td>
+                            <td>&mdash;</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-primary">POST</span></td>
+                            <td><code>/posts</code></td>
+                            <td>Create a new post</td>
+                            <td><code>{ title, body, userId }</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-warning text-dark">PUT</span></td>
+                            <td><code>/posts/:id</code></td>
+                            <td>Update an existing post</td>
+                            <td><code>{ id, title, body, userId }</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-danger">DELETE</span></td>
+                            <td><code>/posts/:id</code></td>
+                            <td>Delete a post</td>
+                            <td>&mdash;</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="alert alert-info mt-3">
+                <strong>Note:</strong> JSONPlaceholder is a fake API. POST, PUT, and DELETE
+                requests return simulated responses and do <em>not</em> persist changes on
+                the server. The application simulates persistence locally for demonstration.
+            </div>
+        </section>
+    </main>
+
+    <!-- ============================================================
+         TOAST CONTAINER
+         
+         Bootstrap toasts provide lightweight notifications.
+         They are stacked in the top-right corner of the viewport.
+         ============================================================ -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"
+         style="z-index: 1100;">
+        <!-- Toasts are inserted dynamically here -->
+    </div>
+
+    <!-- ============================================================
+         CREATE / EDIT MODAL
+         
+         This single modal serves dual purpose:
+         - When "Add New Post" is clicked => Create mode
+         - When "Edit" on a row is clicked => Edit mode
+         
+         The mode is determined by checking if #postId has a value.
+         ============================================================ -->
+    <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <!-- Modal header changes title based on mode -->
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="postModalLabel">Add New Post</h5>
+                    <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <!-- Modal body contains the form -->
+                <div class="modal-body">
+                    <!--
+                        Hidden input stores the post ID for edit mode.
+                        If this has a value, we know we are editing.
+                    -->
+                    <input type="hidden" id="postId">
+
+                    <div class="mb-3">
+                        <label for="postUserId" class="form-label">User ID</label>
+                        <input type="number" class="form-control" id="postUserId"
+                               min="1" max="10" value="1" required>
+                        <div class="form-text">Range: 1&ndash;10</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="postTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="postTitle"
+                               maxlength="150" required>
+                        <div class="form-text">
+                            <span id="titleCharCount">0</span>/150 characters
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="postBody" class="form-label">Body</label>
+                        <textarea class="form-control" id="postBody" rows="5"
+                                  maxlength="1000" required></textarea>
+                        <div class="form-text">
+                            <span id="bodyCharCount">0</span>/1000 characters
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="savePostBtn">
+                        Save Post
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         DELETE CONFIRMATION MODAL
+         
+         Confirms destructive action before sending DELETE request.
+         ============================================================ -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="mb-0">Are you sure you want to delete post
+                        <strong id="deletePostIdDisplay"></strong>?</p>
+                    <p class="text-muted small">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm"
+                            id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="bg-dark text-white text-center py-3 mt-auto">
+        <p class="mb-0">
+            Bootstrap 5 API Integration Complete Guide &copy; 2024
+        </p>
+    </footer>
+
+    <!-- ============================================================
+         Bootstrap 5.3.3 JS Bundle (includes Popper)
+         ============================================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================
+         APPLICATION JAVASCRIPT
+         
+         All logic is contained in this single <script> block.
+         Code is organized into clearly labeled sections:
+         
+         A. Configuration & State
+         B. Utility Functions
+         C. Toast Notification System
+         D. API Service Layer (Fetch wrappers)
+         E. Data Table Rendering
+         F. Sorting Logic
+         G. Pagination Logic
+         H. Search / Filter Logic
+         I. Export to CSV
+         J. Modal Management
+         K. CRUD Operation Handlers
+         L. Event Listeners & Initialization
+         ============================================================ -->
+    <script>
+    /* ===========================================================
+       SECTION A: CONFIGURATION & STATE
+       
+       Central configuration object and application state.
+       =========================================================== */
+
+    // Base URL for the JSONPlaceholder REST API
+    const API_BASE = 'https://jsonplaceholder.typicode.com';
+
+    // Application state – a single object that drives the UI
+    const state = {
+        allPosts: [],          // Full dataset from API (unfiltered)
+        filteredPosts: [],     // Dataset after search filter
+        currentPage: 1,        // Current pagination page (1-indexed)
+        perPage: 10,           // Items shown per page
+        sortColumn: 'id',      // Column currently sorted
+        sortDirection: 'asc',  // Sort direction: 'asc' or 'desc'
+        searchTerm: '',        // Current search query
+        isLoading: false,      // Whether a network request is in flight
+        nextTempId: 1000       // Temporary ID counter for local-only posts
+    };
+
+    // Bootstrap modal instances (initialized after DOMContentLoaded)
+    let postModal, deleteModal;
+
+    // ID of the post pending deletion (set by delete button click)
+    let pendingDeleteId = null;
+
+    /* ===========================================================
+       SECTION B: UTILITY FUNCTIONS
+       =========================================================== */
+
+    /**
+     * Truncate a string to `maxLen` characters, appending ellipsis.
+     */
+    function truncate(str, maxLen) {
+        if (!str) return '';
+        return str.length > maxLen ? str.substring(0, maxLen) + '...' : str;
+    }
+
+    /**
+     * Escape HTML entities to prevent XSS when injecting user-supplied
+     * content into the DOM via innerHTML.
+     */
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
+     * Debounce: returns a new function that delays calling `fn`
+     * until `delay` ms have elapsed since the last invocation.
+     * Used for the search input to avoid filtering on every keystroke.
+     */
+    function debounce(fn, delay) {
+        let timer;
+        return function (...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    /**
+     * Show or hide the loading overlay on the table.
+     */
+    function setLoading(show) {
+        state.isLoading = show;
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.classList.toggle('d-none', !show);
+    }
+
+    /* ===========================================================
+       SECTION C: TOAST NOTIFICATION SYSTEM
+       
+       Creates Bootstrap 5 toast elements dynamically and appends
+       them to the toast container. Each toast auto-removes after
+       its animation completes.
+       =========================================================== */
+
+    /**
+     * Display a toast notification.
+     *
+     * @param {string} title   - Bold heading (e.g., "Success")
+     * @param {string} message - Body text
+     * @param {string} type    - 'success', 'danger', 'warning', 'info'
+     */
+    function showToast(title, message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+
+        // Map type to a Bootstrap contextual color
+        const bgClass = {
+            success: 'bg-success',
+            danger:  'bg-danger',
+            warning: 'bg-warning',
+            info:    'bg-info'
+        }[type] || 'bg-primary';
+
+        // Build the toast HTML using a template literal.
+        // The 'd-flex' and color classes style it as a Bootstrap toast.
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center text-white ${bgClass} border-0 fade-in`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${escapeHtml(title)}:</strong> ${escapeHtml(message)}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+
+        container.appendChild(toastEl);
+
+        // Initialize and show via Bootstrap's Toast API
+        const bsToast = new bootstrap.Toast(toastEl, { delay: 3500 });
+        bsToast.show();
+
+        // Remove from DOM after hidden (keeps DOM clean)
+        toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+    }
+
+    /* ===========================================================
+       SECTION D: API SERVICE LAYER
+       
+       Thin wrappers around fetch() for each HTTP method.
+       All return the parsed JSON (or throw on network/HTTP error).
+       =========================================================== */
+
+    /**
+     * Generic fetch wrapper with error handling.
+     *
+     * @param {string} endpoint - Path appended to API_BASE
+     * @param {object} options  - Standard fetch options (method, headers, body...)
+     * @returns {Promise<any>}  - Parsed JSON response
+     */
+    async function apiRequest(endpoint, options = {}) {
+        try {
+            const url = `${API_BASE}${endpoint}`;
+
+            // Set JSON content-type for requests that send a body
+            const headers = {
+                'Content-Type': 'application/json; charset=UTF-8',
+                ...(options.headers || {})
+            };
+
+            const response = await fetch(url, { ...options, headers });
+
+            // HTTP status check – fetch does NOT reject on 4xx/5xx
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            // Re-throw with a user-friendly message
+            console.error('API Error:', error);
+            throw new Error(`Request failed: ${error.message}`);
+        }
+    }
+
+    /**
+     * GET /posts – fetch all posts.
+     */
+    async function fetchPosts() {
+        return apiRequest('/posts');
+    }
+
+    /**
+     * POST /posts – create a new post.
+     * JSONPlaceholder returns the created object with a fake id.
+     */
+    async function createPost(data) {
+        return apiRequest('/posts', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    /**
+     * PUT /posts/:id – update (replace) an existing post.
+     */
+    async function updatePost(id, data) {
+        return apiRequest(`/posts/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
+    /**
+     * DELETE /posts/:id – delete a post.
+     * JSONPlaceholder returns an empty object on success.
+     */
+    async function deletePost(id) {
+        return apiRequest(`/posts/${id}`, { method: 'DELETE' });
+    }
+
+    /* ===========================================================
+       SECTION E: DATA TABLE RENDERING
+       
+       Reads the current state (filtered + sorted + paginated)
+       and renders table rows. Includes skeleton placeholders
+       during loading.
+       =========================================================== */
+
+    /**
+     * Compute the slice of data for the current page.
+     */
+    function getPaginatedData() {
+        const start = (state.currentPage - 1) * state.perPage;
+        const end = start + state.perPage;
+        return state.filteredPosts.slice(start, end);
+    }
+
+    /**
+     * Render skeleton placeholder rows while data loads.
+     */
+    function renderSkeleton(rows = 5) {
+        const tbody = document.getElementById('tableBody');
+        let html = '';
+        for (let i = 0; i < rows; i++) {
+            html += `
+                <tr class="skeleton-row">
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                    <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>`;
+        }
+        tbody.innerHTML = html;
+    }
+
+    /**
+     * Main render function – builds table rows from paginated data.
+     */
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        const data = getPaginatedData();
+
+        // Handle empty state
+        if (data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-5">
+                        <h5>No posts found</h5>
+                        <p>Try adjusting your search or add a new post.</p>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        // Build rows with template literals for readability
+        tbody.innerHTML = data.map(post => `
+            <tr data-id="${post.id}">
+                <td><span class="badge bg-secondary">${post.id}</span></td>
+                <td><span class="badge bg-info text-dark">User ${post.userId}</span></td>
+                <td title="${escapeHtml(post.title)}">
+                    ${escapeHtml(truncate(post.title, 60))}
+                </td>
+                <td title="${escapeHtml(post.body)}" class="text-muted small">
+                    ${escapeHtml(truncate(post.body, 100))}
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary me-1 edit-btn"
+                            data-id="${post.id}" title="Edit">
+                        &#9998;
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger delete-btn"
+                            data-id="${post.id}" title="Delete">
+                        &#128465;
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        // Re-render pagination controls after table updates
+        renderPagination();
+        updatePaginationInfo();
+    }
+
+    /* ===========================================================
+       SECTION F: SORTING LOGIC
+       
+       Clicking a column header toggles sort direction.
+       The sort is performed on the filtered dataset so search
+       results maintain sort order.
+       =========================================================== */
+
+    /**
+     * Sort `state.filteredPosts` by `column` in `direction`.
+     * Numeric columns (id, userId) sort numerically; others sort
+     * alphabetically with localeCompare.
+     */
+    function sortData() {
+        const col = state.sortColumn;
+        const dir = state.sortDirection === 'asc' ? 1 : -1;
+
+        state.filteredPosts.sort((a, b) => {
+            let valA = a[col];
+            let valB = b[col];
+
+            // Numeric sort for id and userId
+            if (col === 'id' || col === 'userId') {
+                return (valA - valB) * dir;
+            }
+
+            // String sort for title and body
+            valA = String(valA).toLowerCase();
+            valB = String(valB).toLowerCase();
+            return valA.localeCompare(valB) * dir;
+        });
+    }
+
+    /**
+     * Update sort indicator icons in the table header.
+     */
+    function updateSortIndicators() {
+        document.querySelectorAll('.sortable').forEach(th => {
+            const icon = th.querySelector('.sort-icon');
+            if (th.dataset.sort === state.sortColumn) {
+                icon.classList.add('active');
+                icon.textContent = state.sortDirection === 'asc' ? '\u2191' : '\u2193';
+            } else {
+                icon.classList.remove('active');
+                icon.textContent = '\u21C5';
+            }
+        });
+    }
+
+    /* ===========================================================
+       SECTION G: PAGINATION LOGIC
+       
+       Generates page buttons and handles page navigation.
+       The pagination adapts to show nearby pages with ellipsis
+       for large datasets.
+       =========================================================== */
+
+    /**
+     * Calculate total number of pages.
+     */
+    function getTotalPages() {
+        return Math.max(1, Math.ceil(state.filteredPosts.length / state.perPage));
+    }
+
+    /**
+     * Render pagination buttons into #pagination.
+     * Shows: [First] [Prev] [pages...] [Next] [Last]
+     */
+    function renderPagination() {
+        const pagination = document.getElementById('pagination');
+        const totalPages = getTotalPages();
+
+        // Clamp current page
+        if (state.currentPage > totalPages) state.currentPage = totalPages;
+
+        let html = '';
+
+        // First & Previous buttons
+        html += `
+            <li class="page-item ${state.currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="1" title="First">&laquo;</a>
+            </li>
+            <li class="page-item ${state.currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${state.currentPage - 1}" title="Previous">&lsaquo;</a>
+            </li>`;
+
+        // Determine visible page range (show up to 5 pages around current)
+        let startPage = Math.max(1, state.currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        startPage = Math.max(1, endPage - 4);
+
+        if (startPage > 1) {
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="1">1</a></li>`;
+            if (startPage > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            html += `
+                <li class="page-item ${i === state.currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>`;
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            html += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a></li>`;
+        }
+
+        // Next & Last buttons
+        html += `
+            <li class="page-item ${state.currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${state.currentPage + 1}" title="Next">&rsaquo;</a>
+            </li>
+            <li class="page-item ${state.currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" data-page="${totalPages}" title="Last">&raquo;</a>
+            </li>`;
+
+        pagination.innerHTML = html;
+    }
+
+    /**
+     * Update the "Showing X to Y of Z entries" info text.
+     */
+    function updatePaginationInfo() {
+        const info = document.getElementById('paginationInfo');
+        const total = state.filteredPosts.length;
+        if (total === 0) {
+            info.textContent = 'No entries';
+            return;
+        }
+        const start = (state.currentPage - 1) * state.perPage + 1;
+        const end = Math.min(state.currentPage * state.perPage, total);
+        info.textContent = `Showing ${start} to ${end} of ${total} entries`;
+    }
+
+    /* ===========================================================
+       SECTION H: SEARCH / FILTER LOGIC
+       
+       Filters `state.allPosts` by matching the search term against
+       id, userId, title, and body fields. The result is stored in
+       `state.filteredPosts` which drives the table.
+       =========================================================== */
+
+    /**
+     * Apply search filter to the dataset.
+     */
+    function applySearch() {
+        const term = state.searchTerm.toLowerCase().trim();
+
+        if (!term) {
+            // No search – show all posts
+            state.filteredPosts = [...state.allPosts];
+        } else {
+            state.filteredPosts = state.allPosts.filter(post => {
+                return (
+                    String(post.id).includes(term) ||
+                    String(post.userId).includes(term) ||
+                    post.title.toLowerCase().includes(term) ||
+                    post.body.toLowerCase().includes(term)
+                );
+            });
+        }
+
+        // Re-apply sort and reset to first page
+        sortData();
+        state.currentPage = 1;
+        renderTable();
+    }
+
+    /* ===========================================================
+       SECTION I: EXPORT TO CSV
+       
+       Converts the filtered dataset to a CSV string and triggers
+       a browser download. Uses Blob and URL.createObjectURL.
+       =========================================================== */
+
+    /**
+     * Export the current filtered data as a CSV file download.
+     */
+    function exportToCsv() {
+        if (state.filteredPosts.length === 0) {
+            showToast('Export', 'No data to export.', 'warning');
+            return;
+        }
+
+        // CSV header row
+        const headers = ['ID', 'User ID', 'Title', 'Body'];
+
+        // Build CSV rows, escaping quotes per RFC 4180
+        const rows = state.filteredPosts.map(post => [
+            post.id,
+            post.userId,
+            `"${post.title.replace(/"/g, '""')}"`,
+            `"${post.body.replace(/"/g, '""')}"`
+        ]);
+
+        // Combine header + rows with newline separators
+        const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+
+        // Create a Blob and trigger download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `posts_export_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        showToast('Export', `Exported ${state.filteredPosts.length} posts to CSV.`, 'success');
+    }
+
+    /* ===========================================================
+       SECTION J: MODAL MANAGEMENT
+       
+       Functions to open/close the create/edit modal and populate
+       its fields. The delete confirmation modal is separate.
+       =========================================================== */
+
+    /**
+     * Reset the create/edit form to its default (empty) state.
+     */
+    function resetForm() {
+        document.getElementById('postId').value = '';
+        document.getElementById('postUserId').value = '1';
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postBody').value = '';
+        document.getElementById('titleCharCount').textContent = '0';
+        document.getElementById('bodyCharCount').textContent = '0';
+        document.getElementById('postModalLabel').textContent = 'Add New Post';
+    }
+
+    /**
+     * Populate the form with an existing post's data for editing.
+     */
+    function populateForm(post) {
+        document.getElementById('postId').value = post.id;
+        document.getElementById('postUserId').value = post.userId;
+        document.getElementById('postTitle').value = post.title;
+        document.getElementById('postBody').value = post.body;
+        document.getElementById('titleCharCount').textContent = post.title.length;
+        document.getElementById('bodyCharCount').textContent = post.body.length;
+        document.getElementById('postModalLabel').textContent = `Edit Post #${post.id}`;
+    }
+
+    /**
+     * Validate form fields before submission.
+     * @returns {boolean} true if valid
+     */
+    function validateForm() {
+        const title = document.getElementById('postTitle').value.trim();
+        const body = document.getElementById('postBody').value.trim();
+        const userId = parseInt(document.getElementById('postUserId').value, 10);
+
+        if (!title) {
+            showToast('Validation', 'Title is required.', 'warning');
+            return false;
+        }
+        if (!body) {
+            showToast('Validation', 'Body is required.', 'warning');
+            return false;
+        }
+        if (isNaN(userId) || userId < 1 || userId > 10) {
+            showToast('Validation', 'User ID must be between 1 and 10.', 'warning');
+            return false;
+        }
+        return true;
+    }
+
+    /* ===========================================================
+       SECTION K: CRUD OPERATION HANDLERS
+       
+       Each handler calls the API, updates local state, and
+       re-renders the UI with appropriate feedback.
+       =========================================================== */
+
+    /**
+     * LOAD: Fetch all posts from the API.
+     */
+    async function loadPosts() {
+        setLoading(true);
+        renderSkeleton();
+
+        try {
+            // GET request to fetch all posts
+            const posts = await fetchPosts();
+            state.allPosts = posts;
+
+            // Apply current filters and render
+            applySearch();
+            showToast('Data Loaded', `Successfully loaded ${posts.length} posts.`, 'success');
+        } catch (error) {
+            showToast('Error', error.message, 'danger');
+            document.getElementById('tableBody').innerHTML = `
+                <tr><td colspan="5" class="text-center text-danger py-5">
+                    <h5>Failed to load data</h5>
+                    <p>${escapeHtml(error.message)}</p>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadPosts()">
+                        Retry
+                    </button>
+                </td></tr>`;
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    /**
+     * CREATE: Handle form submission in create mode.
+     */
+    async function handleCreate() {
+        if (!validateForm()) return;
+
+        const data = {
+            userId: parseInt(document.getElementById('postUserId').value, 10),
+            title: document.getElementById('postTitle').value.trim(),
+            body: document.getElementById('postBody').value.trim()
+        };
+
+        const saveBtn = document.getElementById('savePostBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+
+        try {
+            // POST request to create the resource
+            const newPost = await createPost(data);
+
+            /*
+             * JSONPlaceholder always returns id: 101 for new posts.
+             * We assign a unique local ID so the UI can distinguish
+             * newly created items.
+             */
+            newPost.id = state.nextTempId++;
+
+            // Prepend to local state (appears at top of list)
+            state.allPosts.unshift(newPost);
+            applySearch();
+
+            postModal.hide();
+            showToast('Created', `Post "${truncate(newPost.title, 30)}" created.`, 'success');
+        } catch (error) {
+            showToast('Error', error.message, 'danger');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Post';
+        }
+    }
+
+    /**
+     * UPDATE: Handle form submission in edit mode.
+     */
+    async function handleUpdate() {
+        if (!validateForm()) return;
+
+        const id = parseInt(document.getElementById('postId').value, 10);
+        const data = {
+            id,
+            userId: parseInt(document.getElementById('postUserId').value, 10),
+            title: document.getElementById('postTitle').value.trim(),
+            body: document.getElementById('postBody').value.trim()
+        };
+
+        const saveBtn = document.getElementById('savePostBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Updating...';
+
+        try {
+            // PUT request to update the resource
+            await updatePost(id, data);
+
+            // Update local state in place
+            const index = state.allPosts.findIndex(p => p.id === id);
+            if (index !== -1) {
+                state.allPosts[index] = { ...state.allPosts[index], ...data };
+            }
+            applySearch();
+
+            postModal.hide();
+            showToast('Updated', `Post #${id} updated.`, 'success');
+
+            // Highlight the updated row briefly
+            setTimeout(() => {
+                const row = document.querySelector(`tr[data-id="${id}"]`);
+                if (row) row.classList.add('row-updated');
+            }, 100);
+        } catch (error) {
+            showToast('Error', error.message, 'danger');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Post';
+        }
+    }
+
+    /**
+     * DELETE: Execute after confirmation.
+     */
+    async function handleDelete() {
+        if (pendingDeleteId === null) return;
+
+        const id = pendingDeleteId;
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
+
+        try {
+            // DELETE request
+            await deletePost(id);
+
+            // Remove from local state
+            state.allPosts = state.allPosts.filter(p => p.id !== id);
+            applySearch();
+
+            deleteModal.hide();
+            showToast('Deleted', `Post #${id} deleted.`, 'danger');
+        } catch (error) {
+            showToast('Error', error.message, 'danger');
+        } finally {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Delete';
+            pendingDeleteId = null;
+        }
+    }
+
+    /* ===========================================================
+       SECTION L: EVENT LISTENERS & INITIALIZATION
+       
+       All DOM event bindings and startup logic.
+       =========================================================== */
+
+    // Wait for the DOM to be fully parsed before binding events
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Bootstrap modal instances
+        postModal = new bootstrap.Modal(document.getElementById('postModal'));
+        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+        /* ---- Toolbar Buttons ---- */
+
+        // "Add New Post" button: reset form and open modal in create mode
+        document.getElementById('addNewBtn').addEventListener('click', () => {
+            resetForm();
+            document.getElementById('postModalLabel').textContent = 'Add New Post';
+            postModal.show();
+        });
+
+        // "Export CSV" button
+        document.getElementById('exportCsvBtn').addEventListener('click', exportToCsv);
+
+        // "Reload" button: re-fetch from API
+        document.getElementById('reloadBtn').addEventListener('click', loadPosts);
+
+        /* ---- Search Input ---- */
+
+        // Debounced search – waits 300ms after last keystroke
+        document.getElementById('searchInput').addEventListener(
+            'input',
+            debounce((e) => {
+                state.searchTerm = e.target.value;
+                applySearch();
+            }, 300)
+        );
+
+        // Clear search button
+        document.getElementById('clearSearchBtn').addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            state.searchTerm = '';
+            applySearch();
+        });
+
+        /* ---- Per-Page Selector ---- */
+
+        document.getElementById('perPageSelect').addEventListener('change', (e) => {
+            state.perPage = parseInt(e.target.value, 10);
+            state.currentPage = 1;
+            renderTable();
+        });
+
+        /* ---- Table: Sorting ---- */
+
+        // Clicking a sortable header toggles sort on that column
+        document.querySelectorAll('.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const col = th.dataset.sort;
+                if (state.sortColumn === col) {
+                    // Toggle direction if same column clicked again
+                    state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    state.sortColumn = col;
+                    state.sortDirection = 'asc';
+                }
+                sortData();
+                updateSortIndicators();
+                renderTable();
+            });
+        });
+
+        /* ---- Table: Pagination ---- */
+
+        // Event delegation for page buttons (they are generated dynamically)
+        document.getElementById('pagination').addEventListener('click', (e) => {
+            e.preventDefault();
+            const link = e.target.closest('[data-page]');
+            if (!link) return;
+
+            const page = parseInt(link.dataset.page, 10);
+            const totalPages = getTotalPages();
+
+            if (page >= 1 && page <= totalPages && page !== state.currentPage) {
+                state.currentPage = page;
+                renderTable();
+                // Scroll table into view
+                document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        /* ---- Table: Edit / Delete Buttons (delegated) ---- */
+
+        document.getElementById('tableBody').addEventListener('click', (e) => {
+            // Edit button
+            const editBtn = e.target.closest('.edit-btn');
+            if (editBtn) {
+                const id = parseInt(editBtn.dataset.id, 10);
+                const post = state.allPosts.find(p => p.id === id);
+                if (post) {
+                    populateForm(post);
+                    postModal.show();
+                }
+                return;
+            }
+
+            // Delete button
+            const delBtn = e.target.closest('.delete-btn');
+            if (delBtn) {
+                pendingDeleteId = parseInt(delBtn.dataset.id, 10);
+                document.getElementById('deletePostIdDisplay').textContent = `#${pendingDeleteId}`;
+                deleteModal.show();
+            }
+        });
+
+        /* ---- Modal: Save Button ---- */
+
+        // The save button handles both create and update based on
+        // whether #postId has a value (edit mode) or is empty (create mode)
+        document.getElementById('savePostBtn').addEventListener('click', () => {
+            const id = document.getElementById('postId').value;
+            if (id) {
+                handleUpdate(); // Edit mode
+            } else {
+                handleCreate(); // Create mode
+            }
+        });
+
+        /* ---- Modal: Confirm Delete ---- */
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', handleDelete);
+
+        /* ---- Modal: Reset form when closed ---- */
+
+        document.getElementById('postModal').addEventListener('hidden.bs.modal', resetForm);
+
+        /* ---- Character Counters ---- */
+
+        document.getElementById('postTitle').addEventListener('input', (e) => {
+            document.getElementById('titleCharCount').textContent = e.target.value.length;
+        });
+        document.getElementById('postBody').addEventListener('input', (e) => {
+            document.getElementById('bodyCharCount').textContent = e.target.value.length;
+        });
+
+        /* ---- Keyboard Shortcut: Ctrl+Enter saves form ---- */
+
+        document.getElementById('postModal').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                document.getElementById('savePostBtn').click();
+            }
+        });
+
+        /* ---- Initial Data Load ---- */
+
+        loadPosts();
+    });
+    </script>
+</body>
+</html>

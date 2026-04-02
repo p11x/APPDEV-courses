@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<!-- Bootstrap 5 - Spacing Performance Optimization
+     Techniques for optimizing spacing-related CSS for better performance. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_02_06 - Spacing Performance Optimization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Performance comparison visualization */
+        .perf-bar {
+            height: 30px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            color: white;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .perf-good { background-color: #198754; }
+        .perf-ok { background-color: #ffc107; color: #000; }
+        .perf-bad { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <!-- ==================== Header ==================== -->
+    <div class="container my-5">
+        <h1 class="display-4 fw-bold text-primary">Spacing Performance Optimization</h1>
+        <p class="lead text-muted">
+            Techniques to minimize CSS output and improve rendering performance
+            when using Bootstrap spacing utilities.
+        </p>
+    </div>
+
+    <!-- ==================== 1: Unused Utility Purging ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">1. Purge Unused Spacing Utilities</h2>
+        <p class="text-muted mb-4">Bootstrap generates spacing utilities for all breakpoints and sides. Purge unused ones.</p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card border-danger h-100">
+                    <div class="card-body">
+                        <h5 class="text-danger">Without Purging</h5>
+                        <!-- Show the CSS size impact -->
+                        <div class="perf-bar perf-bad" style="width: 100%;">~2000+ spacing utility classes</div>
+                        <ul class="list-unstyled small text-muted">
+                            <li class="mb-1">&#x2717; All breakpoints generated</li>
+                            <li class="mb-1">&#x2717; All sides (t/b/l/r/x/y) for every size</li>
+                            <li class="mb-1">&#x2717; Negative margins included</li>
+                            <li class="mb-1">&#x2717; CSS file bloats significantly</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-success h-100">
+                    <div class="card-body">
+                        <h5 class="text-success">With Purging (PurgeCSS)</h5>
+                        <div class="perf-bar perf-good" style="width: 30%;">~150 used classes only</div>
+                        <ul class="list-unstyled small text-muted">
+                            <li class="mb-1">&#10003; Only used classes included</li>
+                            <li class="mb-1">&#10003; Unused breakpoints removed</li>
+                            <li class="mb-1">&#10003; CSS file shrinks 60-80%</li>
+                            <li class="mb-1">&#10003; Faster page loads</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PurgeCSS configuration example -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">PurgeCSS Configuration</h5>
+                <pre class="bg-dark text-light p-3 rounded"><code>// postcss.config.js
+module.exports = {
+  plugins: [
+    require('@fullhuman/postcss-purgecss')({
+      content: ['./**/*.html', './src/**/*.js'],
+      // Safelist classes that might be added dynamically
+      safelist: {
+        standard: [/^m[trblxy]?-/, /^p[trblxy]?-/, /^gap-/],
+        greedy: [/^modal/, /^tooltip/, /^dropdown/]
+      }
+    })
+  ]
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 2: CSS Variables for Spacing ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">2. Use CSS Custom Properties</h2>
+        <p class="text-muted">CSS variables enable runtime spacing changes without recompiling.</p>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Define Spacing Tokens</h5>
+                <pre class="bg-dark text-light p-3 rounded"><code>/* Define your spacing tokens once */
+:root {
+  --space-xs: 0.25rem;   /* 4px */
+  --space-sm: 0.5rem;    /* 8px */
+  --space-md: 1rem;      /* 16px */
+  --space-lg: 1.5rem;    /* 24px */
+  --space-xl: 3rem;      /* 48px */
+}
+
+/* Custom spacing classes use the variables */
+.section-gap { margin-bottom: var(--space-xl); }
+.card-pad { padding: var(--space-md); }
+.inline-gap { gap: var(--space-sm); }
+
+/* Override per theme or mode */
+[data-theme="compact"] {
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 2rem;
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- Live demo of theme switching -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Live Demo: Theme Switching</h5>
+                <div class="btn-group mb-3" role="group">
+                    <button class="btn btn-primary btn-sm" onclick="setTheme('normal')">Normal Spacing</button>
+                    <button class="btn btn-outline-primary btn-sm" onclick="setTheme('compact')">Compact Spacing</button>
+                </div>
+                <div id="themeDemo" class="border rounded p-4" style="--demo-gap: 1rem; --demo-pad: 1rem;">
+                    <div class="d-flex flex-column" style="gap: var(--demo-gap);">
+                        <div class="bg-primary text-white rounded" style="padding: var(--demo-pad);">Item A</div>
+                        <div class="bg-primary text-white rounded" style="padding: var(--demo-pad);">Item B</div>
+                        <div class="bg-primary text-white rounded" style="padding: var(--demo-pad);">Item C</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 3: Avoid Excessive Nesting ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">3. Avoid Excessive Nested Margins</h2>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card border-danger h-100">
+                    <div class="card-body">
+                        <h5 class="text-danger">Poor: Margin Stacking</h5>
+                        <pre class="bg-dark text-light p-2 rounded small"><code>&lt;!-- Each child has its own margin --&gt;
+&lt;div class="mb-3"&gt;
+  &lt;div class="mb-2"&gt;
+    &lt;div class="mb-1"&gt;
+      &lt;!-- Accumulated margin: 24px --&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                        <p class="small text-muted mt-2 mb-0">Margins accumulate through nesting,
+                        creating unpredictable spacing and potential layout shifts.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-success h-100">
+                    <div class="card-body">
+                        <h5 class="text-success">Better: Gap on Container</h5>
+                        <pre class="bg-dark text-light p-2 rounded small"><code>&lt;!-- Gap on parent controls all --&gt;
+&lt;div class="d-flex flex-column gap-3"&gt;
+  &lt;div&gt;Item 1&lt;/div&gt;
+  &lt;div&gt;Item 2&lt;/div&gt;
+  &lt;div&gt;Item 3&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                        <p class="small text-muted mt-2 mb-0">Gap utilities provide consistent spacing
+                        without margin collapse issues or accumulation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 4: Reduce Reflows with Consistent Spacing ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">4. Minimize Layout Reflows</h2>
+        <p class="text-muted">Inconsistent spacing causes layout recalculations during rendering.</p>
+
+        <div class="alert alert-warning">
+            <strong>Performance Tip:</strong> Avoid changing margins/padding dynamically on visible elements.
+            Use <code>transform</code> and <code>opacity</code> for animations instead of spacing properties.
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Spacing Animation: Do vs Don't</h5>
+                <pre class="bg-dark text-light p-3 rounded"><code>/* DON'T: Animating margin causes reflows */
+.element {
+  transition: margin 0.3s; /* Triggers layout recalculation */
+}
+.element:hover {
+  margin-top: 20px; /* Expensive! */
+}
+
+/* DO: Use transform instead */
+.element {
+  transition: transform 0.3s; /* GPU accelerated, no reflow */
+}
+.element:hover {
+  transform: translateY(-20px); /* Cheap! */
+}
+
+/* DO: Use opacity for fade effects */
+.element {
+  transition: opacity 0.3s;
+}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 5: Responsive Spacing Performance ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">5. Responsive Spacing Efficiency</h2>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card border-danger h-100">
+                    <div class="card-body">
+                        <h5 class="text-danger">All Breakpoints</h5>
+                        <pre class="bg-dark text-light p-2 rounded small"><code>&lt;div class="
+  m-1 m-sm-2 m-md-3
+  m-lg-4 m-xl-5 m-xxl-5
+  p-1 p-sm-2 p-md-3
+  p-lg-4 p-xl-5 p-xxl-5
+"&gt;</code></pre>
+                        <div class="perf-bar perf-bad" style="width: 100%;">12 classes per element</div>
+                        <p class="small text-muted mb-0">Generates many CSS rules for breakpoints you may not need.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-success h-100">
+                    <div class="card-body">
+                        <h5 class="text-success">Strategic Breakpoints</h5>
+                        <pre class="bg-dark text-light p-2 rounded small"><code>&lt;div class="
+  p-3 p-lg-5
+  my-4 my-lg-5
+"&gt;</code></pre>
+                        <div class="perf-bar perf-good" style="width: 40%;">4 classes per element</div>
+                        <p class="small text-muted mb-0">Only change spacing where the layout actually shifts.
+                        Fewer classes, same result.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 6: Gap vs Individual Margins ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">6. Gap Utilities: Performance Advantage</h2>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Approach</th>
+                        <th>CSS Rules Generated</th>
+                        <th>Browser Reflow Cost</th>
+                        <th>Maintainability</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Individual <code>mb-3</code> on each child</td>
+                        <td>N rules (one per child)</td>
+                        <td>Higher (margin collapse)</td>
+                        <td>Harder (manual last-child)</td>
+                    </tr>
+                    <tr class="table-success">
+                        <td><code>gap-3</code> on container</td>
+                        <td>1 rule (on parent)</td>
+                        <td>Lower (no collapse)</td>
+                        <td>Easier (automatic)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Gap: Clean and Performant</h5>
+                <!-- Demonstrating gap with flexbox -->
+                <div class="d-flex flex-column gap-3 p-3 border rounded">
+                    <div class="bg-primary text-white p-3 rounded">Row 1</div>
+                    <div class="bg-primary text-white p-3 rounded">Row 2</div>
+                    <div class="bg-primary text-white p-3 rounded">Row 3</div>
+                </div>
+                <pre class="bg-dark text-light p-2 rounded mt-3 small"><code>&lt;div class="d-flex flex-column gap-3"&gt;
+  &lt;div&gt;Row 1&lt;/div&gt;
+  &lt;div&gt;Row 2&lt;/div&gt;
+  &lt;div&gt;Row 3&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 7: Spacing Utility Tree Shaking ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">7. Custom Build: Include Only What You Need</h2>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Selective Sass Import</h5>
+                <pre class="bg-dark text-light p-3 rounded"><code>// Only import spacing utilities you actually use
+// custom-bootstrap.scss
+
+// Import only the spacing utilities
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
+
+// Import only margin utilities (skip padding if unused)
+@import "bootstrap/scss/utilities/api";
+@import "bootstrap/scss/utilities/_spacing";
+
+// Or override the spacing utilities map to include fewer values
+$utilities: (
+  "margin": (
+    property: margin,
+    class: m,
+    values: map-merge($spacers, (auto: auto))
+  ),
+  "padding": (
+    property: padding,
+    class: p,
+    values: $spacers
+  )
+);</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 8: Lazy Loading Spacing ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">8. Critical CSS: Inline Spacing for Above-the-Fold</h2>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Inline Critical Spacing CSS</h5>
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;head&gt;
+  &lt;!-- Inline critical spacing CSS for immediate render --&gt;
+  &lt;style&gt;
+    /* Only above-the-fold spacing */
+    .container { padding-left: 15px; padding-right: 15px; }
+    .hero { padding: 3rem 0; margin-bottom: 2rem; }
+    .nav { padding: 1rem; }
+  &lt;/style&gt;
+
+  &lt;!-- Defer full Bootstrap CSS --&gt;
+  &lt;link rel="preload" href="bootstrap.min.css"
+        as="style" onload="this.onload=null;this.rel='stylesheet'"&gt;
+&lt;/head&gt;</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 9: Spacing Performance Benchmarks ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">9. CSS Size Impact by Approach</h2>
+
+        <div>
+            <div class="perf-bar perf-bad" style="width: 100%;">Full Bootstrap CSS: ~220KB (all spacing utilities)</div>
+            <div class="perf-bar perf-ok" style="width: 45%;">Custom Build: ~100KB (selected utilities)</div>
+            <div class="perf-bar perf-good" style="width: 20%;">Purged Build: ~45KB (only used classes)</div>
+            <div class="perf-bar perf-good" style="width: 10%;">Tailored: ~22KB (critical + lazy load)</div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            <strong>Best Practice:</strong> Use Bootstrap's CDN for development, then switch to a custom/purged build for production.
+        </div>
+    </div>
+
+    <!-- ==================== Footer ==================== -->
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <p class="mb-0">03_02_06 - Spacing Performance Optimization</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* Theme switching demo - shows CSS variable performance benefit */
+        function setTheme(theme) {
+            const demo = document.getElementById('themeDemo');
+            if (theme === 'compact') {
+                demo.style.setProperty('--demo-gap', '0.5rem');
+                demo.style.setProperty('--demo-pad', '0.5rem');
+            } else {
+                demo.style.setProperty('--demo-gap', '1rem');
+                demo.style.setProperty('--demo-pad', '1rem');
+            }
+        }
+    </script>
+</body>
+</html>

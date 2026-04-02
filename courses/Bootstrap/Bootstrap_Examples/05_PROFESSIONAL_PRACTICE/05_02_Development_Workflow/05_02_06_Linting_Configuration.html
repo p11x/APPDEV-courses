@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     05_02_06_Linting_Configuration.html
+     Topic: ESLint, Stylelint, Prettier Configuration
+     ============================================================
+     Linters catch errors and enforce style rules automatically.
+     Prettier formats code consistently. Together they eliminate
+     style debates and catch bugs before they reach production.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linting Configuration - Bootstrap Development Workflow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .config-block {
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.82rem;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.5;
+        }
+        .tool-icon {
+            width: 4rem;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Linting</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="#eslint">ESLint</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#stylelint">Stylelint</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#prettier">Prettier</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#integration">Integration</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Linting & Formatting</h1>
+            <p class="lead">ESLint, Stylelint, and Prettier configuration for Bootstrap 5 projects.</p>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#" class="text-white-50">Workflow</a></li>
+                    <li class="breadcrumb-item active text-white">Linting</li>
+                </ol>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- ============================================================
+             SECTION 1: ESLINT
+             ============================================================
+             ESLint finds and fixes JavaScript problems.
+             It catches bugs, enforces coding standards,
+             and integrates with editors for real-time feedback.
+             ============================================================ -->
+        <section id="eslint" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">1. ESLint Configuration</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Installation</h5>
+                    <div class="config-block">
+<span class="comment"># Install ESLint (flat config - v9+)</span>
+npm install --save-dev eslint @eslint/js
+
+<span class="comment"># For Bootstrap-specific rules</span>
+npm install --save-dev eslint-plugin-html
+
+<span class="comment"># Initialize configuration</span>
+npx eslint --init</div>
+
+                    <h5 class="mt-4 mb-3">eslint.config.js (Flat Config)</h5>
+                    <div class="config-block">
+<span class="comment">// eslint.config.js - ESLint v9+ flat config</span>
+<span class="keyword">import</span> js <span class="keyword">from</span> <span class="string">'@eslint/js'</span>;
+
+<span class="keyword">export default</span> [
+  js.configs.recommended,
+  {
+    files: [<span class="string">'**/*.js'</span>],
+    languageOptions: {
+      ecmaVersion: <span class="string">'latest'</span>,
+      sourceType: <span class="string">'module'</span>,
+      globals: {
+        <span class="comment">// Bootstrap's global dependencies</span>
+        document: <span class="string">'readonly'</span>,
+        window: <span class="string">'readonly'</span>,
+        console: <span class="string">'readonly'</span>,
+        bootstrap: <span class="string">'readonly'</span>,
+      },
+    },
+    rules: {
+      <span class="comment">// Error prevention</span>
+      <span class="string">'no-unused-vars'</span>: [<span class="string">'warn'</span>, { argsIgnorePattern: <span class="string">'^_'</span> }],
+      <span class="string">'no-console'</span>: <span class="string">'warn'</span>,
+      <span class="string">'no-undef'</span>: <span class="string">'error'</span>,
+      
+      <span class="comment">// Code quality</span>
+      <span class="string">'eqeqeq'</span>: [<span class="string">'error'</span>, <span class="string">'always'</span>],
+      <span class="string">'no-var'</span>: <span class="string">'error'</span>,
+      <span class="string">'prefer-const'</span>: <span class="string">'error'</span>,
+      <span class="string">'prefer-arrow-callback'</span>: <span class="string">'error'</span>,
+      
+      <span class="comment">// Style (let Prettier handle most formatting)</span>
+      <span class="string">'semi'</span>: [<span class="string">'error'</span>, <span class="string">'always'</span>],
+      <span class="string">'quotes'</span>: [<span class="string">'error'</span>, <span class="string">'single'</span>],
+    },
+  },
+  {
+    <span class="comment">// Ignore patterns</span>
+    ignores: [<span class="string">'dist/**'</span>, <span class="string">'node_modules/**'</span>, <span class="string">'**/*.min.js'</span>],
+  },
+];</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Legacy .eslintrc Format</h5>
+                    <div class="config-block">
+<span class="comment">// .eslintrc.json - Legacy format (ESLint v8)</span>
+{
+  <span class="string">"env"</span>: {
+    <span class="string">"browser"</span>: <span class="keyword">true</span>,
+    <span class="string">"es2021"</span>: <span class="keyword">true</span>
+  },
+  <span class="string">"extends"</span>: <span class="string">"eslint:recommended"</span>,
+  <span class="string">"parserOptions"</span>: {
+    <span class="string">"ecmaVersion"</span>: <span class="string">"latest"</span>,
+    <span class="string">"sourceType"</span>: <span class="string">"module"</span>
+  },
+  <span class="string">"rules"</span>: {
+    <span class="string">"no-unused-vars"</span>: <span class="string">"warn"</span>,
+    <span class="string">"no-console"</span>: <span class="string">"warn"</span>,
+    <span class="string">"eqeqeq"</span>: <span class="string">"error"</span>
+  },
+  <span class="string">"ignorePatterns"</span>: [<span class="string">"dist/"</span>, <span class="string">"node_modules/"</span>]
+}</div>
+
+                    <h5 class="mt-4 mb-3">Run ESLint</h5>
+                    <div class="config-block">
+<span class="comment"># Check for errors</span>
+npx eslint src/
+
+<span class="comment"># Auto-fix problems</span>
+npx eslint src/ --fix
+
+<span class="comment"># Check specific file types</span>
+npx eslint <span class="string">"src/**/*.js"</span>
+
+<span class="comment"># Add to package.json</span>
+{
+  <span class="string">"scripts"</span>: {
+    <span class="string">"lint"</span>: <span class="string">"eslint src/"</span>,
+    <span class="string">"lint:fix"</span>: <span class="string">"eslint src/ --fix"</span>
+  }
+}</div>
+
+                    <div class="alert alert-info mt-3">
+                        <h6 class="alert-heading">Common ESLint Rules</h6>
+                        <ul class="mb-0 small">
+                            <li><code>no-unused-vars</code> - Catch dead code</li>
+                            <li><code>eqeqeq</code> - Require === instead of ==</li>
+                            <li><code>no-var</code> - Enforce let/const</li>
+                            <li><code>prefer-const</code> - Use const when possible</li>
+                            <li><code>no-console</code> - Flag console.log in prod</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 2: STYLELINT
+             ============================================================
+             Stylelint lints CSS/SCSS for errors and enforces
+             consistent conventions. Essential for Bootstrap SCSS
+             customization projects.
+             ============================================================ -->
+        <section id="stylelint" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">2. Stylelint Configuration</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Installation</h5>
+                    <div class="config-block">
+<span class="comment"># Install Stylelint with SCSS support</span>
+npm install --save-dev stylelint stylelint-config-standard-scss</div>
+
+                    <h5 class="mt-4 mb-3">.stylelintrc.json</h5>
+                    <div class="config-block">
+{
+  <span class="string">"extends"</span>: <span class="string">"stylelint-config-standard-scss"</span>,
+  <span class="string">"rules"</span>: {
+    <span class="comment">// Allow Bootstrap's class naming</span>
+    <span class="string">"selector-class-pattern"</span>: <span class="keyword">null</span>,
+    
+    <span class="comment">// Allow Bootstrap's @import usage</span>
+    <span class="string">"scss/at-import-partial-extension"</span>: <span class="keyword">null</span>,
+    
+    <span class="comment">// Disable rules that conflict with Bootstrap</span>
+    <span class="string">"scss/no-global-function-name"</span>: <span class="keyword">null</span>,
+    
+    <span class="comment">// Enforce consistent formatting</span>
+    <span class="string">"indentation"</span>: <span class="string">2</span>,
+    <span class="string">"max-empty-lines"</span>: <span class="string">1</span>,
+    
+    <span class="comment">// Color rules</span>
+    <span class="string">"color-hex-length"</span>: <span class="string">"short"</span>,
+    <span class="string">"color-no-invalid-hex"</span>: <span class="keyword">true</span>,
+    
+    <span class="comment">// Property rules</span>
+    <span class="string">"declaration-block-no-duplicate-properties"</span>: <span class="keyword">true</span>,
+    <span class="string">"shorthand-property-no-redundant-values"</span>: <span class="keyword">true</span>,
+    
+    <span class="comment">// SCSS specific</span>
+    <span class="string">"scss/dollar-variable-pattern"</span>: <span class="string">"^[a-z][a-z0-9-]*$"</span>,
+    <span class="string">"scss/percent-placeholder-pattern"</span>: <span class="string">"^[a-z][a-z0-9-]*$"</span>
+  }
+}</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Run Stylelint</h5>
+                    <div class="config-block">
+<span class="comment"># Lint SCSS files</span>
+npx stylelint <span class="string">"src/**/*.scss"</span>
+
+<span class="comment"># Auto-fix</span>
+npx stylelint <span class="string">"src/**/*.scss"</span> --fix
+
+<span class="comment"># package.json scripts</span>
+{
+  <span class="string">"scripts"</span>: {
+    <span class="string">"lint:css"</span>: <span class="string">"stylelint 'src/**/*.scss'"</span>,
+    <span class="string">"lint:css:fix"</span>: <span class="string">"stylelint 'src/**/*.scss' --fix"</span>
+  }
+}</div>
+
+                    <h5 class="mt-4 mb-3">Rules for Bootstrap Projects</h5>
+                    <div class="config-block">
+<span class="comment">// Stylelint rules that work well with Bootstrap</span>
+{
+  <span class="string">"rules"</span>: {
+    <span class="comment">// Enforce Bootstrap variable naming</span>
+    <span class="string">"scss/dollar-variable-pattern"</span>: <span class="string">"^(_)?[a-z][a-z0-9-]*$"</span>,
+    
+    <span class="comment">// Allow @extend with Bootstrap classes</span>
+    <span class="string">"scss/selector-no-redundant-nesting-selector"</span>: <span class="keyword">true</span>,
+    
+    <span class="comment">// Require @use over @import</span>
+    <span class="string">"scss/load-no-partial-leading-underscore"</span>: <span class="string">"always"</span>,
+    
+    <span class="comment">// Consistent property order</span>
+    <span class="string">"order/properties-alphabetical-order"</span>: <span class="keyword">null</span>,
+    <span class="comment">// OR custom order:</span>
+    <span class="string">"order/properties-order"</span>: [
+      [<span class="string">"position"</span>, <span class="string">"top"</span>, <span class="string">"right"</span>, <span class="string">"display"</span>, <span class="string">"flex"</span>],
+      { <span class="string">"unspecified"</span>: <span class="string">"bottomAlphabetical"</span> }
+    ]
+  }
+}</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 3: PRETTIER
+             ============================================================
+             Prettier is an opinionated code formatter. It enforces
+             consistent style by parsing and reprinting code.
+             Works with HTML, CSS, SCSS, JS, JSON, and more.
+             ============================================================ -->
+        <section id="prettier" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">3. Prettier Configuration</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Installation</h5>
+                    <div class="config-block">
+npm install --save-dev prettier</div>
+
+                    <h5 class="mt-4 mb-3">.prettierrc</h5>
+                    <div class="config-block">
+{
+  <span class="string">"semi"</span>: <span class="keyword">true</span>,
+  <span class="string">"singleQuote"</span>: <span class="keyword">true</span>,
+  <span class="string">"tabWidth"</span>: <span class="string">2</span>,
+  <span class="string">"useTabs"</span>: <span class="keyword">false</span>,
+  <span class="string">"trailingComma"</span>: <span class="string">"es5"</span>,
+  <span class="string">"printWidth"</span>: <span class="string">80</span>,
+  <span class="string">"bracketSpacing"</span>: <span class="keyword">true</span>,
+  <span class="string">"arrowParens"</span>: <span class="string">"always"</span>,
+  <span class="string">"endOfLine"</span>: <span class="string">"lf"</span>,
+  
+  <span class="comment">// HTML-specific</span>
+  <span class="string">"htmlWhitespaceSensitivity"</span>: <span class="string">"ignore"</span>,
+  <span class="string">"wrapAttributes"</span>: <span class="string">"auto"</span>,
+  
+  <span class="comment">// SCSS-specific</span>
+  <span class="string">"singleQuote"</span>: <span class="keyword">true</span>,
+  
+  <span class="comment">// Override for specific files</span>
+  <span class="string">"overrides"</span>: [
+    {
+      <span class="string">"files"</span>: <span class="string">"*.html"</span>,
+      <span class="string">"options"</span>: {
+        <span class="string">"printWidth"</span>: <span class="string">120</span>
+      }
+    }
+  ]
+}</div>
+
+                    <h5 class="mt-4 mb-3">.prettierignore</h5>
+                    <div class="config-block">
+<span class="comment"># Ignore build output</span>
+dist/
+build/
+
+<span class="comment"># Ignore dependencies</span>
+node_modules/
+
+<span class="comment"># Ignore minified files</span>
+*.min.js
+*.min.css
+
+<span class="comment"># Ignore Bootstrap source (if vendored)</span>
+vendor/bootstrap/</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Run Prettier</h5>
+                    <div class="config-block">
+<span class="comment"># Format all files</span>
+npx prettier --write .
+
+<span class="comment"># Check (without modifying)</span>
+npx prettier --check .
+
+<span class="comment"># Format specific file types</span>
+npx prettier --write <span class="string">"src/**/*.{js,scss,html}"</span>
+
+<span class="comment"># package.json</span>
+{
+  <span class="string">"scripts"</span>: {
+    <span class="string">"format"</span>: <span class="string">"prettier --write ."</span>,
+    <span class="string">"format:check"</span>: <span class="string">"prettier --check ."</span>
+  }
+}</div>
+
+                    <!-- VS Code integration -->
+                    <h5 class="mt-4 mb-3">VS Code Integration</h5>
+                    <div class="config-block">
+<span class="comment">// .vscode/settings.json</span>
+{
+  <span class="string">"editor.formatOnSave"</span>: <span class="keyword">true</span>,
+  <span class="string">"editor.defaultFormatter"</span>: <span class="string">"esbenp.prettier-vscode"</span>,
+  <span class="string">"editor.codeActionsOnSave"</span>: {
+    <span class="string">"source.fixAll.eslint"</span>: <span class="string">"explicit"</span>,
+    <span class="string">"source.fixAll.stylelint"</span>: <span class="string">"explicit"</span>
+  },
+  <span class="string">"scss.validate"</span>: <span class="keyword">false</span>,
+  <span class="comment">// Use Stylelint for SCSS validation instead</span>
+  <span class="string">"[scss]"</span>: {
+    <span class="string">"editor.defaultFormatter"</span>: <span class="string">"esbenp.prettier-vscode"</span>
+  }
+}</div>
+
+                    <div class="alert alert-success mt-3">
+                        <h6 class="alert-heading">Recommended Extensions</h6>
+                        <ul class="mb-0 small">
+                            <li><strong>Prettier</strong> - esbenp.prettier-vscode</li>
+                            <li><strong>ESLint</strong> - dbaeumer.vscode-eslint</li>
+                            <li><strong>Stylelint</strong> - stylelint.vscode-stylelint</li>
+                            <li><strong>SCSS IntelliSense</strong> - mrmlnc.vscode-scss</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 4: INTEGRATION
+             ============================================================
+             All three tools working together with proper conflict
+             resolution and unified scripts.
+             ============================================================ -->
+        <section id="integration" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">4. Tool Integration</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Resolving Conflicts</h5>
+                    <div class="config-block">
+<span class="comment">// Disable formatting rules in ESLint (let Prettier handle it)</span>
+npm install --save-dev eslint-config-prettier
+
+<span class="comment">// eslint.config.js</span>
+<span class="keyword">import</span> prettier <span class="keyword">from</span> <span class="string">'eslint-config-prettier'</span>;
+
+<span class="keyword">export default</span> [
+  js.configs.recommended,
+  prettier,  <span class="comment">// Disables conflicting rules</span>
+  {
+    rules: {
+      <span class="comment">// Your custom rules here</span>
+    }
+  }
+];</div>
+                    
+                    <h5 class="mt-4 mb-3">Combined npm Scripts</h5>
+                    <div class="config-block">
+{
+  <span class="string">"scripts"</span>: {
+    <span class="string">"lint"</span>: <span class="string">"npm run lint:js && npm run lint:css"</span>,
+    <span class="string">"lint:js"</span>: <span class="string">"eslint 'src/**/*.js'"</span>,
+    <span class="string">"lint:css"</span>: <span class="string">"stylelint 'src/**/*.scss'"</span>,
+    <span class="string">"lint:fix"</span>: <span class="string">"npm run lint:js:fix && npm run lint:css:fix"</span>,
+    <span class="string">"lint:js:fix"</span>: <span class="string">"eslint 'src/**/*.js' --fix"</span>,
+    <span class="string">"lint:css:fix"</span>: <span class="string">"stylelint 'src/**/*.scss' --fix"</span>,
+    <span class="string">"format"</span>: <span class="string">"prettier --write ."</span>,
+    <span class="string">"format:check"</span>: <span class="string">"prettier --check ."</span>,
+    <span class="string">"validate"</span>: <span class="string">"npm run format:check && npm run lint"</span>
+  }
+}</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <!-- Tool responsibilities -->
+                    <h5 class="mb-3">Tool Responsibilities</h5>
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Tool</th>
+                                <th>Handles</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Prettier</strong></td>
+                                <td>Formatting: indentation, line length, quotes, semicolons</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ESLint</strong></td>
+                                <td>JS quality: unused vars, == vs ===, best practices</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Stylelint</strong></td>
+                                <td>CSS/SCSS quality: invalid properties, duplicates, patterns</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="alert alert-primary">
+                        <h6 class="alert-heading">Execution Order</h6>
+                        <ol class="mb-0 small">
+                            <li><strong>Prettier</strong> - Format code first</li>
+                            <li><strong>ESLint</strong> - Then check for JS issues</li>
+                            <li><strong>Stylelint</strong> - Then check for CSS issues</li>
+                            <li><strong>Pre-commit hook</strong> - Run all automatically</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="text-muted mb-0">Bootstrap 5.3.3 Development Workflow - Module 05_02_06</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

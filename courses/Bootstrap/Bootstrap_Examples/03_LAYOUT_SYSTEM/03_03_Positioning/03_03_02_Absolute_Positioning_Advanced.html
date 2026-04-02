@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<!-- Bootstrap 5 - Absolute Positioning Advanced
+     Deep dive into absolute positioning: containing blocks, z-index, stacking contexts. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_03_02 - Absolute Positioning Advanced</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-container {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 20px;
+            min-height: 200px;
+        }
+        .abs-box {
+            padding: 15px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid;
+        }
+    </style>
+</head>
+<body>
+    <!-- ==================== Header ==================== -->
+    <div class="container my-5">
+        <h1 class="display-4 fw-bold text-primary">Absolute Positioning Advanced</h1>
+        <p class="lead text-muted">
+            Absolute positioning removes elements from the document flow and positions them
+            relative to their nearest positioned ancestor.
+        </p>
+    </div>
+
+    <!-- ==================== 1: Basic Absolute Positioning ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">1. How Absolute Positioning Works</h2>
+        <p class="text-muted mb-4">
+            <code>position: absolute</code> removes the element from normal flow.
+            It's positioned relative to the nearest ancestor with a non-static position.
+        </p>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <h5>Absolute in Relative Parent</h5>
+                <!-- Relative parent creates the containing block -->
+                <div class="demo-container position-relative" style="height: 250px;">
+                    <p class="text-muted">Relative parent container</p>
+                    <!-- Absolute child positioned within relative parent -->
+                    <div class="abs-box bg-primary border-primary position-absolute"
+                         style="top: 20px; left: 20px; width: 150px;">
+                        top:20 left:20
+                    </div>
+                    <div class="abs-box bg-success border-success position-absolute"
+                         style="top: 60px; right: 20px; width: 150px;">
+                        top:60 right:20
+                    </div>
+                    <div class="abs-box bg-warning border-warning position-absolute"
+                         style="bottom: 20px; left: 50%; transform: translateX(-50%); width: 150px;">
+                        bottom:20 centered
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <h5>Flow Impact</h5>
+                <div class="demo-container">
+                    <!-- Regular flow element -->
+                    <div class="bg-secondary text-white p-2 mb-2">Normal flow element 1</div>
+                    <!-- Absolute element - removed from flow, original space collapses -->
+                    <div class="abs-box bg-danger border-danger position-absolute"
+                         style="top: 50px; right: 10px; width: 120px;">
+                        Absolute
+                    </div>
+                    <!-- This element moves up because absolute element left the flow -->
+                    <div class="bg-secondary text-white p-2">Normal flow element 2 (moved up!)</div>
+                </div>
+                <p class="small text-muted mt-2">
+                    Notice: Element 2 moved up because the absolute element left the document flow.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 2: Containing Block Chain ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">2. Containing Block Chain</h2>
+        <p class="text-muted mb-4">
+            An absolute element looks up the DOM tree for the nearest positioned ancestor.
+            If none is found, it uses the initial containing block (viewport).
+        </p>
+
+        <!-- No positioned ancestor - absolute escapes to viewport -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>No Positioned Ancestor</h5>
+                <div class="demo-container">
+                    <p>This container has no position set (static).</p>
+                    <div class="abs-box bg-danger position-absolute" style="top: 0; right: 0; width: 150px;">
+                        Escapes to viewport
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- With positioned ancestor - absolute stays contained -->
+        <div class="card">
+            <div class="card-body">
+                <h5>With Positioned Ancestor</h5>
+                <div class="demo-container position-relative">
+                    <p>This container has <code>position: relative</code>.</p>
+                    <div class="abs-box bg-success position-absolute" style="top: 10px; right: 10px; width: 150px;">
+                        Contained!
+                    </div>
+
+                    <!-- Nested positioning context -->
+                    <div class="border border-primary rounded p-3 mt-4 position-relative" style="height: 120px;">
+                        <p class="small">Nested relative container</p>
+                        <div class="abs-box bg-info position-absolute" style="bottom: 5px; left: 5px; width: 130px; font-size: 0.8rem;">
+                            Nested absolute
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 3: Z-Index and Stacking ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">3. Z-Index &amp; Stacking Context</h2>
+        <p class="text-muted mb-4">
+            <code>z-index</code> controls the stacking order of positioned elements.
+            It only works on positioned elements (relative, absolute, fixed, sticky).
+        </p>
+
+        <div class="position-relative bg-light border rounded p-4" style="height: 300px;">
+            <!-- z-index: 1 - bottom layer -->
+            <div class="position-absolute bg-primary text-white p-3 rounded"
+                 style="top: 20px; left: 20px; width: 200px; height: 100px; z-index: 1;">
+                z-index: 1 (bottom)
+            </div>
+            <!-- z-index: 2 - middle layer -->
+            <div class="position-absolute bg-success text-white p-3 rounded"
+                 style="top: 40px; left: 60px; width: 200px; height: 100px; z-index: 2;">
+                z-index: 2 (middle)
+            </div>
+            <!-- z-index: 3 - top layer -->
+            <div class="position-absolute bg-danger text-white p-3 rounded"
+                 style="top: 60px; left: 100px; width: 200px; height: 100px; z-index: 3;">
+                z-index: 3 (top)
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <strong>Bootstrap Z-Index Classes:</strong>
+            <code>z-0</code>, <code>z-1</code>, <code>z-2</code>, <code>z-3</code>,
+            <code>z-n1</code> (negative), or use inline styles for specific values.
+        </div>
+    </div>
+
+    <!-- ==================== 4: Bootstrap Position Utilities ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">4. Bootstrap Position Utility Classes</h2>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Class</th>
+                        <th>CSS Property</th>
+                        <th>Effect</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>.position-static</code></td><td>position: static</td><td>Default flow</td></tr>
+                    <tr><td><code>.position-relative</code></td><td>position: relative</td><td>Offset from normal position</td></tr>
+                    <tr><td><code>.position-absolute</code></td><td>position: absolute</td><td>Remove from flow, relative to parent</td></tr>
+                    <tr><td><code>.position-fixed</code></td><td>position: fixed</td><td>Relative to viewport</td></tr>
+                    <tr><td><code>.position-sticky</code></td><td>position: sticky</td><td>Sticks when scrolled to threshold</td></tr>
+                    <tr><td><code>.top-0</code> through <code>.top-50</code></td><td>top: 0% to 50%</td><td>Vertical offset</td></tr>
+                    <tr><td><code>.start-0</code> through <code>.start-50</code></td><td>left: 0% to 50%</td><td>Horizontal offset</td></tr>
+                    <tr><td><code>.translate-middle</code></td><td>transform: translate(-50%, -50%)</td><td>Center element on its anchor point</td></tr>
+                    <tr><td><code>.translate-middle-x</code></td><td>transform: translateX(-50%)</td><td>Horizontal center</td></tr>
+                    <tr><td><code>.translate-middle-y</code></td><td>transform: translateY(-50%)</td><td>Vertical center</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ==================== 5: Practical Patterns ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">5. Common Absolute Positioning Patterns</h2>
+
+        <div class="row g-4">
+            <!-- Pattern: Card with corner badge -->
+            <div class="col-md-4">
+                <div class="card position-relative overflow-hidden">
+                    <div class="card-body">
+                        <h5 class="card-title">Product Card</h5>
+                        <p class="card-text">Card with absolute positioned sale badge.</p>
+                    </div>
+                    <!-- Corner ribbon/badge -->
+                    <div class="position-absolute bg-danger text-white text-center py-1"
+                         style="top: 15px; right: -35px; width: 130px; transform: rotate(45deg); font-size: 0.75rem;">
+                        SALE
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pattern: Image overlay -->
+            <div class="col-md-4">
+                <div class="position-relative rounded overflow-hidden">
+                    <div class="bg-dark" style="height: 200px;"></div>
+                    <!-- Gradient overlay with text -->
+                    <div class="position-absolute bottom-0 start-0 end-0 p-3"
+                         style="background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                        <h5 class="text-white mb-1">Overlay Title</h5>
+                        <p class="text-white-50 small mb-0">Subtitle with gradient background</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pattern: Icon with status dot -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="position-relative d-inline-block">
+                            <!-- Avatar icon -->
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white"
+                                 style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                JD
+                            </div>
+                            <!-- Online status dot -->
+                            <span class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-2 border-white"
+                                  style="width: 16px; height: 16px;"></span>
+                        </div>
+                        <h5 class="mt-3 mb-0">User Avatar</h5>
+                        <small class="text-muted">Status indicator pattern</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 6: Centering with Absolute ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">6. Centering Techniques with Absolute Positioning</h2>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <h5>Classic Centering</h5>
+                <div class="position-relative bg-light border rounded" style="height: 200px;">
+                    <!-- top/left 50% + negative margin technique -->
+                    <div class="position-absolute bg-primary text-white text-center p-3 rounded"
+                         style="top: 50%; left: 50%; width: 120px; height: 60px; margin-left: -60px; margin-top: -30px;">
+                        Negative margin
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h5>Translate Centering</h5>
+                <div class="position-relative bg-light border rounded" style="height: 200px;">
+                    <!-- Bootstrap translate-middle utility for centering -->
+                    <div class="position-absolute top-50 start-50 translate-middle bg-success text-white text-center p-3 rounded">
+                        translate-middle
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h5>Inset Centering</h5>
+                <div class="position-relative bg-light border rounded" style="height: 200px;">
+                    <!-- Using inset: 0 + margin: auto technique -->
+                    <div class="position-absolute bg-warning text-dark text-center p-3 rounded"
+                         style="top: 0; right: 0; bottom: 0; left: 0; width: 120px; height: 60px; margin: auto;">
+                        inset + auto
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== Footer ==================== -->
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <p class="mb-0">03_03_02 - Absolute Positioning Advanced</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

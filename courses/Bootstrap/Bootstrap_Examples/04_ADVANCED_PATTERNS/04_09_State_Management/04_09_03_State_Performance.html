@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_09_03_State_Performance.html
+     Performance Optimization for State Management
+     
+     Covers:
+     - Batch state updates (reduce re-renders)
+     - Debouncing and throttling state changes
+     - Virtual/diffed state (only update changed DOM)
+     - RequestAnimationFrame for smooth state rendering
+     - Memoization of computed state
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_09_03 - State Performance</title>
+    <!-- Bootstrap 5.3.3 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Performance meter styling */
+        .perf-meter { font-family: monospace; font-size: 0.85rem; }
+        /* Highlight for updated elements */
+        .flash-update { animation: flash 0.3s ease; }
+        @keyframes flash { 0% { background-color: #ffc107; } 100% { background-color: transparent; } }
+        /* Render count badge */
+        .render-count { position: absolute; top: 5px; right: 5px; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <!-- Page header -->
+        <h1 class="mb-2">04_09_03 - State Performance Optimization</h1>
+        <p class="text-muted mb-4">Techniques for efficient state updates: batching, debouncing, virtual diffing, and memoization.</p>
+
+        <!-- ============================================================
+             SECTION 1: Naive vs Batched Updates
+             Compare individual renders vs batching multiple changes.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">1. Naive vs Batched Updates</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Naive: render after every change. Batched: collect changes, render once.</p>
+
+                <div class="row">
+                    <!-- Naive approach — renders on every single change -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card position-relative">
+                            <span class="badge bg-danger render-count" id="naiveCount">Renders: 0</span>
+                            <div class="card-header">Naive (per-change render)</div>
+                            <div class="card-body">
+                                <button class="btn btn-danger btn-sm" onclick="naiveUpdate()">Update 50x</button>
+                                <div class="mt-2" id="naiveDisplay">Value: 0</div>
+                                <div class="perf-meter mt-1" id="naiveTime">Time: --</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Batched approach — renders once after all changes -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card position-relative">
+                            <span class="badge bg-success render-count" id="batchCount">Renders: 0</span>
+                            <div class="card-header">Batched (single render)</div>
+                            <div class="card-body">
+                                <button class="btn btn-success btn-sm" onclick="batchUpdate()">Update 50x</button>
+                                <div class="mt-2" id="batchDisplay">Value: 0</div>
+                                <div class="perf-meter mt-1" id="batchTime">Time: --</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 2: Debouncing
+             Delay state updates until user stops typing/clicking.
+             Reduces unnecessary intermediate renders.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">2. Debouncing State Updates</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Debounce: wait until the user stops interacting before updating state.</p>
+
+                <div class="row">
+                    <!-- Without debounce — fires on every keystroke -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card position-relative">
+                            <span class="badge bg-danger render-count" id="rawDebounceCount">Updates: 0</span>
+                            <div class="card-header">Without Debounce</div>
+                            <div class="card-body">
+                                <input type="text" class="form-control mb-2" id="rawInput"
+                                       oninput="rawSearch(this.value)" placeholder="Type here...">
+                                <div id="rawResult" class="small">Result will appear here</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- With debounce — waits 400ms after last keystroke -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card position-relative">
+                            <span class="badge bg-success render-count" id="debouncedCount">Updates: 0</span>
+                            <div class="card-header">With Debounce (400ms)</div>
+                            <div class="card-body">
+                                <input type="text" class="form-control mb-2" id="debouncedInput"
+                                       oninput="debouncedSearch(this.value)" placeholder="Type here...">
+                                <div id="debouncedResult" class="small">Result will appear here</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 3: Throttling
+             Limit state updates to a maximum frequency.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">3. Throttling State Updates</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Throttle: limit updates to max once per interval. Ideal for scroll/mouse events.</p>
+
+                <!-- Simulated scroll tracker -->
+                <div class="border rounded p-3 bg-white" style="height:150px; overflow-y:auto;" id="throttleScroll"
+                     onscroll="throttledScroll()">
+                    <div style="height:600px;" class="position-relative">
+                        <div class="sticky-top bg-warning p-2 rounded">
+                            Throttled position: <span id="throttlePos">0</span>px
+                            <span class="badge bg-success ms-2" id="throttleCount">Updates: 0</span>
+                        </div>
+                        <p class="mt-3">Scroll this container. The position updates are throttled to max once per 200ms.</p>
+                        <p>Without throttling, scroll events can fire 60+ times per second.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 4: Virtual/Diffed State Updates
+             Only update DOM elements that actually changed.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">4. Virtual/Diffed State (Minimal DOM Updates)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Compare old and new state; only update DOM elements that changed.</p>
+
+                <!-- Grid of cells — only changed cells get DOM updates -->
+                <div class="d-flex justify-content-between mb-3">
+                    <button class="btn btn-primary btn-sm" onclick="virtualRandomize()">Randomize All</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="virtualPartial()">Partial Update</button>
+                    <span class="badge bg-dark" id="virtualStats">Updates: 0 / 0 cells</span>
+                </div>
+                <div class="row g-1" id="virtualGrid"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 5: requestAnimationFrame Batching
+             Use rAF to batch state renders into the browser's paint cycle.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">5. requestAnimationFrame Batching</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Batch renders with <code>requestAnimationFrame</code> for smooth 60fps updates.</p>
+
+                <!-- Animated counter using rAF batching -->
+                <div class="text-center mb-3">
+                    <div class="display-1" id="rafCounter">0</div>
+                    <div class="progress mx-auto" style="max-width:400px;height:20px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="rafBar" style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button class="btn btn-primary me-2" onclick="rafStart()" id="rafStartBtn">Start Animation</button>
+                    <button class="btn btn-outline-danger" onclick="rafStop()" id="rafStopBtn" disabled>Stop</button>
+                </div>
+                <div class="perf-meter text-center mt-2" id="rafFps">FPS: --</div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 6: Memoization
+             Cache computed state values to avoid redundant calculations.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">6. Memoization of Computed State</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Cache expensive computations. Only recompute when inputs change.</p>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Array Size</label>
+                        <input type="number" class="form-control" id="memoSize" value="10000" min="100" max="100000">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Filter Threshold</label>
+                        <input type="range" class="form-range mt-2" id="memoThreshold" min="0" max="100" value="50"
+                               oninput="document.getElementById('memoThreshVal').textContent = this.value">
+                        <span id="memoThreshVal">50</span>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="memoRun()">Compute</button>
+                    </div>
+                </div>
+
+                <!-- Results comparison -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-header">Without Memoization</div>
+                            <div class="card-body perf-meter" id="memoNoResult">Click Compute</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-header">With Memoization</div>
+                            <div class="card-body perf-meter" id="memoYesResult">Click Compute</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ========================================================
+        // SECTION 1: Naive vs Batched Updates
+        // ========================================================
+
+        /** Render counters for comparison */
+        let naiveRenders = 0;
+        let batchRenders = 0;
+        /** Batch state value */
+        let batchValue = 0;
+
+        /**
+         * Naive: renders DOM after every single state change
+         * This is the anti-pattern we want to avoid
+         */
+        function naiveUpdate() {
+            let val = 0;
+            const start = performance.now();
+            for (let i = 0; i < 50; i++) {
+                val++;
+                // Render on EVERY iteration — wasteful!
+                document.getElementById('naiveDisplay').textContent = 'Value: ' + val;
+                naiveRenders++;
+            }
+            const elapsed = (performance.now() - start).toFixed(2);
+            document.getElementById('naiveCount').textContent = 'Renders: ' + naiveRenders;
+            document.getElementById('naiveTime').textContent = `Time: ${elapsed}ms (50 renders)`;
+        }
+
+        /**
+         * Batched: changes state 50 times but renders only once
+         * This is the efficient pattern
+         */
+        function batchUpdate() {
+            const start = performance.now();
+            // Mutate state without rendering
+            for (let i = 0; i < 50; i++) {
+                batchValue++;
+            }
+            // Single render after all mutations
+            document.getElementById('batchDisplay').textContent = 'Value: ' + batchValue;
+            batchRenders++;
+            const elapsed = (performance.now() - start).toFixed(2);
+            document.getElementById('batchCount').textContent = 'Renders: ' + batchRenders;
+            document.getElementById('batchTime').textContent = `Time: ${elapsed}ms (1 render)`;
+        }
+
+        // ========================================================
+        // SECTION 2: Debouncing
+        // ========================================================
+
+        /** Update counter for raw (non-debounced) input */
+        let rawUpdates = 0;
+        /** Update counter for debounced input */
+        let debouncedUpdates = 0;
+
+        /**
+         * Raw search — fires on every keystroke
+         * @param {string} val - Current input value
+         */
+        function rawSearch(val) {
+            rawUpdates++;
+            document.getElementById('rawDebounceCount').textContent = 'Updates: ' + rawUpdates;
+            document.getElementById('rawResult').textContent = `Searching for: "${val}" (${val.length} chars)`;
+        }
+
+        /**
+         * Creates a debounced version of a function
+         * @param {Function} fn - Function to debounce
+         * @param {number} delay - Delay in ms
+         * @returns {Function} Debounced function
+         */
+        function debounce(fn, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer); // Cancel previous pending call
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        /**
+         * Debounced search — only fires 400ms after last keystroke
+         */
+        const debouncedSearch = debounce(function(val) {
+            debouncedUpdates++;
+            document.getElementById('debouncedCount').textContent = 'Updates: ' + debouncedUpdates;
+            document.getElementById('debouncedResult').textContent = `Searching for: "${val}" (${val.length} chars)`;
+        }, 400);
+
+        // ========================================================
+        // SECTION 3: Throttling
+        // ========================================================
+
+        /** Throttle update counter */
+        let throttleUpdates = 0;
+
+        /**
+         * Creates a throttled version of a function
+         * @param {Function} fn - Function to throttle
+         * @param {number} limit - Min interval between calls (ms)
+         * @returns {Function} Throttled function
+         */
+        function throttle(fn, limit) {
+            let lastCall = 0;
+            return function(...args) {
+                const now = Date.now();
+                if (now - lastCall >= limit) {
+                    lastCall = now;
+                    fn.apply(this, args);
+                }
+            };
+        }
+
+        /**
+         * Throttled scroll handler — max once per 200ms
+         */
+        const throttledScroll = throttle(function() {
+            const el = document.getElementById('throttleScroll');
+            const pos = Math.round(el.scrollTop);
+            document.getElementById('throttlePos').textContent = pos;
+            throttleUpdates++;
+            document.getElementById('throttleCount').textContent = 'Updates: ' + throttleUpdates;
+        }, 200);
+
+        // ========================================================
+        // SECTION 4: Virtual/Diffed State
+        // ========================================================
+
+        /** Current virtual grid state (array of cell values) */
+        let virtualState = [];
+        /** Grid dimensions */
+        const VGRID_COLS = 10;
+        const VGRID_ROWS = 5;
+        /** Total DOM update count */
+        let virtualDOMUpdates = 0;
+
+        /**
+         * Initializes the virtual grid with empty cells
+         */
+        function virtualInit() {
+            const grid = document.getElementById('virtualGrid');
+            virtualState = Array(VGRID_COLS * VGRID_ROWS).fill(0);
+            grid.innerHTML = virtualState.map((_, i) =>
+                `<div class="col"><div class="border rounded text-center p-2 small" id="vc${i}" style="background:#f8f9fa;">0</div></div>`
+            ).join('');
+        }
+
+        /**
+         * Randomizes all cells — full update
+         */
+        function virtualRandomize() {
+            const newState = virtualState.map(() => Math.floor(Math.random() * 100));
+            virtualDiffAndUpdate(newState);
+        }
+
+        /**
+         * Partial update — only change ~30% of cells
+         */
+        function virtualPartial() {
+            const newState = [...virtualState];
+            const changeCount = Math.floor(newState.length * 0.3);
+            for (let i = 0; i < changeCount; i++) {
+                const idx = Math.floor(Math.random() * newState.length);
+                newState[idx] = Math.floor(Math.random() * 100);
+            }
+            virtualDiffAndUpdate(newState);
+        }
+
+        /**
+         * Diffs old vs new state and only updates changed DOM elements
+         * This is the core of virtual DOM / reconciliation
+         * @param {number[]} newState - New state array
+         */
+        function virtualDiffAndUpdate(newState) {
+            let updates = 0;
+            for (let i = 0; i < newState.length; i++) {
+                // Only touch DOM if value actually changed
+                if (newState[i] !== virtualState[i]) {
+                    const el = document.getElementById('vc' + i);
+                    el.textContent = newState[i];
+                    // Visual flash for updated cells
+                    el.classList.remove('flash-update');
+                    void el.offsetWidth; // Force reflow to restart animation
+                    el.classList.add('flash-update');
+                    // Color based on value
+                    el.style.background = `hsl(${newState[i] * 3.6}, 70%, 85%)`;
+                    updates++;
+                }
+            }
+            virtualState = newState;
+            virtualDOMUpdates += updates;
+            document.getElementById('virtualStats').textContent =
+                `Updates: ${updates} / ${newState.length} cells`;
+        }
+
+        // ========================================================
+        // SECTION 5: requestAnimationFrame Batching
+        // ========================================================
+
+        /** rAF animation state */
+        let rafValue = 0;
+        let rafRunning = false;
+        let rafId = null;
+        let rafLastTime = 0;
+        let rafFrameCount = 0;
+        let rafFpsDisplay = 0;
+
+        /**
+         * Starts the rAF animation loop
+         */
+        function rafStart() {
+            rafRunning = true;
+            rafValue = 0;
+            rafLastTime = performance.now();
+            rafFrameCount = 0;
+            document.getElementById('rafStartBtn').disabled = true;
+            document.getElementById('rafStopBtn').disabled = false;
+            rafTick();
+        }
+
+        /**
+         * Stops the rAF animation
+         */
+        function rafStop() {
+            rafRunning = false;
+            if (rafId) cancelAnimationFrame(rafId);
+            document.getElementById('rafStartBtn').disabled = false;
+            document.getElementById('rafStopBtn').disabled = true;
+        }
+
+        /**
+         * Single animation frame — batches state update and render
+         */
+        function rafTick() {
+            if (!rafRunning) return;
+
+            // Update state
+            rafValue = (rafValue + 1) % 101;
+
+            // Render state (batched into single frame)
+            document.getElementById('rafCounter').textContent = rafValue;
+            document.getElementById('rafBar').style.width = rafValue + '%';
+
+            // FPS calculation
+            rafFrameCount++;
+            const now = performance.now();
+            if (now - rafLastTime >= 1000) {
+                rafFpsDisplay = rafFrameCount;
+                rafFrameCount = 0;
+                rafLastTime = now;
+                document.getElementById('rafFps').textContent = `FPS: ${rafFpsDisplay}`;
+            }
+
+            // Schedule next frame
+            rafId = requestAnimationFrame(rafTick);
+        }
+
+        // ========================================================
+        // SECTION 6: Memoization
+        // ========================================================
+
+        /** Memoization cache */
+        const memoCache = {};
+
+        /**
+         * Creates a memoized version of a function
+         * @param {Function} fn - Function to memoize
+         * @returns {Function} Memoized function
+         */
+        function memoize(fn) {
+            return function(...args) {
+                const key = JSON.stringify(args);
+                if (memoCache[key] !== undefined) {
+                    return { result: memoCache[key], cached: true };
+                }
+                const result = fn(...args);
+                memoCache[key] = result;
+                return { result, cached: false };
+            };
+        }
+
+        /**
+         * Expensive computation: filter and reduce a large array
+         * @param {number} size - Array size
+         * @param {number} threshold - Filter threshold
+         * @returns {Object} Computed results
+         */
+        function expensiveCompute(size, threshold) {
+            const arr = Array.from({ length: size }, (_, i) => Math.random() * 100);
+            const filtered = arr.filter(v => v > threshold);
+            return {
+                total: arr.length,
+                filtered: filtered.length,
+                sum: filtered.reduce((a, b) => a + b, 0),
+                avg: filtered.length > 0 ? filtered.reduce((a, b) => a + b, 0) / filtered.length : 0
+            };
+        }
+
+        /** Memoized version of expensive compute */
+        const memoizedCompute = memoize(expensiveCompute);
+
+        /**
+         * Runs both memoized and non-memoized computation and compares
+         */
+        function memoRun() {
+            const size = parseInt(document.getElementById('memoSize').value) || 10000;
+            const threshold = parseInt(document.getElementById('memoThreshold').value) || 50;
+
+            // Clear cache for fair comparison on first run
+            Object.keys(memoCache).forEach(k => delete memoCache[k]);
+
+            // Non-memoized: always computes
+            const start1 = performance.now();
+            const result1 = expensiveCompute(size, threshold);
+            const time1 = (performance.now() - start1).toFixed(2);
+
+            document.getElementById('memoNoResult').innerHTML =
+                `Time: <strong>${time1}ms</strong><br>` +
+                `Filtered: ${result1.filtered}/${result1.total}<br>` +
+                `Avg: ${result1.avg.toFixed(2)}`;
+
+            // Memoized: first call computes
+            const start2 = performance.now();
+            const { result: result2, cached } = memoizedCompute(size, threshold);
+            const time2 = (performance.now() - start2).toFixed(2);
+
+            // Second call — should be cached
+            const start3 = performance.now();
+            const { result: result3, cached: cached2 } = memoizedCompute(size, threshold);
+            const time3 = (performance.now() - start3).toFixed(2);
+
+            document.getElementById('memoYesResult').innerHTML =
+                `1st call: <strong>${time2}ms</strong> (${cached ? 'cached' : 'computed'})<br>` +
+                `2nd call: <strong>${time3}ms</strong> (${cached2 ? 'cached' : 'computed'})<br>` +
+                `Filtered: ${result2.filtered}/${result2.total}<br>` +
+                `Avg: ${result2.avg.toFixed(2)}`;
+        }
+
+        // ========================================================
+        // INITIALIZATION
+        // ========================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            virtualInit();
+        });
+    </script>
+</body>
+</html>

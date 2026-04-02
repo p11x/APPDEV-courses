@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_07_Animation_Real_World.html                             -->
+<!-- Real-World Animation Patterns with Bootstrap 5                 -->
+<!-- Covers: page transitions, skeleton screens, notification toast,-->
+<!--         card hover effects, hero animations, nav transitions   -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_01_07 - Real-World Animation Patterns</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* --------------------------------------------------------- */
+        /* KEYFRAMES                                                 */
+        /* --------------------------------------------------------- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes shimmer {
+            0%   { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50%      { transform: translateY(-20px) rotate(3deg); }
+        }
+        @keyframes progressBar {
+            from { width: 0; }
+            to   { width: var(--target-width); }
+        }
+        @keyframes ripple {
+            to { transform: scale(4); opacity: 0; }
+        }
+        @keyframes slideNotification {
+            from { transform: translateX(120%); opacity: 0; }
+            to   { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes dotPulse {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* --------------------------------------------------------- */
+        /* HERO SECTION ANIMATION                                    */
+        /* Staggered entrance for hero content elements              */
+        /* --------------------------------------------------------- */
+        .hero-section {
+            min-height: 50vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-title {
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+        .hero-subtitle {
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+        }
+        .hero-cta {
+            animation: fadeInUp 0.8s ease-out 0.5s both;
+        }
+        .hero-image {
+            animation: heroFloat 6s ease-in-out infinite;
+        }
+
+        /* --------------------------------------------------------- */
+        /* NAVBAR SCROLL TRANSITION                                  */
+        /* Navbar changes appearance on scroll via JS class toggle   */
+        /* --------------------------------------------------------- */
+        .navbar-animated {
+            transition: background-color 0.3s ease,
+                        box-shadow 0.3s ease,
+                        padding 0.3s ease;
+            background-color: transparent;
+        }
+        .navbar-animated.scrolled {
+            background-color: rgba(255,255,255,0.98);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        /* --------------------------------------------------------- */
+        /* CARD HOVER EFFECTS                                        */
+        /* Various production-ready card hover animations            */
+        /* --------------------------------------------------------- */
+        .card-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-lift:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        }
+
+        .card-zoom-image {
+            overflow: hidden;
+        }
+        .card-zoom-image img {
+            transition: transform 0.5s ease;
+        }
+        .card-zoom-image:hover img {
+            transform: scale(1.08);
+        }
+
+        .card-border-glow {
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        .card-border-glow::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 0.6rem;
+            background: linear-gradient(45deg, #0d6efd, #6610f2, #d63384);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .card-border-glow:hover::before {
+            opacity: 1;
+        }
+        .card-border-glow:hover {
+            transform: translateY(-4px);
+        }
+
+        /* --------------------------------------------------------- */
+        /* SKELETON SCREEN LOADING                                   */
+        /* Shimmer effect mimics content structure while loading     */
+        /* --------------------------------------------------------- */
+        .skeleton {
+            background: linear-gradient(90deg,
+                #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            border-radius: 0.375rem;
+        }
+        .skeleton-circle {
+            border-radius: 50%;
+        }
+
+        /* --------------------------------------------------------- */
+        /* TOAST NOTIFICATION SYSTEM                                 */
+        /* Slide-in notifications from the top-right corner          */
+        /* --------------------------------------------------------- */
+        .notification-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 350px;
+        }
+
+        .notification {
+            animation: slideNotification 0.4s ease-out forwards;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notification.dismissing {
+            animation: slideNotification 0.3s ease-in reverse forwards;
+        }
+
+        /* Progress bar showing auto-dismiss countdown */
+        .notification-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            animation: progressBar 4s linear forwards;
+        }
+
+        /* --------------------------------------------------------- */
+        /* RIPPLE EFFECT (Material Design style)                     */
+        /* Click anywhere on the button to see ripple                */
+        /* --------------------------------------------------------- */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        /* --------------------------------------------------------- */
+        /* STATS COUNTER ANIMATION                                   */
+        /* Numbers animate up from 0 when they scroll into view      */
+        /* --------------------------------------------------------- */
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        .stat-number.counted {
+            animation: countUp 0.5s ease-out forwards;
+        }
+
+        /* --------------------------------------------------------- */
+        /* STAGGERED LIST ENTRANCE                                   */
+        /* List items appear one by one with increasing delays       */
+        /* --------------------------------------------------------- */
+        .stagger-list-item {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .stagger-list-item.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* --------------------------------------------------------- */
+        /* TAB CONTENT TRANSITION                                    */
+        /* Smooth fade between tab panes                             */
+        /* --------------------------------------------------------- */
+        .tab-pane.fade-in-custom {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* --------------------------------------------------------- */
+        /* LOADING DOTS                                              */
+        /* Three dots bouncing in sequence                           */
+        /* --------------------------------------------------------- */
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #0d6efd;
+            animation: dotPulse 1.4s infinite ease-in-out both;
+        }
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dot:nth-child(3) { animation-delay: 0s; }
+
+        /* --------------------------------------------------------- */
+        /* IMAGE GALLERY LIGHTBOX                                    */
+        /* --------------------------------------------------------- */
+        .gallery-item {
+            cursor: pointer;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+
+        /* --------------------------------------------------------- */
+        /* ACCORDION CHEVRON ROTATION                                */
+        /* Custom chevron animation for Bootstrap accordion          */
+        /* --------------------------------------------------------- */
+        .accordion-button::after {
+            transition: transform 0.3s ease;
+        }
+        .accordion-button:not(.collapsed)::after {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Notification Container (fixed position) -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- ============================================================= -->
+    <!-- ANIMATED NAVBAR                                               -->
+    <!-- ============================================================= -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-animated fixed-top" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">AnimateUI</a>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-light btn-sm" id="notifyBtn">
+                    Show Notification
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5 mt-5">
+        <!-- ============================================================= -->
+        <!-- HERO SECTION                                                  -->
+        <!-- ============================================================= -->
+        <section class="hero-section mb-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="hero-title display-4 fw-bold">
+                        Real-World <span class="text-primary">Animations</span>
+                    </h1>
+                    <p class="hero-subtitle lead text-muted">
+                        Production-ready animation patterns used in modern web applications.
+                        Each pattern is performance-optimized and accessible.
+                    </p>
+                    <div class="hero-cta">
+                        <button class="btn btn-primary btn-lg ripple-btn me-2">Get Started</button>
+                        <button class="btn btn-outline-secondary btn-lg">Learn More</button>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="hero-image bg-primary text-white rounded-4 p-5 d-inline-block">
+                        <span style="font-size: 5rem;">&#127912;</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- CARD HOVER EFFECTS                                            -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">Card Hover Effects</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card card-lift h-100">
+                        <div class="card-body">
+                            <h5>Lift Effect</h5>
+                            <p class="mb-0 small">Card lifts up and shadow deepens on hover. Most common production pattern.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-zoom-image h-100">
+                        <div class="card-img-top bg-gradient" style="height:120px;background:linear-gradient(135deg,#0d6efd,#6610f2)"></div>
+                        <div class="card-body">
+                            <h5>Image Zoom</h5>
+                            <p class="mb-0 small">Image scales up on hover. Used in portfolio and e-commerce sites.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-border-glow h-100">
+                        <div class="card-body">
+                            <h5>Border Glow</h5>
+                            <p class="mb-0 small">Gradient border appears on hover. Modern, eye-catching effect.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SKELETON SCREENS                                              -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">Skeleton Loading Screens</h2>
+            <button class="btn btn-primary mb-3" id="toggleSkeletonBtn">Toggle Skeleton / Content</button>
+            <div class="row g-3" id="skeletonDemo">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="skeleton skeleton-circle me-3" style="width:48px;height:48px"></div>
+                                <div class="flex-grow-1">
+                                    <div class="skeleton mb-2" style="height:16px;width:60%"></div>
+                                    <div class="skeleton" style="height:12px;width:40%"></div>
+                                </div>
+                            </div>
+                            <div class="skeleton mb-2" style="height:14px;width:100%"></div>
+                            <div class="skeleton mb-2" style="height:14px;width:90%"></div>
+                            <div class="skeleton" style="height:14px;width:70%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="skeleton mb-3" style="height:120px;width:100%"></div>
+                            <div class="skeleton mb-2" style="height:16px;width:50%"></div>
+                            <div class="skeleton mb-2" style="height:14px;width:100%"></div>
+                            <div class="skeleton" style="height:14px;width:80%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- STATS COUNTER                                                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">Animated Stats Counters</h2>
+            <div class="row g-3 text-center">
+                <div class="col-6 col-md-3">
+                    <div class="stat-number text-primary" data-target="1500">0</div>
+                    <small class="text-muted">Users</small>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number text-success" data-target="340">0</div>
+                    <small class="text-muted">Projects</small>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number text-warning" data-target="98">0</div>
+                    <small class="text-muted">Satisfaction %</small>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-number text-danger" data-target="24">0</div>
+                    <small class="text-muted">Countries</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- STAGGERED FEATURE LIST                                        -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">Staggered Feature List</h2>
+            <ul class="list-group" id="featureList">
+                <li class="list-group-item stagger-list-item d-flex align-items-center">
+                    <span class="badge bg-primary me-3">1</span>
+                    GPU-accelerated animations using transform and opacity
+                </li>
+                <li class="list-group-item stagger-list-item d-flex align-items-center">
+                    <span class="badge bg-success me-3">2</span>
+                    Respects prefers-reduced-motion for accessibility
+                </li>
+                <li class="list-group-item stagger-list-item d-flex align-items-center">
+                    <span class="badge bg-warning me-3">3</span>
+                    IntersectionObserver for scroll-triggered animations
+                </li>
+                <li class="list-group-item stagger-list-item d-flex align-items-center">
+                    <span class="badge bg-danger me-4">4</span>
+                    60fps performance with will-change optimization
+                </li>
+                <li class="list-group-item stagger-list-item d-flex align-items-center">
+                    <span class="badge bg-info me-3">5</span>
+                    Mobile-first with touch-friendly interactions
+                </li>
+            </ul>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- RIPPLE BUTTON                                                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">Ripple Effect Button</h2>
+            <button class="btn btn-primary btn-lg ripple-btn">Click Anywhere on Me</button>
+            <button class="btn btn-success btn-lg ripple-btn ms-2">Success Ripple</button>
+            <button class="btn btn-danger btn-lg ripple-btn ms-2">Danger Ripple</button>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- LOADING DOTS                                                  -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">Loading Dots</h2>
+            <div class="loading-dots p-3 bg-white rounded shadow-sm d-inline-block">
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- PROGRESS BARS                                                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">Animated Progress Bars</h2>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Design</span><span>85%</span>
+                </div>
+                <div class="progress" style="height:8px">
+                    <div class="progress-bar" style="--target-width:85%;animation:progressBar 1s ease-out 0.1s both"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Development</span><span>70%</span>
+                </div>
+                <div class="progress" style="height:8px">
+                    <div class="progress-bar bg-success" style="--target-width:70%;animation:progressBar 1s ease-out 0.3s both"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Testing</span><span>50%</span>
+                </div>
+                <div class="progress" style="height:8px">
+                    <div class="progress-bar bg-warning" style="--target-width:50%;animation:progressBar 1s ease-out 0.5s both"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- ANIMATED ACCORDION                                            -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">Animated Accordion</h2>
+            <div class="accordion" id="realWorldAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#rw1">
+                            How do animations improve UX?
+                        </button>
+                    </h2>
+                    <div id="rw1" class="accordion-collapse collapse show" data-bs-parent="#realWorldAccordion">
+                        <div class="accordion-body">
+                            Animations provide visual feedback, guide attention, create continuity between states,
+                            and make interfaces feel responsive and alive.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#rw2">
+                            What is the 60fps rule?
+                        </button>
+                    </h2>
+                    <div id="rw2" class="accordion-collapse collapse" data-bs-parent="#realWorldAccordion">
+                        <div class="accordion-body">
+                            To maintain 60 frames per second, each frame must render within 16.67ms.
+                            Only animate transform and opacity to stay within this budget.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ----------------------------------------------------------- */
+        /* NAVBAR SCROLL EFFECT                                        */
+        /* Adds .scrolled class when user scrolls past threshold       */
+        /* ----------------------------------------------------------- */
+        const mainNav = document.getElementById('mainNav');
+        window.addEventListener('scroll', function () {
+            mainNav.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        /* ----------------------------------------------------------- */
+        /* NOTIFICATION SYSTEM                                         */
+        /* Creates slide-in toast notifications with auto-dismiss      */
+        /* ----------------------------------------------------------- */
+        let notifId = 0;
+        const notifTypes = ['success', 'danger', 'warning', 'info'];
+        const notifMessages = [
+            'Changes saved successfully!',
+            'An error occurred. Please try again.',
+            'Warning: Your session will expire soon.',
+            'New update available.'
+        ];
+
+        function showNotification(type, message) {
+            notifId++;
+            const container = document.getElementById('notificationContainer');
+            const colors = { success: '#198754', danger: '#dc3545', warning: '#ffc107', info: '#0dcaf0' };
+
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            notif.style.backgroundColor = colors[type] || colors.info;
+            notif.style.color = type === 'warning' ? '#000' : '#fff';
+            notif.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <span>${message}</span>
+                    <button class="btn-close btn-close-white ms-2" style="font-size:0.7rem" aria-label="Dismiss"></button>
+                </div>
+                <div class="notification-progress" style="background:rgba(255,255,255,0.3);--target-width:100%"></div>
+            `;
+
+            container.appendChild(notif);
+
+            /* Dismiss handler */
+            const dismiss = function () {
+                notif.classList.add('dismissing');
+                setTimeout(() => notif.remove(), 300);
+            };
+
+            notif.querySelector('.btn-close').addEventListener('click', dismiss);
+
+            /* Auto-dismiss after 4 seconds */
+            setTimeout(dismiss, 4000);
+        }
+
+        document.getElementById('notifyBtn').addEventListener('click', function () {
+            const i = Math.floor(Math.random() * notifTypes.length);
+            showNotification(notifTypes[i], notifMessages[i]);
+        });
+
+        /* ----------------------------------------------------------- */
+        /* RIPPLE EFFECT                                               */
+        /* Creates a water-ripple animation at click position          */
+        /* ----------------------------------------------------------- */
+        document.querySelectorAll('.ripple-btn').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                const rect = this.getBoundingClientRect();
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        /* ----------------------------------------------------------- */
+        /* STAT COUNTER ANIMATION                                      */
+        /* Counts up from 0 to the target number                      */
+        /* ----------------------------------------------------------- */
+        const statObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const target = parseInt(el.dataset.target);
+                    el.classList.add('counted');
+
+                    let current = 0;
+                    const increment = target / 60;
+                    const timer = setInterval(function () {
+                        current += increment;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+                        el.textContent = Math.floor(current).toLocaleString();
+                    }, 16);
+
+                    statObserver.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.stat-number').forEach(function (el) {
+            statObserver.observe(el);
+        });
+
+        /* ----------------------------------------------------------- */
+        /* STAGGERED LIST OBSERVER                                     */
+        /* ----------------------------------------------------------- */
+        const listObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.stagger-list-item').forEach(function (el, i) {
+            el.style.transitionDelay = (i * 0.1) + 's';
+            listObserver.observe(el);
+        });
+
+        /* ----------------------------------------------------------- */
+        /* SKELETON TOGGLE                                             */
+        /* ----------------------------------------------------------- */
+        let skeletonVisible = true;
+        document.getElementById('toggleSkeletonBtn').addEventListener('click', function () {
+            const container = document.getElementById('skeletonDemo');
+            skeletonVisible = !skeletonVisible;
+
+            if (skeletonVisible) {
+                container.innerHTML = `
+                    <div class="col-md-6"><div class="card"><div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="skeleton skeleton-circle me-3" style="width:48px;height:48px"></div>
+                            <div class="flex-grow-1">
+                                <div class="skeleton mb-2" style="height:16px;width:60%"></div>
+                                <div class="skeleton" style="height:12px;width:40%"></div>
+                            </div>
+                        </div>
+                        <div class="skeleton mb-2" style="height:14px;width:100%"></div>
+                        <div class="skeleton mb-2" style="height:14px;width:90%"></div>
+                        <div class="skeleton" style="height:14px;width:70%"></div>
+                    </div></div></div>
+                    <div class="col-md-6"><div class="card"><div class="card-body">
+                        <div class="skeleton mb-3" style="height:120px;width:100%"></div>
+                        <div class="skeleton mb-2" style="height:16px;width:50%"></div>
+                        <div class="skeleton mb-2" style="height:14px;width:100%"></div>
+                        <div class="skeleton" style="height:14px;width:80%"></div>
+                    </div></div></div>`;
+            } else {
+                container.innerHTML = `
+                    <div class="col-md-6"><div class="card"><div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:48px;height:48px">JD</div>
+                            <div><strong>John Doe</strong><br><small class="text-muted">2 hours ago</small></div>
+                        </div>
+                        <p>Content has loaded! The skeleton shimmer gives users the perception
+                        of faster loading by showing the content structure immediately.</p>
+                    </div></div></div>
+                    <div class="col-md-6"><div class="card"><div class="card-body">
+                        <div class="bg-gradient rounded mb-3" style="height:120px;background:linear-gradient(135deg,#198754,#0dcaf0)"></div>
+                        <h5>Loaded Article</h5>
+                        <p class="mb-0">Skeleton screens are preferred over spinners because they
+                        reduce perceived loading time by 20-30%.</p>
+                    </div></div></div>`;
+            }
+        });
+    </script>
+</body>
+</html>

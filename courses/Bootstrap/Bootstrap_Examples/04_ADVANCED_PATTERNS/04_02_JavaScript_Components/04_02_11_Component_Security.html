@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_02_11_Component_Security.html                              -->
+<!-- Bootstrap 5 Secure JavaScript Patterns                       -->
+<!-- XSS prevention, CSP, input sanitization, safe DOM insertion  -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap JS Security Patterns</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="mb-4">Secure JavaScript Patterns</h1>
+        <p class="lead text-muted">
+            Security best practices when working with Bootstrap components and user-generated content.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 1: HTML Sanitization                                 -->
+        <!-- Never insert raw HTML from user input. Sanitize first.       -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>1. HTML Sanitization</h2>
+            <p>Input with potentially dangerous HTML. Sanitize before rendering.</p>
+
+            <div class="mb-3">
+                <label for="htmlInput" class="form-label">Enter HTML (try <code>&lt;script&gt;alert('xss')&lt;/script&gt;</code>)</label>
+                <textarea class="form-control" id="htmlInput" rows="3"><b>Bold text</b> and <em>italic</em></textarea>
+            </div>
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-danger" id="unsafeRender">Render UNSAFE (innerHTML)</button>
+                <button class="btn btn-success" id="safeRender">Render SAFE (sanitized)</button>
+            </div>
+            <div class="card">
+                <div class="card-header">Output</div>
+                <div class="card-body" id="sanitizeOutput">
+                    <em class="text-muted">Rendered output appears here...</em>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 2: Content Security Policy Headers                   -->
+        <!-- Demonstrate inline script blocking and nonce-based loading   -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>2. Content Security Policy Awareness</h2>
+            <p>Bootstrap 5 works without inline scripts. CSP headers should allow Bootstrap's CDN.</p>
+
+            <div class="card bg-dark text-light">
+                <div class="card-body">
+                    <pre class="mb-0"><code>Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' https://cdn.jsdelivr.net;
+  style-src 'self' https://cdn.jsdelivr.net;
+  img-src 'self' data:;
+  connect-src 'self';</code></pre>
+                </div>
+            </div>
+            <p class="mt-2 text-muted">All Bootstrap components work with <code>data-bs-*</code> attributes — no inline event handlers needed.</p>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 3: Safe DOM Insertion Methods                        -->
+        <!-- Use textContent, createElement, and trusted types instead    -->
+        <!-- of innerHTML with user data.                                 -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>3. Safe DOM Insertion</h2>
+            <p>Compare unsafe vs safe methods of inserting user content into the DOM.</p>
+
+            <div class="mb-3">
+                <label for="userText" class="form-label">User Text Input</label>
+                <input type="text" class="form-control" id="userText" value="<img src=x onerror=alert('XSS')> Hello">
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">Unsafe: innerHTML</div>
+                        <div class="card-body" id="unsafeOutput"></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">Safe: textContent / createElement</div>
+                        <div class="card-body" id="safeOutput"></div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary mt-3" id="insertContent">Insert Content</button>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 4: Safe Popover/Tooltip Content                      -->
+        <!-- When populating tooltips/popovers with dynamic content,      -->
+        <!-- always sanitize the content first.                           -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>4. Safe Dynamic Popover Content</h2>
+            <p>Populating popovers with user-generated content safely.</p>
+
+            <div class="mb-3">
+                <label for="popoverInput" class="form-label">Popover Content</label>
+                <input type="text" class="form-control" id="popoverInput" value="Safe popover content here">
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-danger" id="unsafePopover">Unsafe Popover</button>
+                <button class="btn btn-outline-success" id="safePopover">Safe Popover</button>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 5: URL Validation for Dynamic Links                  -->
+        <!-- Validate URLs before setting them as href to prevent         -->
+        <!-- javascript: protocol injection.                              -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>5. URL Validation</h2>
+            <p>Validate URLs before using them in href attributes to prevent <code>javascript:</code> injection.</p>
+
+            <div class="mb-3">
+                <label for="urlInput" class="form-label">Enter URL (try <code>javascript:alert('xss')</code>)</label>
+                <input type="text" class="form-control" id="urlInput" value="https://example.com">
+            </div>
+            <button class="btn btn-primary" id="createLink">Create Link</button>
+            <div class="mt-3" id="urlOutput"></div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 6: JSON Parsing Safety                               -->
+        <!-- Always wrap JSON.parse in try/catch to handle malformed data -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>6. Safe JSON Parsing</h2>
+            <p>Parse JSON data safely with error handling.</p>
+
+            <div class="mb-3">
+                <label for="jsonInput" class="form-label">JSON Input</label>
+                <textarea class="form-control" id="jsonInput" rows="3">{"name": "Bootstrap", "version": "5.3.3"}</textarea>
+            </div>
+            <button class="btn btn-primary" id="parseJson">Parse JSON</button>
+            <div class="mt-3" id="jsonOutput"></div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 7: Event Handler Security                            -->
+        <!-- Use addEventListener instead of inline onclick attributes    -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>7. Secure Event Binding</h2>
+            <p>Always use <code>addEventListener</code> instead of inline event attributes.</p>
+
+            <div class="alert alert-warning">
+                <strong>Avoid:</strong> <code>&lt;button onclick="doSomething()"&gt;</code><br>
+                <strong>Use:</strong> <code>button.addEventListener('click', doSomething)</code>
+            </div>
+
+            <button class="btn btn-primary" id="secureBtn">Secure Button (addEventListener)</button>
+            <div class="mt-2" id="secureOutput"></div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ============================================================
+        // Pattern 1: HTML Sanitization
+        // A simple sanitizer that strips script tags and event handlers
+        // For production, use DOMPurify library
+        // ============================================================
+        function sanitizeHTML(html) {
+            // Create a temporary element
+            const temp = document.createElement('div');
+            temp.textContent = html; // First, set as text to escape everything
+            return temp.innerHTML; // Then get the escaped HTML string
+        }
+
+        // More comprehensive sanitizer using DOM-based approach
+        function sanitizeHTMLAdvanced(html) {
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+
+            // Remove all script elements
+            temp.querySelectorAll('script').forEach(function (s) { s.remove(); });
+
+            // Remove all event handler attributes (on*)
+            temp.querySelectorAll('*').forEach(function (el) {
+                Array.from(el.attributes).forEach(function (attr) {
+                    if (attr.name.startsWith('on')) {
+                        el.removeAttribute(attr.name);
+                    }
+                    // Remove javascript: URLs
+                    if ((attr.name === 'href' || attr.name === 'src') && attr.value.trim().toLowerCase().startsWith('javascript:')) {
+                        el.removeAttribute(attr.name);
+                    }
+                });
+            });
+
+            return temp.innerHTML;
+        }
+
+        document.getElementById('unsafeRender').addEventListener('click', function () {
+            const input = document.getElementById('htmlInput').value;
+            // DANGER: Using innerHTML directly with user input
+            document.getElementById('sanitizeOutput').innerHTML = input;
+        });
+
+        document.getElementById('safeRender').addEventListener('click', function () {
+            const input = document.getElementById('htmlInput').value;
+            // SAFE: Sanitize before rendering
+            document.getElementById('sanitizeOutput').innerHTML = sanitizeHTMLAdvanced(input);
+        });
+
+        // ============================================================
+        // Pattern 3: Safe DOM Insertion
+        // textContent escapes HTML, createElement is explicit
+        // ============================================================
+        document.getElementById('insertContent').addEventListener('click', function () {
+            const userInput = document.getElementById('userText').value;
+
+            // UNSAFE: innerHTML can execute scripts
+            document.getElementById('unsafeOutput').innerHTML = userInput;
+
+            // SAFE: textContent treats input as plain text
+            const safeDiv = document.getElementById('safeOutput');
+            safeDiv.innerHTML = ''; // Clear first
+            const p = document.createElement('p');
+            p.textContent = userInput; // This is safe - no HTML parsing
+            safeDiv.appendChild(p);
+        });
+
+        // Auto-run on load
+        document.getElementById('insertContent').click();
+
+        // ============================================================
+        // Pattern 4: Safe Popover Content
+        // ============================================================
+        let unsafePop = null;
+        let safePop = null;
+
+        document.getElementById('unsafePopover').addEventListener('click', function () {
+            // Clean up previous
+            if (unsafePop) unsafePop.dispose();
+
+            const input = document.getElementById('popoverInput').value;
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-danger';
+            btn.textContent = 'Unsafe Popover';
+            document.getElementById('unsafePopover').replaceWith(btn);
+
+            // DANGER: Using user input directly as HTML content
+            unsafePop = new bootstrap.Popover(btn, {
+                content: input,
+                html: true, // Allows HTML rendering - DANGEROUS with user input
+                trigger: 'focus',
+                placement: 'bottom'
+            });
+            btn.focus();
+        });
+
+        document.getElementById('safePopover').addEventListener('click', function () {
+            // Clean up previous
+            if (safePop) safePop.dispose();
+
+            const input = document.getElementById('popoverInput').value;
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-success';
+            btn.textContent = 'Safe Popover';
+            document.getElementById('safePopover').replaceWith(btn);
+
+            // SAFE: html: false (default) treats content as plain text
+            safePop = new bootstrap.Popover(btn, {
+                content: input, // Will be treated as plain text (no HTML)
+                html: false, // Explicitly disable HTML rendering
+                trigger: 'focus',
+                placement: 'bottom'
+            });
+            btn.focus();
+        });
+
+        // ============================================================
+        // Pattern 5: URL Validation
+        // ============================================================
+        function isValidURL(url) {
+            try {
+                const parsed = new URL(url);
+                // Only allow http and https protocols
+                return ['http:', 'https:'].includes(parsed.protocol);
+            } catch (e) {
+                return false;
+            }
+        }
+
+        document.getElementById('createLink').addEventListener('click', function () {
+            const input = document.getElementById('urlInput').value.trim();
+            const output = document.getElementById('urlOutput');
+
+            if (isValidURL(input)) {
+                const link = document.createElement('a');
+                link.href = input;
+                link.textContent = 'Safe Link: ' + input;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer'; // Prevent window.opener attacks
+                output.innerHTML = '';
+                output.appendChild(link);
+                output.insertAdjacentHTML('beforeend', '<br><span class="badge bg-success">URL validated ✓</span>');
+            } else {
+                output.innerHTML = '<div class="alert alert-danger mb-0">Invalid or unsafe URL detected. Only http:// and https:// are allowed.</div>';
+            }
+        });
+
+        // ============================================================
+        // Pattern 6: Safe JSON Parsing
+        // ============================================================
+        document.getElementById('parseJson').addEventListener('click', function () {
+            const input = document.getElementById('jsonInput').value;
+            const output = document.getElementById('jsonOutput');
+
+            try {
+                const data = JSON.parse(input);
+
+                // Validate expected structure
+                if (typeof data !== 'object' || data === null) {
+                    throw new Error('Expected an object');
+                }
+
+                output.innerHTML = '<div class="alert alert-success mb-0"><strong>Parsed successfully:</strong><pre class="mb-0 mt-2">' +
+                    JSON.stringify(data, null, 2).replace(/</g, '&lt;') +
+                    '</pre></div>';
+            } catch (e) {
+                output.innerHTML = '<div class="alert alert-danger mb-0"><strong>Parse error:</strong> ' +
+                    e.message.replace(/</g, '&lt;') + '</div>';
+            }
+        });
+
+        // ============================================================
+        // Pattern 7: Secure Event Binding
+        // Always use addEventListener, never inline handlers
+        // ============================================================
+        document.getElementById('secureBtn').addEventListener('click', function () {
+            document.getElementById('secureOutput').innerHTML =
+                '<div class="alert alert-success mb-0">Event handled securely via addEventListener.</div>';
+        });
+    </script>
+</body>
+</html>

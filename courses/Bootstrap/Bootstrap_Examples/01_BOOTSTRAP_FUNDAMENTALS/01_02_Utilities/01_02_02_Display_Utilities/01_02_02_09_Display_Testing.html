@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================
+         01_02_02_09_Display_Testing.html
+         Topic: Bootstrap 5 Display Utilities — Testing & Debugging
+         
+         This file provides interactive testing tools and visual debugging
+         techniques for display utilities: breakpoint indicators, visual
+         regression tests, debug overlays, and automated testing patterns.
+         ============================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 - Display Utilities Testing</title>
+
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <style>
+        /* ============================================================
+           Debug overlay styles — toggle with the debug button
+           Shows borders around all elements using display utilities.
+           ============================================================ */
+        body.debug-mode [class*="d-none"],
+        body.debug-mode [class*="d-block"],
+        body.debug-mode [class*="d-flex"],
+        body.debug-mode [class*="d-inline"],
+        body.debug-mode [class*="d-grid"],
+        body.debug-mode [class*="d-table"] {
+            outline: 2px dashed rgba(255, 0, 0, 0.6) !important;
+            outline-offset: 2px;
+            position: relative;
+        }
+        
+        body.debug-mode [class*="d-none"]::after {
+            content: "d-none";
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: red;
+            color: white;
+            font-size: 10px;
+            padding: 2px 5px;
+            z-index: 9999;
+        }
+
+        /* Breakpoint indicator */
+        .breakpoint-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            color: #0f0;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            z-index: 10000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Test box styles */
+        .test-box {
+            padding: 15px;
+            border-radius: 5px;
+            color: white;
+            margin: 5px 0;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .test-section {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #f8f9fa;
+        }
+
+        /* Visual regression comparison */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Results styling */
+        .pass { color: #198754; font-weight: bold; }
+        .fail { color: #dc3545; font-weight: bold; }
+        .warn { color: #ffc107; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+
+        <!-- ============================================================
+             PAGE HEADER
+             ============================================================ -->
+        <h1 class="mb-3">Display Utilities — Testing &amp; Debugging</h1>
+        <p class="lead text-muted">
+            Interactive tools and techniques for testing and debugging 
+            display utility behavior across breakpoints.
+        </p>
+        <hr class="mb-4">
+
+        <!-- ============================================================
+             SECTION 1: Debug Mode Toggle
+             Enables visual overlay showing all display utility elements.
+             ============================================================ -->
+        <h3>1. Visual Debug Mode</h3>
+        <p>Toggle debug mode to see dashed outlines around all elements using display utilities.</p>
+        
+        <div class="test-section">
+            <button class="btn btn-outline-danger mb-3" onclick="document.body.classList.toggle('debug-mode')">
+                Toggle Debug Mode
+            </button>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="test-box bg-primary d-block">d-block</div>
+                    <div class="test-box bg-success d-inline-block" style="width: 120px;">d-inline-block</div>
+                    <div class="test-box bg-warning d-inline-block" style="width: 120px;">d-inline-block</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex gap-2">
+                        <div class="test-box bg-info flex-fill">d-flex</div>
+                        <div class="test-box bg-danger flex-fill">d-flex</div>
+                    </div>
+                    <div class="test-box bg-secondary d-none">d-none (hidden)</div>
+                </div>
+            </div>
+            <p class="text-muted mt-2">
+                In debug mode, d-none elements show a red "d-none" label even though they're hidden.
+            </p>
+        </div>
+
+        <!-- ============================================================
+             SECTION 2: Breakpoint Visibility Test
+             Each colored box is visible only at a specific breakpoint.
+             The current breakpoint is shown in the top-right indicator.
+             ============================================================ -->
+        <h3 class="mt-5">2. Breakpoint Visibility Test</h3>
+        <p>Resize the browser to see which boxes appear at each breakpoint.</p>
+        
+        <div class="test-section">
+            <div class="test-box bg-danger d-block d-sm-none">
+                <strong>XS only</strong> — Visible &lt;576px
+            </div>
+            <div class="test-box bg-warning text-dark d-none d-sm-block d-md-none">
+                <strong>SM only</strong> — Visible 576–767px
+            </div>
+            <div class="test-box bg-success d-none d-md-block d-lg-none">
+                <strong>MD only</strong> — Visible 768–991px
+            </div>
+            <div class="test-box bg-primary d-none d-lg-block d-xl-none">
+                <strong>LG only</strong> — Visible 992–1199px
+            </div>
+            <div class="test-box bg-info d-none d-xl-block d-xxl-none">
+                <strong>XL only</strong> — Visible 1200–1399px
+            </div>
+            <div class="test-box bg-dark text-white d-none d-xxl-block">
+                <strong>XXL only</strong> — Visible ≥1400px
+            </div>
+            
+            <p class="text-muted mt-2">
+                Only ONE box should be visible at any time. If multiple show, there's a bug.
+            </p>
+        </div>
+
+        <!-- ============================================================
+             SECTION 3: Automated Visibility Tests
+             JavaScript checks that display classes work correctly.
+             ============================================================ -->
+        <h3 class="mt-5">3. Automated Visibility Tests</h3>
+        <button class="btn btn-primary mb-3" onclick="runTests()">Run Tests</button>
+        
+        <div class="test-section">
+            <!-- Test elements (visually hidden to not affect layout) -->
+            <div style="position: absolute; left: -9999px;">
+                <div id="test-none" class="d-none">Should be hidden</div>
+                <div id="test-block" class="d-block">Should be block</div>
+                <div id="test-inline" class="d-inline">Should be inline</div>
+                <div id="test-flex" class="d-flex">Should be flex</div>
+                <div id="test-grid" class="d-grid">Should be grid</div>
+                <div id="test-table" class="d-table">Should be table</div>
+            </div>
+            
+            <table class="table table-bordered" id="test-results">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Test</th>
+                        <th>Expected</th>
+                        <th>Actual</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>d-none element</td>
+                        <td>display: none</td>
+                        <td id="result-none">—</td>
+                        <td id="status-none">—</td>
+                    </tr>
+                    <tr>
+                        <td>d-block element</td>
+                        <td>display: block</td>
+                        <td id="result-block">—</td>
+                        <td id="status-block">—</td>
+                    </tr>
+                    <tr>
+                        <td>d-inline element</td>
+                        <td>display: inline</td>
+                        <td id="result-inline">—</td>
+                        <td id="status-inline">—</td>
+                    </tr>
+                    <tr>
+                        <td>d-flex element</td>
+                        <td>display: flex</td>
+                        <td id="result-flex">—</td>
+                        <td id="status-flex">—</td>
+                    </tr>
+                    <tr>
+                        <td>d-grid element</td>
+                        <td>display: grid</td>
+                        <td id="result-grid">—</td>
+                        <td id="status-grid">—</td>
+                    </tr>
+                    <tr>
+                        <td>d-table element</td>
+                        <td>display: table</td>
+                        <td id="result-table">—</td>
+                        <td id="status-table">—</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div id="test-summary" class="mt-3"></div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 4: Responsive Display State Inspector
+             Shows all breakpoint states for a custom element.
+             ============================================================ -->
+        <h3 class="mt-5">4. Display State Inspector</h3>
+        <p>Select a display class combination to see its behavior at each breakpoint.</p>
+        
+        <div class="test-section">
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Base class:</label>
+                    <select class="form-select" id="inspector-base" onchange="updateInspector()">
+                        <option value="">(none)</option>
+                        <option value="d-none">d-none</option>
+                        <option value="d-block">d-block</option>
+                        <option value="d-inline">d-inline</option>
+                        <option value="d-inline-block">d-inline-block</option>
+                        <option value="d-flex">d-flex</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">SM override:</label>
+                    <select class="form-select" id="inspector-sm" onchange="updateInspector()">
+                        <option value="">(none)</option>
+                        <option value="d-sm-none">d-sm-none</option>
+                        <option value="d-sm-block">d-sm-block</option>
+                        <option value="d-sm-inline">d-sm-inline</option>
+                        <option value="d-sm-inline-block">d-sm-inline-block</option>
+                        <option value="d-sm-flex">d-sm-flex</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">MD override:</label>
+                    <select class="form-select" id="inspector-md" onchange="updateInspector()">
+                        <option value="">(none)</option>
+                        <option value="d-md-none">d-md-none</option>
+                        <option value="d-md-block">d-md-block</option>
+                        <option value="d-md-inline">d-md-inline</option>
+                        <option value="d-md-inline-block">d-md-inline-block</option>
+                        <option value="d-md-flex">d-md-flex</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="inspector-preview" class="border rounded p-3 mb-3 bg-white">
+                <span id="inspector-element" class="p-3 bg-primary text-white rounded d-inline-block">
+                    Preview Element
+                </span>
+            </div>
+            
+            <div id="inspector-analysis" class="mt-3"></div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 5: CSS Computed Style Viewer
+             Inspect the actual CSS computed styles of a display class.
+             ============================================================ -->
+        <h3 class="mt-5">5. Computed Style Viewer</h3>
+        <p>Click a button to see the computed <code>display</code> property for each class.</p>
+        
+        <div class="test-section">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <button class="btn btn-outline-primary" onclick="showComputedStyle('d-none')">d-none</button>
+                <button class="btn btn-outline-primary" onclick="showComputedStyle('d-block')">d-block</button>
+                <button class="btn btn-outline-primary" onclick="showComputedStyle('d-inline')">d-inline</button>
+                <button class="btn btn-outline-primary" onclick="showComputedStyle('d-inline-block')">d-inline-block</button>
+                <button class="btn btn-outline-primary" onclick="showComputedStyle('d-flex')">d-flex</button>
+                <button class="btn btn-outline-primary" onclick="showComputedStyle('d-inline-flex')">d-inline-flex</button>
+                <button class="btn btn-outline-primary" onclick="showComputedStyle('d-grid')">d-grid</button>
+                <button class="btn btn-outline-primary" onclick="showComputedStyle('d-table')">d-table</button>
+                <button class="btn btn-outline-primary" onclick="showComputedStyle('d-contents')">d-contents</button>
+            </div>
+            <div id="computed-result" class="bg-dark text-light p-3 rounded font-monospace">
+                Click a class above to see its computed display value.
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 6: Visual Regression Test Grid
+             Reference grid showing expected visual output for display classes.
+             ============================================================ -->
+        <h3 class="mt-5">6. Visual Regression Reference</h3>
+        <p>Reference grid for visual regression testing tools (e.g., Playwright, Percy).</p>
+        
+        <div class="test-section">
+            <div class="compare-grid">
+                <div>
+                    <h6 class="text-center">d-block × 3</h6>
+                    <div class="test-box bg-primary d-block">Block 1</div>
+                    <div class="test-box bg-primary d-block">Block 2</div>
+                    <div class="test-box bg-primary d-block">Block 3</div>
+                </div>
+                <div>
+                    <h6 class="text-center">d-inline × 3</h6>
+                    <span class="test-box bg-success d-inline">Inline 1</span>
+                    <span class="test-box bg-success d-inline">Inline 2</span>
+                    <span class="test-box bg-success d-inline">Inline 3</span>
+                </div>
+                <div>
+                    <h6 class="text-center">d-flex × 3</h6>
+                    <div class="d-flex gap-2">
+                        <div class="test-box bg-warning text-dark flex-fill">Flex 1</div>
+                        <div class="test-box bg-warning text-dark flex-fill">Flex 2</div>
+                        <div class="test-box bg-warning text-dark flex-fill">Flex 3</div>
+                    </div>
+                </div>
+                <div>
+                    <h6 class="text-center">d-inline-block × 3</h6>
+                    <div class="test-box bg-danger d-inline-block" style="width: 100px;">IB 1</div>
+                    <div class="test-box bg-danger d-inline-block" style="width: 100px;">IB 2</div>
+                    <div class="test-box bg-danger d-inline-block" style="width: 100px;">IB 3</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 7: Console Logging Tests
+             Demonstrates how to test display utilities programmatically.
+             ============================================================ -->
+        <h3 class="mt-5">7. Programmatic Testing Pattern</h3>
+        
+        <div class="test-section">
+            <button class="btn btn-outline-secondary mb-3" onclick="runConsoleTests()">
+                Run Console Tests (check DevTools)
+            </button>
+            <pre class="bg-dark text-light p-3 rounded"><code>// Example: Programmatic display utility tests
+function testDisplayUtility(elementId, expectedDisplay) {
+    const el = document.getElementById(elementId);
+    const computed = window.getComputedStyle(el).display;
+    const pass = computed === expectedDisplay;
+    console[pass ? 'log' : 'error'](
+        `Test ${elementId}: ${pass ? 'PASS' : 'FAIL'}`,
+        `Expected: ${expectedDisplay}, Got: ${computed}`
+    );
+    return pass;
+}
+
+// Usage:
+testDisplayUtility('test-none', 'none');
+testDisplayUtility('test-block', 'block');
+testDisplayUtility('test-flex', 'flex');</code></pre>
+        </div>
+
+        <!-- ============================================================
+             SECTION 8: Testing best practices summary
+             ============================================================ -->
+        <h3 class="mt-5">8. Testing Best Practices</h3>
+        
+        <div class="test-section">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Practice</th>
+                        <th>Tool</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Visual debug mode</td>
+                        <td>CSS outline overlay</td>
+                        <td>Show all elements with display classes</td>
+                    </tr>
+                    <tr>
+                        <td>Breakpoint indicator</td>
+                        <td>Responsive badge</td>
+                        <td>Show current viewport breakpoint</td>
+                    </tr>
+                    <tr>
+                        <td>Unit tests</td>
+                        <td>Jest + jsdom</td>
+                        <td>Test class presence and computed styles</td>
+                    </tr>
+                    <tr>
+                        <td>Visual regression</td>
+                        <td>Playwright, Percy</td>
+                        <td>Screenshot comparison across breakpoints</td>
+                    </tr>
+                    <tr>
+                        <td>Accessibility</td>
+                        <td>axe-core, Lighthouse</td>
+                        <td>Test d-none vs visually-hidden usage</td>
+                    </tr>
+                    <tr>
+                        <td>Cross-browser</td>
+                        <td>BrowserStack</td>
+                        <td>Test display rendering in all browsers</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <!-- End container -->
+
+    <!-- ============================================================
+         BREAKPOINT INDICATOR
+         Shows current viewport breakpoint in real time.
+         ============================================================ -->
+    <div class="breakpoint-indicator">
+        <div><strong>Viewport:</strong></div>
+        <span class="d-inline d-sm-none">XS &lt;576px</span>
+        <span class="d-none d-sm-inline d-md-none">SM 576–767px</span>
+        <span class="d-none d-md-inline d-lg-none">MD 768–991px</span>
+        <span class="d-none d-lg-inline d-xl-none">LG 992–1199px</span>
+        <span class="d-none d-xl-inline d-xxl-none">XL 1200–1399px</span>
+        <span class="d-none d-xxl-inline">XXL ≥1400px</span>
+        <div id="viewport-size" class="mt-1 text-muted" style="font-size: 0.75rem;"></div>
+    </div>
+
+    <script>
+        /* ============================================================
+           JavaScript for testing and debugging tools
+           ============================================================ */
+        
+        // Update viewport size indicator
+        function updateViewportSize() {
+            document.getElementById('viewport-size').textContent = 
+                `${window.innerWidth} × ${window.innerHeight}px`;
+        }
+        window.addEventListener('resize', updateViewportSize);
+        updateViewportSize();
+
+        // Automated visibility tests
+        function runTests() {
+            const tests = [
+                { id: 'none', expected: 'none' },
+                { id: 'block', expected: 'block' },
+                { id: 'inline', expected: 'inline' },
+                { id: 'flex', expected: 'flex' },
+                { id: 'grid', expected: 'grid' },
+                { id: 'table', expected: 'table' }
+            ];
+
+            let passed = 0;
+            tests.forEach(test => {
+                const el = document.getElementById('test-' + test.id);
+                const computed = window.getComputedStyle(el).display;
+                const pass = computed === test.expected;
+                
+                document.getElementById('result-' + test.id).textContent = computed;
+                document.getElementById('status-' + test.id).innerHTML = 
+                    pass ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>';
+                
+                if (pass) passed++;
+            });
+
+            const summary = document.getElementById('test-summary');
+            summary.innerHTML = `<div class="alert ${passed === tests.length ? 'alert-success' : 'alert-danger'}">
+                <strong>${passed}/${tests.length} tests passed.</strong>
+            </div>`;
+        }
+
+        // Display state inspector
+        function updateInspector() {
+            const base = document.getElementById('inspector-base').value;
+            const sm = document.getElementById('inspector-sm').value;
+            const md = document.getElementById('inspector-md').value;
+            
+            const el = document.getElementById('inspector-element');
+            
+            // Remove all d-* classes
+            el.className = el.className.replace(/\bd-\S+/g, '').trim();
+            
+            // Add selected classes
+            if (base) el.classList.add(base);
+            if (sm) el.classList.add(sm);
+            if (md) el.classList.add(md);
+            el.classList.add('p-3', 'bg-primary', 'text-white', 'rounded');
+            
+            // Show analysis
+            const analysis = document.getElementById('inspector-analysis');
+            const classes = [base, sm, md].filter(Boolean);
+            analysis.innerHTML = `
+                <strong>Classes applied:</strong> <code>${classes.join(' ') || '(none)'}</code><br>
+                <strong>Behavior:</strong>
+                <ul class="mt-2 mb-0">
+                    <li><strong>XS (&lt;576px):</strong> ${base || 'default'}</li>
+                    <li><strong>SM (576–767px):</strong> ${sm || base || 'default'}</li>
+                    <li><strong>MD (≥768px):</strong> ${md || sm || base || 'default'}</li>
+                </ul>
+            `;
+        }
+
+        // Computed style viewer
+        function showComputedStyle(className) {
+            const temp = document.createElement('div');
+            temp.className = className;
+            temp.style.position = 'absolute';
+            temp.style.left = '-9999px';
+            document.body.appendChild(temp);
+            
+            const computed = window.getComputedStyle(temp).display;
+            document.body.removeChild(temp);
+            
+            const result = document.getElementById('computed-result');
+            result.innerHTML = `<span class="text-success">.${className}</span> → <code>display: ${computed}</code>`;
+        }
+
+        // Console tests
+        function runConsoleTests() {
+            const tests = [
+                { id: 'test-none', expected: 'none', name: 'd-none' },
+                { id: 'test-block', expected: 'block', name: 'd-block' },
+                { id: 'test-inline', expected: 'inline', name: 'd-inline' },
+                { id: 'test-flex', expected: 'flex', name: 'd-flex' },
+                { id: 'test-grid', expected: 'grid', name: 'd-grid' },
+                { id: 'test-table', expected: 'table', name: 'd-table' }
+            ];
+
+            console.group('Bootstrap Display Utility Tests');
+            tests.forEach(test => {
+                const el = document.getElementById(test.id);
+                if (!el) {
+                    console.warn(`Element #${test.id} not found`);
+                    return;
+                }
+                const computed = window.getComputedStyle(el).display;
+                const pass = computed === test.expected;
+                console[pass ? 'log' : 'error'](
+                    `${test.name}: ${pass ? 'PASS' : 'FAIL'} — Expected: ${test.expected}, Got: ${computed}`
+                );
+            });
+            console.groupEnd();
+            alert('Check the browser console (F12) for test results.');
+        }
+    </script>
+
+    <!-- Bootstrap 5.3.3 JS Bundle via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

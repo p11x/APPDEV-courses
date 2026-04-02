@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_03_03_CSS_Custom_Properties.html                             -->
+<!-- CSS Custom Properties: theming, runtime manipulation           -->
+<!-- Bootstrap 5.3.3 + CSS Variables (Custom Properties)            -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06_03_03 - CSS Custom Properties</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* ROOT-LEVEL CUSTOM PROPERTIES                                    */
+        /* CSS custom properties (variables) are defined with -- prefix. */
+        /* :root makes them globally available. They cascade and inherit. */
+        /* var(--name, fallback) retrieves the value with an optional     */
+        /* fallback if the variable is undefined.                         */
+        /* ============================================================= */
+
+        :root {
+            /* Primary brand colors */
+            --brand-primary: #6c5ce7;
+            --brand-secondary: #a29bfe;
+            --brand-accent: #fd79a8;
+
+            /* Neutral colors */
+            --brand-bg: #ffffff;
+            --brand-surface: #f8f9fa;
+            --brand-text: #2d3436;
+            --brand-text-muted: #636e72;
+
+            /* Spacing scale (multiples of 8px) */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+
+            /* Typography scale */
+            --font-size-sm: 0.875rem;
+            --font-size-base: 1rem;
+            --font-size-lg: 1.25rem;
+            --font-size-xl: 1.5rem;
+            --font-size-2xl: 2rem;
+
+            /* Border radius scale */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 16px;
+            --radius-full: 9999px;
+
+            /* Shadow scale */
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+
+            /* Transition */
+            --transition-fast: 0.15s ease;
+            --transition-base: 0.3s ease;
+        }
+
+        /* ============================================================= */
+        /* DARK THEME OVERRIDES                                            */
+        /* By redefining variables under a selector, you can create      */
+        /* theme variants. This is the foundation of modern theming.     */
+        /* ============================================================= */
+
+        [data-theme="dark"] {
+            --brand-bg: #1a1a2e;
+            --brand-surface: #16213e;
+            --brand-text: #edf2f7;
+            --brand-text-muted: #a0aec0;
+            --brand-primary: #a29bfe;
+        }
+
+        /* ============================================================= */
+        /* COMPONENT USING CUSTOM PROPERTIES                               */
+        /* All values reference variables, making the component fully    */
+        /* themeable by changing variable values.                         */
+        /* ============================================================= */
+
+        /* Themed card component */
+        .themed-card {
+            background: var(--brand-surface);
+            color: var(--brand-text);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-base);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* Hover state using variables */
+        .themed-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        /* ============================================================= */
+        /* BUTTON USING CUSTOM PROPERTIES                                  */
+        /* Buttons derive all colors from custom properties, making      */
+        /* theme switching trivial.                                       */
+        /* ============================================================= */
+
+        .themed-btn {
+            background: var(--brand-primary);
+            color: white;
+            border: none;
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-base);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        /* Darken on hover by using a slightly different shade */
+        .themed-btn:hover {
+            opacity: 0.85;
+            transform: scale(1.02);
+        }
+
+        /* ============================================================= */
+        /* COMPUTED VALUES WITH CALC()                                     */
+        /* Custom properties can be used inside calc() for dynamic math. */
+        /* ============================================================= */
+
+        .spacing-demo {
+            /* Calculate padding from spacing variable */
+            padding: calc(var(--space-md) * 2);
+            /* Combine variables with units */
+            margin-bottom: var(--space-lg);
+            border-left: 4px solid var(--brand-primary);
+            background: var(--brand-surface);
+            color: var(--brand-text);
+            border-radius: var(--radius-md);
+        }
+
+        /* ============================================================= */
+        /* RUNTIME MANIPULATION DEMO STYLES                                */
+        /* ============================================================= */
+
+        .color-swatch {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: transform var(--transition-fast);
+            border: 3px solid transparent;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.15);
+            border-color: var(--brand-text);
+        }
+
+        /* Dynamic theming container */
+        .theme-preview {
+            background: var(--brand-bg);
+            color: var(--brand-text);
+            padding: var(--space-xl);
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--brand-primary);
+            transition: all var(--transition-base);
+        }
+
+        /* ============================================================= */
+        /* REGISTERED CUSTOM PROPERTIES (@property)                        */
+        /* @property allows defining type, inheritance, and initial value */
+        /* for custom properties, enabling CSS animations on them.        */
+        /* ============================================================= */
+
+        /* Register a custom property with type <color> */
+        @property --gradient-start {
+            syntax: '<color>';
+            inherits: false;
+            initial-value: #6c5ce7;
+        }
+
+        @property --gradient-end {
+            syntax: '<color>';
+            inherits: false;
+            initial-value: #fd79a8;
+        }
+
+        /* Animated gradient using registered properties */
+        .animated-gradient {
+            /* Use the registered properties as gradient colors */
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            padding: var(--space-xl);
+            border-radius: var(--radius-lg);
+            color: white;
+            text-align: center;
+            font-weight: 600;
+            /* Animate the custom properties */
+            transition: --gradient-start 0.5s, --gradient-end 0.5s;
+        }
+
+        .animated-gradient:hover {
+            --gradient-start: #00b894;
+            --gradient-end: #00cec9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+
+        <!-- Page header -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold" style="color: var(--brand-primary);">CSS Custom Properties</h1>
+                <p class="lead text-muted">Theming, runtime manipulation, and @property</p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: BASIC CUSTOM PROPERTIES                              -->
+        <!-- CSS variables defined in :root cascade to all descendants.     -->
+        <!-- Use var(--name) to reference them. The fallback value after    -->
+        <!-- the comma is used if the variable is undefined.                -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">1. Variable Reference</h2>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <!-- Card using custom properties for all styling -->
+                    <div class="themed-card">
+                        <h3 style="color: var(--brand-primary);">Themed Card</h3>
+                        <p style="color: var(--brand-text-muted); font-size: var(--font-size-sm);">
+                            This card's colors, spacing, and typography all reference CSS custom
+                            properties. Change any variable in <code>:root</code> to update all
+                            components simultaneously.
+                        </p>
+                        <!-- Button using themed variables -->
+                        <button class="themed-btn">Themed Button</button>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="themed-card">
+                        <h3 style="color: var(--brand-accent);">Second Card</h3>
+                        <p style="color: var(--brand-text-muted); font-size: var(--font-size-sm);">
+                            Custom properties inherit down the DOM tree. You can override them
+                            on any element to change that element and its children only.
+                        </p>
+                        <button class="themed-btn" style="--brand-primary: #e17055;">Override Color</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: SPACING SCALE                                        -->
+        <!-- Using a consistent spacing scale via custom properties ensures -->
+        <!-- visual rhythm across all components.                           -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">2. Spacing Scale</h2>
+
+            <!-- Demonstrating the spacing scale -->
+            <div class="d-flex align-items-end gap-2 flex-wrap">
+                <div class="text-center">
+                    <div style="width:var(--space-xs); height:var(--space-xs); background:var(--brand-primary); margin:0 auto 8px; border-radius:2px;"></div>
+                    <small>xs:4px</small>
+                </div>
+                <div class="text-center">
+                    <div style="width:var(--space-sm); height:var(--space-sm); background:var(--brand-primary); margin:0 auto 8px; border-radius:2px;"></div>
+                    <small>sm:8px</small>
+                </div>
+                <div class="text-center">
+                    <div style="width:var(--space-md); height:var(--space-md); background:var(--brand-primary); margin:0 auto 8px; border-radius:2px;"></div>
+                    <small>md:16px</small>
+                </div>
+                <div class="text-center">
+                    <div style="width:var(--space-lg); height:var(--space-lg); background:var(--brand-primary); margin:0 auto 8px; border-radius:2px;"></div>
+                    <small>lg:24px</small>
+                </div>
+                <div class="text-center">
+                    <div style="width:var(--space-xl); height:var(--space-xl); background:var(--brand-primary); margin:0 auto 8px; border-radius:2px;"></div>
+                    <small>xl:32px</small>
+                </div>
+                <div class="text-center">
+                    <div style="width:var(--space-2xl); height:var(--space-2xl); background:var(--brand-primary); margin:0 auto 8px; border-radius:2px;"></div>
+                    <small>2xl:48px</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: RUNTIME THEME SWITCHING                              -->
+        <!-- JavaScript can read and write custom properties at runtime via -->
+        /*  getComputedStyle().getPropertyValue() and setProperty().      */
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">3. Runtime Theme Switching</h2>
+
+            <!-- Theme switcher controls -->
+            <div class="mb-3">
+                <button class="btn btn-outline-dark me-2" onclick="setTheme('light')">Light Theme</button>
+                <button class="btn btn-dark me-2" onclick="setTheme('dark')">Dark Theme</button>
+            </div>
+
+            <!-- Color picker for runtime customization -->
+            <div class="d-flex gap-3 align-items-center mb-3">
+                <span class="fw-bold">Pick Primary:</span>
+                <!-- Color swatches that set --brand-primary via JS -->
+                <div class="color-swatch" style="background:#6c5ce7;" onclick="setProperty('--brand-primary','#6c5ce7')"></div>
+                <div class="color-swatch" style="background:#e17055;" onclick="setProperty('--brand-primary','#e17055')"></div>
+                <div class="color-swatch" style="background:#00b894;" onclick="setProperty('--brand-primary','#00b894')"></div>
+                <div class="color-swatch" style="background:#0984e3;" onclick="setProperty('--brand-primary','#0984e3')"></div>
+                <div class="color-swatch" style="background:#fdcb6e;" onclick="setProperty('--brand-primary','#fdcb6e')"></div>
+            </div>
+
+            <!-- Preview area that reacts to theme changes -->
+            <div class="theme-preview">
+                <h3>Theme Preview</h3>
+                <p style="color: var(--brand-text-muted);">
+                    This preview updates in real-time when you switch themes or pick colors.
+                    Custom properties are resolved at computed-value time, not parse time.
+                </p>
+                <button class="themed-btn me-2">Primary Button</button>
+                <button class="themed-btn" style="--brand-primary: var(--brand-accent);">Accent Button</button>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: @PROPERTY REGISTERED VARIABLES                       -->
+        <!-- @property enables type checking and animation of custom        -->
+        <!-- properties. Without registration, browsers cannot animate     -->
+        <!-- custom properties because their type is unknown.              -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">4. @property Animated Gradients</h2>
+            <p class="text-muted mb-3">
+                <code>@property --gradient-start</code> registers the variable as a <code>&lt;color&gt;</code>,
+                enabling CSS transitions on gradient colors.
+            </p>
+
+            <!-- Animated gradient demo -->
+            <div class="animated-gradient">
+                <h3>Hover to Animate Gradient</h3>
+                <p>The gradient colors transition smoothly because they're registered with @property</p>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: FALLBACK VALUES                                      -->
+        <!-- var(--name, fallback) provides a default when the variable     -->
+        <!-- is not defined. Fallbacks can be nested for chain lookups.    -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">5. Fallback Values</h2>
+
+            <div class="themed-card">
+                <!-- Undefined variable with fallback -->
+                <p style="color: var(--undefined-var, #e74c3c);">
+                    This text uses a fallback color because <code>--undefined-var</code> is not defined.
+                </p>
+                <!-- Nested fallbacks -->
+                <p style="color: var(--also-undefined, var(--brand-text-muted, #999));">
+                    Nested fallbacks: <code>--also-undefined</code> -> <code>--brand-text-muted</code> -> #999
+                </p>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap JS bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- JavaScript for runtime custom property manipulation -->
+    <script>
+        /* ============================================================= */
+        /* RUNTIME THEME MANAGEMENT                                        */
+        /* JavaScript reads/writes CSS custom properties via the          */
+        /* CSSStyleDeclaration API on document.documentElement.           */
+        /* ============================================================= */
+
+        /**
+         * Sets the document theme by toggling a data attribute.
+         * The [data-theme="dark"] CSS selector redefines variables.
+         * @param {string} theme - 'light' or 'dark'
+         */
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        /**
+         * Sets a custom property value on the root element at runtime.
+         * This immediately updates all elements using that variable.
+         * @param {string} prop - CSS custom property name (e.g., '--brand-primary')
+         * @param {string} value - New value for the property
+         */
+        function setProperty(prop, value) {
+            document.documentElement.style.setProperty(prop, value);
+        }
+    </script>
+</body>
+</html>

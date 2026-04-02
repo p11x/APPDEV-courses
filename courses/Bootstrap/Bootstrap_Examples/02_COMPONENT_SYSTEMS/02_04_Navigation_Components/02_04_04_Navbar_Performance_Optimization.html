@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================= -->
+    <!-- FILE: 02_04_04_Navbar_Performance_Optimization.html            -->
+    <!-- TOPIC: Render Performance, Sticky Navigation, Optimization      -->
+    <!-- ============================================================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navbar Performance Optimization - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-section { margin-bottom: 3rem; padding: 1.5rem; border: 1px solid #dee2e6; border-radius: 0.375rem; }
+        .demo-section h4 { margin-bottom: 1rem; border-bottom: 2px solid #0d6efd; padding-bottom: 0.5rem; }
+        
+        /* ============================================================= */
+        /* PERFORMANCE: CSS Containment                                   */
+        /* contain: layout style paint tells browser changes in this     */
+        /* element don't affect outside layout, improving render perf    */
+        /* ============================================================= */
+        .navbar-optimized {
+            contain: layout style paint;
+            will-change: transform;
+        }
+        
+        /* ============================================================= */
+        /* PERFORMANCE: GPU-accelerated sticky positioning                */
+        /* Using transform for smoother scroll performance               */
+        /* ============================================================= */
+        .navbar-sticky-gpu {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            /* Promote to own compositor layer */
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+        
+        /* ============================================================= */
+        /* PERFORMANCE: Reduce repaint on scroll with shadow optimization */
+        /* Using box-shadow with opacity instead of re-rendering shadows */
+        /* ============================================================= */
+        .navbar-scroll-shadow {
+            box-shadow: 0 0 0 rgba(0,0,0,0);
+            transition: box-shadow 0.3s ease;
+        }
+        .navbar-scroll-shadow.scrolled {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+        
+        /* Lazy loading placeholder animation */
+        .navbar-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .content-placeholder { height: 1500px; }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================= -->
+    <!-- PERFORMANCE OPTIMIZATION 1: MINIMAL NAVBAR STRUCTURE            -->
+    <!-- Fewer DOM nodes = faster initial render and layout              -->
+    <!-- ============================================================= -->
+    
+    <!--
+        PERFORMANCE TIP: Minimize DOM depth
+        - Avoid unnecessary wrapper divs
+        - Use container-fluid instead of nested containers
+        - Reduce nesting levels in navbar-nav lists
+        - Each DOM node costs memory and layout computation time
+    -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-optimized sticky-top"
+         aria-label="Performance optimized navigation">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">OptimizedNav</a>
+            
+            <!--
+                PERFORMANCE TIP: Toggler button
+                - Inline SVG is faster than external image requests
+                - data-bs-* attributes are parsed by Bootstrap JS
+                - Avoid adding extra event listeners; Bootstrap handles these
+            -->
+            <button class="navbar-toggler" type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#perfNav"
+                    aria-controls="perfNav" aria-expanded="false" 
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="perfNav">
+                <!--
+                    PERFORMANCE TIP: Flat list structure
+                    - Avoid deeply nested UL > LI > UL > LI patterns
+                    - Each nesting level adds layout computation
+                -->
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Pricing</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <h1 class="mb-4">Navbar Performance Optimization</h1>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: STICKY NAVBAR PERFORMANCE                           -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>4.1 Sticky Navbar Performance</h4>
+            
+            <p>Sticky positioning performance considerations:</p>
+            <ul>
+                <li><strong>GPU Promotion:</strong> Use <code>will-change: transform</code> to promote navbar to its own compositor layer</li>
+                <li><strong>CSS Containment:</strong> Use <code>contain: layout style paint</code> to isolate rendering</li>
+                <li><strong>Avoid Layout Thrashing:</strong> Don't read layout properties (offsetHeight, getBoundingClientRect) in scroll handlers</li>
+                <li><strong>Debounce Scroll Events:</strong> Use <code>requestAnimationFrame</code> for scroll-based updates</li>
+            </ul>
+            
+            <pre class="bg-light p-3"><code>/* CSS: GPU-accelerated sticky nav */
+.navbar-sticky {
+    position: sticky;
+    top: 0;
+    will-change: transform;        /* Promote to compositor layer */
+    backface-visibility: hidden;   /* Reduce repaint artifacts */
+    contain: layout style paint;   /* CSS containment */
+}</code></pre>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: SCROLL-DRIVEN SHADOW EFFECT                         -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>4.2 Optimized Scroll Shadow (Scroll down to test)</h4>
+            
+            <!--
+                This navbar uses the .navbar-scroll-shadow class
+                JavaScript adds/removes .scrolled class on scroll
+                CSS transition handles the visual change (GPU-composited)
+            -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-sticky-gpu navbar-scroll-shadow" 
+                 id="shadowNav" aria-label="Scroll shadow demo">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="#">ShadowNav</a>
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+                    </ul>
+                </div>
+            </nav>
+            
+            <pre class="bg-light p-3 mt-3"><code>// JavaScript: Scroll handler with requestAnimationFrame
+let ticking = false;
+window.addEventListener('scroll', () => {
+    if (!ticking) {
+        requestAnimationFrame(() => {
+            const nav = document.getElementById('shadowNav');
+            nav.classList.toggle('scrolled', window.scrollY > 10);
+            ticking = false;
+        });
+        ticking = true;
+    }
+});</code></pre>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: IMAGE OPTIMIZATION IN NAVBARS                       -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>4.3 Image Optimization in Navbars</h4>
+            
+            <!--
+                PERFORMANCE TIP: Logo images
+                - Use SVG for logos (vector = any size, small file)
+                - Add width/height to prevent layout shift (CLS)
+                - Use loading="lazy" for below-fold images
+                - Consider inlining small SVGs directly
+            -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <!--
+                        SVG logo: Vector format, resolution independent
+                        width/height prevent Cumulative Layout Shift (CLS)
+                    -->
+                    <a class="navbar-brand" href="#">
+                        <svg width="32" height="32" viewBox="0 0 32 32" 
+                             xmlns="http://www.w3.org/2000/svg"
+                             aria-hidden="true">
+                            <rect width="32" height="32" rx="6" fill="#0d6efd"/>
+                            <text x="16" y="22" text-anchor="middle" fill="white" font-size="18" font-weight="bold">N</text>
+                        </svg>
+                        LogoBrand
+                    </a>
+                    <ul class="navbar-nav">
+                        <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+                    </ul>
+                </div>
+            </nav>
+            
+            <ul class="mt-3">
+                <li><strong>SVG over PNG:</strong> SVGs are typically smaller and scale without quality loss</li>
+                <li><strong>Explicit Dimensions:</strong> Always set width/height on images to prevent CLS</li>
+                <li><strong>Inline Small SVGs:</strong> SVGs under 1KB should be inlined to avoid HTTP requests</li>
+                <li><strong>Optimize SVGs:</strong> Use SVGO to remove unnecessary metadata</li>
+            </ul>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: CSS PERFORMANCE BEST PRACTICES                      -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>4.4 CSS Performance Best Practices</h4>
+            
+            <table class="table table-striped">
+                <thead>
+                    <tr><th>Technique</th><th>Benefit</th><th>Example</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>CSS Containment</td>
+                        <td>Isolates layout recalculations</td>
+                        <td><code>contain: layout style paint;</code></td>
+                    </tr>
+                    <tr>
+                        <td>will-change</td>
+                        <td>Promotes element to GPU layer</td>
+                        <td><code>will-change: transform;</code></td>
+                    </tr>
+                    <tr>
+                        <td>transform over top/left</td>
+                        <td>GPU-composited, no layout reflow</td>
+                        <td><code>transform: translateY(0);</code></td>
+                    </tr>
+                    <tr>
+                        <td>opacity over visibility</td>
+                        <td>GPU-composited transitions</td>
+                        <td><code>opacity: 0; vs visibility: hidden;</code></td>
+                    </tr>
+                    <tr>
+                        <td>Avoid @import</td>
+                        <td>Reduces blocking requests</td>
+                        <td>Use <code>&lt;link&gt;</code> tags instead</td>
+                    </tr>
+                    <tr>
+                        <td>Critical CSS inline</td>
+                        <td>Faster First Contentful Paint</td>
+                        <td>Inline navbar CSS in <code>&lt;style&gt;</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: LAZY INITIALIZATION PATTERNS                        -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>4.5 Lazy Navbar Initialization</h4>
+            
+            <p>For complex mega-menu navbars, consider lazy initialization:</p>
+            
+            <pre class="bg-light p-3"><code>/* ============================================================= */
+/* LAZY DROPDOWN INITIALIZATION                                     */
+/* Only initialize dropdown JS when the user interacts with the    */
+/* navbar, reducing initial page load JavaScript execution time     */
+/* ============================================================= */
+document.querySelector('.navbar').addEventListener('mouseenter', function initDropdowns() {
+    // Bootstrap dropdowns auto-init on page load
+    // For custom behavior, use Intersection Observer:
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Initialize heavy components only when visible
+                initMegaMenu(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    });
+    observer.observe(document.querySelector('.mega-menu'));
+    this.removeEventListener('mouseenter', initDropdowns);
+}, { once: true });</code></pre>
+        </div>
+
+        <!-- Content to enable scrolling for sticky shadow demo -->
+        <div class="content-placeholder">
+            <p class="text-muted">Scroll down to test the sticky shadow navbar effect above.</p>
+            <p class="lead">Performance optimization focuses on reducing:</p>
+            <ol>
+                <li><strong>Layout Thrashing</strong> - Reading and writing DOM properties in the same frame</li>
+                <li><strong>Paint Operations</strong> - Minimizing visual changes that require repainting</li>
+                <li><strong>Composite Layers</strong> - Using GPU acceleration strategically</li>
+                <li><strong>JavaScript Execution</strong> - Deferring non-critical initialization</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* ============================================================= */
+        /* SCROLL SHADOW PERFORMANCE OPTIMIZATION                          */
+        /* Uses requestAnimationFrame to avoid layout thrashing           */
+        /* ============================================================= */
+        (function() {
+            let ticking = false;
+            const shadowNav = document.getElementById('shadowNav');
+            
+            if (!shadowNav) return;
+            
+            window.addEventListener('scroll', function() {
+                if (!ticking) {
+                    requestAnimationFrame(function() {
+                        shadowNav.classList.toggle('scrolled', window.scrollY > 50);
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            }, { passive: true }); /* passive: true improves scroll performance */
+        })();
+    </script>
+</body>
+</html>

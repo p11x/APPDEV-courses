@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_08_07_Error_Recovery.html
+     Error Recovery Patterns with Bootstrap 5
+     
+     Retry strategies, circuit breakers, graceful degradation,
+     offline support, and self-healing UI patterns.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Recovery - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Circuit breaker state indicators */
+        .circuit-state {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .circuit-closed { background: #198754; }
+        .circuit-open { background: #dc3545; }
+        .circuit-half { background: #ffc107; }
+        /* Retry animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .retrying .spinner-border {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="#">Error Recovery</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#erNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="erNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Patterns</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Demo</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Code</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+
+        <!-- Page header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-5 fw-bold">Error Recovery Patterns</h1>
+                <p class="text-muted lead">
+                    Strategies for recovering from failures gracefully.
+                </p>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             RETRY PATTERNS
+             Different retry strategies with code examples
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h4 class="mb-3">Retry Strategies</h4>
+                <div class="row g-3">
+                    <!-- Immediate retry -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Immediate Retry</h6>
+                                <p class="small text-muted">Retry immediately up to N times.</p>
+                                <pre class="bg-dark text-light p-2 rounded small"><code>async function retry(fn, attempts) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === attempts - 1) throw err;
+    }
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Exponential backoff -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Exponential Backoff</h6>
+                                <p class="small text-muted">Increase delay between retries exponentially.</p>
+                                <pre class="bg-dark text-light p-2 rounded small"><code>async function retryBackoff(fn, max) {
+  for (let i = 0; i < max; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === max - 1) throw err;
+      const delay = Math.pow(2, i) * 1000;
+      await sleep(delay);
+    }
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Jittered retry -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Jittered Retry</h6>
+                                <p class="small text-muted">Add randomness to prevent thundering herd.</p>
+                                <pre class="bg-dark text-light p-2 rounded small"><code>async function retryJitter(fn, max) {
+  for (let i = 0; i < max; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === max - 1) throw err;
+      const base = Math.pow(2, i) * 1000;
+      const jitter = Math.random() * 1000;
+      await sleep(base + jitter);
+    }
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             INTERACTIVE RETRY DEMO
+             Click to simulate API call with automatic retry
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Interactive Retry Demo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="text-muted">Click the button to simulate a failing API call with automatic retry.</p>
+                                <button class="btn btn-success mb-3" id="retryBtn" onclick="simulateRetry()">
+                                    Simulate API Call
+                                </button>
+                                <!-- Retry progress log -->
+                                <div class="bg-dark text-light p-3 rounded" id="retryLog"
+                                     style="height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.85rem;">
+                                    Click the button to start...
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Retry configuration -->
+                                <h6>Retry Configuration</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Max Attempts</label>
+                                    <input type="range" class="form-range" min="1" max="10" value="5"
+                                           id="maxAttempts" oninput="updateMaxLabel()">
+                                    <span class="badge bg-primary" id="maxLabel">5</span>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Base Delay (ms)</label>
+                                    <input type="number" class="form-control" value="500" id="baseDelay">
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="useBackoff" checked>
+                                    <label class="form-check-label" for="useBackoff">
+                                        Use exponential backoff
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="useJitter">
+                                    <label class="form-check-label" for="useJitter">
+                                        Add jitter
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             CIRCUIT BREAKER
+             Visual state of a circuit breaker pattern
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Circuit Breaker Pattern</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <!-- Closed state -->
+                            <div class="col-md-4">
+                                <div class="border rounded p-3">
+                                    <span class="circuit-state circuit-closed"></span>
+                                    <h6 class="mt-2">Closed</h6>
+                                    <p class="small text-muted">Requests flow normally. Failures are counted.</p>
+                                    <span class="badge bg-success">Normal Operation</span>
+                                </div>
+                            </div>
+                            <!-- Open state -->
+                            <div class="col-md-4">
+                                <div class="border rounded p-3">
+                                    <span class="circuit-state circuit-open"></span>
+                                    <h6 class="mt-2">Open</h6>
+                                    <p class="small text-muted">Requests are blocked. Fallback is used.</p>
+                                    <span class="badge bg-danger">Service Down</span>
+                                </div>
+                            </div>
+                            <!-- Half-open state -->
+                            <div class="col-md-4">
+                                <div class="border rounded p-3">
+                                    <span class="circuit-state circuit-half"></span>
+                                    <h6 class="mt-2">Half-Open</h6>
+                                    <p class="small text-muted">Limited test requests allowed through.</p>
+                                    <span class="badge bg-warning text-dark">Testing Recovery</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Circuit breaker code -->
+                        <pre class="bg-dark text-light p-3 rounded mt-4"><code>class CircuitBreaker {
+  constructor(threshold = 5, timeout = 30000) {
+    this.threshold = threshold;
+    this.timeout = timeout;
+    this.failures = 0;
+    this.state = 'CLOSED';
+    this.nextAttempt = 0;
+  }
+
+  async call(fn) {
+    if (this.state === 'OPEN') {
+      if (Date.now() < this.nextAttempt) {
+        throw new Error('Circuit is OPEN - using fallback');
+      }
+      this.state = 'HALF-OPEN';
+    }
+
+    try {
+      const result = await fn();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      throw error;
+    }
+  }
+
+  onSuccess() {
+    this.failures = 0;
+    this.state = 'CLOSED';
+  }
+
+  onFailure() {
+    this.failures++;
+    if (this.failures >= this.threshold) {
+      this.state = 'OPEN';
+      this.nextAttempt = Date.now() + this.timeout;
+    }
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             GRACEFUL DEGRADATION
+             Examples of fallback UI when services fail
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h4 class="mb-3">Graceful Degradation Examples</h4>
+                <div class="row g-3">
+                    <!-- Cached data fallback -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Cached Data Fallback</h6>
+                                <div class="alert alert-warning small">
+                                    <strong>Using cached data</strong> (last updated 5 min ago)
+                                </div>
+                                <p class="small text-muted">
+                                    When the API is down, show cached/stale data with a
+                                    warning instead of an error screen.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Offline mode -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Offline Mode</h6>
+                                <div class="alert alert-secondary small d-flex align-items-center">
+                                    <span class="me-2">&#128268;</span>
+                                    <span>You're offline. Changes will sync when reconnected.</span>
+                                </div>
+                                <p class="small text-muted">
+                                    Queue actions locally and sync when connection is restored.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Reduced functionality -->
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Reduced Functionality</h6>
+                                <div class="list-group list-group-flush small">
+                                    <div class="list-group-item d-flex justify-content-between">
+                                        <span>Search</span>
+                                        <span class="badge bg-success">Available</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between">
+                                        <span>Recommendations</span>
+                                        <span class="badge bg-warning text-dark">Limited</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between">
+                                        <span>Live Chat</span>
+                                        <span class="badge bg-danger">Unavailable</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 Error Recovery Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Retry simulation scripts -->
+    <script>
+        // Update max attempts label
+        function updateMaxLabel() {
+            document.getElementById('maxLabel').textContent =
+                document.getElementById('maxAttempts').value;
+        }
+
+        // Sleep helper
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Simulate retry logic with configurable options
+        async function simulateRetry() {
+            const log = document.getElementById('retryLog');
+            const btn = document.getElementById('retryBtn');
+            const maxAttempts = parseInt(document.getElementById('maxAttempts').value);
+            const baseDelay = parseInt(document.getElementById('baseDelay').value);
+            const useBackoff = document.getElementById('useBackoff').checked;
+            const useJitter = document.getElementById('useJitter').checked;
+
+            log.textContent = '';
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+
+            function appendLog(msg) {
+                log.textContent += msg + '\n';
+                log.scrollTop = log.scrollHeight;
+            }
+
+            for (let i = 0; i < maxAttempts; i++) {
+                appendLog(`[Attempt ${i + 1}/${maxAttempts}] Calling API...`);
+                await sleep(300);
+
+                // Simulate failure (80% chance until last attempt)
+                const willSucceed = i === maxAttempts - 1 || Math.random() > 0.8;
+
+                if (willSucceed) {
+                    appendLog(`[Attempt ${i + 1}] SUCCESS! Response received.`);
+                    appendLog(`\nTotal attempts: ${i + 1}`);
+                    btn.disabled = false;
+                    btn.textContent = 'Simulate API Call';
+                    return;
+                } else {
+                    appendLog(`[Attempt ${i + 1}] FAILED: Network timeout`);
+                    if (i < maxAttempts - 1) {
+                        let delay = useBackoff ? Math.pow(2, i) * baseDelay : baseDelay;
+                        if (useJitter) delay += Math.random() * baseDelay;
+                        appendLog(`[Retry] Waiting ${Math.round(delay)}ms before retry...`);
+                        await sleep(delay);
+                    }
+                }
+            }
+
+            appendLog(`\nAll ${maxAttempts} attempts exhausted. Using fallback.`);
+            btn.disabled = false;
+            btn.textContent = 'Simulate API Call';
+        }
+    </script>
+</body>
+</html>

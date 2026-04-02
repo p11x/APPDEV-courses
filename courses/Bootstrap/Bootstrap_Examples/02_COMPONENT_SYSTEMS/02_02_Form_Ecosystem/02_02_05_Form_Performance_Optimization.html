@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<!-- Form performance optimization: debouncing, lazy validation, efficient event handling -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Performance Optimization - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-section { margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 0.5rem; }
+        .perf-metric { font-family: monospace; font-size: 0.85rem; padding: 0.5rem; background: #212529; color: #0f0; border-radius: 0.25rem; }
+        .timing-badge { font-size: 0.7rem; }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Form Performance Optimization</h1>
+                <p class="lead text-muted">Debouncing, lazy validation, efficient event handling, and performance patterns for forms.</p>
+                <hr>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Debouncing -->
+        <!-- Debouncing delays execution until user stops typing -->
+        <section class="demo-section" id="debouncing">
+            <h2 class="h4 mb-3">1. Debouncing Input Events</h2>
+            <p class="text-muted">Debounce fires function only after user stops typing for a specified delay. Reduces unnecessary processing.</p>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="noDebounce" class="form-label">No Debounce (fires on every keystroke)</label>
+                    <input type="text" class="form-control" id="noDebounce" placeholder="Type something...">
+                    <div class="perf-metric mt-2" id="noDebounceCount">Events: 0 | Time: 0ms</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="debounce300" class="form-label">Debounce 300ms</label>
+                    <input type="text" class="form-control" id="debounce300" placeholder="Type something...">
+                    <div class="perf-metric mt-2" id="debounce300Count">Events: 0 | Time: 0ms</div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="debounce500" class="form-label">Debounce 500ms</label>
+                    <input type="text" class="form-control" id="debounce500" placeholder="Type something...">
+                    <div class="perf-metric mt-2" id="debounce500Count">Events: 0 | Time: 0ms</div>
+                </div>
+            </div>
+
+            <!-- Debounce vs Throttle comparison -->
+            <div class="row mt-3">
+                <div class="col-md-6 mb-3">
+                    <label for="throttleInput" class="form-label">Throttle (fires every 300ms while typing)</label>
+                    <input type="text" class="form-control" id="throttleInput" placeholder="Type something...">
+                    <div class="perf-metric mt-2" id="throttleCount">Events: 0 | Time: 0ms</div>
+                    <div class="form-text">Throttle executes at regular intervals during continuous input.</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="rafInput" class="form-label">requestAnimationFrame (synced to display)</label>
+                    <input type="text" class="form-control" id="rafInput" placeholder="Type something...">
+                    <div class="perf-metric mt-2" id="rafCount">Events: 0 | Time: 0ms</div>
+                    <div class="form-text">rAF batches updates to align with browser repaint cycle (16ms).</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Lazy Validation -->
+        <!-- Validate only when necessary, not on every keystroke -->
+        <section class="demo-section" id="lazy-validation">
+            <h2 class="h4 mb-3">2. Lazy Validation</h2>
+            <p class="text-muted">Validate on blur (focus lost) rather than on every keystroke. Reduces visual noise and improves UX.</p>
+
+            <form novalidate id="lazyForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="lazyEmail" class="form-label">Email (validates on blur only)</label>
+                        <input type="email" class="form-control" id="lazyEmail">
+                        <div class="valid-feedback">Valid email!</div>
+                        <div class="invalid-feedback">Please enter a valid email.</div>
+                        <div class="form-text">Validation runs only when you leave this field.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="lazyName" class="form-label">Name (validates on blur, then on input)</label>
+                        <input type="text" class="form-control" id="lazyName" minlength="2">
+                        <div class="invalid-feedback">Name must be at least 2 characters.</div>
+                        <div class="form-text">After first blur, validates on every input (progressive).</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="lazyPassword" class="form-label">Password (validates after user stops for 500ms)</label>
+                    <input type="password" class="form-control" id="lazyPassword" minlength="8">
+                    <div class="invalid-feedback">Password must be at least 8 characters.</div>
+                    <div class="progress mt-2" style="height: 3px;">
+                        <div class="progress-bar" id="lazyPassBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
+        </section>
+
+        <!-- SECTION 3: Event Delegation -->
+        <!-- Use one event listener on parent instead of many on children -->
+        <section class="demo-section" id="event-delegation">
+            <h2 class="h4 mb-3">3. Event Delegation</h2>
+            <p class="text-muted">Attach one listener to parent instead of one per input. More efficient for large/dynamic forms.</p>
+
+            <form id="delegatedForm">
+                <h5>Shipping Information (delegated events)</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="delFirstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control validate-on-blur" id="delFirstName" data-validate="required">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="delLastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control validate-on-blur" id="delLastName" data-validate="required">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="delEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control validate-on-blur" id="delEmail" data-validate="email">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="delPhone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control validate-on-blur" id="delPhone" data-validate="phone">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label for="delAddress" class="form-label">Address</label>
+                        <input type="text" class="form-control validate-on-blur" id="delAddress" data-validate="required">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="delCity" class="form-label">City</label>
+                        <input type="text" class="form-control validate-on-blur" id="delCity" data-validate="required">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="delState" class="form-label">State</label>
+                        <select class="form-select validate-on-blur" id="delState" data-validate="required">
+                            <option value="">Choose...</option>
+                            <option>CA</option>
+                            <option>NY</option>
+                            <option>TX</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="delZip" class="form-label">Zip</label>
+                        <input type="text" class="form-control validate-on-blur" id="delZip" data-validate="zip">
+                    </div>
+                </div>
+                <div class="perf-metric mb-3" id="delegationMetric">Event listeners: 1 (on form) instead of 8 (on each input)</div>
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
+        </section>
+
+        <!-- SECTION 4: Virtual Scrolling for Large Selects -->
+        <!-- For very large option lists, use search/filter instead of rendering all -->
+        <section class="demo-section" id="large-selects">
+            <h2 class="h4 mb-3">4. Large Select Optimization</h2>
+            <p class="text-muted">For large datasets, filter options with search rather than rendering thousands of &lt;option&gt; elements.</p>
+
+            <form>
+                <div class="mb-3">
+                    <label for="countrySearch" class="form-label">Country (type to filter)</label>
+                    <input type="text" class="form-control" id="countrySearch" placeholder="Type to search countries..." autocomplete="off">
+                    <select class="form-select mt-1" id="countrySelect" size="6">
+                        <!-- Options populated dynamically to avoid rendering all at once -->
+                    </select>
+                    <div class="form-text">Only matching options are rendered. Reduces DOM size from 250+ to ~10 elements.</div>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 5: Efficient DOM Updates -->
+        <!-- Batch DOM updates and avoid forced reflows -->
+        <section class="demo-section" id="dom-updates">
+            <h2 class="h4 mb-3">5. Efficient DOM Updates</h2>
+
+            <form id="bulkForm">
+                <h5>Bulk Field Updates</h5>
+                <div class="mb-3">
+                    <label class="form-label">Number of fields to generate</label>
+                    <input type="number" class="form-control" id="fieldCount" value="50" min="1" max="500">
+                </div>
+                <div class="btn-group mb-3">
+                    <button type="button" class="btn btn-outline-primary" id="slowGen">Slow (one-by-one)</button>
+                    <button type="button" class="btn btn-outline-success" id="fastGen">Fast (batched)</button>
+                    <button type="button" class="btn btn-outline-danger" id="clearFields">Clear</button>
+                </div>
+                <div class="perf-metric mb-3" id="genMetric">Click a button to generate fields and compare performance.</div>
+                <!-- Container for dynamically generated fields -->
+                <div id="fieldsContainer" class="row"></div>
+            </form>
+        </section>
+
+        <!-- SECTION 6: Form Serialization Performance -->
+        <!-- Efficient ways to extract form data -->
+        <section class="demo-section" id="serialization">
+            <h2 class="h4 mb-3">6. Form Serialization</h2>
+            <p class="text-muted">Efficient methods to collect form data for submission.</p>
+
+            <form id="serializeForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="serName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="serName" name="name" value="John">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="serEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="serEmail" name="email" value="john@example.com">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="serAge" class="form-label">Age</label>
+                        <input type="number" class="form-control" id="serAge" name="age" value="30">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" name="role">
+                            <option value="admin">Admin</option>
+                            <option value="user" selected>User</option>
+                            <option value="guest">Guest</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="interests" value="coding" checked>
+                        <label class="form-check-label">Coding</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="interests" value="design" checked>
+                        <label class="form-check-label">Design</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="interests" value="music">
+                        <label class="form-check-label">Music</label>
+                    </div>
+                </div>
+                <div class="btn-group mb-3">
+                    <button type="button" class="btn btn-outline-primary" id="serFormData">FormData API</button>
+                    <button type="button" class="btn btn-outline-success" id="serJSON">JSON Object</button>
+                    <button type="button" class="btn btn-outline-info" id="serURL">URLSearchParams</button>
+                </div>
+                <pre class="perf-metric" id="serOutput">Click a button to serialize form data...</pre>
+            </form>
+        </section>
+
+        <!-- SECTION 7: Intersection Observer for Lazy Loading -->
+        <!-- Load form sections only when they come into view -->
+        <section class="demo-section" id="lazy-loading">
+            <h2 class="h4 mb-3">7. Lazy Loading Form Sections</h2>
+            <p class="text-muted">Load form sections only when scrolled into view using IntersectionObserver.</p>
+
+            <div style="height: 100px; overflow-y: scroll; border: 1px solid #dee2e6; border-radius: 0.5rem; padding: 1rem;">
+                <p class="text-muted text-center">Scroll down to lazy-load the form section...</p>
+                <div style="height: 200px;"></div>
+                <!-- Lazy-loaded section -->
+                <div id="lazySection" class="lazy-form-section" data-loaded="false">
+                    <div class="text-center py-4" id="lazyPlaceholder">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading form section...</p>
+                    </div>
+                    <div id="lazyContent" class="d-none">
+                        <h5>Lazy-Loaded Form Section</h5>
+                        <div class="mb-3">
+                            <label for="lazyField1" class="form-label">Field 1</label>
+                            <input type="text" class="form-control" id="lazyField1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="lazyField2" class="form-label">Field 2</label>
+                            <input type="text" class="form-control" id="lazyField2">
+                        </div>
+                        <div class="mb-3">
+                            <label for="lazyField3" class="form-label">Field 3</label>
+                            <input type="text" class="form-control" id="lazyField3">
+                        </div>
+                        <button class="btn btn-primary">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 8: Performance Metrics -->
+        <!-- Measure and display form performance metrics -->
+        <section class="demo-section" id="metrics">
+            <h2 class="h4 mb-3">8. Performance Metrics</h2>
+
+            <div class="row" id="metricsContainer">
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted">Form Controls</h6>
+                            <h3 id="metricControls" class="text-primary">-</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted">Event Listeners</h6>
+                            <h3 id="metricListeners" class="text-success">-</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted">DOM Nodes</h6>
+                            <h3 id="metricDOM" class="text-warning">-</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted">Form Init Time</h6>
+                            <h3 id="metricTime" class="text-danger">-</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-outline-primary" id="measureBtn">Measure Performance</button>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================
+        // UTILITY: Debounce function
+        // Debounce delays execution until after wait ms have elapsed since last call
+        // ============================================
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                // Clear any existing timeout (resets the wait period)
+                clearTimeout(timeout);
+                // Set new timeout - function only executes after wait ms of inactivity
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // ============================================
+        // UTILITY: Throttle function
+        // Throttle executes at most once per wait period
+        // ============================================
+        function throttle(func, wait) {
+            let lastTime = 0;
+            return function(...args) {
+                const now = Date.now();
+                // Only execute if enough time has passed since last execution
+                if (now - lastTime >= wait) {
+                    lastTime = now;
+                    func.apply(this, args);
+                }
+            };
+        }
+
+        // ============================================
+        // SECTION 1: Debounce demonstration
+        // ============================================
+        let noDebounceEvents = 0;
+        let noDebounceStart = Date.now();
+
+        // No debounce: fires on every single keystroke
+        document.getElementById('noDebounce').addEventListener('input', function() {
+            noDebounceEvents++;
+            const elapsed = Date.now() - noDebounceStart;
+            document.getElementById('noDebounceCount').textContent = 'Events: ' + noDebounceEvents + ' | Time: ' + elapsed + 'ms';
+        });
+
+        // 300ms debounce: waits 300ms after last keystroke
+        let db300Events = 0;
+        let db300Start = Date.now();
+        const db300Handler = debounce(function() {
+            db300Events++;
+            const elapsed = Date.now() - db300Start;
+            document.getElementById('debounce300Count').textContent = 'Events: ' + db300Events + ' | Time: ' + elapsed + 'ms';
+        }, 300);
+        document.getElementById('debounce300').addEventListener('input', db300Handler);
+
+        // 500ms debounce
+        let db500Events = 0;
+        let db500Start = Date.now();
+        const db500Handler = debounce(function() {
+            db500Events++;
+            const elapsed = Date.now() - db500Start;
+            document.getElementById('debounce500Count').textContent = 'Events: ' + db500Events + ' | Time: ' + elapsed + 'ms';
+        }, 500);
+        document.getElementById('debounce500').addEventListener('input', db500Handler);
+
+        // Throttle demonstration
+        let throttleEvents = 0;
+        let throttleStart = Date.now();
+        const throttleHandler = throttle(function() {
+            throttleEvents++;
+            const elapsed = Date.now() - throttleStart;
+            document.getElementById('throttleCount').textContent = 'Events: ' + throttleEvents + ' | Time: ' + elapsed + 'ms';
+        }, 300);
+        document.getElementById('throttleInput').addEventListener('input', throttleHandler);
+
+        // requestAnimationFrame demonstration
+        let rafEvents = 0;
+        let rafStart = Date.now();
+        let rafPending = false;
+        document.getElementById('rafInput').addEventListener('input', function() {
+            // Only schedule one rAF per frame (16ms)
+            if (!rafPending) {
+                rafPending = true;
+                requestAnimationFrame(function() {
+                    rafEvents++;
+                    const elapsed = Date.now() - rafStart;
+                    document.getElementById('rafCount').textContent = 'Events: ' + rafEvents + ' | Time: ' + elapsed + 'ms';
+                    rafPending = false;
+                });
+            }
+        });
+
+        // ============================================
+        // SECTION 2: Lazy Validation
+        // ============================================
+        const lazyEmail = document.getElementById('lazyEmail');
+        const lazyName = document.getElementById('lazyName');
+        const lazyPassword = document.getElementById('lazyPassword');
+
+        let nameHasBeenBlurred = false;
+
+        // Email: validate only on blur
+        lazyEmail.addEventListener('blur', function() {
+            if (this.value && !this.checkValidity()) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else if (this.value) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        // Name: validate on blur first, then on input (progressive enhancement)
+        lazyName.addEventListener('blur', function() {
+            nameHasBeenBlurred = true;
+            if (this.value.length < 2) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        // After first blur, validate on input
+        lazyName.addEventListener('input', function() {
+            if (nameHasBeenBlurred) {
+                if (this.value.length >= 2) {
+                    this.classList.add('is-valid');
+                    this.classList.remove('is-invalid');
+                } else if (this.value.length > 0) {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                }
+            }
+        });
+
+        // Password: debounced validation
+        const validatePasswordLazy = debounce(function() {
+            const val = lazyPassword.value;
+            const bar = document.getElementById('lazyPassBar');
+            const pct = Math.min((val.length / 8) * 100, 100);
+            bar.style.width = pct + '%';
+            bar.className = 'progress-bar ' + (pct < 50 ? 'bg-danger' : pct < 100 ? 'bg-warning' : 'bg-success');
+
+            if (val.length > 0 && val.length < 8) {
+                lazyPassword.classList.add('is-invalid');
+                lazyPassword.classList.remove('is-valid');
+            } else if (val.length >= 8) {
+                lazyPassword.classList.add('is-valid');
+                lazyPassword.classList.remove('is-invalid');
+            }
+        }, 500);
+        lazyPassword.addEventListener('input', validatePasswordLazy);
+
+        document.getElementById('lazyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            this.classList.add('was-validated');
+        });
+
+        // ============================================
+        // SECTION 3: Event Delegation
+        // ============================================
+        const delegatedForm = document.getElementById('delegatedForm');
+
+        // ONE event listener handles ALL .validate-on-blur elements
+        delegatedForm.addEventListener('blur', function(event) {
+            const target = event.target;
+            // Check if the event target has the validate-on-blur class
+            if (target.classList.contains('validate-on-blur')) {
+                const validationType = target.dataset.validate;
+                let isValid = true;
+
+                switch (validationType) {
+                    case 'required':
+                        isValid = target.value.trim().length > 0;
+                        break;
+                    case 'email':
+                        isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target.value);
+                        break;
+                    case 'phone':
+                        isValid = /^[\d\s\-()]{10,}$/.test(target.value);
+                        break;
+                    case 'zip':
+                        isValid = /^\d{5}(-\d{4})?$/.test(target.value);
+                        break;
+                }
+
+                if (isValid) {
+                    target.classList.remove('is-invalid');
+                    target.classList.add('is-valid');
+                } else {
+                    target.classList.remove('is-valid');
+                    target.classList.add('is-invalid');
+                }
+            }
+        }, true); // useCapture=true for blur events (they don't bubble)
+
+        delegatedForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            let valid = true;
+            this.querySelectorAll('.validate-on-blur').forEach(function(el) {
+                if (!el.classList.contains('is-valid') && el.value) {
+                    // Trigger validation
+                    el.dispatchEvent(new Event('blur', { bubbles: true }));
+                }
+                if (el.classList.contains('is-invalid')) valid = false;
+            });
+            if (valid) alert('Form submitted!');
+        });
+
+        // ============================================
+        // SECTION 4: Large Select Optimization
+        // ============================================
+        const allCountries = [
+            'Afghanistan','Albania','Algeria','Andorra','Angola','Argentina','Armenia','Australia','Austria','Azerbaijan',
+            'Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan','Bolivia',
+            'Brazil','Brunei','Bulgaria','Burkina Faso','Cambodia','Cameroon','Canada','Chad','Chile','China',
+            'Colombia','Congo','Costa Rica','Croatia','Cuba','Cyprus','Czech Republic','Denmark','Dominican Republic','Ecuador',
+            'Egypt','El Salvador','Estonia','Ethiopia','Fiji','Finland','France','Georgia','Germany','Ghana',
+            'Greece','Guatemala','Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq',
+            'Ireland','Israel','Italy','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kuwait','Kyrgyzstan',
+            'Latvia','Lebanon','Liberia','Libya','Lithuania','Luxembourg','Madagascar','Malaysia','Maldives','Mali',
+            'Malta','Mexico','Moldova','Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia',
+            'Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Korea','Norway','Oman','Pakistan',
+            'Panama','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania','Russia','Rwanda',
+            'Saudi Arabia','Senegal','Serbia','Singapore','Slovakia','Slovenia','Somalia','South Africa','South Korea','Spain',
+            'Sri Lanka','Sudan','Suriname','Sweden','Switzerland','Syria','Taiwan','Tajikistan','Tanzania','Thailand',
+            'Togo','Trinidad','Tunisia','Turkey','Turkmenistan','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States',
+            'Uruguay','Uzbekistan','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'
+        ];
+
+        const countrySearch = document.getElementById('countrySearch');
+        const countrySelect = document.getElementById('countrySelect');
+
+        function renderCountries(filter) {
+            // Filter countries based on search text
+            const filtered = filter ? allCountries.filter(function(c) {
+                return c.toLowerCase().includes(filter.toLowerCase());
+            }) : allCountries.slice(0, 20); // Show first 20 if no filter
+
+            // Limit to 20 results for performance
+            const limited = filtered.slice(0, 20);
+
+            // Build HTML string and set once (efficient DOM update)
+            countrySelect.innerHTML = limited.map(function(c) {
+                return '<option value="' + c + '">' + c + '</option>';
+            }).join('');
+        }
+
+        // Debounced search to avoid filtering on every keystroke
+        const debouncedCountrySearch = debounce(function() {
+            renderCountries(countrySearch.value);
+        }, 200);
+        countrySearch.addEventListener('input', debouncedCountrySearch);
+
+        // Initial render
+        renderCountries('');
+
+        // ============================================
+        // SECTION 5: DOM Update Performance
+        // ============================================
+        const fieldsContainer = document.getElementById('fieldsContainer');
+
+        // SLOW: One-by-one DOM insertion (causes multiple reflows)
+        document.getElementById('slowGen').addEventListener('click', function() {
+            const count = parseInt(document.getElementById('fieldCount').value);
+            fieldsContainer.innerHTML = '';
+            const start = performance.now();
+
+            for (let i = 0; i < count; i++) {
+                // Each appendChild triggers a potential reflow
+                const div = document.createElement('div');
+                div.className = 'col-md-4 mb-2';
+                div.innerHTML = '<input type="text" class="form-control form-control-sm" placeholder="Field ' + (i + 1) + '">';
+                fieldsContainer.appendChild(div);
+            }
+
+            const elapsed = (performance.now() - start).toFixed(2);
+            document.getElementById('genMetric').textContent = 'Slow (one-by-one): ' + elapsed + 'ms for ' + count + ' fields';
+        });
+
+        // FAST: Batch DOM insertion using DocumentFragment
+        document.getElementById('fastGen').addEventListener('click', function() {
+            const count = parseInt(document.getElementById('fieldCount').value);
+            fieldsContainer.innerHTML = '';
+            const start = performance.now();
+
+            // DocumentFragment is a lightweight container not in the DOM
+            // Building in fragment = no reflows until we append the fragment
+            const fragment = document.createDocumentFragment();
+
+            for (let i = 0; i < count; i++) {
+                const div = document.createElement('div');
+                div.className = 'col-md-4 mb-2';
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'form-control form-control-sm';
+                input.placeholder = 'Field ' + (i + 1);
+                div.appendChild(input);
+                fragment.appendChild(div);
+            }
+
+            // Single DOM insertion triggers only one reflow
+            fieldsContainer.appendChild(fragment);
+
+            const elapsed = (performance.now() - start).toFixed(2);
+            document.getElementById('genMetric').textContent = 'Fast (batched): ' + elapsed + 'ms for ' + count + ' fields';
+        });
+
+        document.getElementById('clearFields').addEventListener('click', function() {
+            fieldsContainer.innerHTML = '';
+            document.getElementById('genMetric').textContent = 'Fields cleared.';
+        });
+
+        // ============================================
+        // SECTION 6: Form Serialization
+        // ============================================
+        const serializeForm = document.getElementById('serializeForm');
+
+        // FormData API (modern, handles files and complex data)
+        document.getElementById('serFormData').addEventListener('click', function() {
+            const formData = new FormData(serializeForm);
+            const entries = [];
+            formData.forEach(function(value, key) {
+                entries.push(key + ': ' + value);
+            });
+            document.getElementById('serOutput').textContent = 'FormData API:\n' + entries.join('\n');
+        });
+
+        // JSON Object conversion
+        document.getElementById('serJSON').addEventListener('click', function() {
+            const formData = new FormData(serializeForm);
+            const obj = {};
+            formData.forEach(function(value, key) {
+                // Handle multiple values (checkboxes with same name)
+                if (obj[key]) {
+                    if (!Array.isArray(obj[key])) obj[key] = [obj[key]];
+                    obj[key].push(value);
+                } else {
+                    obj[key] = value;
+                }
+            });
+            document.getElementById('serOutput').textContent = 'JSON Object:\n' + JSON.stringify(obj, null, 2);
+        });
+
+        // URLSearchParams (for URL-encoded data)
+        document.getElementById('serURL').addEventListener('click', function() {
+            const formData = new FormData(serializeForm);
+            const params = new URLSearchParams(formData);
+            document.getElementById('serOutput').textContent = 'URLSearchParams:\n' + params.toString();
+        });
+
+        // ============================================
+        // SECTION 7: Lazy Loading with IntersectionObserver
+        // ============================================
+        const lazySection = document.getElementById('lazySection');
+
+        // IntersectionObserver watches when elements enter/exit the viewport
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                // When section becomes visible and hasn't been loaded yet
+                if (entry.isIntersecting && lazySection.dataset.loaded === 'false') {
+                    lazySection.dataset.loaded = 'true';
+
+                    // Simulate loading delay
+                    setTimeout(function() {
+                        document.getElementById('lazyPlaceholder').classList.add('d-none');
+                        document.getElementById('lazyContent').classList.remove('d-none');
+                    }, 1000);
+
+                    // Stop observing after loading
+                    observer.unobserve(lazySection);
+                }
+            });
+        }, { threshold: 0.1 }); // Trigger when 10% visible
+
+        observer.observe(lazySection);
+
+        // ============================================
+        // SECTION 8: Performance Metrics
+        // ============================================
+        document.getElementById('measureBtn').addEventListener('click', function() {
+            // Count form controls
+            const controls = document.querySelectorAll('input, select, textarea').length;
+            document.getElementById('metricControls').textContent = controls;
+
+            // Count DOM nodes (approximate)
+            const domNodes = document.querySelectorAll('*').length;
+            document.getElementById('metricDOM').textContent = domNodes;
+
+            // Measure form init time
+            const start = performance.now();
+            // Simulate form initialization
+            document.querySelectorAll('.form-control').forEach(function(el) {
+                el.offsetHeight; // Force reflow for measurement
+            });
+            const initTime = (performance.now() - start).toFixed(2);
+            document.getElementById('metricTime').textContent = initTime + 'ms';
+
+            // Estimated listeners (we can't count actual listeners directly)
+            document.getElementById('metricListeners').textContent = '~' + Math.round(controls * 0.5);
+        });
+    </script>
+</body>
+</html>

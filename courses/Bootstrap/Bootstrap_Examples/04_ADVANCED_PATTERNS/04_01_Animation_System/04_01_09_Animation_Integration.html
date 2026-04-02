@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_09_Animation_Integration.html                            -->
+<!-- Integration with Bootstrap 5 Components                        -->
+<!-- Covers: animated modals, carousel, navbar, tabs, accordion,    -->
+<!--         offcanvas, toast, dropdown, alerts, progress, badges   -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_01_09 - Animation Integration</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes slideInRight { from { opacity:0; transform:translateX(50px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes zoomIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
+        @keyframes shakeX { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+        @keyframes bounceIn { 0%{opacity:0;transform:scale(0.3)} 50%{opacity:1;transform:scale(1.05)} 70%{transform:scale(0.9)} 100%{transform:scale(1)} }
+        @keyframes progressFill { from { width:0; } to { width: var(--pw); } }
+        @keyframes badgePop { 0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+        @keyframes alertSlide { from { opacity:0; transform:translateY(-15px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+        /* --------------------------------------------------------- */
+        /* MODAL ANIMATION ENHANCEMENT                               */
+        /* Override Bootstrap modal fade with custom entrance         */
+        /* --------------------------------------------------------- */
+        .modal.fade .modal-dialog {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+        }
+
+        /* --------------------------------------------------------- */
+        /* CAROUSEL SLIDE ENHANCEMENT                                */
+        /* Add parallax-like depth to carousel transitions           */
+        /* --------------------------------------------------------- */
+        .carousel-item {
+            transition: transform 0.8s ease-in-out, opacity 0.6s ease;
+        }
+        .carousel-item .carousel-caption {
+            animation: fadeInUp 0.6s ease-out 0.3s both;
+        }
+
+        /* --------------------------------------------------------- */
+        /* TAB CONTENT TRANSITIONS                                   */
+        /* Fade in tab content when switching tabs                   */
+        /* --------------------------------------------------------- */
+        .tab-pane {
+            animation: none;
+        }
+        .tab-pane.fade.show {
+            animation: fadeInUp 0.35s ease-out;
+        }
+
+        /* --------------------------------------------------------- */
+        /* ACCORDION ITEM ANIMATIONS                                 */
+        /* Custom entrance animation for accordion body content      */
+        /* --------------------------------------------------------- */
+        .accordion-body {
+            animation: fadeInUp 0.3s ease-out;
+        }
+        .accordion-button {
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .accordion-button:not(.collapsed) {
+            animation: fadeInUp 0.2s ease-out;
+        }
+
+        /* --------------------------------------------------------- */
+        /* ALERT ENHANCEMENT                                         */
+        /* Animated entrance and dismiss                             */
+        /* --------------------------------------------------------- */
+        .alert-animated {
+            animation: alertSlide 0.4s ease-out;
+        }
+        .alert-animated.dismissing {
+            animation: alertSlide 0.3s ease-in reverse forwards;
+        }
+
+        /* --------------------------------------------------------- */
+        /* PROGRESS BAR ANIMATION                                    */
+        /* Animated fill on load and on update                       */
+        /* --------------------------------------------------------- */
+        .progress-bar-animated-custom {
+            animation: progressFill 1.2s ease-out forwards;
+        }
+
+        /* --------------------------------------------------------- */
+        /* BADGE POP ANIMATION                                       */
+        /* Badges pop in when added dynamically                      */
+        /* --------------------------------------------------------- */
+        .badge-pop {
+            animation: badgePop 0.4s ease-out;
+        }
+
+        /* --------------------------------------------------------- */
+        /* DROPDOWN ENHANCEMENT                                      */
+        /* Custom entrance animation for dropdown menus              */
+        /* --------------------------------------------------------- */
+        .dropdown-menu {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .dropdown-menu.show {
+            animation: fadeInUp 0.25s ease-out;
+        }
+
+        /* --------------------------------------------------------- */
+        /* NAVBAR SCROLL EFFECT                                      */
+        /* Background and shadow change on scroll                    */
+        /* --------------------------------------------------------- */
+        .navbar-scroll-effect {
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease;
+        }
+        .navbar-scroll-effect.scrolled {
+            background-color: rgba(255,255,255,0.97) !important;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1) !important;
+            backdrop-filter: blur(8px);
+        }
+
+        /* --------------------------------------------------------- */
+        /* OFFCANVAS ENHANCEMENT                                     */
+        /* Custom slide-in animation                                 */
+        /* --------------------------------------------------------- */
+        .offcanvas-animated {
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* --------------------------------------------------------- */
+        /* TOAST CONTAINER ANIMATION                                 */
+        /* Stacked toast entrance                                    */
+        /* --------------------------------------------------------- */
+        .toast-animated {
+            animation: slideInRight 0.4s ease-out;
+        }
+
+        /* --------------------------------------------------------- */
+        /* LIST GROUP STAGGERED ENTRANCE                             */
+        /* Each item fades in with a delay                           */
+        /* --------------------------------------------------------- */
+        .list-group-item-animated {
+            opacity: 0;
+            transform: translateX(-15px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .list-group-item-animated.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* --------------------------------------------------------- */
+        /* CARD FLIP                                                 */
+        /* 3D card flip animation using CSS transforms               */
+        /* --------------------------------------------------------- */
+        .card-flip-container {
+            perspective: 1000px;
+        }
+        .card-flip {
+            transition: transform 0.6s ease;
+            transform-style: preserve-3d;
+        }
+        .card-flip.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-flip-front, .card-flip-back {
+            backface-visibility: hidden;
+        }
+        .card-flip-back {
+            transform: rotateY(180deg);
+            position: absolute;
+            inset: 0;
+        }
+
+        /* --------------------------------------------------------- */
+        /* FLOATING ACTION BUTTON                                    */
+        /* Bounce animation on appear                                */
+        /* --------------------------------------------------------- */
+        .fab {
+            animation: bounceIn 0.6s ease-out;
+        }
+        .fab:hover {
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .tab-pane.fade.show,
+            .accordion-body,
+            .alert-animated,
+            .badge-pop,
+            .dropdown-menu.show,
+            .toast-animated,
+            .carousel-item .carousel-caption,
+            .fab {
+                animation: none !important;
+            }
+            .list-group-item-animated {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+            .card-flip { transition: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Animated Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-scroll-effect fixed-top" id="integNav">
+        <div class="container">
+            <a class="navbar-brand" href="#">AnimateBootstrap</a>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#integModal">Modal</button>
+                <button class="btn btn-outline-light btn-sm" data-bs-toggle="offcanvas" data-bs-target="#integOffcanvas">Menu</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5 mt-5">
+
+        <!-- ============================================================= -->
+        <!-- ANIMATED MODAL                                                -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Enhanced Modal Animation</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#integModal">
+                Open Animated Modal
+            </button>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- ANIMATED CAROUSEL                                             -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Enhanced Carousel</h2>
+            <div id="integCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    <button data-bs-target="#integCarousel" data-bs-slide-to="0" class="active"></button>
+                    <button data-bs-target="#integCarousel" data-bs-slide-to="1"></button>
+                    <button data-bs-target="#integCarousel" data-bs-slide-to="2"></button>
+                </div>
+                <div class="carousel-inner rounded">
+                    <div class="carousel-item active">
+                        <div class="bg-primary d-flex align-items-center justify-content-center text-white" style="height:300px">
+                            <div class="carousel-caption">
+                                <h3>Slide 1</h3>
+                                <p>Caption fades in with CSS animation</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="bg-success d-flex align-items-center justify-content-center text-white" style="height:300px">
+                            <div class="carousel-caption">
+                                <h3>Slide 2</h3>
+                                <p>Each caption re-triggers its entrance animation</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="bg-danger d-flex align-items-center justify-content-center text-white" style="height:300px">
+                            <div class="carousel-caption">
+                                <h3>Slide 3</h3>
+                                <p>Smooth carousel transitions with depth</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" data-bs-target="#integCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" data-bs-target="#integCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- ANIMATED TABS                                                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Animated Tabs</h2>
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab1">Overview</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab2">Features</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab3">Pricing</button></li>
+            </ul>
+            <div class="tab-content border border-top-0 p-4 bg-white rounded-bottom">
+                <div class="tab-pane fade show active" id="tab1">
+                    <h5>Overview</h5>
+                    <p>Tab content fades in with a subtle upward animation. Each tab switch triggers a new entrance animation.</p>
+                </div>
+                <div class="tab-pane fade" id="tab2">
+                    <h5>Features</h5>
+                    <p>Bootstrap handles the fade/active class toggle. Our CSS adds a fadeInUp animation when <code>.show</code> is applied.</p>
+                </div>
+                <div class="tab-pane fade" id="tab3">
+                    <h5>Pricing</h5>
+                    <p>The animation is purely CSS — no JavaScript needed. Just add the keyframes and apply to <code>.tab-pane.fade.show</code>.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- ANIMATED ACCORDION                                            -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Animated Accordion</h2>
+            <div class="accordion" id="integAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#ac1">What are CSS animations?</button>
+                    </h2>
+                    <div id="ac1" class="accordion-collapse collapse show" data-bs-parent="#integAccordion">
+                        <div class="accordion-body">CSS animations use @keyframes to define intermediate steps in an animation sequence, allowing complex multi-step animations without JavaScript.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#ac2">How do transitions differ?</button>
+                    </h2>
+                    <div id="ac2" class="accordion-collapse collapse" data-bs-parent="#integAccordion">
+                        <div class="accordion-body">Transitions only animate between two states (start and end). Animations can have unlimited intermediate keyframes and run automatically or infinitely.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#ac3">Performance tips?</button>
+                    </h2>
+                    <div id="ac3" class="accordion-collapse collapse" data-bs-parent="#integAccordion">
+                        <div class="accordion-body">Only animate transform and opacity. Use will-change sparingly. Respect prefers-reduced-motion. Target 60fps (16.6ms per frame).</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- ANIMATED ALERTS                                               -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Animated Alerts</h2>
+            <button class="btn btn-success mb-2" id="addAlertBtn">Add Alert</button>
+            <div id="alertContainer"></div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- ANIMATED PROGRESS BARS                                        -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Animated Progress Bars</h2>
+            <button class="btn btn-primary mb-3" id="animateProgressBtn">Animate Progress</button>
+            <div class="mb-2">
+                <div class="progress" style="height:20px">
+                    <div class="progress-bar progress-bar-animated-custom" id="progBar1" style="--pw:0%"></div>
+                </div>
+            </div>
+            <div class="mb-2">
+                <div class="progress" style="height:20px">
+                    <div class="progress-bar bg-success progress-bar-animated-custom" id="progBar2" style="--pw:0%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- ANIMATED TOASTS                                                -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Animated Toasts</h2>
+            <button class="btn btn-info" id="showIntegToastBtn">Show Toast</button>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- ANIMATED BADGES                                               -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Animated Badges</h2>
+            <button class="btn btn-outline-primary me-2" id="addBadgeBtn">Add Badge</button>
+            <div class="d-flex flex-wrap gap-2 mt-2" id="badgeContainer"></div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- LIST GROUP STAGGERED                                          -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">9. Staggered List Group</h2>
+            <button class="btn btn-primary mb-2" id="showListBtn">Show List</button>
+            <ul class="list-group" id="integList">
+                <li class="list-group-item list-group-item-animated">Dashboard Overview</li>
+                <li class="list-group-item list-group-item-animated">User Analytics</li>
+                <li class="list-group-item list-group-item-animated">Revenue Reports</li>
+                <li class="list-group-item list-group-item-animated">Settings</li>
+                <li class="list-group-item list-group-item-animated">Help & Support</li>
+            </ul>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- CARD FLIP                                                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">10. Card Flip</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card-flip-container" style="height:200px">
+                        <div class="card card-flip h-100" id="flipCard1" style="cursor:pointer">
+                            <div class="card-body card-flip-front d-flex align-items-center justify-content-center">
+                                <h5>Click to Flip</h5>
+                            </div>
+                            <div class="card-body card-flip-back bg-primary text-white d-flex align-items-center justify-content-center">
+                                <h5>Back Side!</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- FLOATING ACTION BUTTON                                        -->
+        <!-- ============================================================= -->
+        <section class="mb-5 pb-5">
+            <h2 class="h4 mb-3">11. Floating Action Button</h2>
+            <p class="text-muted">The FAB button in the bottom-right demonstrates bounce-in and floating hover.</p>
+        </section>
+    </div>
+
+    <!-- FAB Button -->
+    <button class="btn btn-primary fab rounded-circle shadow-lg position-fixed"
+            style="bottom:2rem;right:2rem;width:56px;height:56px;font-size:1.5rem;z-index:1000" id="fabBtn">
+        +
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="integModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Animated Modal</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This modal uses a custom bounce easing on the dialog transform, creating a more lively entrance than Bootstrap's default.</p>
+                    <p class="mb-0"><code>cubic-bezier(0.34, 1.56, 0.64, 1)</code> creates an overshoot effect.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offcanvas -->
+    <div class="offcanvas offcanvas-start offcanvas-animated" tabindex="-1" id="integOffcanvas">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">Navigation</h5>
+            <button class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <nav class="nav flex-column">
+                <a class="nav-link" href="#">Home</a>
+                <a class="nav-link" href="#">Components</a>
+                <a class="nav-link" href="#">Animations</a>
+                <a class="nav-link" href="#">Documentation</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="integToast" class="toast toast-animated" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto">Notification</strong>
+                <button class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">Toast notification with slide-in animation.</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* Navbar scroll effect */
+        window.addEventListener('scroll', function () {
+            document.getElementById('integNav').classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        /* Animated alerts */
+        let alertCount = 0;
+        const alertTypes = ['success', 'info', 'warning', 'danger'];
+        document.getElementById('addAlertBtn').addEventListener('click', function () {
+            alertCount++;
+            const type = alertTypes[alertCount % alertTypes.length];
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-animated alert-dismissible fade show`;
+            alert.innerHTML = `<strong>Alert #${alertCount}!</strong> This alert slides in. <button class="btn-close" data-bs-dismiss="alert"></button>`;
+            document.getElementById('alertContainer').prepend(alert);
+        });
+
+        /* Progress bars */
+        document.getElementById('animateProgressBtn').addEventListener('click', function () {
+            const b1 = document.getElementById('progBar1');
+            const b2 = document.getElementById('progBar2');
+            b1.style.setProperty('--pw', Math.random() * 100 + '%');
+            b2.style.setProperty('--pw', Math.random() * 100 + '%');
+            b1.style.animation = 'none'; void b1.offsetWidth; b1.style.animation = '';
+            b2.style.animation = 'none'; void b2.offsetWidth; b2.style.animation = '';
+        });
+
+        /* Toast */
+        document.getElementById('showIntegToastBtn').addEventListener('click', function () {
+            new bootstrap.Toast(document.getElementById('integToast')).show();
+        });
+
+        /* Badges */
+        let badgeCount = 0;
+        const badgeColors = ['primary', 'success', 'danger', 'warning', 'info', 'dark'];
+        document.getElementById('addBadgeBtn').addEventListener('click', function () {
+            badgeCount++;
+            const badge = document.createElement('span');
+            badge.className = `badge badge-pop bg-${badgeColors[badgeCount % badgeColors.length]}`;
+            badge.textContent = 'Badge ' + badgeCount;
+            document.getElementById('badgeContainer').appendChild(badge);
+        });
+
+        /* Staggered list */
+        document.getElementById('showListBtn').addEventListener('click', function () {
+            const items = document.querySelectorAll('.list-group-item-animated');
+            items.forEach(function (item, i) {
+                item.classList.remove('visible');
+                setTimeout(function () {
+                    item.classList.add('visible');
+                }, i * 100);
+            });
+        });
+
+        /* Card flip */
+        document.getElementById('flipCard1').addEventListener('click', function () {
+            this.classList.toggle('flipped');
+        });
+    </script>
+</body>
+</html>

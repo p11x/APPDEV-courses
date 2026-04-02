@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_02_Tree_Shaking.html
+     Topic: Tree Shaking with Bootstrap 5
+     
+     Tree shaking eliminates dead code from your JavaScript bundle.
+     Bootstrap 5 ships ES modules, enabling bundlers (Webpack, Rollup,
+     Vite) to include only the components you actually import.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Preconnect to CDN for faster resource fetching -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Tree Shaking - Bootstrap 5</title>
+
+    <style>
+        /* Minimal custom CSS - leveraging Bootstrap utilities instead */
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+        }
+        .keyword { color: #569cd6; }
+        .string { color: #ce9178; }
+        .comment { color: #6a9955; }
+        .import { color: #c586c0; }
+        .size-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Tree Shaking</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navContent" aria-controls="navContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#concept">Concept</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#examples">Examples</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#config">Config</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#demo">Demo</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+         HERO: Introduces tree shaking concept
+         ============================================================ -->
+    <header class="bg-primary text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold">Tree Shaking Bootstrap</h1>
+            <p class="lead mt-2">Import only what you use. Eliminate dead code from your bundle.</p>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         SECTION 1: CONCEPT EXPLANATION
+         Accordion component explains tree shaking step by step.
+         ============================================================ -->
+    <section id="concept" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">How Tree Shaking Works</h2>
+
+            <!-- Bootstrap Accordion: each panel explains a step -->
+            <div class="accordion" id="treeShakingAccordion">
+                <!-- Step 1 -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#step1" aria-expanded="true" aria-controls="step1">
+                            Step 1: ES Module Syntax
+                        </button>
+                    </h3>
+                    <div id="step1" class="accordion-collapse collapse show"
+                         data-bs-parent="#treeShakingAccordion">
+                        <div class="accordion-body">
+                            <p>Bootstrap 5 provides ES module builds. Use <code>import</code> statements instead of <code>require()</code> to enable static analysis.</p>
+                            <div class="code-block">
+                                <span class="comment">// ES module import - tree-shakeable</span><br>
+                                <span class="import">import</span> { Tooltip, Dropdown } <span class="import">from</span> <span class="string">'bootstrap'</span>;<br><br>
+                                <span class="comment">// CommonJS require - NOT tree-shakeable</span><br>
+                                <span class="keyword">const</span> bootstrap = <span class="import">require</span>(<span class="string">'bootstrap'</span>);
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#step2" aria-expanded="false" aria-controls="step2">
+                            Step 2: Named Imports
+                        </button>
+                    </h3>
+                    <div id="step2" class="accordion-collapse collapse"
+                         data-bs-parent="#treeShakingAccordion">
+                        <div class="accordion-body">
+                            <p>Import specific components by name. The bundler marks unused exports as dead code.</p>
+                            <div class="code-block">
+                                <span class="comment">// Only these 3 components will be in your bundle</span><br>
+                                <span class="import">import</span> {<br>
+                                &nbsp;&nbsp;Alert,<br>
+                                &nbsp;&nbsp;Button,<br>
+                                &nbsp;&nbsp;Modal<br>
+                                } <span class="import">from</span> <span class="string">'bootstrap'</span>;<br><br>
+                                <span class="comment">// Carousel, ScrollSpy, Toast etc. are excluded</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#step3" aria-expanded="false" aria-controls="step3">
+                            Step 3: Bundler Elimination
+                        </button>
+                    </h3>
+                    <div id="step3" class="accordion-collapse collapse"
+                         data-bs-parent="#treeShakingAccordion">
+                        <div class="accordion-body">
+                            <p>Webpack, Rollup, or Vite performs dead code elimination during production builds. Unused exports are never included in the output bundle.</p>
+                            <div class="code-block">
+                                <span class="comment">// webpack.config.js</span><br>
+                                module.exports = {<br>
+                                &nbsp;&nbsp;mode: <span class="string">'production'</span>, <span class="comment">// enables minification + tree shaking</span><br>
+                                &nbsp;&nbsp;optimization: {<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;usedExports: <span class="keyword">true</span>, <span class="comment">// mark unused exports</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;sideEffects: <span class="keyword">false</span> <span class="comment">// trust package.json sideEffects</span><br>
+                                &nbsp;&nbsp;}<br>
+                                };
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#step4" aria-expanded="false" aria-controls="step4">
+                            Step 4: Verify Results
+                        </button>
+                    </h3>
+                    <div id="step4" class="accordion-collapse collapse"
+                         data-bs-parent="#treeShakingAccordion">
+                        <div class="accordion-body">
+                            <p>Use bundle analysis tools to verify what was included. Tools like <code>webpack-bundle-analyzer</code> visualize the output.</p>
+                            <div class="code-block">
+                                <span class="comment">// Install analyzer</span><br>
+                                npm install --save-dev webpack-bundle-analyzer<br><br>
+                                <span class="comment">// Add to webpack config</span><br>
+                                <span class="keyword">const</span> { BundleAnalyzerPlugin } = <span class="import">require</span>(<span class="string">'webpack-bundle-analyzer'</span>);<br>
+                                plugins: [<span class="keyword">new</span> BundleAnalyzerPlugin()]
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: COMPONENT SIZE COMPARISON
+         Cards show individual Bootstrap JS component sizes.
+         ============================================================ -->
+    <section id="examples" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Bootstrap JS Component Sizes (Approx.)</h2>
+            <p class="text-muted mb-4">Individual component sizes when tree-shaken. Full bundle is ~85 KB unminified.</p>
+
+            <div class="row g-3">
+                <!-- Component size cards -->
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Modal</h6>
+                            <span class="size-indicator bg-primary text-white">~4.2 KB</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Dropdown</h6>
+                            <span class="size-indicator bg-success text-white">~3.8 KB</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Carousel</h6>
+                            <span class="size-indicator bg-info text-white">~3.5 KB</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Tooltip</h6>
+                            <span class="size-indicator bg-warning text-dark">~2.9 KB</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Collapse</h6>
+                            <span class="size-indicator bg-danger text-white">~2.5 KB</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Tab</h6>
+                            <span class="size-indicator bg-secondary text-white">~1.8 KB</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Alert</h6>
+                            <span class="size-indicator bg-dark text-white">~1.2 KB</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">Button</h6>
+                            <span class="size-indicator bg-light text-dark border">~0.9 KB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: BUNDLER CONFIGURATIONS
+         Side-by-side configs for popular bundlers.
+         Uses Bootstrap nav tabs for switching between configs.
+         ============================================================ -->
+    <section id="config" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Bundler Configuration Examples</h2>
+
+            <!-- Tab navigation -->
+            <ul class="nav nav-tabs" id="bundlerTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="webpack-tab" data-bs-toggle="tab"
+                            data-bs-target="#webpack" type="button" role="tab"
+                            aria-controls="webpack" aria-selected="true">Webpack</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="vite-tab" data-bs-toggle="tab"
+                            data-bs-target="#vite" type="button" role="tab"
+                            aria-controls="vite" aria-selected="false">Vite</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="rollup-tab" data-bs-toggle="tab"
+                            data-bs-target="#rollup" type="button" role="tab"
+                            aria-controls="rollup" aria-selected="false">Rollup</button>
+                </li>
+            </ul>
+
+            <!-- Tab content panels -->
+            <div class="tab-content border border-top-0 p-4 rounded-bottom" id="bundlerTabContent">
+                <!-- Webpack config -->
+                <div class="tab-pane fade show active" id="webpack" role="tabpanel" aria-labelledby="webpack-tab">
+                    <div class="code-block">
+                        <span class="comment">// webpack.config.js</span><br>
+                        module.exports = {<br>
+                        &nbsp;&nbsp;mode: <span class="string">'production'</span>,<br>
+                        &nbsp;&nbsp;entry: <span class="string">'./src/index.js'</span>,<br>
+                        &nbsp;&nbsp;optimization: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;usedExports: <span class="keyword">true</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;sideEffects: <span class="keyword">false</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;minimize: <span class="keyword">true</span><br>
+                        &nbsp;&nbsp;},<br>
+                        &nbsp;&nbsp;resolve: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;mainFields: [<span class="string">'module'</span>, <span class="string">'main'</span>]<br>
+                        &nbsp;&nbsp;}<br>
+                        };
+                    </div>
+                </div>
+
+                <!-- Vite config -->
+                <div class="tab-pane fade" id="vite" role="tabpanel" aria-labelledby="vite-tab">
+                    <div class="code-block">
+                        <span class="comment">// vite.config.js</span><br>
+                        <span class="import">import</span> { defineConfig } <span class="import">from</span> <span class="string">'vite'</span>;<br><br>
+                        export <span class="keyword">default</span> defineConfig({<br>
+                        &nbsp;&nbsp;build: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;rollupOptions: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;treeshake: <span class="keyword">true</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;output: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;manualChunks: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bootstrap: [<span class="string">'bootstrap'</span>]<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                        &nbsp;&nbsp;}<br>
+                        });
+                    </div>
+                </div>
+
+                <!-- Rollup config -->
+                <div class="tab-pane fade" id="rollup" role="tabpanel" aria-labelledby="rollup-tab">
+                    <div class="code-block">
+                        <span class="comment">// rollup.config.js</span><br>
+                        <span class="import">import</span> { nodeResolve } <span class="import">from</span> <span class="string">'@rollup/plugin-node-resolve'</span>;<br>
+                        <span class="import">import</span> terser <span class="import">from</span> <span class="string">'@rollup/plugin-terser'</span>;<br><br>
+                        export <span class="keyword">default</span> {<br>
+                        &nbsp;&nbsp;input: <span class="string">'src/index.js'</span>,<br>
+                        &nbsp;&nbsp;output: {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;file: <span class="string">'dist/bundle.js'</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;format: <span class="string">'es'</span><br>
+                        &nbsp;&nbsp;},<br>
+                        &nbsp;&nbsp;plugins: [nodeResolve(), terser()],<br>
+                        &nbsp;&nbsp;treeshake: <span class="string">'smallest'</span><br>
+                        };
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: INTERACTIVE DEMO
+         Shows tree-shaking in action with Bootstrap components.
+         Only components used on this page are loaded.
+         ============================================================ -->
+    <section id="demo" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Live Component Demo</h2>
+            <p class="text-muted mb-4">
+                This page imports only Accordion, Tab, and Navbar JS. Other Bootstrap JS components are not loaded.
+            </p>
+
+            <div class="row g-4">
+                <!-- Tooltip demo (requires Popper which is in bundle) -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Tooltip</h5>
+                            <button type="button" class="btn btn-primary"
+                                    data-bs-toggle="tooltip" data-bs-placement="top"
+                                    title="This tooltip uses Popper.js bundled with Bootstrap">
+                                Hover for Tooltip
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Popover demo -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Popover</h5>
+                            <button type="button" class="btn btn-success" data-bs-toggle="popover"
+                                    data-bs-title="Popover Title"
+                                    data-bs-content="This popover content is rendered by Bootstrap JS.">
+                                Click for Popover
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert dismiss demo -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Dismissible Alert</h5>
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <strong>Alert!</strong> Click the X to dismiss.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Tree Shaking &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+
+    <!-- Initialize Bootstrap components used on this page -->
+    <script>
+        // Initialize tooltips - requires Popper.js (included in bundle)
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
+
+        // Initialize popovers
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+        const popoverList = [...popoverTriggerList].map(el => new bootstrap.Popover(el));
+    </script>
+</body>
+</html>

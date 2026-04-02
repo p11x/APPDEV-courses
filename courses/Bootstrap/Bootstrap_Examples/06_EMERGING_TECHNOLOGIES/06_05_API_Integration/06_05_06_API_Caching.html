@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  API CACHING WITH BOOTSTRAP 5
+  ============================================================================
+  This file demonstrates key API caching strategies used in modern web apps:
+    1. Response Caching with localStorage
+    2. Cache Hit/Miss Indicators
+    3. ETag-based Validation
+    4. Cache Invalidation UI
+    5. Cache Age Display
+    6. Cache Management Controls
+    7. Stale-While-Revalidate Pattern
+    8. Cache Statistics Dashboard
+
+  Caching reduces redundant network requests, improves perceived performance,
+  and provides offline/fallback data when the network is unavailable.
+  ============================================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!--
+    META VIEWPORT: Ensures proper rendering on all devices.
+    width=device-width  -> match screen width
+    initial-scale=1.0   -> no zoom on load
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Caching — Bootstrap 5 Demo</title>
+
+  <!-- Bootstrap 5.3.3 CSS from CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    /* ------------------------------------------------------------------ */
+    /*  Custom styles that complement Bootstrap defaults                  */
+    /* ------------------------------------------------------------------ */
+
+    /* Smooth transitions for cache-status badges */
+    .cache-badge {
+      transition: all 0.3s ease;
+    }
+
+    /* Blinking animation for live cache indicators */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
+    .blink {
+      animation: blink 1.2s infinite;
+    }
+
+    /* Card hover effect */
+    .demo-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+      transition: all 0.25s ease;
+    }
+    .demo-card {
+      transition: all 0.25s ease;
+    }
+
+    /* Monospace for cache keys and values */
+    .mono {
+      font-family: "Courier New", Courier, monospace;
+    }
+
+    /* Pre-formatted JSON output area */
+    .json-output {
+      background: #1e1e2e;
+      color: #a6e3a1;
+      border-radius: 0.375rem;
+      padding: 1rem;
+      max-height: 220px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Stats dashboard tiles */
+    .stat-tile {
+      border-left: 4px solid;
+      padding: 1rem;
+      border-radius: 0.375rem;
+    }
+    .stat-tile.hits   { border-color: #198754; background: #d1e7dd; }
+    .stat-tile.misses  { border-color: #dc3545; background: #f8d7da; }
+    .stat-tile.total   { border-color: #0d6efd; background: #cfe2ff; }
+    .stat-tile.ratio   { border-color: #6f42c1; background: #e2d9f3; }
+  </style>
+</head>
+
+<body class="bg-light">
+
+  <!-- ================================================================== -->
+  <!--  NAVBAR                                                            -->
+  <!-- ================================================================== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">API Caching Demo</a>
+      <span class="navbar-text text-secondary">
+        Bootstrap 5.3.3 &bull; localStorage Cache Engine
+      </span>
+    </div>
+  </nav>
+
+  <!-- ================================================================== -->
+  <!--  MAIN CONTAINER                                                    -->
+  <!-- ================================================================== -->
+  <div class="container my-5">
+
+    <!-- ================================================================ -->
+    <!--  PAGE HEADER                                                     -->
+    <!-- ================================================================ -->
+    <div class="text-center mb-5">
+      <h1 class="display-5 fw-bold">API Caching Strategies</h1>
+      <p class="lead text-muted">
+        Explore response caching, ETag validation, stale-while-revalidate,
+        and cache management — all running in your browser with
+        <code>localStorage</code>.
+      </p>
+    </div>
+
+    <!-- ================================================================ -->
+    <!--  ROW 1: Response Cache + Cache Hit/Miss                          -->
+    <!-- ================================================================ -->
+    <div class="row g-4 mb-4">
+
+      <!-- -------------------------------------------------------------- -->
+      <!--  CARD 1 — Response Caching with localStorage                   -->
+      <!-- -------------------------------------------------------------- -->
+      <div class="col-lg-6">
+        <div class="card demo-card h-100 shadow-sm">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">1. Response Caching</h5>
+          </div>
+          <div class="card-body">
+            <!--
+              CONCEPT: When an API response is received, serialize it and
+              store it in localStorage keyed by the request URL (or a
+              custom cache key). On subsequent requests, check localStorage
+              first before hitting the network.
+
+              BENEFITS:
+                - Eliminates duplicate network round-trips
+                - Provides data even when offline
+                - Reduces server load
+
+              TRADE-OFFS:
+                - localStorage has a ~5 MB limit per origin
+                - Data can become stale (must handle invalidation)
+                - Synchronous read — blocks main thread briefly
+            -->
+            <p class="text-muted small">
+              Fetches "posts" from a simulated API. The first call hits the
+              network; subsequent calls read from <code>localStorage</code>.
+            </p>
+
+            <!-- Button triggers the fetch -->
+            <button id="btnFetchPosts" class="btn btn-primary mb-3">
+              Fetch Posts
+            </button>
+
+            <!-- Cache status badge (hit / miss / idle) -->
+            <span id="fetchStatus" class="badge cache-badge bg-secondary ms-2">
+              Idle
+            </span>
+
+            <!-- JSON output area -->
+            <div id="postsOutput" class="json-output">
+              <span class="text-secondary">// Click "Fetch Posts" to load data</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- -------------------------------------------------------------- -->
+      <!--  CARD 2 — Cache Hit / Miss Indicators                          -->
+      <!-- -------------------------------------------------------------- -->
+      <div class="col-lg-6">
+        <div class="card demo-card h-100 shadow-sm">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">2. Cache Hit / Miss Indicators</h5>
+          </div>
+          <div class="card-body">
+            <!--
+              CONCEPT: A "cache HIT" means the requested data was found in
+              the cache — no network request needed. A "cache MISS" means
+              the data was NOT in the cache (or was expired), so a network
+              request must be made.
+
+              INDICATORS help developers and users understand performance:
+                - Green badge  = HIT  (fast, cached)
+                - Red badge    = MISS (slow, network)
+                - Yellow badge = STALE (expired but usable)
+            -->
+            <p class="text-muted small">
+              Demonstrates clear visual indicators when the cache is hit or
+              missed. Badges update in real time.
+            </p>
+
+            <button id="btnHitMiss" class="btn btn-success mb-3">
+              Simulate Lookup
+            </button>
+
+            <!-- Clear button to force a MISS -->
+            <button id="btnClearHitMiss" class="btn btn-outline-danger mb-3 ms-2">
+              Clear Cache &amp; Retry
+            </button>
+
+            <!-- Live hit/miss log -->
+            <div id="hitMissLog" class="json-output" style="max-height:200px;">
+              <span class="text-secondary">// Hit/miss events will appear here</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /row 1 -->
+
+    <!-- ================================================================ -->
+    <!--  ROW 2: ETag Simulation + Cache Invalidation                     -->
+    <!-- ================================================================ -->
+    <div class="row g-4 mb-4">
+
+      <!-- -------------------------------------------------------------- -->
+      <!--  CARD 3 — ETag Simulation                                      -->
+      <!-- -------------------------------------------------------------- -->
+      <div class="col-lg-6">
+        <div class="card demo-card h-100 shadow-sm">
+          <div class="card-header bg-info text-dark">
+            <h5 class="mb-0">3. ETag Simulation</h5>
+          </div>
+          <div class="card-body">
+            <!--
+              CONCEPT: An ETag (Entity Tag) is a unique hash the server
+              sends with a response (e.g., ETag: "abc123"). The client
+              stores it. On the next request the client sends:
+                  If-None-Match: "abc123"
+              If the data hasn't changed, the server returns 304 Not Modified
+              — saving bandwidth. If it HAS changed, the server sends 200
+              with the new data and a new ETag.
+
+              SIMULATION: We generate a mock ETag by hashing the JSON
+              response. When data changes, the ETag changes, triggering
+              a "304 → 200" indicator.
+            -->
+            <p class="text-muted small">
+              Simulates server-side ETag validation. Toggle data freshness
+              to see 304 (not modified) vs 200 (new data) responses.
+            </p>
+
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" id="etagToggle" />
+              <label class="form-check-label" for="etagToggle">
+                Toggle data freshness (on = new data available)
+              </label>
+            </div>
+
+            <button id="btnEtagFetch" class="btn btn-info mb-3">
+              Fetch with ETag
+            </button>
+
+            <div id="etagOutput" class="json-output">
+              <span class="text-secondary">// ETag results shown here</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- -------------------------------------------------------------- -->
+      <!--  CARD 4 — Cache Invalidation UI                                -->
+      <!-- -------------------------------------------------------------- -->
+      <div class="col-lg-6">
+        <div class="card demo-card h-100 shadow-sm">
+          <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">4. Cache Invalidation</h5>
+          </div>
+          <div class="card-body">
+            <!--
+              CONCEPT: Cache invalidation is the process of marking cached
+              data as no longer valid so that fresh data is fetched.
+
+              COMMON STRATEGIES:
+                - Time-based (TTL): expire after N seconds
+                - Manual: user clicks "refresh" or "clear"
+                - Event-driven: server pushes an invalidation signal
+                - Tag-based: invalidate all entries sharing a tag
+
+              Here we show TTL countdown + manual invalidation.
+            -->
+            <p class="text-muted small">
+              Each cached entry has a TTL (time-to-live). When it expires the
+              badge turns red. You can also manually invalidate.
+            </p>
+
+            <button id="btnCacheItem" class="btn btn-warning mb-3">
+              Create Cached Item
+            </button>
+            <button id="btnInvalidate" class="btn btn-outline-danger mb-3 ms-2">
+              Invalidate Now
+            </button>
+
+            <!-- List of cached items with TTL bars -->
+            <div id="invalidationList" class="json-output" style="max-height:200px;">
+              <span class="text-secondary">// Cached items will appear here</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /row 2 -->
+
+    <!-- ================================================================ -->
+    <!--  ROW 3: Cache Age + Management Controls                          -->
+    <!-- ================================================================ -->
+    <div class="row g-4 mb-4">
+
+      <!-- -------------------------------------------------------------- -->
+      <!--  CARD 5 — Cache Age Display (Progress Bars)                    -->
+      <!-- -------------------------------------------------------------- -->
+      <div class="col-lg-6">
+        <div class="card demo-card h-100 shadow-sm">
+          <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">5. Cache Age Display</h5>
+          </div>
+          <div class="card-body">
+            <!--
+              CONCEPT: Knowing how old cached data is helps decide whether
+              to trust it. A progress bar visually represents the remaining
+              TTL relative to the total TTL.
+
+                0 %  → just cached (fresh)
+              100 % → fully expired (stale)
+
+              Color coding:
+                Green  = fresh (< 50 % of TTL)
+                Yellow = aging  (50–80 %)
+                Red    = almost expired (> 80 %)
+            -->
+            <p class="text-muted small">
+              Visualizes cache age with Bootstrap progress bars. Watch them
+              fill up in real time.
+            </p>
+
+            <button id="btnAddAgeItem" class="btn btn-secondary mb-3">
+              Add Cache Entry
+            </button>
+
+            <!-- Container for age progress bars -->
+            <div id="ageContainer">
+              <span class="text-secondary small">
+                No entries yet. Click the button above.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- -------------------------------------------------------------- -->
+      <!--  CARD 6 — Cache Management Controls                            -->
+      <!-- -------------------------------------------------------------- -->
+      <div class="col-lg-6">
+        <div class="card demo-card h-100 shadow-sm">
+          <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">6. Cache Management Controls</h5>
+          </div>
+          <div class="card-body">
+            <!--
+              CONCEPT: A production cache needs administrative controls:
+                - Clear All: wipe the entire cache store
+                - Refresh All: re-fetch every cached endpoint
+                - Purge Expired: remove only stale entries
+                - Export / Import: backup and restore the cache
+
+              This card demonstrates each control with Bootstrap buttons
+              and a live log of actions taken.
+            -->
+            <p class="text-muted small">
+              Manage the simulated cache with clear, refresh, and purge
+              controls. All actions are logged below.
+            </p>
+
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <button id="btnClearAll" class="btn btn-danger btn-sm">
+                Clear All
+              </button>
+              <button id="btnRefreshAll" class="btn btn-primary btn-sm">
+                Refresh All
+              </button>
+              <button id="btnPurgeExpired" class="btn btn-outline-warning btn-sm">
+                Purge Expired
+              </button>
+              <button id="btnExport" class="btn btn-outline-info btn-sm">
+                Export
+              </button>
+              <button id="btnImport" class="btn btn-outline-success btn-sm">
+                Import
+              </button>
+            </div>
+
+            <!-- Management log -->
+            <div id="mgmtLog" class="json-output" style="max-height:180px;">
+              <span class="text-secondary">// Management actions logged here</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /row 3 -->
+
+    <!-- ================================================================ -->
+    <!--  ROW 4: Stale-While-Revalidate + Cache Statistics                -->
+    <!-- ================================================================ -->
+    <div class="row g-4 mb-4">
+
+      <!-- -------------------------------------------------------------- -->
+      <!--  CARD 7 — Stale-While-Revalidate Pattern                      -->
+      <!-- -------------------------------------------------------------- -->
+      <div class="col-lg-6">
+        <div class="card demo-card h-100 shadow-sm">
+          <div class="card-header" style="background:#6f42c1; color:#fff;">
+            <h5 class="mb-0">7. Stale-While-Revalidate</h5>
+          </div>
+          <div class="card-body">
+            <!--
+              CONCEPT: Stale-While-Revalidate (SWR) is a caching strategy:
+                1. Return cached (stale) data IMMEDIATELY — fast UX.
+                2. In the background, re-fetch from the network.
+                3. When the network response arrives, UPDATE the cache
+                   and silently refresh the UI.
+
+              This gives users instant data while ensuring freshness.
+
+              Popularized by libraries like:
+                - Google Workbox (Service Workers)
+                - SWR (React)
+                - TanStack Query (React/Vue/Svelte)
+                - Axios with cache adapters
+            -->
+            <p class="text-muted small">
+              Demonstrates SWR: stale data loads instantly, then fresh data
+              replaces it after a simulated network delay.
+            </p>
+
+            <button id="btnSWR" class="btn text-white mb-3" style="background:#6f42c1;">
+              Trigger SWR Fetch
+            </button>
+
+            <!-- Two-phase output: stale → fresh -->
+            <div id="swrOutput" class="json-output">
+              <span class="text-secondary">// SWR results shown here</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- -------------------------------------------------------------- -->
+      <!--  CARD 8 — Cache Statistics Dashboard                           -->
+      <!-- -------------------------------------------------------------- -->
+      <div class="col-lg-6">
+        <div class="card demo-card h-100 shadow-sm">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">8. Cache Statistics Dashboard</h5>
+          </div>
+          <div class="card-body">
+            <!--
+              CONCEPT: Tracking cache performance metrics helps tune TTLs
+              and understand user behavior.
+
+              KEY METRICS:
+                - Total Requests  : all lookups performed
+                - Cache Hits      : served from cache
+                - Cache Misses    : required network fetch
+                - Hit Ratio       : hits / total (higher = better)
+                - Avg Response    : mean latency for hits vs misses
+
+              The dashboard updates in real time as you interact with the
+              other cards on this page.
+            -->
+            <p class="text-muted small">
+              Real-time stats collected from all cache operations on this
+              page.
+            </p>
+
+            <!-- Stats tiles -->
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <div class="stat-tile hits">
+                  <div class="small text-muted">Cache Hits</div>
+                  <div id="statHits" class="fs-4 fw-bold text-success">0</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="stat-tile misses">
+                  <div class="small text-muted">Cache Misses</div>
+                  <div id="statMisses" class="fs-4 fw-bold text-danger">0</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="stat-tile total">
+                  <div class="small text-muted">Total Requests</div>
+                  <div id="statTotal" class="fs-4 fw-bold text-primary">0</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="stat-tile ratio">
+                  <div class="small text-muted">Hit Ratio</div>
+                  <div id="statRatio" class="fs-4 fw-bold" style="color:#6f42c1;">0 %</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hit ratio progress bar -->
+            <label class="form-label small text-muted">Hit Ratio</label>
+            <div class="progress mb-3" style="height: 20px;">
+              <div id="ratioBar"
+                   class="progress-bar bg-success"
+                   role="progressbar"
+                   style="width: 0%;"
+                   aria-valuenow="0"
+                   aria-valuemin="0"
+                   aria-valuemax="100">
+                0 %
+              </div>
+            </div>
+
+            <button id="btnResetStats" class="btn btn-outline-secondary btn-sm">
+              Reset Statistics
+            </button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /row 4 -->
+
+  </div><!-- /container -->
+
+  <!-- ================================================================== -->
+  <!--  FOOTER                                                            -->
+  <!-- ================================================================== -->
+  <footer class="bg-dark text-center text-secondary py-3 mt-5">
+    <small>
+      API Caching Demo &copy; 2026 &bull; Built with Bootstrap 5.3.3 &bull;
+      All caching runs client-side in <code>localStorage</code>.
+    </small>
+  </footer>
+
+  <!-- ================================================================== -->
+  <!--  Bootstrap 5.3.3 JS Bundle (includes Popper)                      -->
+  <!-- ================================================================== -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ================================================================== -->
+  <!--  APPLICATION JAVASCRIPT                                           -->
+  <!-- ================================================================== -->
+  <script>
+    /*
+     =====================================================================
+     CACHE ENGINE — lightweight localStorage-backed cache
+     =====================================================================
+     This section implements a reusable CacheEngine object that handles:
+       - get(key)        → retrieve cached value (or null on miss)
+       - set(key, val)   → store value with timestamp + TTL
+       - remove(key)     → delete a single entry
+       - clear()         → wipe all entries
+       - purgeExpired()  → remove only expired entries
+       - keys()          → list all cache keys
+       - stats()         → return hit/miss counters
+       - exportAll()     → serialize entire cache
+       - importAll(data) → restore from serialization
+
+     Every entry stored looks like:
+       {
+         value    : <any serializable data>,
+         timestamp: Date.now(),        // when it was cached
+         ttl      : 30000,             // time-to-live in ms
+         etag     : "<hash>"           // optional ETag
+       }
+     =====================================================================
+    */
+
+    /* ----------  GLOBAL STATS COUNTERS  ---------- */
+    const _cacheStats = { hits: 0, misses: 0 };
+
+    /* Update the dashboard numbers after every operation */
+    function refreshStatsUI() {
+      const total = _cacheStats.hits + _cacheStats.misses;
+      const ratio = total === 0 ? 0 : Math.round((_cacheStats.hits / total) * 100);
+
+      document.getElementById('statHits').textContent   = _cacheStats.hits;
+      document.getElementById('statMisses').textContent  = _cacheStats.misses;
+      document.getElementById('statTotal').textContent    = total;
+      document.getElementById('statRatio').textContent    = ratio + ' %';
+
+      const bar = document.getElementById('ratioBar');
+      bar.style.width = ratio + '%';
+      bar.textContent = ratio + ' %';
+      bar.setAttribute('aria-valuenow', ratio);
+    }
+
+    /* Log a management action */
+    function mgmtLog(msg) {
+      const el = document.getElementById('mgmtLog');
+      const ts = new Date().toLocaleTimeString();
+      el.textContent += `\n[${ts}] ${msg}`;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    /*
+     =====================================================================
+     1. RESPONSE CACHING WITH localStorage
+     =====================================================================
+     The first fetch goes to the "network" (simulated). Subsequent fetches
+     read from localStorage until the TTL expires.
+    */
+
+    /* Simulated API — returns different mock data based on endpoint */
+    const _mockAPI = {
+      '/api/posts': [
+        { id: 1, title: 'Understanding Cache Invalidation', author: 'Alice' },
+        { id: 2, title: 'ETags and Conditional Requests',   author: 'Bob' },
+        { id: 3, title: 'Service Worker Caching',           author: 'Carol' },
+        { id: 4, title: 'CDN Edge Caching Strategies',      author: 'Dave' },
+      ],
+      '/api/users': [
+        { id: 1, name: 'Alice', role: 'Admin' },
+        { id: 2, name: 'Bob',   role: 'Editor' },
+      ],
+    };
+
+    /*
+     fetchWithCache(endpoint, ttl)
+     ---------------------------------
+     1. Check localStorage for a cached copy of `endpoint`.
+     2. If found AND not expired → return cached data (CACHE HIT).
+     3. Otherwise → simulate network call → store result (CACHE MISS).
+    */
+    function fetchWithCache(endpoint, ttl = 30000) {
+      return new Promise((resolve) => {
+        const cacheKey = 'cache_' + endpoint;
+        const raw = localStorage.getItem(cacheKey);
+
+        /* ---- CACHE HIT path ---- */
+        if (raw) {
+          const entry = JSON.parse(raw);
+          const age = Date.now() - entry.timestamp;
+
+          if (age < entry.ttl) {
+            /* Data is still fresh — serve from cache */
+            _cacheStats.hits++;
+            refreshStatsUI();
+            resolve({ data: entry.value, cached: true, age, etag: entry.etag });
+            return;
+          }
+          /* Data is stale — treat as a miss and re-fetch */
+        }
+
+        /* ---- CACHE MISS path ---- */
+        _cacheStats.misses++;
+        refreshStatsUI();
+
+        /* Simulate network latency (200–600 ms) */
+        const latency = 200 + Math.random() * 400;
+        setTimeout(() => {
+          const data = _mockAPI[endpoint] || { message: 'No data' };
+          const etag = generateETag(data);
+
+          /* Store in localStorage */
+          localStorage.setItem(cacheKey, JSON.stringify({
+            value: data,
+            timestamp: Date.now(),
+            ttl,
+            etag,
+          }));
+
+          resolve({ data, cached: false, age: 0, etag });
+        }, latency);
+      });
+    }
+
+    /* Generate a simple hash to simulate an ETag */
+    function generateETag(obj) {
+      const str = JSON.stringify(obj);
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0; /* Convert to 32-bit int */
+      }
+      return '"' + Math.abs(hash).toString(16) + '"';
+    }
+
+    /* ----------  BUTTON: Fetch Posts  ---------- */
+    document.getElementById('btnFetchPosts').addEventListener('click', () => {
+      const statusEl = document.getElementById('fetchStatus');
+      const outputEl = document.getElementById('postsOutput');
+
+      statusEl.className = 'badge cache-badge bg-secondary blink';
+      statusEl.textContent = 'Loading…';
+      outputEl.textContent = '';
+
+      fetchWithCache('/api/posts', 30000).then(({ data, cached, age, etag }) => {
+        /* Update badge based on hit/miss */
+        if (cached) {
+          statusEl.className = 'badge cache-badge bg-success';
+          statusEl.textContent = `HIT (age: ${(age / 1000).toFixed(1)}s)`;
+        } else {
+          statusEl.className = 'badge cache-badge bg-danger';
+          statusEl.textContent = 'MISS (fetched from network)';
+        }
+
+        /* Display the JSON data */
+        outputEl.textContent = JSON.stringify(data, null, 2)
+          + '\n\n// ETag: ' + etag
+          + '\n// Cached: ' + cached;
+      });
+    });
+
+    /*
+     =====================================================================
+     2. CACHE HIT / MISS INDICATORS
+     =====================================================================
+     Repeated lookups show how the first is a MISS and subsequent ones
+     are HITs until the TTL expires or the cache is cleared.
+    */
+
+    document.getElementById('btnHitMiss').addEventListener('click', () => {
+      const logEl = document.getElementById('hitMissLog');
+      const ts = new Date().toLocaleTimeString();
+
+      fetchWithCache('/api/users', 15000).then(({ cached }) => {
+        const label = cached ? 'HIT' : 'MISS';
+        const cls   = cached ? 'bg-success' : 'bg-danger';
+        logEl.textContent += `\n[${ts}] ${label.padEnd(5)} — /api/users`;
+        logEl.scrollTop = logEl.scrollHeight;
+
+        /* Also flash a toast-style inline badge */
+        const badge = document.createElement('span');
+        badge.className = `badge ${cls} ms-2 cache-badge`;
+        badge.textContent = label;
+        logEl.appendChild(badge);
+      });
+    });
+
+    document.getElementById('btnClearHitMiss').addEventListener('click', () => {
+      localStorage.removeItem('cache_/api/users');
+      const logEl = document.getElementById('hitMissLog');
+      logEl.textContent += `\n[${new Date().toLocaleTimeString()}] CLEARED cache for /api/users`;
+      mgmtLog('Cleared /api/users from hit/miss demo');
+    });
+
+    /*
+     =====================================================================
+     3. ETag SIMULATION
+     =====================================================================
+     Demonstrates conditional fetching using ETags:
+       - If data hasn't changed → 304 Not Modified
+       - If data has changed    → 200 OK with new data
+    */
+
+    document.getElementById('btnEtagFetch').addEventListener('click', () => {
+      const outputEl = document.getElementById('etagOutput');
+      const toggle   = document.getElementById('etagToggle');
+      const endpoint = '/api/posts';
+
+      outputEl.textContent = 'Fetching…\n';
+
+      /* Retrieve the stored ETag */
+      const cacheKey = 'cache_' + endpoint;
+      const raw = localStorage.getItem(cacheKey);
+      const storedEtag = raw ? JSON.parse(raw).etag : null;
+
+      /* Simulate whether the server has new data */
+      const serverHasNewData = toggle.checked;
+
+      setTimeout(() => {
+        if (storedEtag && !serverHasNewData) {
+          /* ---- 304 Not Modified ---- */
+          const entry = JSON.parse(raw);
+          _cacheStats.hits++;
+          refreshStatsUI();
+          outputEl.textContent =
+              'Status: 304 Not Modified ✅\n'
+            + 'ETag matches server: ' + storedEtag + '\n'
+            + 'No new data — using cached copy.\n\n'
+            + JSON.stringify(entry.value, null, 2);
+        } else {
+          /* ---- 200 OK (new data or first request) ---- */
+          const newData = serverHasNewData
+            ? [
+                ..._mockAPI[endpoint],
+                { id: 5, title: 'New Post from Server', author: 'Eve' },
+              ]
+            : _mockAPI[endpoint];
+
+          const newEtag = generateETag(newData);
+          _cacheStats.misses++;
+          refreshStatsUI();
+
+          /* Update the cache */
+          localStorage.setItem(cacheKey, JSON.stringify({
+            value: newData,
+            timestamp: Date.now(),
+            ttl: 30000,
+            etag: newEtag,
+          }));
+
+          outputEl.textContent =
+              'Status: 200 OK (new data)\n'
+            + 'Old ETag: ' + (storedEtag || 'none') + '\n'
+            + 'New ETag: ' + newEtag + '\n\n'
+            + JSON.stringify(newData, null, 2);
+        }
+      }, 300);
+    });
+
+    /*
+     =====================================================================
+     4. CACHE INVALIDATION UI
+     =====================================================================
+     Create cached items with a TTL and visually track their expiration.
+    */
+
+    const _invalidationEntries = [];
+
+    document.getElementById('btnCacheItem').addEventListener('click', () => {
+      const id = Date.now();
+      const ttl = 10000 + Math.random() * 20000; /* 10–30 seconds */
+      _invalidationEntries.push({
+        id,
+        key: 'item_' + id,
+        created: Date.now(),
+        ttl,
+        valid: true,
+      });
+      renderInvalidationList();
+    });
+
+    document.getElementById('btnInvalidate').addEventListener('click', () => {
+      _invalidationEntries.forEach(e => { e.valid = false; e.ttl = 0; });
+      renderInvalidationList();
+      mgmtLog('Manually invalidated all entries');
+    });
+
+    function renderInvalidationList() {
+      const el = document.getElementById('invalidationList');
+      if (_invalidationEntries.length === 0) {
+        el.textContent = '// No cached items';
+        return;
+      }
+      const now = Date.now();
+      el.innerHTML = '';
+      _invalidationEntries.forEach(entry => {
+        const age = now - entry.created;
+        const expired = age > entry.ttl || !entry.valid;
+        const cls = expired ? 'text-danger' : 'text-success';
+        const status = expired ? 'EXPIRED' : 'VALID';
+        const ageSec = (age / 1000).toFixed(1);
+        const ttlSec = (entry.ttl / 1000).toFixed(0);
+        el.innerHTML += `<div class="${cls} mono small">[${status.padEnd(7)}] ${entry.key}  age: ${ageSec}s / TTL: ${ttlSec}s</div>`;
+      });
+    }
+
+    /* Re-render every second so the age updates */
+    setInterval(renderInvalidationList, 1000);
+
+    /*
+     =====================================================================
+     5. CACHE AGE DISPLAY WITH PROGRESS BARS
+     =====================================================================
+     Each entry gets a Bootstrap progress bar that fills from 0% (fresh)
+     to 100% (expired). Color shifts green → yellow → red.
+    */
+
+    const _ageEntries = [];
+    let _ageCounter = 0;
+
+    document.getElementById('btnAddAgeItem').addEventListener('click', () => {
+      const ttl = 8000 + Math.random() * 12000; /* 8–20 seconds */
+      _ageCounter++;
+      _ageEntries.push({
+        id: _ageCounter,
+        created: Date.now(),
+        ttl,
+      });
+      renderAgeBars();
+    });
+
+    function renderAgeBars() {
+      const container = document.getElementById('ageContainer');
+      if (_ageEntries.length === 0) {
+        container.innerHTML = '<span class="text-secondary small">No entries yet.</span>';
+        return;
+      }
+
+      const now = Date.now();
+      container.innerHTML = '';
+
+      _ageEntries.forEach(entry => {
+        const age = now - entry.created;
+        const pct = Math.min(100, Math.round((age / entry.ttl) * 100));
+        const expired = pct >= 100;
+
+        /* Color logic: green < 50, yellow 50–80, red > 80 */
+        let colorClass = 'bg-success';
+        if (pct > 80) colorClass = 'bg-danger';
+        else if (pct > 50) colorClass = 'bg-warning';
+
+        const label = expired
+          ? `Entry ${entry.id} — EXPIRED`
+          : `Entry ${entry.id} — ${(age / 1000).toFixed(1)}s / ${(entry.ttl / 1000).toFixed(0)}s`;
+
+        container.innerHTML += `
+          <div class="mb-2">
+            <div class="d-flex justify-content-between small">
+              <span>${label}</span>
+              <span class="mono">${pct} %</span>
+            </div>
+            <div class="progress" style="height: 12px;">
+              <div class="progress-bar ${expired ? 'bg-danger' : colorClass}"
+                   style="width: ${pct}%;"
+                   role="progressbar"
+                   aria-valuenow="${pct}"
+                   aria-valuemin="0"
+                   aria-valuemax="100">
+              </div>
+            </div>
+          </div>`;
+      });
+    }
+
+    /* Re-render age bars every 500 ms for smooth animation */
+    setInterval(renderAgeBars, 500);
+
+    /*
+     =====================================================================
+     6. CACHE MANAGEMENT CONTROLS
+     =====================================================================
+     Buttons that manipulate the entire cache store.
+    */
+
+    /* Clear All — wipe every cache_* key from localStorage */
+    document.getElementById('btnClearAll').addEventListener('click', () => {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('cache_'));
+      keys.forEach(k => localStorage.removeItem(k));
+      mgmtLog(`Cleared ${keys.length} cached entries`);
+    });
+
+    /* Refresh All — re-fetch every mock endpoint */
+    document.getElementById('btnRefreshAll').addEventListener('click', () => {
+      /* Remove existing cache first */
+      Object.keys(localStorage).filter(k => k.startsWith('cache_')).forEach(k => localStorage.removeItem(k));
+
+      /* Re-fetch all known endpoints */
+      const endpoints = Object.keys(_mockAPI);
+      endpoints.forEach(ep => {
+        fetchWithCache(ep, 30000).then(() => {
+          mgmtLog(`Refreshed ${ep}`);
+        });
+      });
+      mgmtLog(`Refreshing ${endpoints.length} endpoints…`);
+    });
+
+    /* Purge Expired — remove only entries past their TTL */
+    document.getElementById('btnPurgeExpired').addEventListener('click', () => {
+      let purged = 0;
+      Object.keys(localStorage).filter(k => k.startsWith('cache_')).forEach(k => {
+        const entry = JSON.parse(localStorage.getItem(k));
+        if (Date.now() - entry.timestamp > entry.ttl) {
+          localStorage.removeItem(k);
+          purged++;
+        }
+      });
+      mgmtLog(`Purged ${purged} expired entries`);
+    });
+
+    /* Export — dump the cache as a downloadable JSON blob */
+    document.getElementById('btnExport').addEventListener('click', () => {
+      const data = {};
+      Object.keys(localStorage).filter(k => k.startsWith('cache_')).forEach(k => {
+        data[k] = JSON.parse(localStorage.getItem(k));
+      });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'cache-export.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      mgmtLog('Exported cache to cache-export.json');
+    });
+
+    /* Import — restore cache from user-provided JSON (simulated) */
+    document.getElementById('btnImport').addEventListener('click', () => {
+      /* Simulate an import by re-adding a mock entry */
+      const mockData = { '/api/imported': [{ id: 99, title: 'Imported Entry' }] };
+      Object.entries(mockData).forEach(([ep, val]) => {
+        localStorage.setItem('cache_' + ep, JSON.stringify({
+          value: val,
+          timestamp: Date.now(),
+          ttl: 60000,
+          etag: generateETag(val),
+        }));
+      });
+      mgmtLog('Imported 1 entry (simulated)');
+    });
+
+    /*
+     =====================================================================
+     7. STALE-WHILE-REVALIDATE (SWR) PATTERN
+     =====================================================================
+     Step 1: Immediately show cached (stale) data.
+     Step 2: In the background, fetch fresh data.
+     Step 3: When fresh data arrives, silently update the UI.
+    */
+
+    document.getElementById('btnSWR').addEventListener('click', () => {
+      const outputEl = document.getElementById('swrOutput');
+      const endpoint = '/api/posts';
+      const cacheKey = 'cache_' + endpoint;
+
+      /* ---- STEP 1: serve stale data immediately ---- */
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const entry = JSON.parse(raw);
+        _cacheStats.hits++;
+        refreshStatsUI();
+        outputEl.textContent =
+            '⚡ STALE DATA (served immediately):\n'
+          + JSON.stringify(entry.value, null, 2)
+          + '\n\n⏳ Revalidating in background…';
+      } else {
+        outputEl.textContent = '⚡ No cache available. Fetching…\n';
+      }
+
+      /* ---- STEP 2: revalidate in background ---- */
+      setTimeout(() => {
+        /* Simulate a network fetch that might return updated data */
+        const freshData = [
+          ..._mockAPI[endpoint],
+          { id: 6, title: 'Freshly Revalidated Post', author: 'Frank' },
+        ];
+        const newEtag = generateETag(freshData);
+
+        /* Update the cache */
+        localStorage.setItem(cacheKey, JSON.stringify({
+          value: freshData,
+          timestamp: Date.now(),
+          ttl: 30000,
+          etag: newEtag,
+        }));
+
+        _cacheStats.misses++;
+        refreshStatsUI();
+
+        /* ---- STEP 3: update UI with fresh data ---- */
+        outputEl.textContent =
+            '✅ FRESH DATA (revalidated):\n'
+          + JSON.stringify(freshData, null, 2)
+          + '\n\n// Cache updated silently in the background.'
+          + '\n// New ETag: ' + newEtag;
+      }, 1500); /* simulate 1.5 s network delay */
+    });
+
+    /*
+     =====================================================================
+     8. CACHE STATISTICS DASHBOARD
+     =====================================================================
+     Stats are updated globally by fetchWithCache() and the SWR handler.
+     The "Reset" button zeroes out all counters.
+    */
+
+    document.getElementById('btnResetStats').addEventListener('click', () => {
+      _cacheStats.hits   = 0;
+      _cacheStats.misses  = 0;
+      refreshStatsUI();
+      mgmtLog('Statistics reset');
+    });
+
+    /* Initial render */
+    refreshStatsUI();
+
+  </script>
+</body>
+</html>

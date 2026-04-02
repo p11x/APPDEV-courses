@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<!-- ====================================================================
+     04_09_06_State_Testing.html
+     Testing State Management Patterns
+     
+     Covers:
+     - Unit testing state logic in isolation
+     - Integration testing component state flows
+     - State assertion helpers and test utilities
+     - Mock state for component testing
+     - Test-driven state machine development
+     - DOM state verification after transitions
+     ==================================================================== -->
+<html lang="en">
+<head>
+    <!-- Meta charset for proper character encoding -->
+    <meta charset="UTF-8">
+    <!-- Meta viewport for responsive layout -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Testing - Bootstrap 5</title>
+    <!-- Bootstrap 5.3.3 CSS CDN for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles for test runner UI -->
+    <style>
+        /* ====================================================================
+           TEST RUNNER STYLES
+           Visual styling for the built-in test runner output.
+           ==================================================================== */
+        /* Test result pass indicator */
+        .test-pass { color: #198754; font-weight: bold; }
+        /* Test result fail indicator */
+        .test-fail { color: #dc3545; font-weight: bold; }
+        /* Test result skip indicator */
+        .test-skip { color: #6c757d; font-style: italic; }
+        /* Test output log area */
+        .test-log {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.375rem;
+        }
+        /* Log line styles */
+        .test-log .pass { color: #4ec9b0; }
+        .test-log .fail { color: #f44747; }
+        .test-log .info { color: #569cd6; }
+        .test-log .warn { color: #dcdcaa; }
+        /* Test summary bar */
+        .test-summary {
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+        }
+        /* Assertion detail styling */
+        .assertion-detail {
+            border-left: 3px solid #6c757d;
+            padding-left: 0.75rem;
+            margin: 0.25rem 0;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Main container for the testing lesson -->
+    <div class="container my-5">
+
+        <!-- Page header with lesson title and description -->
+        <div class="mb-4">
+            <h1 class="display-6">State Testing Patterns</h1>
+            <p class="text-muted lead">
+                Testing state management: unit tests for state logic, integration tests for state flows,
+                assertion helpers, and test-driven state machine development.
+            </p>
+        </div>
+
+        <!-- ==============================================================
+             SECTION 1: MINI TEST FRAMEWORK
+             A lightweight test framework built into the page that can
+             run assertions and display results in real time.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Mini Test Framework</h2>
+            <p class="text-muted">
+                A built-in test runner that executes state tests and displays results.
+                This simulates a testing environment like Jest or Mocha, but runs in the browser.
+            </p>
+
+            <!-- Test runner controls -->
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-primary" id="runAllTestsBtn" onclick="runAllTests()">
+                    Run All Tests
+                </button>
+                <button class="btn btn-outline-secondary" onclick="clearTestLog()">
+                    Clear Log
+                </button>
+                <button class="btn btn-outline-info" onclick="runUnitTestsOnly()">
+                    Unit Tests Only
+                </button>
+                <button class="btn btn-outline-warning" onclick="runIntegrationTestsOnly()">
+                    Integration Tests Only
+                </button>
+            </div>
+
+            <!-- Test summary bar showing pass/fail counts -->
+            <div class="test-summary bg-dark text-light d-flex justify-content-between mb-3" id="testSummary">
+                <span>Tests: <span id="testTotal">0</span> total</span>
+                <span class="test-pass">Passed: <span id="testPassed">0</span></span>
+                <span class="test-fail">Failed: <span id="testFailed">0</span></span>
+                <span class="test-skip">Skipped: <span id="testSkipped">0</span></span>
+            </div>
+
+            <!-- Test output log -->
+            <div class="test-log" id="testLog">
+                <div class="info">// Click "Run All Tests" to execute the test suite</div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 2: STATE UNDER TEST
+             The component and state logic that will be tested.
+             This is the "system under test" (SUT).
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. System Under Test (SUT)</h2>
+            <p class="text-muted">
+                This card's state logic is what the tests verify. You can also interact with it manually.
+            </p>
+
+            <!-- Interactive component whose state is tested -->
+            <div class="card border-2" id="sutCard" data-state="idle" data-counter="0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span>Testable Counter Component</span>
+                    <!-- Live state display -->
+                    <span>
+                        <span class="badge bg-secondary" id="sutStateBadge">idle</span>
+                        <span class="badge bg-info" id="sutCounterBadge">0</span>
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        This component's state is managed by the functions tested in Section 1.
+                        Interact here or let the tests run automatically.
+                    </p>
+                    <!-- Counter controls -->
+                    <div class="d-flex gap-2 align-items-center mb-3">
+                        <button class="btn btn-outline-primary" onclick="sutCounter.increment()">+</button>
+                        <button class="btn btn-outline-danger" onclick="sutCounter.decrement()">-</button>
+                        <button class="btn btn-outline-secondary" onclick="sutCounter.reset()">Reset</button>
+                        <input type="number" class="form-control" style="width:80px" id="sutCounterInput"
+                               value="0" onchange="sutCounter.set(parseInt(this.value)||0)">
+                    </div>
+                    <!-- State transition controls -->
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="sutStateMachine.transition('activate')">Activate</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="sutStateMachine.transition('pause')">Pause</button>
+                        <button class="btn btn-sm btn-outline-success" onclick="sutStateMachine.transition('complete')">Complete</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="sutStateMachine.transition('reset')">Reset</button>
+                    </div>
+                    <!-- Validation display -->
+                    <div class="mt-3" id="sutValidation"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 3: TEST COVERAGE VISUALIZATION
+             Shows which state transitions and scenarios are covered by tests.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Test Coverage Visualization</h2>
+            <p class="text-muted">
+                Visual matrix showing which state transitions are covered by tests.
+            </p>
+
+            <!-- Coverage matrix table -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm text-center" id="coverageMatrix">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>From \ To</th>
+                            <th>idle</th>
+                            <th>active</th>
+                            <th>paused</th>
+                            <th>completed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>idle</th>
+                            <td class="coverage-cell" data-from="idle" data-to="idle">-</td>
+                            <td class="coverage-cell" data-from="idle" data-to="active">pending</td>
+                            <td class="coverage-cell" data-from="idle" data-to="paused">N/A</td>
+                            <td class="coverage-cell" data-from="idle" data-to="completed">N/A</td>
+                        </tr>
+                        <tr>
+                            <th>active</th>
+                            <td class="coverage-cell" data-from="active" data-to="idle">N/A</td>
+                            <td class="coverage-cell" data-from="active" data-to="active">-</td>
+                            <td class="coverage-cell" data-from="active" data-to="paused">pending</td>
+                            <td class="coverage-cell" data-from="active" data-to="completed">pending</td>
+                        </tr>
+                        <tr>
+                            <th>paused</th>
+                            <td class="coverage-cell" data-from="paused" data-to="idle">pending</td>
+                            <td class="coverage-cell" data-from="paused" data-to="active">pending</td>
+                            <td class="coverage-cell" data-from="paused" data-to="paused">-</td>
+                            <td class="coverage-cell" data-from="paused" data-to="completed">N/A</td>
+                        </tr>
+                        <tr>
+                            <th>completed</th>
+                            <td class="coverage-cell" data-from="completed" data-to="idle">pending</td>
+                            <td class="coverage-cell" data-from="completed" data-to="active">N/A</td>
+                            <td class="coverage-cell" data-from="completed" data-to="paused">N/A</td>
+                            <td class="coverage-cell" data-from="completed" data-to="completed">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex gap-3 small">
+                <span><span class="badge bg-success">Tested</span> Covered by test</span>
+                <span><span class="badge bg-danger">Failed</span> Test failed</span>
+                <span><span class="badge bg-secondary">N/A</span> Not a valid transition</span>
+                <span><span class="badge bg-warning text-dark">Pending</span> Not yet tested</span>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 4: MOCK STATE PATTERNS
+             Demonstrates how to create mock state objects for testing
+             components that depend on external state.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Mock State Patterns</h2>
+            <p class="text-muted">
+                Mock state objects simulate real state for isolated testing. The mock store below
+                can be used to test components without affecting real application state.
+            </p>
+
+            <!-- Mock state inspector -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <span>Mock State Store Inspector</span>
+                    <button class="btn btn-sm btn-outline-primary float-end" onclick="mockStore.reset()">Reset Mock</button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Current mock state -->
+                        <div class="col-md-6">
+                            <h6>Current State</h6>
+                            <pre class="bg-dark text-light p-2 rounded" id="mockStateDisplay" style="font-size:0.8rem;">{}</pre>
+                        </div>
+                        <!-- State history log -->
+                        <div class="col-md-6">
+                            <h6>Action History</h6>
+                            <div class="test-log" id="mockHistory" style="max-height:200px; font-size:0.75rem;"></div>
+                        </div>
+                    </div>
+                    <!-- Mock state manipulation buttons -->
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-sm btn-outline-primary" onclick="mockStore.dispatch({type:'INCREMENT'})">dispatch(INCREMENT)</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="mockStore.dispatch({type:'DECREMENT'})">dispatch(DECREMENT)</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="mockStore.dispatch({type:'SET_VALUE',payload:42})">dispatch(SET_VALUE, 42)</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="mockStore.dispatch({type:'TOGGLE_ACTIVE'})">dispatch(TOGGLE_ACTIVE)</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="mockStore.dispatch({type:'RESET'})">dispatch(RESET)</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 5: ASYNC STATE TESTING
+             Testing state changes that happen asynchronously, such as
+             API calls, timers, and promise-based state flows.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Async State Testing</h2>
+            <p class="text-muted">
+                Testing asynchronous state transitions: loading, success, error patterns.
+            </p>
+
+            <!-- Async test component -->
+            <div class="card" id="asyncTestCard">
+                <div class="card-body">
+                    <h6>Async Data Fetcher</h6>
+                    <p class="small text-muted">
+                        Click "Fetch" to trigger an async state flow. The test suite verifies
+                        that state transitions happen in the correct order.
+                    </p>
+                    <div id="asyncStatus" class="mb-2">
+                        <span class="badge bg-secondary">idle</span>
+                    </div>
+                    <div id="asyncData" class="mb-2"></div>
+                    <button class="btn btn-primary btn-sm" onclick="asyncFetcher.fetch()" id="asyncFetchBtn">Fetch Data</button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="asyncFetcher.cancel()">Cancel</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle CDN for interactive components -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ====================================================================
+           MINI TEST FRAMEWORK
+           A lightweight assertion-based test framework that runs in the browser.
+           Supports describe/it blocks, assertions, and coverage tracking.
+           ==================================================================== */
+
+        // Global test state
+        const testState = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            skipped: 0,
+            currentSuite: '',
+            results: [],
+            coverage: {} // Tracks which transitions are tested
+        };
+
+        /**
+         * assertEqual - Asserts that two values are strictly equal.
+         * @param {*} actual - The actual value produced by the code
+         * @param {*} expected - The expected value
+         * @param {string} description - Description of what is being tested
+         */
+        function assertEqual(actual, expected, description) {
+            testState.total++;
+            if (actual === expected) {
+                testState.passed++;
+                logTest('pass', 'PASS: ' + description + ' (actual: ' + JSON.stringify(actual) + ')');
+                testState.results.push({ status: 'pass', description });
+            } else {
+                testState.failed++;
+                logTest('fail', 'FAIL: ' + description);
+                logTest('fail', '  Expected: ' + JSON.stringify(expected));
+                logTest('fail', '  Actual:   ' + JSON.stringify(actual));
+                testState.results.push({ status: 'fail', description, actual, expected });
+            }
+            updateTestSummary();
+        }
+
+        /**
+         * assertTrue - Asserts that a value is truthy.
+         * @param {*} value - The value to check
+         * @param {string} description - Test description
+         */
+        function assertTrue(value, description) {
+            assertEqual(!!value, true, description);
+        }
+
+        /**
+         * assertFalse - Asserts that a value is falsy.
+         * @param {*} value - The value to check
+         * @param {string} description - Test description
+         */
+        function assertFalse(value, description) {
+            assertEqual(!!value, false, description);
+        }
+
+        /**
+         * assertThrows - Asserts that a function throws an error.
+         * @param {Function} fn - The function that should throw
+         * @param {string} description - Test description
+         */
+        function assertThrows(fn, description) {
+            testState.total++;
+            try {
+                fn();
+                testState.failed++;
+                logTest('fail', 'FAIL: ' + description + ' (no error thrown)');
+                testState.results.push({ status: 'fail', description });
+            } catch (e) {
+                testState.passed++;
+                logTest('pass', 'PASS: ' + description + ' (threw: ' + e.message + ')');
+                testState.results.push({ status: 'pass', description });
+            }
+            updateTestSummary();
+        }
+
+        /**
+         * skipTest - Marks a test as skipped.
+         * @param {string} description - Test description
+         */
+        function skipTest(description) {
+            testState.skipped++;
+            logTest('info', 'SKIP: ' + description);
+            updateTestSummary();
+        }
+
+        /**
+         * describe - Groups related tests into a suite.
+         * @param {string} name - Suite name
+         * @param {Function} fn - Function containing tests
+         */
+        function describe(name, fn) {
+            testState.currentSuite = name;
+            logTest('info', '\n--- Suite: ' + name + ' ---');
+            fn();
+        }
+
+        /**
+         * logTest - Adds a styled message to the test log.
+         * @param {string} type - Log type (pass, fail, info, warn)
+         * @param {string} message - The message to log
+         */
+        function logTest(type, message) {
+            const log = document.getElementById('testLog');
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = message;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        /**
+         * updateTestSummary - Updates the test summary counters in the UI.
+         */
+        function updateTestSummary() {
+            document.getElementById('testTotal').textContent = testState.total;
+            document.getElementById('testPassed').textContent = testState.passed;
+            document.getElementById('testFailed').textContent = testState.failed;
+            document.getElementById('testSkipped').textContent = testState.skipped;
+
+            // Update summary bar color based on results
+            const summary = document.getElementById('testSummary');
+            if (testState.failed > 0) {
+                summary.className = 'test-summary bg-danger text-white d-flex justify-content-between mb-3';
+            } else if (testState.passed > 0) {
+                summary.className = 'test-summary bg-success text-white d-flex justify-content-between mb-3';
+            }
+        }
+
+        /**
+         * clearTestLog - Clears the test log and resets counters.
+         */
+        function clearTestLog() {
+            document.getElementById('testLog').innerHTML = '<div class="info">// Test log cleared</div>';
+            testState.total = 0;
+            testState.passed = 0;
+            testState.failed = 0;
+            testState.skipped = 0;
+            testState.results = [];
+            updateTestSummary();
+            // Reset coverage matrix
+            document.querySelectorAll('.coverage-cell').forEach(cell => {
+                if (cell.textContent !== '-' && cell.textContent !== 'N/A') {
+                    cell.className = 'coverage-cell table-warning';
+                }
+            });
+        }
+
+        /**
+         * markCoverage - Marks a transition as tested in the coverage matrix.
+         * @param {string} from - Source state
+         * @param {string} to - Target state
+         * @param {boolean} passed - Whether the test passed
+         */
+        function markCoverage(from, to, passed) {
+            const cell = document.querySelector(`.coverage-cell[data-from="${from}"][data-to="${to}"]`);
+            if (cell && cell.textContent !== '-' && cell.textContent !== 'N/A') {
+                cell.className = 'coverage-cell ' + (passed ? 'table-success' : 'table-danger');
+                cell.textContent = passed ? '\u2713' : '\u2717';
+            }
+        }
+
+        /* ====================================================================
+           SYSTEM UNDER TEST (SUT) IMPLEMENTATIONS
+           These are the actual state management modules that the tests verify.
+           ==================================================================== */
+
+        /**
+         * sutCounter - A counter module with increment, decrement, reset, and validation.
+         * This is the "production code" that the tests exercise.
+         */
+        const sutCounter = {
+            // Internal state stored on the card's data attributes
+            _card: () => document.getElementById('sutCard'),
+
+            /** Returns the current counter value from the data attribute */
+            getValue() {
+                return parseInt(this._card().getAttribute('data-counter')) || 0;
+            },
+
+            /** Sets the counter to a specific value with bounds checking */
+            set(val) {
+                // Clamp between 0 and 100
+                val = Math.max(0, Math.min(100, val));
+                this._card().setAttribute('data-counter', val);
+                this._render();
+                this._validate();
+            },
+
+            /** Increments the counter by 1 */
+            increment() {
+                this.set(this.getValue() + 1);
+            },
+
+            /** Decrements the counter by 1 */
+            decrement() {
+                this.set(this.getValue() - 1);
+            },
+
+            /** Resets the counter to 0 */
+            reset() {
+                this.set(0);
+            },
+
+            /** Validates the counter and shows warnings if out of range */
+            _validate() {
+                const val = this.getValue();
+                const div = document.getElementById('sutValidation');
+                if (val >= 100) {
+                    div.innerHTML = '<div class="alert alert-warning py-1 mb-0">Maximum value reached</div>';
+                } else if (val <= 0) {
+                    div.innerHTML = '<div class="alert alert-info py-1 mb-0">Minimum value reached</div>';
+                } else {
+                    div.innerHTML = '';
+                }
+            },
+
+            /** Renders the counter value to all display elements */
+            _render() {
+                const val = this.getValue();
+                document.getElementById('sutCounterBadge').textContent = val;
+                document.getElementById('sutCounterInput').value = val;
+            }
+        };
+
+        /**
+         * sutStateMachine - A state machine module that manages component state transitions.
+         * Only defined transitions are allowed; invalid transitions throw errors.
+         */
+        const sutStateMachine = {
+            // Current state stored on the card's data attribute
+            _card: () => document.getElementById('sutCard'),
+
+            // Allowed transitions: each key is a state, value is array of allowed next states
+            transitions: {
+                idle:      ['activate'],
+                active:    ['pause', 'complete'],
+                paused:    ['activate', 'reset'],
+                completed: ['reset']
+            },
+
+            /** Returns the current state */
+            getState() {
+                return this._card().getAttribute('data-state') || 'idle';
+            },
+
+            /**
+             * transition - Attempts a state transition.
+             * @param {string} action - The transition action (maps to target state)
+             * @returns {boolean} True if transition succeeded, false otherwise
+             */
+            transition(action) {
+                const currentState = this.getState();
+                // Map action names to target states
+                const actionToState = {
+                    activate: 'active',
+                    pause: 'paused',
+                    complete: 'completed',
+                    reset: 'idle'
+                };
+                const targetState = actionToState[action];
+                if (!targetState) {
+                    throw new Error('Unknown action: ' + action);
+                }
+                // Check if transition is allowed
+                const allowed = this.transitions[currentState] || [];
+                if (!allowed.includes(targetState)) {
+                    return false; // Transition not allowed
+                }
+                // Perform the transition
+                this._card().setAttribute('data-state', targetState);
+                this._render();
+                return true;
+            },
+
+            /** Renders the state badge to reflect current state */
+            _render() {
+                const state = this.getState();
+                const badge = document.getElementById('sutStateBadge');
+                badge.textContent = state;
+                badge.className = 'badge ' + ({
+                    idle: 'bg-secondary',
+                    active: 'bg-primary',
+                    paused: 'bg-warning text-dark',
+                    completed: 'bg-success'
+                }[state] || 'bg-secondary');
+            }
+        };
+
+        /* ====================================================================
+           MOCK STATE STORE
+           A Redux-like state store used to demonstrate mock testing patterns.
+           ==================================================================== */
+
+        /**
+         * mockStore - A simple Redux-like store with dispatch, getState, and history.
+         * Used to demonstrate testing with mock state.
+         */
+        const mockStore = {
+            // Initial state
+            _state: { counter: 0, active: false, lastAction: null },
+            // Action history for testing
+            _history: [],
+
+            /** Returns a copy of the current state */
+            getState() {
+                return { ...this._state };
+            },
+
+            /**
+             * dispatch - Dispatches an action to update state.
+             * @param {Object} action - Action object with type and optional payload
+             */
+            dispatch(action) {
+                // Record action in history
+                this._history.push({ ...action, timestamp: Date.now() });
+
+                // Reducer logic: update state based on action type
+                switch (action.type) {
+                    case 'INCREMENT':
+                        this._state.counter++;
+                        break;
+                    case 'DECREMENT':
+                        this._state.counter--;
+                        break;
+                    case 'SET_VALUE':
+                        this._state.counter = action.payload;
+                        break;
+                    case 'TOGGLE_ACTIVE':
+                        this._state.active = !this._state.active;
+                        break;
+                    case 'RESET':
+                        this._state = { counter: 0, active: false, lastAction: null };
+                        break;
+                    default:
+                        throw new Error('Unknown action type: ' + action.type);
+                }
+                this._state.lastAction = action.type;
+                this._render();
+            },
+
+            /** Resets the store to initial state */
+            reset() {
+                this._state = { counter: 0, active: false, lastAction: null };
+                this._history = [];
+                this._render();
+            },
+
+            /** Returns the action history (for testing) */
+            getHistory() {
+                return [...this._history];
+            },
+
+            /** Renders the current state and history to the UI */
+            _render() {
+                document.getElementById('mockStateDisplay').textContent =
+                    JSON.stringify(this._state, null, 2);
+                const histEl = document.getElementById('mockHistory');
+                histEl.innerHTML = this._history.map(
+                    h => `<div class="info">[${new Date(h.timestamp).toLocaleTimeString()}] ${h.type}${h.payload !== undefined ? '(' + h.payload + ')' : ''}</div>`
+                ).join('');
+                histEl.scrollTop = histEl.scrollHeight;
+            }
+        };
+
+        /* ====================================================================
+           ASYNC FETCHER MODULE
+           Simulates an async data fetch with proper state transitions.
+           ==================================================================== */
+
+        /**
+         * asyncFetcher - Module that demonstrates async state flow: idle -> loading -> success/error.
+         */
+        const asyncFetcher = {
+            _state: 'idle',
+            _controller: null, // AbortController for cancellation
+
+            /** Returns the current fetch state */
+            getState() {
+                return this._state;
+            },
+
+            /**
+             * fetch - Simulates an async data fetch with proper state transitions.
+             * Transitions: idle -> loading -> success (or error)
+             */
+            async fetch() {
+                if (this._state === 'loading') return; // Prevent double-fetch
+
+                // Transition to loading state
+                this._setState('loading');
+                this._controller = new AbortController();
+
+                try {
+                    // Simulate network delay (1-2 seconds)
+                    await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(resolve, 1000 + Math.random() * 1000);
+                        this._controller.signal.addEventListener('abort', () => {
+                            clearTimeout(timeout);
+                            reject(new Error('Cancelled'));
+                        });
+                    });
+
+                    // Simulate occasional errors (20% chance)
+                    if (Math.random() < 0.2) {
+                        throw new Error('Server error (simulated)');
+                    }
+
+                    // Success: transition to success state with data
+                    this._setState('success', { users: ['Alice', 'Bob', 'Charlie'], count: 3 });
+                } catch (e) {
+                    if (e.message === 'Cancelled') {
+                        this._setState('idle');
+                    } else {
+                        this._setState('error', e.message);
+                    }
+                }
+            },
+
+            /** Cancels an in-progress fetch */
+            cancel() {
+                if (this._controller) {
+                    this._controller.abort();
+                }
+            },
+
+            /**
+             * _setState - Updates the internal state and re-renders the UI.
+             * @param {string} state - New state
+             * @param {*} data - Optional data payload
+             */
+            _setState(state, data) {
+                this._state = state;
+                const statusEl = document.getElementById('asyncStatus');
+                const dataEl = document.getElementById('asyncData');
+                const btn = document.getElementById('asyncFetchBtn');
+
+                switch (state) {
+                    case 'idle':
+                        statusEl.innerHTML = '<span class="badge bg-secondary">idle</span>';
+                        dataEl.innerHTML = '';
+                        btn.disabled = false;
+                        break;
+                    case 'loading':
+                        statusEl.innerHTML = '<span class="badge bg-primary"><span class="spinner-border spinner-border-sm"></span> loading</span>';
+                        dataEl.innerHTML = '';
+                        btn.disabled = true;
+                        break;
+                    case 'success':
+                        statusEl.innerHTML = '<span class="badge bg-success">success</span>';
+                        dataEl.innerHTML = '<div class="alert alert-success py-1 mb-0">Loaded ' + data.count + ' users: ' + data.users.join(', ') + '</div>';
+                        btn.disabled = false;
+                        break;
+                    case 'error':
+                        statusEl.innerHTML = '<span class="badge bg-danger">error</span>';
+                        dataEl.innerHTML = '<div class="alert alert-danger py-1 mb-0">Error: ' + data + '</div>';
+                        btn.disabled = false;
+                        break;
+                }
+            }
+        };
+
+        /* ====================================================================
+           TEST SUITES
+           The actual tests that verify state management behavior.
+           ==================================================================== */
+
+        /**
+         * runUnitTests - Executes unit tests for state logic in isolation.
+         * These test the sutCounter and sutStateMachine modules directly.
+         */
+        function runUnitTests() {
+            describe('Counter Unit Tests', function() {
+                // Reset counter before each test suite
+                sutCounter.reset();
+
+                // Test: initial state
+                assertEqual(sutCounter.getValue(), 0, 'Counter starts at 0');
+
+                // Test: increment
+                sutCounter.increment();
+                assertEqual(sutCounter.getValue(), 1, 'Counter increments to 1');
+
+                // Test: multiple increments
+                sutCounter.increment();
+                sutCounter.increment();
+                assertEqual(sutCounter.getValue(), 3, 'Counter reaches 3 after 3 increments');
+
+                // Test: decrement
+                sutCounter.decrement();
+                assertEqual(sutCounter.getValue(), 2, 'Counter decrements to 2');
+
+                // Test: reset
+                sutCounter.reset();
+                assertEqual(sutCounter.getValue(), 0, 'Counter resets to 0');
+
+                // Test: boundary - cannot go below 0
+                sutCounter.decrement();
+                assertEqual(sutCounter.getValue(), 0, 'Counter clamps at 0 (cannot go negative)');
+
+                // Test: boundary - cannot exceed 100
+                sutCounter.set(99);
+                sutCounter.increment();
+                sutCounter.increment(); // Should clamp at 100
+                assertEqual(sutCounter.getValue(), 100, 'Counter clamps at 100 (cannot exceed max)');
+
+                // Test: set specific value
+                sutCounter.set(42);
+                assertEqual(sutCounter.getValue(), 42, 'Counter set to 42');
+
+                // Reset for next suite
+                sutCounter.reset();
+            });
+
+            describe('State Machine Unit Tests', function() {
+                // Reset state machine
+                sutStateMachine._card().setAttribute('data-state', 'idle');
+
+                // Test: initial state
+                assertEqual(sutStateMachine.getState(), 'idle', 'State machine starts at idle');
+
+                // Test: valid transition idle -> active
+                const result1 = sutStateMachine.transition('activate');
+                assertTrue(result1, 'idle->active transition succeeds');
+                assertEqual(sutStateMachine.getState(), 'active', 'State is now active');
+
+                // Test: valid transition active -> paused
+                const result2 = sutStateMachine.transition('pause');
+                assertTrue(result2, 'active->paused transition succeeds');
+                assertEqual(sutStateMachine.getState(), 'paused', 'State is now paused');
+
+                // Test: invalid transition paused -> completed (not allowed)
+                const result3 = sutStateMachine.transition('complete');
+                assertFalse(result3, 'paused->completed transition is blocked');
+                assertEqual(sutStateMachine.getState(), 'paused', 'State remains paused after blocked transition');
+
+                // Test: valid transition paused -> active (reactivate)
+                const result4 = sutStateMachine.transition('activate');
+                assertTrue(result4, 'paused->active transition succeeds');
+                assertEqual(sutStateMachine.getState(), 'active', 'State is active again');
+
+                // Test: valid transition active -> completed
+                const result5 = sutStateMachine.transition('complete');
+                assertTrue(result5, 'active->completed transition succeeds');
+                assertEqual(sutStateMachine.getState(), 'completed', 'State is now completed');
+
+                // Test: valid transition completed -> reset
+                const result6 = sutStateMachine.transition('reset');
+                assertTrue(result6, 'completed->reset transition succeeds');
+                assertEqual(sutStateMachine.getState(), 'idle', 'State is idle after reset');
+
+                // Test: unknown action throws error
+                assertThrows(function() {
+                    sutStateMachine.transition('nonexistent');
+                }, 'Unknown action throws error');
+
+                // Mark coverage
+                markCoverage('idle', 'active', true);
+                markCoverage('active', 'paused', true);
+                markCoverage('paused', 'active', true);
+                markCoverage('active', 'completed', true);
+                markCoverage('completed', 'idle', true);
+                markCoverage('paused', 'idle', true);
+
+                // Reset
+                sutStateMachine._card().setAttribute('data-state', 'idle');
+            });
+
+            describe('Mock Store Unit Tests', function() {
+                mockStore.reset();
+
+                // Test: initial state
+                const initial = mockStore.getState();
+                assertEqual(initial.counter, 0, 'Mock store counter starts at 0');
+                assertFalse(initial.active, 'Mock store active starts as false');
+
+                // Test: INCREMENT action
+                mockStore.dispatch({ type: 'INCREMENT' });
+                assertEqual(mockStore.getState().counter, 1, 'Counter increments via dispatch');
+
+                // Test: SET_VALUE action
+                mockStore.dispatch({ type: 'SET_VALUE', payload: 42 });
+                assertEqual(mockStore.getState().counter, 42, 'Counter set to 42 via dispatch');
+
+                // Test: TOGGLE_ACTIVE action
+                mockStore.dispatch({ type: 'TOGGLE_ACTIVE' });
+                assertTrue(mockStore.getState().active, 'Active toggles to true');
+                mockStore.dispatch({ type: 'TOGGLE_ACTIVE' });
+                assertFalse(mockStore.getState().active, 'Active toggles back to false');
+
+                // Test: RESET action
+                mockStore.dispatch({ type: 'INCREMENT' });
+                mockStore.dispatch({ type: 'INCREMENT' });
+                mockStore.dispatch({ type: 'RESET' });
+                assertEqual(mockStore.getState().counter, 0, 'Counter resets to 0');
+
+                // Test: history tracking
+                mockStore.dispatch({ type: 'INCREMENT' });
+                mockStore.dispatch({ type: 'INCREMENT' });
+                const history = mockStore.getHistory();
+                assertTrue(history.length >= 2, 'History records dispatched actions');
+                assertEqual(history[history.length - 1].type, 'INCREMENT', 'Last action is INCREMENT');
+
+                // Test: unknown action throws
+                assertThrows(function() {
+                    mockStore.dispatch({ type: 'UNKNOWN_ACTION' });
+                }, 'Unknown action type throws error');
+
+                mockStore.reset();
+            });
+        }
+
+        /**
+         * runIntegrationTests - Tests state flows that span multiple operations.
+         * These verify that state transitions work correctly in sequences.
+         */
+        function runIntegrationTests() {
+            describe('Counter Integration Tests', function() {
+                sutCounter.reset();
+
+                // Test: full lifecycle
+                sutCounter.set(50);
+                sutCounter.increment();
+                sutCounter.increment();
+                sutCounter.decrement();
+                assertEqual(sutCounter.getValue(), 51, 'Full lifecycle: 50+1+1-1=51');
+
+                // Test: reset from any value
+                sutCounter.set(99);
+                sutCounter.reset();
+                assertEqual(sutCounter.getValue(), 0, 'Reset works from any value');
+
+                sutCounter.reset();
+            });
+
+            describe('State Machine Integration Tests', function() {
+                sutStateMachine._card().setAttribute('data-state', 'idle');
+
+                // Test: full happy path: idle -> active -> completed -> reset
+                sutStateMachine.transition('activate');
+                markCoverage('idle', 'active', true);
+                sutStateMachine.transition('complete');
+                markCoverage('active', 'completed', true);
+                assertEqual(sutStateMachine.getState(), 'completed', 'Happy path: idle->active->completed');
+
+                sutStateMachine.transition('reset');
+                markCoverage('completed', 'idle', true);
+                assertEqual(sutStateMachine.getState(), 'idle', 'Happy path ends at idle');
+
+                // Test: pause and resume path: idle -> active -> paused -> active -> completed
+                sutStateMachine.transition('activate');
+                sutStateMachine.transition('pause');
+                markCoverage('active', 'paused', true);
+                assertEqual(sutStateMachine.getState(), 'paused', 'Pause path: state is paused');
+
+                sutStateMachine.transition('activate');
+                markCoverage('paused', 'active', true);
+                assertEqual(sutStateMachine.getState(), 'active', 'Resume from pause');
+
+                sutStateMachine.transition('complete');
+                assertEqual(sutStateMachine.getState(), 'completed', 'Complete after pause/resume');
+
+                sutStateMachine._card().setAttribute('data-state', 'idle');
+            });
+
+            describe('Mock Store Integration Tests', function() {
+                mockStore.reset();
+
+                // Test: complex action sequence
+                mockStore.dispatch({ type: 'INCREMENT' });
+                mockStore.dispatch({ type: 'INCREMENT' });
+                mockStore.dispatch({ type: 'INCREMENT' });
+                mockStore.dispatch({ type: 'SET_VALUE', payload: 100 });
+                mockStore.dispatch({ type: 'TOGGLE_ACTIVE' });
+                assertEqual(mockStore.getState().counter, 100, 'Complex sequence: counter is 100');
+                assertTrue(mockStore.getState().active, 'Complex sequence: active is true');
+
+                // Test: history preserves all actions
+                const hist = mockStore.getHistory();
+                assertEqual(hist.length, 5, 'History has 5 actions');
+
+                // Test: state isolation (getState returns a copy)
+                const state1 = mockStore.getState();
+                state1.counter = 999;
+                assertEqual(mockStore.getState().counter, 100, 'getState returns a copy (mutation safe)');
+
+                mockStore.reset();
+            });
+        }
+
+        /**
+         * runAllTests - Runs both unit and integration test suites sequentially.
+         */
+        function runAllTests() {
+            clearTestLog();
+            logTest('info', '=== Running All Tests ===\n');
+            runUnitTests();
+            runIntegrationTests();
+            logTest('info', '\n=== Test Run Complete ===');
+            logTest('info', `Results: ${testState.passed} passed, ${testState.failed} failed, ${testState.skipped} skipped`);
+        }
+
+        /** Runs only unit tests */
+        function runUnitTestsOnly() {
+            clearTestLog();
+            logTest('info', '=== Running Unit Tests ===\n');
+            runUnitTests();
+            logTest('info', '\n=== Unit Test Run Complete ===');
+        }
+
+        /** Runs only integration tests */
+        function runIntegrationTestsOnly() {
+            clearTestLog();
+            logTest('info', '=== Running Integration Tests ===\n');
+            runIntegrationTests();
+            logTest('info', '\n=== Integration Test Run Complete ===');
+        }
+
+        /* ====================================================================
+           INITIALIZATION
+           Run on page load.
+           ==================================================================== */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize SUT display
+            sutCounter._render();
+            sutStateMachine._render();
+            mockStore._render();
+        });
+    </script>
+</body>
+</html>

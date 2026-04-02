@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         04_03_09 - Theme Accessibility
+         ============================================
+         Demonstrates accessible theme patterns:
+         - WCAG contrast ratios
+         - Focus indicators
+         - Reduced motion support
+         - Screen reader compatibility
+         - Color-blind safe palettes
+         - High contrast mode support
+         ============================================ -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Accessible Theme Design</title>
+
+    <style>
+        /* ============================================
+           SECTION 1: ACCESSIBLE COLOR SYSTEM
+           ============================================
+           All custom colors meet WCAG AA contrast
+           requirements (4.5:1 for text, 3:1 for UI).
+           ============================================ */
+
+        :root {
+            /* Primary: #1e40af meets 4.5:1 on white */
+            --a11y-primary: #1e40af;
+            /* Dark on light backgrounds */
+            --a11y-text-dark: #1a1a1a;
+            /* Light on dark backgrounds */
+            --a11y-text-light: #f8f9fa;
+        }
+
+        /* ============================================
+           SECTION 2: FOCUS INDICATORS
+           ============================================
+           Visible, high-contrast focus rings for
+           keyboard navigation users.
+           ============================================ */
+
+        /* Enhanced focus ring */
+        :focus-visible {
+            outline: 3px solid var(--a11y-primary);
+            outline-offset: 2px;
+            border-radius: 2px;
+        }
+
+        /* Remove default outline only when :focus-visible is available */
+        :focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        /* Skip to content link */
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--a11y-primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0 0 0.5rem 0.5rem;
+            z-index: 10000;
+            font-weight: 600;
+            text-decoration: none;
+            transition: top 0.2s;
+        }
+
+        .skip-link:focus {
+            top: 0;
+            outline-color: white;
+        }
+
+        /* ============================================
+           SECTION 3: REDUCED MOTION
+           ============================================
+           Respect prefers-reduced-motion for users
+           who are sensitive to motion.
+           ============================================ */
+
+        .animate-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .animate-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .animate-card {
+                transition: none;
+            }
+            .animate-card:hover {
+                transform: none;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+
+            /* Disable all animations */
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* ============================================
+           SECTION 4: HIGH CONTRAST MODE
+           ============================================
+           Support forced-colors / Windows High Contrast.
+           ============================================ */
+
+        @media (forced-colors: active) {
+            .hc-border {
+                border: 2px solid ButtonText;
+            }
+
+            .hc-link {
+                color: LinkText;
+                text-decoration: underline;
+            }
+
+            /* Ensure focus rings are visible */
+            :focus-visible {
+                outline: 3px solid Highlight;
+            }
+        }
+
+        /* ============================================
+           SECTION 5: COLOR-BLIND SAFE PALETTES
+           ============================================
+           Use shapes + text alongside color.
+           ============================================ */
+
+        .status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-dot-success { background: #059669; }
+        .status-dot-warning { background: #d97706; }
+        .status-dot-danger { background: #dc2626; }
+        .status-dot-info { background: #0284c7; }
+
+        /* ============================================
+           SECTION 6: CONTRAST SWATCH DISPLAY
+           ============================================ */
+
+        .contrast-demo {
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .contrast-ratio {
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: 700;
+        }
+
+        /* ============================================
+           SECTION 7: SEMANTIC HTML EMPHASIS
+           ============================================ */
+
+        .sr-only-focusable:not(:focus) {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip navigation link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Accessible Themes</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent"
+                    aria-controls="navContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="#">Contrast</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#focus">Focus</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#motion">Motion</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <main id="main-content">
+        <!-- Hero -->
+        <section class="py-5 text-center bg-light">
+            <div class="container">
+                <h1 class="display-4 fw-bold mb-3">Accessible Theme Design</h1>
+                <p class="lead text-muted">
+                    WCAG 2.1 compliant theme patterns with proper contrast, focus, and motion support.
+                </p>
+            </div>
+        </section>
+
+        <!-- Contrast examples -->
+        <section class="py-5">
+            <div class="container">
+                <h2 class="mb-4">WCAG Contrast Compliance</h2>
+
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="contrast-demo text-white" style="background:#1e40af">
+                            <strong>Primary on Dark</strong>
+                            <p class="mb-1 small">White text on #1e40af</p>
+                            <span class="contrast-ratio" style="background:#198754;color:white">8.4:1 - AAA</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="contrast-demo text-dark" style="background:#dbeafe">
+                            <strong style="color:#1e40af">Dark on Light</strong>
+                            <p class="mb-1 small" style="color:#1e40af">Dark text on #dbeafe</p>
+                            <span class="contrast-ratio" style="background:#198754;color:white">7.8:1 - AAA</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="contrast-demo text-white" style="background:#059669">
+                            <strong>Success on Green</strong>
+                            <p class="mb-1 small">White text on #059669</p>
+                            <span class="contrast-ratio" style="background:#198754;color:white">4.6:1 - AA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contrast comparison table -->
+                <h3 class="mb-3">Color Pair Reference</h3>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr><th>Background</th><th>Text Color</th><th>Ratio</th><th>WCAG Level</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>#ffffff</td><td>#1a1a1a</td><td>17.4:1</td><td><span class="badge bg-success">AAA</span></td></tr>
+                            <tr><td>#1e40af</td><td>#ffffff</td><td>8.4:1</td><td><span class="badge bg-success">AAA</span></td></tr>
+                            <tr><td>#ffffff</td><td>#1e40af</td><td>8.4:1</td><td><span class="badge bg-success">AAA</span></td></tr>
+                            <tr><td>#059669</td><td>#ffffff</td><td>4.6:1</td><td><span class="badge bg-info">AA</span></td></tr>
+                            <tr><td>#ffffff</td><td>#6c757d</td><td>4.6:1</td><td><span class="badge bg-info">AA</span></td></tr>
+                            <tr class="table-danger"><td>#dc3545</td><td>#ffffff</td><td>4.0:1</td><td><span class="badge bg-warning text-dark">AA Large</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Focus indicators -->
+        <section id="focus" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="mb-4">Focus Indicators</h2>
+                <p class="mb-4">
+                    Tab through these elements to see visible focus rings.
+                    Every interactive element must have a visible focus state.
+                </p>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>Buttons</h5>
+                                <button class="btn btn-primary me-2 mb-2">Primary</button>
+                                <button class="btn btn-outline-secondary me-2 mb-2">Secondary</button>
+                                <button class="btn btn-success mb-2">Success</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>Form Inputs</h5>
+                                <div class="mb-2">
+                                    <label for="a11y-name" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="a11y-name" placeholder="Your name">
+                                </div>
+                                <div>
+                                    <label for="a11y-email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="a11y-email" placeholder="name@example.com">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>Links</h5>
+                                <p><a href="#">Regular link with focus ring</a></p>
+                                <p><a href="#" class="btn btn-link p-0">Button-styled link</a></p>
+                                <p><a href="#" class="text-decoration-none">Link without underline</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reduced motion -->
+        <section id="motion" class="py-5">
+            <div class="container">
+                <h2 class="mb-4">Reduced Motion Support</h2>
+                <p class="mb-4">
+                    Enable "Reduce motion" in your OS settings to see these
+                    cards lose their hover animations.
+                </p>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card animate-card h-100">
+                            <div class="card-body">
+                                <h5>Animated Card 1</h5>
+                                <p class="card-text">This card lifts on hover. With reduced motion enabled, the lift is disabled.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card animate-card h-100">
+                            <div class="card-body">
+                                <h5>Animated Card 2</h5>
+                                <p class="card-text">Smooth transitions enhance UX for most users while respecting preferences.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card animate-card h-100">
+                            <div class="card-body">
+                                <h5>Animated Card 3</h5>
+                                <p class="card-text">All transitions are disabled via the <code>prefers-reduced-motion</code> media query.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Color-blind safe indicators -->
+        <section class="py-5 bg-light">
+            <div class="container">
+                <h2 class="mb-4">Color-Blind Safe Patterns</h2>
+                <p class="mb-4">
+                    Never rely on color alone. Use icons, text, and shapes alongside color.
+                </p>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>Status with Icons</h5>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        <span class="status-dot status-dot-success" role="img" aria-label="Success"></span>
+                                        <strong>&#10003;</strong> System operational
+                                    </li>
+                                    <li class="mb-2">
+                                        <span class="status-dot status-dot-warning" role="img" aria-label="Warning"></span>
+                                        <strong>&#9888;</strong> Maintenance scheduled
+                                    </li>
+                                    <li class="mb-2">
+                                        <span class="status-dot status-dot-danger" role="img" aria-label="Error"></span>
+                                        <strong>&#10005;</strong> Service disruption
+                                    </li>
+                                    <li>
+                                        <span class="status-dot status-dot-info" role="img" aria-label="Info"></span>
+                                        <strong>&#9432;</strong> Update available
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5>Alerts with Text Labels</h5>
+                                <div class="alert alert-success d-flex align-items-center" role="alert">
+                                    <span class="me-2">&#10003;</span>
+                                    <div><strong>Success:</strong> Your changes have been saved.</div>
+                                </div>
+                                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                                    <span class="me-2">&#10005;</span>
+                                    <div><strong>Error:</strong> Please fix the highlighted fields.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- High contrast mode -->
+        <section class="py-5">
+            <div class="container">
+                <h2 class="mb-4">Windows High Contrast Mode</h2>
+                <p class="mb-4">
+                    Use the <code>forced-colors</code> media query to support
+                    Windows High Contrast and other forced color modes.
+                </p>
+                <div class="card hc-border">
+                    <div class="card-body">
+                        <h5 class="card-title">High Contrast Card</h5>
+                        <p class="card-text">
+                            In forced-colors mode, borders use <code>ButtonText</code> color
+                            and links use <code>LinkText</code>.
+                        </p>
+                        <a href="#" class="hc-link">High contrast link</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ARIA labels -->
+        <section class="py-5 bg-light">
+            <div class="container">
+                <h2 class="mb-4">ARIA Labels & Roles</h2>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>Icon-only Buttons</h5>
+                                <p class="text-muted small">Always provide aria-label for icon buttons.</p>
+                                <button class="btn btn-outline-primary me-2" aria-label="Search">&#128269;</button>
+                                <button class="btn btn-outline-secondary me-2" aria-label="Settings">&#9881;</button>
+                                <button class="btn btn-outline-danger" aria-label="Delete">&#128465;</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>Live Regions</h5>
+                                <p class="text-muted small">Use aria-live for dynamic content updates.</p>
+                                <div aria-live="polite" aria-atomic="true" class="alert alert-info mb-0" id="live-region">
+                                    Status: All systems operational
+                                </div>
+                                <button class="btn btn-sm btn-primary mt-2" onclick="updateLiveRegion()">
+                                    Update Status
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accessibility checklist -->
+        <section class="py-5">
+            <div class="container">
+                <h2 class="mb-4">Accessibility Checklist</h2>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr><th>Requirement</th><th>WCAG Level</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Color contrast 4.5:1 (text)</td><td>AA</td><td><span class="badge bg-success">Pass</span></td></tr>
+                            <tr><td>Color contrast 3:1 (large text/UI)</td><td>AA</td><td><span class="badge bg-success">Pass</span></td></tr>
+                            <tr><td>Visible focus indicators</td><td>AA</td><td><span class="badge bg-success">Pass</span></td></tr>
+                            <tr><td>Respects prefers-reduced-motion</td><td>AAA</td><td><span class="badge bg-success">Pass</span></td></tr>
+                            <tr><td>Information not by color alone</td><td>A</td><td><span class="badge bg-success">Pass</span></td></tr>
+                            <tr><td>Skip navigation link</td><td>A</td><td><span class="badge bg-success">Pass</span></td></tr>
+                            <tr><td>Semantic HTML structure</td><td>A</td><td><span class="badge bg-success">Pass</span></td></tr>
+                            <tr><td>ARIA labels on icon buttons</td><td>A</td><td><span class="badge bg-success">Pass</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Accessible Theme Design Demo</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Live region demo update
+        function updateLiveRegion() {
+            const region = document.getElementById('live-region');
+            const messages = [
+                'Status: All systems operational',
+                'Status: Checking for updates...',
+                'Status: 3 updates available',
+                'Status: System running smoothly'
+            ];
+            region.textContent = messages[Math.floor(Math.random() * messages.length)];
+        }
+    </script>
+</body>
+</html>

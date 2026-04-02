@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_02_14_Component_Future_Patterns.html                       -->
+<!-- Bootstrap 5 Modern JavaScript Patterns                       -->
+<!-- ES modules, Web Components, modern APIs, future-proofing     -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap Modern JS Patterns</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="mb-4">Modern &amp; Future JavaScript Patterns</h1>
+        <p class="lead text-muted">
+            Modern JavaScript patterns that complement Bootstrap 5 and prepare code for the future.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 1: ES Module Imports                                 -->
+        <!-- Import Bootstrap components as ES modules for tree-shaking   -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>1. ES Module Import Pattern</h2>
+            <p>Import individual Bootstrap components for smaller bundle sizes.</p>
+
+            <div class="card bg-dark text-light mb-3">
+                <div class="card-body">
+                    <pre class="mb-0"><code>// Import only what you need (tree-shaking friendly)
+import { Modal, Tooltip, Toast } from 'bootstrap';
+
+// Or import the full bundle
+import * as bootstrap from 'bootstrap';
+
+// In a module environment:
+const modal = new Modal(document.getElementById('myModal'));
+modal.show();</code></pre>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>Note:</strong> ES module imports require a bundler (Webpack, Vite, Rollup) or native ESM support.
+                The CDN version used here attaches to the global <code>bootstrap</code> object.
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 2: Web Components Wrapper                            -->
+        <!-- Wrap Bootstrap components in custom elements for reusability -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>2. Web Components Wrapper</h2>
+            <p>Wrap Bootstrap components in custom elements for framework-agnostic reuse.</p>
+
+            <!-- Custom element wrapping a Bootstrap modal -->
+            <bs-modal-trigger modal-id="wcModal">
+                <button class="btn btn-primary">Open Web Component Modal</button>
+            </bs-modal-trigger>
+
+            <div class="modal fade" id="wcModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Web Component Modal</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            This modal is triggered via a Web Component wrapper.
+                            The custom element handles Bootstrap JS initialization.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 3: Reactive State Management                         -->
+        <!-- Proxy-based reactive state that updates Bootstrap components -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>3. Reactive State (Proxy)</h2>
+            <p>Use ES6 Proxy for reactive state that automatically updates the UI.</p>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Counter</label>
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary" id="decCounter">-</button>
+                                <input type="text" class="form-control text-center" id="counterDisplay" value="0" readonly>
+                                <button class="btn btn-outline-secondary" id="incCounter">+</button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Alert Type</label>
+                            <select class="form-select" id="alertTypeSelect">
+                                <option value="primary">Primary</option>
+                                <option value="success">Success</option>
+                                <option value="danger">Danger</option>
+                                <option value="warning">Warning</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Toast Auto-hide</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="autoHideToggle" checked>
+                                <label class="form-check-label" for="autoHideToggle">Enabled</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reactiveAlert" class="alert alert-primary">
+                Counter: <strong id="reactiveCounterText">0</strong> | Type: <strong id="reactiveTypeText">primary</strong>
+            </div>
+
+            <button class="btn btn-dark" id="reactiveToastBtn">Show Reactive Toast</button>
+            <div class="toast-container position-fixed bottom-0 end-0 p-3">
+                <div id="reactiveToast" class="toast" role="alert">
+                    <div class="toast-header"><strong class="me-auto">Reactive Toast</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">Counter value: <span id="toastCounterValue">0</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 4: Async/Await Component Lifecycle                   -->
+        <!-- Use async/await for sequential component animations           -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>4. Async/Await Lifecycle</h2>
+            <p>Chain component transitions with async/await for sequential animations.</p>
+
+            <button class="btn btn-primary" id="asyncSequenceBtn">Run Async Sequence</button>
+            <button class="btn btn-outline-secondary ms-2" id="resetSequence">Reset</button>
+
+            <div class="mt-3">
+                <div class="progress mb-3" style="height:30px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="sequenceProgress" style="width:0%;">Ready</div>
+                </div>
+                <div id="sequenceLog" class="font-monospace" style="font-size:0.85rem;"></div>
+            </div>
+
+            <div class="collapse mt-3" id="asyncCollapse">
+                <div class="card card-body">Async collapse target reached!</div>
+            </div>
+
+            <div class="toast-container position-fixed bottom-0 end-0 p-3">
+                <div id="asyncToast" class="toast" role="alert">
+                    <div class="toast-header"><strong class="me-auto">Async Toast</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">Async sequence complete.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 5: Custom Events for Component Communication        -->
+        <!-- Components communicate via CustomEvent dispatching           -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>5. Custom Event Bus</h2>
+            <p>Components communicate loosely via a custom event bus.</p>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">Publisher</div>
+                        <div class="card-body">
+                            <button class="btn btn-primary w-100 mb-2" id="publishMsg">Publish "user-action"</button>
+                            <button class="btn btn-warning w-100" id="publishAlert">Publish "alert-event"</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">Subscriber Log</div>
+                        <div class="card-body" id="eventBusLog" style="height:150px; overflow-y:auto; font-family:monospace; font-size:0.85rem;">
+                            <div class="text-muted">// Listening for custom events...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 6: Intersection Observer + Component Lazy Init       -->
+        <!-- Combine modern Observer APIs with Bootstrap initialization   -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>6. Observer-Driven Components</h2>
+            <p>Components initialize and activate based on IntersectionObserver and MutationObserver.</p>
+
+            <h5>MutationObserver Demo</h5>
+            <p class="text-muted">Add/remove elements and watch the observer detect changes.</p>
+
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-success" id="addObservedEl">Add Element</button>
+                <button class="btn btn-danger" id="removeObservedEl">Remove Element</button>
+            </div>
+            <div id="observedContainer" class="d-flex flex-wrap gap-2 p-3 border rounded bg-white" style="min-height:80px;"></div>
+            <div class="mt-2" id="mutationLog" class="font-monospace" style="font-size:0.85rem;"></div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 7: Template Literals for Dynamic Component Creation  -->
+        <!-- Use tagged templates or template literals for clean HTML gen -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>7. Template Literal Components</h2>
+            <p>Generate Bootstrap components cleanly using template literals.</p>
+
+            <div class="mb-3">
+                <label class="form-label">Card Title</label>
+                <input type="text" class="form-control" id="cardTitleInput" value="Dynamic Card">
+                <label class="form-label mt-2">Card Color</label>
+                <select class="form-select" id="cardColorSelect">
+                    <option value="primary">Primary</option>
+                    <option value="success">Success</option>
+                    <option value="danger">Danger</option>
+                    <option value="warning">Warning</option>
+                    <option value="info">Info</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" id="generateCard">Generate Card</button>
+            <div class="row g-3 mt-2" id="templateCardContainer"></div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ============================================================
+        // Pattern 2: Web Component Wrapper
+        // Custom element that wraps a Bootstrap modal trigger
+        // ============================================================
+        class BsModalTrigger extends HTMLElement {
+            connectedCallback() {
+                const modalId = this.getAttribute('modal-id');
+                if (!modalId) return;
+
+                // Wrap child content in a clickable wrapper
+                this.style.cursor = 'pointer';
+                this.addEventListener('click', function () {
+                    const modalEl = document.getElementById(modalId);
+                    if (modalEl) {
+                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modal.show();
+                    }
+                });
+            }
+        }
+        customElements.define('bs-modal-trigger', BsModalTrigger);
+
+        // ============================================================
+        // Pattern 3: Reactive State with Proxy
+        // State changes automatically update the UI
+        // ============================================================
+        const state = {
+            counter: 0,
+            alertType: 'primary',
+            autoHide: true
+        };
+
+        const reactive = new Proxy(state, {
+            set: function (target, prop, value) {
+                target[prop] = value;
+                updateReactiveUI(prop, value);
+                return true;
+            }
+        });
+
+        function updateReactiveUI(prop, value) {
+            switch (prop) {
+                case 'counter':
+                    document.getElementById('counterDisplay').value = value;
+                    document.getElementById('reactiveCounterText').textContent = value;
+                    document.getElementById('toastCounterValue').textContent = value;
+                    break;
+                case 'alertType':
+                    const alert = document.getElementById('reactiveAlert');
+                    alert.className = 'alert alert-' + value;
+                    document.getElementById('reactiveTypeText').textContent = value;
+                    break;
+                case 'autoHide':
+                    document.getElementById('autoHideToggle').checked = value;
+                    break;
+            }
+        }
+
+        document.getElementById('incCounter').addEventListener('click', function () {
+            reactive.counter = reactive.counter + 1;
+        });
+
+        document.getElementById('decCounter').addEventListener('click', function () {
+            reactive.counter = reactive.counter - 1;
+        });
+
+        document.getElementById('alertTypeSelect').addEventListener('change', function () {
+            reactive.alertType = this.value;
+        });
+
+        document.getElementById('autoHideToggle').addEventListener('change', function () {
+            reactive.autoHide = this.checked;
+        });
+
+        document.getElementById('reactiveToastBtn').addEventListener('click', function () {
+            const el = document.getElementById('reactiveToast');
+            const toast = new bootstrap.Toast(el, {
+                autohide: reactive.autoHide,
+                delay: 3000
+            });
+            toast.show();
+        });
+
+        // ============================================================
+        // Pattern 4: Async/Await Component Lifecycle
+        // Chain Bootstrap component transitions sequentially
+        // ============================================================
+        function waitForEvent(element, eventName) {
+            return new Promise(function (resolve) {
+                element.addEventListener(eventName, resolve, { once: true });
+            });
+        }
+
+        function sleep(ms) {
+            return new Promise(function (resolve) { setTimeout(resolve, ms); });
+        }
+
+        async function runAsyncSequence() {
+            const log = document.getElementById('sequenceLog');
+            const progress = document.getElementById('sequenceProgress');
+            const collapseEl = document.getElementById('asyncCollapse');
+            const toastEl = document.getElementById('asyncToast');
+
+            log.innerHTML = '';
+            progress.style.width = '0%';
+
+            function step(text, pct) {
+                log.innerHTML += `<div>→ ${text}</div>`;
+                progress.style.width = pct + '%';
+                progress.textContent = text;
+            }
+
+            // Step 1: Show collapse
+            step('Showing collapse...', 25);
+            const collapse = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+            collapse.show();
+            await waitForEvent(collapseEl, 'shown.bs.collapse');
+            step('Collapse shown ✓', 50);
+
+            // Step 2: Wait
+            await sleep(800);
+
+            // Step 3: Show toast
+            step('Showing toast...', 75);
+            const toast = bootstrap.Toast.getOrCreateInstance(toastEl, { autohide: true, delay: 2000 });
+            toast.show();
+            await waitForEvent(toastEl, 'shown.bs.toast');
+            step('Toast shown ✓', 100);
+
+            // Step 4: Wait for toast to auto-hide
+            await sleep(2500);
+            log.innerHTML += '<div class="text-success"><strong>Sequence complete!</strong></div>';
+        }
+
+        document.getElementById('asyncSequenceBtn').addEventListener('click', function () {
+            runAsyncSequence();
+        });
+
+        document.getElementById('resetSequence').addEventListener('click', function () {
+            document.getElementById('sequenceLog').innerHTML = '';
+            document.getElementById('sequenceProgress').style.width = '0%';
+            document.getElementById('sequenceProgress').textContent = 'Ready';
+            const collapse = bootstrap.Collapse.getInstance(document.getElementById('asyncCollapse'));
+            if (collapse) collapse.hide();
+        });
+
+        // ============================================================
+        // Pattern 5: Custom Event Bus
+        // Publish/subscribe pattern using CustomEvent
+        // ============================================================
+        const EventBus = {
+            subscribe: function (eventName, callback) {
+                document.addEventListener(eventName, function (e) {
+                    callback(e.detail);
+                });
+            },
+            publish: function (eventName, data) {
+                document.dispatchEvent(new CustomEvent(eventName, { detail: data }));
+            }
+        };
+
+        // Subscribe to events
+        EventBus.subscribe('user-action', function (data) {
+            const log = document.getElementById('eventBusLog');
+            const div = document.createElement('div');
+            div.innerHTML = `<span class="text-primary">[user-action]</span> ${JSON.stringify(data)}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        });
+
+        EventBus.subscribe('alert-event', function (data) {
+            const log = document.getElementById('eventBusLog');
+            const div = document.createElement('div');
+            div.innerHTML = `<span class="text-warning">[alert-event]</span> ${JSON.stringify(data)}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        });
+
+        document.getElementById('publishMsg').addEventListener('click', function () {
+            EventBus.publish('user-action', { timestamp: Date.now(), action: 'button-click' });
+        });
+
+        document.getElementById('publishAlert').addEventListener('click', function () {
+            EventBus.publish('alert-event', { level: 'warning', message: 'Something happened' });
+        });
+
+        // ============================================================
+        // Pattern 6: MutationObserver
+        // Watch for DOM changes in a container
+        // ============================================================
+        const observedContainer = document.getElementById('observedContainer');
+        const mutationLog = document.getElementById('mutationLog');
+        let elementCounter = 0;
+
+        const mutationObserver = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                const div = document.createElement('div');
+                div.className = 'text-muted';
+                div.innerHTML = `<small>Detected: ${mutation.type} | Added: ${mutation.addedNodes.length} | Removed: ${mutation.removedNodes.length}</small>`;
+                mutationLog.prepend(div);
+            });
+        });
+
+        mutationObserver.observe(observedContainer, { childList: true });
+
+        document.getElementById('addObservedEl').addEventListener('click', function () {
+            elementCounter++;
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-primary';
+            badge.textContent = 'Element ' + elementCounter;
+            observedContainer.appendChild(badge);
+        });
+
+        document.getElementById('removeObservedEl').addEventListener('click', function () {
+            if (observedContainer.lastElementChild) {
+                observedContainer.removeChild(observedContainer.lastElementChild);
+            }
+        });
+
+        // ============================================================
+        // Pattern 7: Template Literal Components
+        // Generate Bootstrap cards with template literals
+        // ============================================================
+        let templateCardCount = 0;
+
+        function createCard(title, color) {
+            templateCardCount++;
+            return `
+                <div class="col-md-4">
+                    <div class="card border-${color}">
+                        <div class="card-header bg-${color} text-white">${title}</div>
+                        <div class="card-body">
+                            <p class="card-text">Card #${templateCardCount} generated with template literals.</p>
+                            <small class="text-muted">Created: ${new Date().toLocaleTimeString()}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('generateCard').addEventListener('click', function () {
+            const title = document.getElementById('cardTitleInput').value || 'Untitled';
+            const color = document.getElementById('cardColorSelect').value;
+            document.getElementById('templateCardContainer').insertAdjacentHTML('beforeend', createCard(title, color));
+        });
+    </script>
+</body>
+</html>

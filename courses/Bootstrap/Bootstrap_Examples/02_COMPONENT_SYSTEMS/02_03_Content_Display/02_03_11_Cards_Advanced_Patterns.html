@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cards Advanced Patterns - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WR6W8Z16TsA5kqVEf3MzL4FnTRi6lB"
+          crossorigin="anonymous">
+    <style>
+        /* Masonry-style layout using CSS columns */
+        .masonry-grid {
+            column-count: 3;
+            /* CSS columns for masonry layout */
+            column-gap: 1.5rem;
+            /* Gap between columns */
+        }
+        .masonry-grid .card {
+            break-inside: avoid;
+            /* Prevents card from splitting across columns */
+            margin-bottom: 1.5rem;
+            /* Vertical spacing between cards in columns */
+        }
+        @media (max-width: 992px) {
+            .masonry-grid { column-count: 2; }
+        }
+        @media (max-width: 576px) {
+            .masonry-grid { column-count: 1; }
+        }
+
+        /* Card with gradient overlay */
+        .card-gradient .card-img-overlay {
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+            /* Gradient from dark at bottom to transparent at top */
+        }
+
+        /* Expandable card */
+        .card-expandable .expand-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        .card-expandable.expanded .expand-content {
+            max-height: 500px;
+        }
+
+        /* Flip card */
+        .flip-card {
+            perspective: 1000px;
+            /* perspective: enables 3D transform for flip effect */
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            /* Hides back face during rotation */
+            border-radius: var(--bs-border-radius);
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+            /* Back face is pre-rotated 180deg */
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="mb-4">Cards Advanced Patterns</h1>
+        <p class="text-body-secondary mb-4">
+            Advanced card layout techniques: masonry grids, horizontal cards, flip cards,
+            expandable cards, and more.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- MASONRY LAYOUT -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">1. Masonry Layout (CSS Columns)</h2>
+
+        <div class="masonry-grid">
+            <!-- Masonry uses CSS columns instead of flexbox/grid
+                 Cards naturally flow into columns of varying heights -->
+            <div class="card">
+                <img src="https://picsum.photos/seed/mason1/400/300"
+                     class="card-img-top" alt="Masonry card 1" loading="lazy">
+                <div class="card-body">
+                    <h5 class="card-title">Card 1</h5>
+                    <p class="card-text">Short content.</p>
+                </div>
+            </div>
+            <div class="card">
+                <img src="https://picsum.photos/seed/mason2/400/150"
+                     class="card-img-top" alt="Masonry card 2" loading="lazy">
+                <div class="card-body">
+                    <h5 class="card-title">Card 2</h5>
+                    <p class="card-text">This card has more content which creates a taller height
+                        in the masonry layout. The next card in the column will stack below it.</p>
+                </div>
+            </div>
+            <div class="card">
+                <img src="https://picsum.photos/seed/mason3/400/250"
+                     class="card-img-top" alt="Masonry card 3" loading="lazy">
+                <div class="card-body">
+                    <h5 class="card-title">Card 3</h5>
+                    <p class="card-text">CSS columns handle variable-height items naturally.</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Card 4 (No Image)</h5>
+                    <p class="card-text">Text-only card. Masonry layouts work with any mix of
+                        card types and sizes. Cards fill columns top-to-bottom before moving to
+                        the next column.</p>
+                </div>
+            </div>
+            <div class="card">
+                <img src="https://picsum.photos/seed/mason5/400/350"
+                     class="card-img-top" alt="Masonry card 5" loading="lazy">
+                <div class="card-body">
+                    <h5 class="card-title">Card 5</h5>
+                    <p class="card-text">Tall image card.</p>
+                </div>
+            </div>
+            <div class="card">
+                <img src="https://picsum.photos/seed/mason6/400/200"
+                     class="card-img-top" alt="Masonry card 6" loading="lazy">
+                <div class="card-body">
+                    <h5 class="card-title">Card 6</h5>
+                    <p class="card-text">Another card with medium content length for the layout.</p>
+                </div>
+            </div>
+            <div class="card">
+                <img src="https://picsum.photos/seed/mason7/400/280"
+                     class="card-img-top" alt="Masonry card 7" loading="lazy">
+                <div class="card-body">
+                    <h5 class="card-title">Card 7</h5>
+                    <p class="card-text">Responsive columns reduce count on smaller screens.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- HORIZONTAL CARD VARIATIONS -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">2. Horizontal Card Variations</h2>
+
+        <div class="row g-4">
+            <!-- Icon-left horizontal card -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="row g-0">
+                        <div class="col-auto d-flex align-items-center ps-4 pe-3 py-4">
+                            <!-- col-auto: takes only the content width -->
+                            <div class="rounded-circle bg-primary text-white
+                                        d-flex align-items-center justify-content-center"
+                                 style="width:64px;height:64px;font-size:1.5rem">
+                                &#128202;
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card-body py-3">
+                                <h5 class="card-title mb-1">Analytics Dashboard</h5>
+                                <p class="card-text text-body-secondary mb-2">
+                                    Track your key metrics in real-time with our analytics dashboard.
+                                </p>
+                                <div class="d-flex gap-3">
+                                    <span class="badge text-bg-success">+12% growth</span>
+                                    <span class="badge text-bg-info">2.4k users</span>
+                                    <span class="badge text-bg-warning">3 alerts</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto d-flex align-items-center pe-4">
+                            <button class="btn btn-outline-primary btn-sm">View</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action list horizontal card -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="card-title mb-0">Quick Actions</h5>
+                            <a href="#" class="small">View all</a>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6 col-md-3">
+                                <a href="#" class="card text-decoration-none h-100">
+                                    <div class="card-body text-center py-3">
+                                        <div class="fs-4">&#128196;</div>
+                                        <small class="text-body">New Report</small>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <a href="#" class="card text-decoration-none h-100">
+                                    <div class="card-body text-center py-3">
+                                        <div class="fs-4">&#128100;</div>
+                                        <small class="text-body">Add User</small>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <a href="#" class="card text-decoration-none h-100">
+                                    <div class="card-body text-center py-3">
+                                        <div class="fs-4">&#128274;</div>
+                                        <small class="text-body">Permissions</small>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <a href="#" class="card text-decoration-none h-100">
+                                    <div class="card-body text-center py-3">
+                                        <div class="fs-4">&#9881;</div>
+                                        <small class="text-body">Settings</small>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- FLIP CARD -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">3. Flip Card Pattern</h2>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="flip-card" style="height:300px">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front card">
+                            <img src="https://picsum.photos/seed/flip1/400/300"
+                                 class="card-img h-100 object-fit-cover" alt="Flip card front">
+                            <div class="card-img-overlay d-flex align-items-end">
+                                <div class="text-white">
+                                    <h5 class="card-title">Hover to Flip</h5>
+                                    <p class="card-text small">See details on the back</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flip-card-back card text-bg-primary">
+                            <div class="card-body d-flex flex-column justify-content-center text-center">
+                                <h5>Team Member</h5>
+                                <p>Full-stack developer with 5 years of experience in React and Node.js.</p>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="#" class="btn btn-light btn-sm">Contact</a>
+                                    <a href="#" class="btn btn-outline-light btn-sm">Profile</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="flip-card" style="height:300px">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front card text-bg-dark">
+                            <div class="card-body d-flex flex-column justify-content-center text-center">
+                                <div class="fs-1 mb-2">&#128274;</div>
+                                <h5 class="card-title">Security Card</h5>
+                                <p class="card-text small">Hover to reveal credentials</p>
+                            </div>
+                        </div>
+                        <div class="flip-card-back card text-bg-dark">
+                            <div class="card-body d-flex flex-column justify-content-center">
+                                <h5>Security Details</h5>
+                                <ul class="list-unstyled small">
+                                    <li class="mb-1">&#10003; 2FA Enabled</li>
+                                    <li class="mb-1">&#10003; SSL Certificate Active</li>
+                                    <li class="mb-1">&#10003; Last audit: 2 days ago</li>
+                                    <li class="mb-1">&#10003; Zero vulnerabilities</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="flip-card" style="height:300px">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front card">
+                            <div class="card-body d-flex flex-column justify-content-center text-center">
+                                <div class="fs-1 mb-2">&#127919;</div>
+                                <h5 class="card-title">Quiz Card</h5>
+                                <p class="card-text">What does HTML stand for?</p>
+                            </div>
+                        </div>
+                        <div class="flip-card-back card text-bg-success">
+                            <div class="card-body d-flex flex-column justify-content-center text-center">
+                                <h5>Answer</h5>
+                                <p class="fs-5">HyperText Markup Language</p>
+                                <p class="small">The standard markup language for documents
+                                    designed to be displayed in a web browser.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- EXPANDABLE CARD -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">4. Expandable Cards</h2>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card card-expandable" id="expandCard1">
+                    <img src="https://picsum.photos/seed/expand1/600/200"
+                         class="card-img-top" alt="Expandable card" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title">Expandable Article</h5>
+                        <p class="card-text">
+                            This card shows a preview with the option to expand for full content.
+                        </p>
+                        <div class="expand-content">
+                            <!-- Hidden content that reveals on expand -->
+                            <p class="card-text">
+                                Here is the expanded content with additional details that were
+                                initially hidden. This pattern is useful for long-form content
+                                where you want to save vertical space while still making the
+                                full content accessible.
+                            </p>
+                            <p class="card-text">
+                                The expand animation uses CSS max-height transition for smooth
+                                reveal. JavaScript toggles the expanded class.
+                            </p>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm mt-2"
+                                onclick="this.closest('.card-expandable').classList.toggle('expanded');
+                                         this.textContent = this.textContent === 'Show More' ? 'Show Less' : 'Show More'">
+                            Show More
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card card-expandable" id="expandCard2">
+                    <div class="card-body">
+                        <h5 class="card-title">Expandable FAQ</h5>
+                        <p class="card-text">
+                            <strong>Q: How do I get started?</strong>
+                        </p>
+                        <div class="expand-content">
+                            <p class="card-text">
+                                <strong>A:</strong> Getting started is easy! Simply create an account,
+                                choose your plan, and follow the setup wizard. The entire process takes
+                                about 5 minutes, and our support team is available 24/7 to help with
+                                any questions.
+                            </p>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm mt-2"
+                                onclick="this.closest('.card-expandable').classList.toggle('expanded');
+                                         this.textContent = this.textContent === 'Read Answer' ? 'Hide Answer' : 'Read Answer'">
+                            Read Answer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- STAGGERED GRID -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">5. Staggered/Offset Grid</h2>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <img src="https://picsum.photos/seed/stag1/400/250"
+                         class="card-img-top" alt="Staggered card 1" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title">Standard Card</h5>
+                        <p class="card-text">Normal grid placement.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mt-md-5">
+                <!-- mt-md-5: pushes this card down on medium+ screens for stagger effect -->
+                <div class="card h-100">
+                    <img src="https://picsum.photos/seed/stag2/400/200"
+                         class="card-img-top" alt="Staggered card 2" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title">Offset Card</h5>
+                        <p class="card-text">Using margin-top to create a staggered visual effect.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <img src="https://picsum.photos/seed/stag3/400/280"
+                         class="card-img-top" alt="Staggered card 3" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title">Standard Card</h5>
+                        <p class="card-text">Returns to normal grid position.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- GRADIENT OVERLAY CARDS -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">6. Gradient Overlay Cards</h2>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card text-white card-gradient" style="height:280px">
+                    <img src="https://picsum.photos/seed/grad1/400/280"
+                         class="card-img h-100 object-fit-cover" alt="Gradient overlay"
+                         loading="lazy">
+                    <div class="card-img-overlay d-flex flex-column justify-content-end">
+                        <h5 class="card-title">Bottom Gradient</h5>
+                        <p class="card-text small">
+                            Dark gradient at bottom ensures text readability over any image.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white" style="height:280px">
+                    <img src="https://picsum.photos/seed/grad2/400/280"
+                         class="card-img h-100 object-fit-cover" alt="Color gradient overlay"
+                         loading="lazy">
+                    <div class="card-img-overlay d-flex flex-column justify-content-center text-center"
+                         style="background:linear-gradient(135deg,rgba(13,110,253,0.8),rgba(102,16,242,0.8))">
+                        <!-- Colored gradient overlay for branding -->
+                        <h5 class="card-title">Branded Gradient</h5>
+                        <p class="card-text small">Colored overlays reinforce brand identity.</p>
+                        <button class="btn btn-light btn-sm mt-2">Learn More</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white" style="height:280px">
+                    <img src="https://picsum.photos/seed/grad3/400/280"
+                         class="card-img h-100 object-fit-cover" alt="Semi-transparent overlay"
+                         loading="lazy">
+                    <div class="card-img-overlay d-flex flex-column justify-content-center"
+                         style="background:rgba(0,0,0,0.5)">
+                        <!-- Semi-transparent black overlay -->
+                        <h5 class="card-title">Semi-Transparent</h5>
+                        <p class="card-text small">
+                            Simple rgba overlay for consistent darkening effect.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- COMPACT INLINE CARDS -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">7. Compact Inline Cards</h2>
+
+        <div class="d-flex flex-column gap-2">
+            <!-- Vertical list of compact cards for feeds/timelines -->
+            <div class="card">
+                <div class="card-body py-2 d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success" style="width:8px;height:8px"></div>
+                    <div class="flex-grow-1">
+                        <small class="fw-medium">Build #847 passed</small>
+                        <small class="text-body-secondary ms-2">2 minutes ago</small>
+                    </div>
+                    <span class="badge text-bg-success">Passed</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body py-2 d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-danger" style="width:8px;height:8px"></div>
+                    <div class="flex-grow-1">
+                        <small class="fw-medium">Build #846 failed</small>
+                        <small class="text-body-secondary ms-2">15 minutes ago</small>
+                    </div>
+                    <span class="badge text-bg-danger">Failed</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body py-2 d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-warning" style="width:8px;height:8px"></div>
+                    <div class="flex-grow-1">
+                        <small class="fw-medium">Build #845 in progress</small>
+                        <small class="text-body-secondary ms-2">25 minutes ago</small>
+                    </div>
+                    <span class="badge text-bg-warning">Running</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_03_14_CSS_Future_Features.html                               -->
+<!-- Future CSS: @scope, :has(), nesting                            -->
+<!-- Bootstrap 5.3.3 + Cutting-Edge CSS Features                    -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06_03_14 - CSS Future Features</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* CSS NESTING                                                   */
+        /* CSS now supports nesting natively, similar to Sass/SCSS.     */
+        /* Rules can be nested inside their parent selectors using &.   */
+        /* The & symbol represents the parent selector.                 */
+        /* ============================================================= */
+
+        /* Nested CSS: card component */
+        .nested-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 24px;
+            transition: all 0.3s ease;
+
+            /* Nested hover state */
+            &:hover {
+                box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+                transform: translateY(-4px);
+            }
+
+            /* Nested child selector */
+            & .nested-card-title {
+                color: #2d3436;
+                font-weight: 700;
+                margin-bottom: 8px;
+            }
+
+            /* Nested pseudo-element */
+            &::before {
+                content: '';
+                display: block;
+                width: 40px;
+                height: 4px;
+                background: #6c5ce7;
+                border-radius: 2px;
+                margin-bottom: 16px;
+            }
+
+            /* Nested sibling combinator */
+            & + .nested-card {
+                margin-top: 16px;
+            }
+
+            /* Media query inside nesting */
+            @media (max-width: 768px) {
+                padding: 16px;
+            }
+        }
+
+        /* Nested navigation */
+        .nested-nav {
+            display: flex;
+            gap: 8px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            & li {
+                & a {
+                    display: block;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    color: #636e72;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background: #6c5ce7;
+                        color: white;
+                    }
+
+                    &:active {
+                        transform: scale(0.95);
+                    }
+                }
+            }
+        }
+
+        /* ============================================================= */
+        /* :HAS() SELECTOR                                               */
+        /* :has() is a relational pseudo-class that selects a parent    */
+        /* based on its children. "Select X that has Y inside it."     */
+        /* Previously impossible without JavaScript.                   */
+        /* ============================================================= */
+
+        /* Card that contains an image gets a different style */
+        .has-demo-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+
+            /* If the card has an image, add a gradient border */
+            &:has(img) {
+                border-color: #6c5ce7;
+                box-shadow: 0 4px 16px rgba(108, 92, 231, 0.15);
+            }
+
+            /* If the card has a .highlight class child, make it stand out */
+            &:has(.highlight) {
+                background: #fff8e1;
+                border-color: #f39c12;
+            }
+
+            /* If the card has an input:focus, highlight the card */
+            &:has(input:focus) {
+                border-color: #00b894;
+                box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.2);
+            }
+
+            /* If card contains a button, add padding at bottom */
+            &:has(button) {
+                padding-bottom: 32px;
+            }
+        }
+
+        /* Form group that has invalid input shows error styling */
+        .has-form-group {
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+
+            /* When any input inside is invalid, show red border */
+            &:has(:invalid) {
+                border-color: #e74c3c;
+                background: #ffeaea;
+            }
+
+            /* When any input inside is valid and not placeholder-shown */
+            &:has(:valid:not(:placeholder-shown)) {
+                border-color: #27ae60;
+                background: #eafff3;
+            }
+        }
+
+        /* Heading that has a sibling paragraph */
+        .has-heading:has(+ p) {
+            margin-bottom: 4px;
+        }
+
+        /* ============================================================= */
+        /* @SCOPE RULE                                                   */
+        /* @scope limits styles to a specific DOM subtree. It provides  */
+        /* true scoping without CSS Modules, Shadow DOM, or CSS-in-JS.  */
+        /* ============================================================= */
+
+        /* Scoped styles for dark-themed sections */
+        @scope (.dark-section) {
+            :scope {
+                background: #1a1a2e;
+                color: #edf2f7;
+                padding: 24px;
+                border-radius: 12px;
+            }
+
+            h4 {
+                color: #a29bfe;
+            }
+
+            p {
+                color: #a0aec0;
+            }
+
+            .scoped-btn {
+                background: #a29bfe;
+                color: #1a1a2e;
+                border: none;
+                padding: 8px 20px;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+        }
+
+        /* Scoped styles for card sections */
+        @scope (.card-scope) {
+            :scope {
+                background: white;
+                border: 1px solid #e9ecef;
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 16px;
+            }
+
+            h4 {
+                color: #0984e3;
+                font-size: 1.25rem;
+            }
+
+            p {
+                color: #636e72;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* @scope with specificity boundary */
+        @scope (.feature-flag) to (.inner-scope) {
+            :scope {
+                border: 2px dashed #fdcb6e;
+                padding: 16px;
+                border-radius: 8px;
+                background: #fffbf0;
+            }
+
+            /* Only styles elements between .feature-flag and .inner-scope */
+            p {
+                color: #e17055;
+                font-weight: 500;
+            }
+        }
+
+        /* ============================================================= */
+        /* VISUAL STYLES                                                 */
+        /* ============================================================= */
+
+        .future-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .card-placeholder-img {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+
+        <!-- Page header -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">CSS Future Features</h1>
+                <p class="lead text-muted">CSS Nesting, :has(), and @scope</p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: CSS NESTING                                        -->
+        <!-- Native CSS nesting eliminates the need for preprocessors.    -->
+        <!-- The & symbol refers to the parent selector.                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">1. CSS Nesting</h2>
+            <p class="text-muted mb-3">
+                <span class="future-badge bg-success text-white">Stable</span>
+                Native CSS nesting works without Sass/SCSS.
+            </p>
+
+            <div class="row">
+                <!-- Nested card example -->
+                <div class="col-md-6 mb-3">
+                    <div class="nested-card">
+                        <div class="nested-card-title">Nested Card Component</div>
+                        <p class="text-muted mb-0">
+                            This card's styles use native CSS nesting.
+                            Hover effects, child selectors, and pseudo-elements
+                            are all defined within the parent rule block.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Nested navigation -->
+                <div class="col-md-6 mb-3">
+                    <div class="nested-card">
+                        <div class="nested-card-title">Nested Navigation</div>
+                        <nav>
+                            <ul class="nested-nav">
+                                <li><a href="#">Home</a></li>
+                                <li><a href="#">About</a></li>
+                                <li><a href="#">Contact</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: :HAS() SELECTOR                                    -->
+        <!-- :has() selects parents based on their children. A "parent    -->
+        <!-- query" that was impossible before.                           -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">2. :has() Relational Selector</h2>
+            <p class="text-muted mb-3">
+                <span class="future-badge bg-success text-white">Stable</span>
+                Select parents based on their descendants.
+            </p>
+
+            <div class="row">
+                <!-- Card without image -->
+                <div class="col-md-4 mb-3">
+                    <div class="has-demo-card">
+                        <h5>Text Only Card</h5>
+                        <p class="text-muted small mb-0">
+                            No image inside - default border style.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card with image - gets special border -->
+                <div class="col-md-4 mb-3">
+                    <div class="has-demo-card">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='80' fill='%236c5ce7'%3E%3Crect width='100' height='80' rx='8'/%3E%3C/svg%3E" alt="Placeholder" style="width:100%; height:80px; object-fit:cover; border-radius:8px;">
+                        <h5>Card with Image</h5>
+                        <p class="text-muted small mb-0">
+                            <code>:has(img)</code> applies purple border.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card with highlight - gets yellow background -->
+                <div class="col-md-4 mb-3">
+                    <div class="has-demo-card">
+                        <h5>Card with Highlight</h5>
+                        <span class="highlight badge bg-warning text-dark">Featured</span>
+                        <p class="text-muted small mb-0 mt-2">
+                            <code>:has(.highlight)</code> applies yellow background.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form with :has() validation -->
+            <h4 class="h5 mt-4">:has() Form Validation</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="has-form-group">
+                        <label class="form-label fw-bold">Email (required)</label>
+                        <input type="email" class="form-control" placeholder=" " required>
+                        <small class="text-muted">Shows green when valid, red when invalid</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="has-form-group">
+                        <label class="form-label fw-bold">Name (required)</label>
+                        <input type="text" class="form-control" placeholder=" " required>
+                        <small class="text-muted">Container changes color based on validity</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: @SCOPE                                             -->
+        <!-- @scope creates style boundaries. Styles only apply within    -->
+        <!-- the specified DOM subtree, preventing leakage.              -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">3. @scope Rule</h2>
+            <p class="text-muted mb-3">
+                <span class="future-badge bg-info text-white">New</span>
+                Limit styles to a specific DOM subtree.
+            </p>
+
+            <div class="row">
+                <!-- Dark scoped section -->
+                <div class="col-md-6 mb-3">
+                    <div class="dark-section">
+                        <h4>Dark Scoped Section</h4>
+                        <p>
+                            All styles here are scoped to <code>.dark-section</code>.
+                            They don't leak outside this container.
+                        </p>
+                        <button class="scoped-btn">Scoped Button</button>
+                    </div>
+                </div>
+
+                <!-- Light scoped card -->
+                <div class="col-md-6 mb-3">
+                    <div class="card-scope">
+                        <h4>Light Scoped Card</h4>
+                        <p>
+                            This card uses <code>@scope (.card-scope)</code> to isolate
+                            its typography from the rest of the page.
+                        </p>
+                    </div>
+                    <div class="card-scope">
+                        <h4>Another Scoped Card</h4>
+                        <p>
+                            Multiple elements share the same scope. Styles stay contained.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- @scope with boundary -->
+            <h4 class="h5 mt-4">@scope with Boundary</h4>
+            <div class="feature-flag">
+                <p>This paragraph is scoped between .feature-flag and .inner-scope</p>
+                <div class="inner-scope bg-white p-3 rounded">
+                    <p class="text-dark">This content inside .inner-scope is NOT affected by the outer @scope.</p>
+                </div>
+                <p>This paragraph is also in the outer scope.</p>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: FEATURE SUPPORT TABLE                              -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">4. Feature Support</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Feature</th>
+                            <th>Chrome</th>
+                            <th>Firefox</th>
+                            <th>Safari</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>CSS Nesting</strong></td>
+                            <td>120+</td>
+                            <td>117+</td>
+                            <td>17.2+</td>
+                            <td><span class="badge bg-success">Stable</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>:has()</strong></td>
+                            <td>105+</td>
+                            <td>121+</td>
+                            <td>15.4+</td>
+                            <td><span class="badge bg-success">Stable</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>@scope</strong></td>
+                            <td>118+</td>
+                            <td>---</td>
+                            <td>17.4+</td>
+                            <td><span class="badge bg-info">New</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>@property</strong></td>
+                            <td>85+</td>
+                            <td>128+</td>
+                            <td>15.4+</td>
+                            <td><span class="badge bg-success">Stable</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: COMBINED EXAMPLE                                   -->
+        <!-- All three features working together in a real component.     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">5. Combined Example</h2>
+
+            <div class="dark-section">
+                <h4>Component Using All Three</h4>
+                <p>This section uses @scope for isolation, nesting for structure, and :has() for conditional styling.</p>
+
+                <!-- Nested + :has() inside a scoped container -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="has-demo-card" style="background:#16213e; border-color:#a29bfe;">
+                            <h5 style="color:#edf2f2;">Nested + :has()</h5>
+                            <p class="small" style="color:#a0aec0;">Combining nesting, :has(), and @scope in one component.</p>
+                            <span class="highlight badge bg-warning text-dark">Using All Three</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

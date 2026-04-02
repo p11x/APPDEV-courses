@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================ -->
+    <!-- CORE META TAGS                               -->
+    <!-- ============================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bootstrap 5 Tree Shaking Concepts - Eliminating unused CSS and JavaScript">
+    <meta name="author" content="Bootstrap Course">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- ============================================ -->
+    <!-- TITLE                                        -->
+    <!-- ============================================ -->
+    <title>01_01_07 - Tree Shaking</title>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 CSS CDN                          -->
+    <!-- ============================================ -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aV76Ug"
+        crossorigin="anonymous"
+    >
+
+    <!-- Bootstrap Icons CDN -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <!-- ============================================ -->
+    <!-- CUSTOM STYLES                                -->
+    <!-- ============================================ -->
+    <style>
+        /*
+            Tree visualization styling.
+            Shows code dependencies as a tree structure.
+        */
+        .tree-node {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            margin: 0.25rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .tree-node--used { background-color: #d1e7dd; color: #0f5132; border: 2px solid #198754; }
+        .tree-node--unused { background-color: #f8d7da; color: #842029; border: 2px dashed #dc3545; opacity: 0.7; }
+        .tree-node--root { background-color: #0d6efd; color: white; border: 2px solid #0a58ca; }
+
+        /*
+            Terminal styling.
+        */
+        .ts-terminal {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        .ts-terminal .green { color: #6a9955; }
+        .ts-terminal .yellow { color: #dcdcaa; }
+        .ts-terminal .blue { color: #569cd6; }
+        .ts-terminal .red { color: #f44747; }
+        .ts-terminal .orange { color: #ce9178; }
+
+        /*
+            Shake animation for tree-shaking visual effect.
+        */
+        @keyframes shake-off {
+            0% { transform: translateX(0); opacity: 1; }
+            50% { transform: translateX(10px); opacity: 0.5; }
+            100% { transform: translateX(20px); opacity: 0; }
+        }
+        .shaking {
+            animation: shake-off 1s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================ -->
+    <!-- NAVIGATION BAR                               -->
+    <!-- ============================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-tree me-2"></i>Tree Shaking
+            </a>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#concept">Concept</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#css">CSS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#js">JavaScript</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tools">Tools</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================ -->
+    <!-- HERO SECTION                                 -->
+    <!-- ============================================ -->
+    <header class="bg-success text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Tree Shaking</h1>
+            <p class="lead mb-0">
+                Eliminating unused code from your bundle. Tree shaking removes dead code
+                to reduce file sizes and improve load performance.
+            </p>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT                                 -->
+    <!-- ============================================ -->
+    <main class="container py-5">
+
+        <!-- ============================================ -->
+        <!-- CONCEPT SECTION                              -->
+        <!-- ============================================ -->
+        <!--
+            Tree shaking is a dead code elimination technique.
+            It analyzes your code's dependency graph and removes anything
+            that is never imported or used.
+        -->
+        <section class="mb-5" id="concept">
+            <h2 class="mb-4">
+                <i class="bi bi-question-circle me-2"></i>What Is Tree Shaking?
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">The Concept</h5>
+                            <p class="card-text">
+                                Tree shaking is a term for dead code elimination in JavaScript and CSS.
+                                Imagine your codebase as a tree. The live (used) code are the leaves
+                                that get "shaken off" the tree, leaving only what you need.
+                            </p>
+
+                            <!--
+                                Visual tree diagram showing used vs unused code.
+                            -->
+                            <h6 class="mt-4">Dependency Tree Visualization</h6>
+                            <div class="bg-light p-3 rounded">
+                                <div class="text-center mb-2">
+                                    <span class="tree-node tree-node--root">bootstrap</span>
+                                </div>
+                                <div class="d-flex justify-content-center flex-wrap mb-2">
+                                    <span class="tree-node tree-node--used">buttons</span>
+                                    <span class="tree-node tree-node--used">forms</span>
+                                    <span class="tree-node tree-node--used">grid</span>
+                                    <span class="tree-node tree-node--unused">carousel</span>
+                                    <span class="tree-node tree-node--unused">modal</span>
+                                    <span class="tree-node tree-node--unused">popover</span>
+                                </div>
+                                <div class="text-center small text-muted">
+                                    <i class="bi bi-check-circle text-success me-1"></i> Used
+                                    = included in bundle
+                                    <span class="mx-3">|</span>
+                                    <i class="bi bi-x-circle text-danger me-1"></i> Unused
+                                    = removed by tree shaking
+                                </div>
+                            </div>
+
+                            <div class="alert alert-success mt-4 mb-0">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                <strong>Key requirement:</strong> Tree shaking works best with ES modules
+                                (<code>import/export</code>). CommonJS (<code>require/module.exports</code>)
+                                is harder to tree-shake because of its dynamic nature.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!--
+                        Benefits of tree shaking.
+                    -->
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-graph-down-arrow me-2"></i>Benefits
+                            </h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex">
+                                    <i class="bi bi-speedometer2 text-success me-3 fs-4"></i>
+                                    <div>
+                                        <strong>Faster Loading</strong>
+                                        <p class="mb-0 small text-muted">Smaller bundles download faster</p>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex">
+                                    <i class="bi bi-cpu text-primary me-3 fs-4"></i>
+                                    <div>
+                                        <strong>Less Parsing</strong>
+                                        <p class="mb-0 small text-muted">Browser processes less CSS/JS</p>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex">
+                                    <i class="bi bi-memory text-warning me-3 fs-4"></i>
+                                    <div>
+                                        <strong>Lower Memory</strong>
+                                        <p class="mb-0 small text-muted">Less code in browser memory</p>
+                                    </div>
+                                </li>
+                                <li class="list-group-item d-flex">
+                                    <i class="bi bi-shield-check text-info me-3 fs-4"></i>
+                                    <div>
+                                        <strong>Smaller Attack Surface</strong>
+                                        <p class="mb-0 small text-muted">Less code = fewer vulnerabilities</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- CSS TREE SHAKING SECTION                     -->
+        <!-- ============================================ -->
+        <!--
+            CSS tree shaking is primarily done through SASS selective imports
+            and PurgeCSS/UnCSS tools that scan HTML for used classes.
+        -->
+        <section class="mb-5" id="css">
+            <h2 class="mb-4">
+                <i class="bi bi-filetype-css me-2"></i>CSS Tree Shaking
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Method 1: Selective SASS Imports</h5>
+                            <p class="card-text text-muted">
+                                Only import the SASS partials you actually use. This is the
+                                simplest form of CSS tree shaking.
+                            </p>
+                            <div class="ts-terminal small">
+                                <div><span class="green">// Only import what you need</span></div>
+                                <div><span class="blue">@import</span> <span class="orange">"bootstrap/scss/functions"</span>;</div>
+                                <div><span class="blue">@import</span> <span class="orange">"bootstrap/scss/variables"</span>;</div>
+                                <div><span class="blue">@import</span> <span class="orange">"bootstrap/scss/mixins"</span>;</div>
+                                <div><span class="blue">@import</span> <span class="orange">"bootstrap/scss/reboot"</span>;</div>
+                                <div><span class="blue">@import</span> <span class="orange">"bootstrap/scss/grid"</span>;</div>
+                                <div><span class="blue">@import</span> <span class="orange">"bootstrap/scss/buttons"</span>;</div>
+                                <div class="mt-1"><span class="green">// Everything else is excluded</span></div>
+                                <div><span class="red">// No: modals, carousels, tooltips...</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Method 2: PurgeCSS</h5>
+                            <p class="card-text text-muted">
+                                PurgeCSS scans your HTML/JS files and removes CSS rules
+                                whose selectors are never used in your markup.
+                            </p>
+                            <div class="ts-terminal small">
+                                <div><span class="green">// postcss.config.js</span></div>
+                                <div>module.exports = {</div>
+                                <div>&nbsp;&nbsp;plugins: [</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;require(<span class="orange">'@fullhuman/postcss-purgecss'</span>)({</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content: [</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="orange">'./**/*.html'</span>,</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="orange">'./js/**/*.js'</span></div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;],</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;safelist: {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;standard: [/^modal/, /^tooltip/]</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;})</div>
+                                <div>&nbsp;&nbsp;]</div>
+                                <div>}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--
+                    CSS tree shaking results comparison.
+                -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">CSS Tree Shaking Results</h5>
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-light rounded">
+                                        <div class="display-6 text-danger fw-bold">277 KB</div>
+                                        <p class="text-muted mb-0 small">Full Bootstrap CSS</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-light rounded">
+                                        <div class="display-6 text-warning fw-bold">~50 KB</div>
+                                        <p class="text-muted mb-0 small">Selective Imports</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-light rounded">
+                                        <div class="display-6 text-success fw-bold">~15 KB</div>
+                                        <p class="text-muted mb-0 small">PurgeCSS + Selective</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- JAVASCRIPT TREE SHAKING SECTION              -->
+        <!-- ============================================ -->
+        <!--
+            JavaScript tree shaking uses ES module syntax and bundler analysis
+            to eliminate unused JavaScript code from the final bundle.
+        -->
+        <section class="mb-5" id="js">
+            <h2 class="mb-4">
+                <i class="bi bi-filetype-js me-2"></i>JavaScript Tree Shaking
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">ES Module Imports</h5>
+                            <p class="card-text text-muted">
+                                Bootstrap 5 provides ES module builds that enable tree shaking.
+                                Import only the components you need.
+                            </p>
+                            <div class="ts-terminal small">
+                                <div><span class="green">// Import only what you use</span></div>
+                                <div><span class="blue">import</span> { Tooltip } <span class="blue">from</span> <span class="orange">'bootstrap'</span>;</div>
+                                <div class="mt-1"><span class="green">// This is tree-shakeable</span></div>
+                                <div><span class="green">// Bundler sees only Tooltip is imported</span></div>
+                                <div><span class="green">// Modal, Carousel, etc. are excluded</span></div>
+                            </div>
+                            <div class="alert alert-warning mt-3 mb-0 small">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Do NOT import the full bundle if you want tree shaking:
+                                <br><code class="text-danger">import 'bootstrap'; // imports everything!</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Bundle Comparison</h5>
+                            <p class="card-text text-muted small">
+                                JavaScript bundle sizes with different import strategies:
+                            </p>
+                            <table class="table table-sm small">
+                                <thead>
+                                    <tr>
+                                        <th>Import Style</th>
+                                        <th>Size</th>
+                                        <th>Tree-Shakeable</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>import 'bootstrap'</code></td>
+                                        <td class="text-danger">~60 KB</td>
+                                        <td><i class="bi bi-x-circle text-danger"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>import 'bootstrap.bundle'</code></td>
+                                        <td class="text-danger">~78 KB</td>
+                                        <td><i class="bi bi-x-circle text-danger"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>import { Modal }</code></td>
+                                        <td class="text-success">~12 KB</td>
+                                        <td><i class="bi bi-check-circle text-success"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>import { Tooltip }</code></td>
+                                        <td class="text-success">~8 KB</td>
+                                        <td><i class="bi bi-check-circle text-success"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>import { Dropdown }</code></td>
+                                        <td class="text-success">~10 KB</td>
+                                        <td><i class="bi bi-check-circle text-success"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- TOOLS SECTION                                -->
+        <!-- ============================================ -->
+        <!--
+            Tools that help with tree shaking in different contexts.
+        -->
+        <section id="tools">
+            <h2 class="mb-4">
+                <i class="bi bi-wrench me-2"></i>Tree Shaking Tools
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-box me-2"></i>Webpack
+                            </h5>
+                            <p class="card-text small">
+                                Uses <code>sideEffects</code> in package.json to identify
+                                safe-to-remove modules. Set <code>mode: 'production'</code>
+                                to enable tree shaking.
+                            </p>
+                            <div class="ts-terminal small">
+                                <div><span class="green">// webpack.config.js</span></div>
+                                <div>module.exports = {</div>
+                                <div>&nbsp;&nbsp;mode: <span class="orange">'production'</span>,</div>
+                                <div>&nbsp;&nbsp;optimization: {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;usedExports: <span class="blue">true</span></div>
+                                <div>&nbsp;&nbsp;}</div>
+                                <div>}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-lightning me-2"></i>Vite
+                            </h5>
+                            <p class="card-text small">
+                                Built-in tree shaking via Rollup. Just use ES module imports
+                                and Vite handles the rest automatically.
+                            </p>
+                            <div class="ts-terminal small">
+                                <div><span class="green">// vite.config.js</span></div>
+                                <div><span class="blue">import</span> { defineConfig }</div>
+                                <div><span class="blue">from</span> <span class="orange">'vite'</span>;</div>
+                                <div class="mt-1">export default defineConfig({</div>
+                                <div>&nbsp;&nbsp;<span class="green">// Tree shaking is</span></div>
+                                <div>&nbsp;&nbsp;<span class="green">// enabled by default</span></div>
+                                <div>&nbsp;&nbsp;build: {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;minify: <span class="orange">'terser'</span></div>
+                                <div>&nbsp;&nbsp;}</div>
+                                <div>});</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-search me-2"></i>PurgeCSS
+                            </h5>
+                            <p class="card-text small">
+                                Specifically for CSS. Scans your content files and
+                                removes unused CSS selectors. Can reduce Bootstrap
+                                CSS by 70-90%.
+                            </p>
+                            <div class="ts-terminal small">
+                                <div><span class="green"># CLI usage</span></div>
+                                <div>purgecss \</div>
+                                <div>&nbsp;&nbsp;--css bootstrap.css \</div>
+                                <div>&nbsp;&nbsp;--content **/*.html \</div>
+                                <div>&nbsp;&nbsp;--output dist/css/</div>
+                                <div class="mt-1"><span class="green"># npm package</span></div>
+                                <div>npm install \</div>
+                                <div>&nbsp;&nbsp;@fullhuman/postcss-purgecss</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================ -->
+    <!-- FOOTER                                       -->
+    <!-- ============================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Tree Shaking</h5>
+                    <p class="text-muted mb-0">
+                        Eliminating unused CSS and JavaScript from Bootstrap bundles for optimal performance.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-github"></i></a>
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <p class="text-center text-muted mb-0">
+                &copy; 2024 Bootstrap Course. Built with Bootstrap 5.3.3
+            </p>
+        </div>
+    </footer>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 JAVASCRIPT BUNDLE CDN            -->
+    <!-- ============================================ -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- ============================================ -->
+    <!-- CUSTOM JAVASCRIPT                            -->
+    <!-- ============================================ -->
+    <script>
+        console.log('Bootstrap version:', bootstrap.Tooltip.VERSION || '5.3.3');
+
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(
+            tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl)
+        );
+    </script>
+</body>
+</html>

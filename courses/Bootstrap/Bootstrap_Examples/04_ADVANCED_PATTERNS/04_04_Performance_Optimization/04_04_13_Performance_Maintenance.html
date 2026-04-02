@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_13_Performance_Maintenance.html
+     Topic: Performance Maintenance and Regression Prevention
+     
+     Covers ongoing performance maintenance: monitoring dashboards,
+     regression alerts, performance budgets in CI, and team workflows.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Performance Maintenance - Bootstrap 5</title>
+
+    <style>
+        .hero-maint { background: linear-gradient(135deg, #20c997 0%, #0dcaf0 100%); color: #212529; padding: 4rem 0; }
+        .code-dark { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.82rem; overflow-x: auto; }
+        .checklist-item { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .check-icon { color: #198754; font-weight: bold; min-width: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Maintenance</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#regression">Regression</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#audit">Audit</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#team">Team</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-maint text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Performance Maintenance</h1>
+            <p class="lead mt-2">Prevent regressions and maintain fast load times over time.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: REGRESSION PREVENTION
+         ============================================================ -->
+    <section id="regression" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Regression Prevention</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-danger text-white"><h5 class="mb-0">Common Regressions</h5></div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <strong>New dependency added</strong><br>
+                                    <small class="text-muted">A library adds 200KB to the bundle unnoticed.</small>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Image optimization removed</strong><br>
+                                    <small class="text-muted">Content team uploads 5MB uncompressed images.</small>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>CSS purge config broken</strong><br>
+                                    <small class="text-muted">Build change disables PurgeCSS silently.</small>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Third-party script bloat</strong><br>
+                                    <small class="text-muted">Marketing adds 5 tracking scripts.</small>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Cache headers removed</strong><br>
+                                    <small class="text-muted">Server config change loses long cache TTL.</small>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white"><h5 class="mb-0">Prevention Strategies</h5></div>
+                        <div class="card-body">
+                            <div class="code-dark">
+// .github/workflows/perf-guard.yml<br>
+name: Performance Guard<br>
+on: [pull_request]<br>
+jobs:<br>
+&nbsp;&nbsp;perf-check:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;runs-on: ubuntu-latest<br>
+&nbsp;&nbsp;&nbsp;&nbsp;steps:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- uses: actions/checkout@v4<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- run: npm ci && npm run build<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- uses: treosh/lighthouse-ci-action<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;budgetPath: ./budget.json<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;uploadArtifacts: true<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- uses: andresz1/size-limit-action<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;with:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;github_token: ${{ secrets.GITHUB_TOKEN }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: PERIODIC AUDIT CHECKLIST
+         ============================================================ -->
+    <section id="audit" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Monthly Performance Audit Checklist</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Frontend Audit</h5>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Run Lighthouse on all key pages</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Review bundle size changes (last 30 days)</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Check for unused Bootstrap components</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Audit third-party scripts and their impact</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Verify lazy loading is working correctly</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Check image optimization compliance</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Infrastructure Audit</h5>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Verify CDN cache hit rates</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Check Gzip/Brotli compression enabled</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Review HTTP/2 or HTTP/3 status</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Verify cache headers on static assets</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Check TLS certificate and HSTS</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">&#10003;</span>
+                                <span>Review server response times (TTFB)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: TEAM WORKFLOW
+         ============================================================ -->
+    <section id="team" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Performance Team Workflow</h2>
+
+            <div class="accordion" id="workflowAccordion">
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#wf1" aria-expanded="true" aria-controls="wf1">
+                            1. Before Development
+                        </button>
+                    </h3>
+                    <div id="wf1" class="accordion-collapse collapse show" data-bs-parent="#workflowAccordion">
+                        <div class="accordion-body">
+                            <ul>
+                                <li>Review performance budgets before adding new features</li>
+                                <li>Estimate bundle impact of new dependencies</li>
+                                <li>Check if existing utilities can replace new library needs</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#wf2" aria-expanded="false" aria-controls="wf2">
+                            2. During Development
+                        </button>
+                    </h3>
+                    <div id="wf2" class="accordion-collapse collapse" data-bs-parent="#workflowAccordion">
+                        <div class="accordion-body">
+                            <ul>
+                                <li>Use <code>npm run build -- --analyze</code> to check bundle composition</li>
+                                <li>Test on throttled network (Chrome DevTools: Slow 3G)</li>
+                                <li>Verify images have proper width/height and lazy loading</li>
+                                <li>Use Bootstrap utilities instead of custom CSS when possible</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#wf3" aria-expanded="false" aria-controls="wf3">
+                            3. Code Review
+                        </button>
+                    </h3>
+                    <div id="wf3" class="accordion-collapse collapse" data-bs-parent="#workflowAccordion">
+                        <div class="accordion-body">
+                            <ul>
+                                <li>CI automatically runs Lighthouse and bundle size checks</li>
+                                <li>Reviewer checks for unnecessary new dependencies</li>
+                                <li>Verify no inline styles that could use Bootstrap utilities</li>
+                                <li>Confirm images have lazy loading and proper sizing</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#wf4" aria-expanded="false" aria-controls="wf4">
+                            4. Post-Deployment
+                        </button>
+                    </h3>
+                    <div id="wf4" class="accordion-collapse collapse" data-bs-parent="#workflowAccordion">
+                        <div class="accordion-body">
+                            <ul>
+                                <li>Monitor RUM dashboards for 24-48 hours after deploy</li>
+                                <li>Set alerts for Web Vitals regression (>10% degradation)</li>
+                                <li>Document any performance changes in release notes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Performance Maintenance &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+</body>
+</html>

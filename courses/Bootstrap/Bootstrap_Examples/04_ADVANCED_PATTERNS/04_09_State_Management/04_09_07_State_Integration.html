@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<!-- ====================================================================
+     04_09_07_State_Integration.html
+     State Integration with Frameworks
+     
+     Covers:
+     - Bridging Bootstrap state with React-like patterns
+     - Vue-style reactive state with Proxy
+     - Angular-style change detection
+     - Custom state stores (Redux-like)
+     - Framework-agnostic state adapters
+     ==================================================================== -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Integration with Frameworks - Bootstrap 5</title>
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Framework badge colors */
+        .fw-react { background: #61dafb; color: #000; }
+        .fw-vue { background: #42b883; color: #fff; }
+        .fw-angular { background: #dd0031; color: #fff; }
+        .fw-redux { background: #764abc; color: #fff; }
+        /* State diff styling */
+        .state-diff { font-family: monospace; font-size: 0.8rem; }
+        .state-diff .added { color: #28a745; }
+        .state-diff .removed { color: #dc3545; text-decoration: line-through; }
+        .state-diff .changed { color: #ffc107; }
+        /* Reactive binding indicator */
+        .bound-element { transition: all 0.3s ease; }
+        .bound-element.highlight { background-color: #fff3cd !important; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container my-5">
+
+        <!-- Page header -->
+        <div class="mb-4">
+            <h1 class="display-6">State Integration with Frameworks</h1>
+            <p class="text-muted lead">
+                Bridging Bootstrap component state with React, Vue, Angular patterns,
+                and building framework-agnostic state stores.
+            </p>
+        </div>
+
+        <!-- ==============================================================
+             SECTION 1: REACT-LIKE STATE (useState pattern)
+             Implements React's useState hook pattern in vanilla JS.
+             Each state value triggers a re-render of dependent UI.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                <span class="badge fw-react me-2">React</span>
+                useState Pattern
+            </h2>
+            <p class="text-muted">
+                Simulates React's <code>useState</code> hook. State changes trigger re-renders
+                of components that depend on that state.
+            </p>
+
+            <!-- React-like component using useState pattern -->
+            <div class="card" id="reactLikeCard">
+                <div class="card-body">
+                    <h5 class="card-title">React-like Counter</h5>
+                    <p class="card-text">
+                        Uses a <code>useState</code>-like function to manage count and name state.
+                        Changing state triggers a re-render of the component.
+                    </p>
+                    <!-- Display area that re-renders on state change -->
+                    <div class="border rounded p-3 mb-3 bg-light" id="reactRenderArea">
+                        <!-- Rendered by reactLikeRender() -->
+                    </div>
+                    <!-- State inspector -->
+                    <details>
+                        <summary class="text-muted small">Inspect State</summary>
+                        <pre class="bg-dark text-light p-2 rounded small mt-2" id="reactStateInspector">[]</pre>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 2: VUE-LIKE REACTIVE STATE (Proxy-based)
+             Implements Vue 3's reactivity system using JavaScript Proxy.
+             Any property access or mutation is automatically tracked.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                <span class="badge fw-vue me-2">Vue</span>
+                Reactive State (Proxy)
+            </h2>
+            <p class="text-muted">
+                Vue 3-style reactivity using <code>Proxy</code>. Property access is tracked
+                for dependencies; mutations trigger updates automatically.
+            </p>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Reactive Form</h5>
+                    <p class="card-text">
+                        All inputs are bound to a reactive proxy object. Changing any property
+                        automatically updates every element that reads it.
+                    </p>
+                    <!-- Form inputs bound to reactive state -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="vueFirstName"
+                                   oninput="vueState.firstName = this.value">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="vueLastName"
+                                   oninput="vueState.lastName = this.value">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Age</label>
+                            <input type="number" class="form-control" id="vueAge"
+                                   oninput="vueState.age = parseInt(this.value)||0">
+                        </div>
+                    </div>
+
+                    <!-- Reactive display that updates automatically -->
+                    <div class="alert alert-light border" id="vueReactiveDisplay">
+                        <!-- Populated by reactive render -->
+                    </div>
+
+                    <!-- Computed-style derived state -->
+                    <div class="alert alert-info" id="vueComputedDisplay">
+                        <!-- Computed full name and category -->
+                    </div>
+
+                    <!-- Vue state inspector -->
+                    <details>
+                        <summary class="text-muted small">Inspect Reactive State</summary>
+                        <pre class="bg-dark text-light p-2 rounded small mt-2" id="vueStateInspector">{}</pre>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 3: ANGULAR-LIKE CHANGE DETECTION
+             Implements Angular's zone-based change detection pattern.
+             Changes are batched and applied on the next "tick".
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                <span class="badge fw-angular me-2">Angular</span>
+                Change Detection
+            </h2>
+            <p class="text-muted">
+                Angular-style change detection: state changes are batched and applied
+                on the next microtask tick, reducing unnecessary re-renders.
+            </p>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Batched Change Detection</h5>
+                    <p class="card-text">
+                        Multiple state changes within the same tick are batched into a single render cycle.
+                    </p>
+                    <!-- Display showing change detection stats -->
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <small class="text-muted">State Changes</small>
+                                <div class="h4 mb-0" id="angularChanges">0</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <small class="text-muted">Render Cycles</small>
+                                <div class="h4 mb-0" id="angularRenders">0</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <small class="text-muted">Efficiency</small>
+                                <div class="h4 mb-0" id="angularEfficiency">100%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Batch update controls -->
+                    <div class="d-flex gap-2 mb-3">
+                        <button class="btn btn-outline-primary btn-sm" onclick="angularBatchUpdate()">
+                            Batch 10 Changes
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm" onclick="angularIndividualUpdates()">
+                            10 Individual Updates
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="angularReset()">
+                            Reset
+                        </button>
+                    </div>
+
+                    <!-- Angular state display -->
+                    <pre class="bg-dark text-light p-2 rounded small" id="angularStateDisplay" style="max-height:150px;overflow-y:auto;"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 4: REDUX-LIKE STATE STORE
+             Implements a Redux-inspired unidirectional data flow store
+             with actions, reducers, middleware, and selectors.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                <span class="badge fw-redux me-2">Redux</span>
+                State Store
+            </h2>
+            <p class="text-muted">
+                Redux-like unidirectional data flow: actions -> reducer -> store -> view.
+                Supports middleware for logging and validation.
+            </p>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Todo Store</h5>
+                    <p class="card-text">
+                        A complete Redux-like store managing a todo list with actions, reducers,
+                        and selectors.
+                    </p>
+
+                    <!-- Todo input -->
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="todoInput" placeholder="Add a todo..."
+                               onkeydown="if(event.key==='Enter') addTodo()">
+                        <button class="btn btn-primary" onclick="addTodo()">Add</button>
+                    </div>
+
+                    <!-- Filter buttons -->
+                    <div class="btn-group btn-group-sm mb-3" role="group">
+                        <button class="btn btn-outline-secondary active" id="filterAll" onclick="setFilter('ALL')">All</button>
+                        <button class="btn btn-outline-secondary" id="filterActive" onclick="setFilter('ACTIVE')">Active</button>
+                        <button class="btn btn-outline-secondary" id="filterCompleted" onclick="setFilter('COMPLETED')">Completed</button>
+                    </div>
+
+                    <!-- Todo list rendered from store state -->
+                    <ul class="list-group mb-3" id="todoList">
+                        <li class="list-group-item text-muted">No todos yet</li>
+                    </ul>
+
+                    <!-- Store stats -->
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Total: <span id="todoTotal">0</span></span>
+                        <span>Active: <span id="todoActive">0</span></span>
+                        <span>Completed: <span id="todoCompleted">0</span></span>
+                    </div>
+
+                    <!-- Store state inspector -->
+                    <details class="mt-3">
+                        <summary class="text-muted small">Inspect Store State</summary>
+                        <pre class="bg-dark text-light p-2 rounded small mt-2" id="reduxStateInspector">{}</pre>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 5: FRAMEWORK-AGNOSTIC STATE ADAPTER
+             A state adapter that can bridge any framework's state system
+             with Bootstrap component state. Demonstrates the adapter pattern.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Framework-Agnostic State Adapter</h2>
+            <p class="text-muted">
+                A universal state adapter that can bridge any framework's state system
+                with Bootstrap components. Use the dropdown to simulate different frameworks.
+            </p>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">State Adapter Demo</h5>
+
+                    <!-- Framework selector -->
+                    <div class="mb-3">
+                        <label class="form-label">Simulate Framework</label>
+                        <select class="form-select" id="adapterFramework" onchange="adapterSwitchFramework()">
+                            <option value="vanilla">Vanilla JS</option>
+                            <option value="react">React-like</option>
+                            <option value="vue">Vue-like</option>
+                            <option value="angular">Angular-like</option>
+                        </select>
+                    </div>
+
+                    <!-- Adapter-controlled component -->
+                    <div class="border rounded p-3 mb-3" id="adapterComponent">
+                        <h6>Adapter-Controlled Component</h6>
+                        <div class="d-flex gap-2 align-items-center">
+                            <button class="btn btn-sm btn-outline-primary" onclick="adapterState.count++">+1</button>
+                            <span class="badge bg-primary fs-5" id="adapterCount">0</span>
+                            <button class="btn btn-sm btn-outline-primary" onclick="adapterState.count--">-1</button>
+                        </div>
+                        <div class="mt-2" id="adapterMessage" style="font-size:0.85rem;"></div>
+                    </div>
+
+                    <!-- Adapter log -->
+                    <div class="bg-dark text-light p-2 rounded small" id="adapterLog" style="max-height:150px;overflow-y:auto;font-family:monospace;"></div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ==================================================================
+           SECTION 1: REACT-LIKE useState PATTERN
+           ================================================================== */
+
+        /**
+         * createUseState - Creates a React-like useState system.
+         * Returns a useState function and a render trigger.
+         * Each useState call registers a state value that, when set,
+         * schedules a re-render of the component.
+         */
+        const reactStates = [];       // Array of { value, setValue } pairs
+        let reactRenderPending = false; // Flag to batch renders
+
+        /**
+         * useState - React-like hook that returns [value, setter].
+         * @param {*} initialValue - The initial state value
+         * @returns {Array} [currentValue, setterFunction]
+         */
+        function useState(initialValue) {
+            const index = reactStates.length;
+            // Initialize state if not already done
+            if (reactStates.length === index) {
+                reactStates.push({ value: initialValue });
+            }
+            // Setter function that updates state and schedules render
+            const setValue = (newValue) => {
+                reactStates[index].value = newValue;
+                // Schedule a re-render (batched to next microtask)
+                if (!reactRenderPending) {
+                    reactRenderPending = true;
+                    queueMicrotask(() => {
+                        reactRenderPending = false;
+                        reactLikeRender();
+                    });
+                }
+            };
+            return [reactStates[index].value, setValue];
+        }
+
+        // Clear states on reload
+        reactStates.length = 0;
+
+        /**
+         * reactLikeRender - The "component render" function.
+         * Calls useState to get state values and builds the UI.
+         */
+        function reactLikeRender() {
+            // Clear and re-declare states (simulating React's render cycle)
+            reactStates.length = 0;
+
+            const [count, setCount] = useState(0);
+            const [name, setName] = useState('World');
+            const [multiplier, setMultiplier] = useState(1);
+
+            // Build the render output
+            const area = document.getElementById('reactRenderArea');
+            area.innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Count (${count})</label>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-primary" onclick="reactSetCount(${count + multiplier})">+${multiplier}</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="reactSetCount(${count - multiplier})">-${multiplier}</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="reactSetCount(0)">Reset</button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control form-control-sm" value="${name}"
+                               oninput="reactSetName(this.value)">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Multiplier</label>
+                        <select class="form-select form-select-sm" onchange="reactSetMultiplier(parseInt(this.value))">
+                            <option value="1" ${multiplier===1?'selected':''}>x1</option>
+                            <option value="5" ${multiplier===5?'selected':''}>x5</option>
+                            <option value="10" ${multiplier===10?'selected':''}>x10</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-3 alert alert-success mb-0">
+                    Hello, <strong>${name}</strong>! Count is <strong>${count}</strong>.
+                </div>
+            `;
+
+            // Update inspector
+            document.getElementById('reactStateInspector').textContent =
+                JSON.stringify(reactStates.map((s, i) => ({ index: i, value: s.value })), null, 2);
+        }
+
+        // Setter functions that re-trigger useState values
+        function reactSetCount(val) {
+            reactStates.length = 0;
+            const [, setCount] = useState(0);
+            const [, setName] = useState('World');
+            const [, setMultiplier] = useState(1);
+            setCount(val);
+        }
+        function reactSetName(val) {
+            reactStates.length = 0;
+            const [, setCount] = useState(0);
+            const [, setName] = useState('World');
+            const [, setMultiplier] = useState(1);
+            setName(val);
+        }
+        function reactSetMultiplier(val) {
+            reactStates.length = 0;
+            const [, setCount] = useState(0);
+            const [, setName] = useState('World');
+            const [, setMultiplier] = useState(1);
+            setMultiplier(val);
+        }
+
+        /* ==================================================================
+           SECTION 2: VUE-LIKE REACTIVE STATE (Proxy)
+           ================================================================== */
+
+        /** Set of render functions that depend on reactive state */
+        const vueSubscribers = new Set();
+
+        /**
+         * createReactive - Creates a Vue 3-style reactive proxy.
+         * Property access tracks dependencies; mutations trigger updates.
+         * @param {Object} target - The object to make reactive
+         * @returns {Proxy} A reactive proxy of the target
+         */
+        function createReactive(target) {
+            return new Proxy(target, {
+                /**
+                 * get trap - Intercepts property access for dependency tracking.
+                 */
+                get(obj, prop) {
+                    return obj[prop];
+                },
+                /**
+                 * set trap - Intercepts property assignment and triggers re-render.
+                 */
+                set(obj, prop, value) {
+                    obj[prop] = value;
+                    // Notify all subscribers (re-render)
+                    vueSubscribers.forEach(fn => fn());
+                    return true;
+                }
+            });
+        }
+
+        /**
+         * watchEffect - Registers a function that re-runs when reactive state changes.
+         * @param {Function} fn - The effect function
+         */
+        function watchEffect(fn) {
+            vueSubscribers.add(fn);
+            fn(); // Run immediately
+        }
+
+        // Create reactive state object
+        const vueState = createReactive({
+            firstName: 'John',
+            lastName: 'Doe',
+            age: 25
+        });
+
+        // Watch effect: updates the reactive display
+        watchEffect(() => {
+            const display = document.getElementById('vueReactiveDisplay');
+            if (display) {
+                display.innerHTML = `
+                    <strong>Reactive Display:</strong>
+                    Name: ${vueState.firstName} ${vueState.lastName}, Age: ${vueState.age}
+                `;
+            }
+            // Sync input values
+            const fn = document.getElementById('vueFirstName');
+            const ln = document.getElementById('vueLastName');
+            const ag = document.getElementById('vueAge');
+            if (fn && fn !== document.activeElement) fn.value = vueState.firstName;
+            if (ln && ln !== document.activeElement) ln.value = vueState.lastName;
+            if (ag && ag !== document.activeElement) ag.value = vueState.age;
+
+            // Update computed display
+            const computed = document.getElementById('vueComputedDisplay');
+            if (computed) {
+                const fullName = `${vueState.firstName} ${vueState.lastName}`;
+                const category = vueState.age < 18 ? 'Minor' : vueState.age < 65 ? 'Adult' : 'Senior';
+                computed.innerHTML = `<strong>Computed:</strong> Full Name: ${fullName} | Category: ${category}`;
+            }
+
+            // Update inspector
+            const inspector = document.getElementById('vueStateInspector');
+            if (inspector) {
+                inspector.textContent = JSON.stringify({
+                    firstName: vueState.firstName,
+                    lastName: vueState.lastName,
+                    age: vueState.age
+                }, null, 2);
+            }
+        });
+
+        /* ==================================================================
+           SECTION 3: ANGULAR-LIKE CHANGE DETECTION
+           ================================================================== */
+
+        /** Angular-style state container */
+        const angularState = {
+            items: [],
+            selectedItem: null,
+            filter: 'all'
+        };
+
+        /** Counters for tracking efficiency */
+        let angularChangeCount = 0;
+        let angularRenderCount = 0;
+        let angularTickScheduled = false;
+
+        /**
+         * angularDetectChanges - Angular-style change detection that runs on the next tick.
+         * Multiple state changes within the same tick are batched into a single render.
+         */
+        function angularDetectChanges() {
+            angularRenderCount++;
+            const display = document.getElementById('angularStateDisplay');
+            display.textContent = JSON.stringify(angularState, null, 2);
+            document.getElementById('angularChanges').textContent = angularChangeCount;
+            document.getElementById('angularRenders').textContent = angularRenderCount;
+            const eff = angularChangeCount > 0
+                ? Math.round((angularRenderCount / angularChangeCount) * 100) + '%'
+                : '100%';
+            document.getElementById('angularEfficiency').textContent = eff;
+        }
+
+        /**
+         * angularScheduleTick - Schedules a change detection tick.
+         * If a tick is already scheduled, it batches additional changes.
+         */
+        function angularScheduleTick() {
+            angularChangeCount++;
+            if (!angularTickScheduled) {
+                angularTickScheduled = true;
+                queueMicrotask(() => {
+                    angularTickScheduled = false;
+                    angularDetectChanges();
+                });
+            }
+        }
+
+        /** Batch 10 state changes — all batched into one render */
+        function angularBatchUpdate() {
+            for (let i = 0; i < 10; i++) {
+                angularState.items.push({ id: Date.now() + i, value: Math.random().toFixed(2) });
+                angularScheduleTick(); // Each schedules a tick, but only one fires
+            }
+        }
+
+        /** 10 individual updates — each triggers its own render */
+        function angularIndividualUpdates() {
+            for (let i = 0; i < 10; i++) {
+                angularState.items.push({ id: Date.now() + i, value: Math.random().toFixed(2) });
+                angularChangeCount++;
+                angularDetectChanges(); // Immediate render each time
+            }
+        }
+
+        /** Resets the Angular demo state and counters */
+        function angularReset() {
+            angularState.items = [];
+            angularState.selectedItem = null;
+            angularChangeCount = 0;
+            angularRenderCount = 0;
+            angularDetectChanges();
+        }
+
+        /* ==================================================================
+           SECTION 4: REDUX-LIKE STATE STORE
+           ================================================================== */
+
+        /**
+         * createStore - Creates a Redux-like store with reducer, middleware, and selectors.
+         * @param {Function} reducer - The reducer function (state, action) => newState
+         * @param {Object} initialState - Initial state
+         * @param {Array} middleware - Array of middleware functions
+         */
+        function createStore(reducer, initialState, middleware = []) {
+            let state = { ...initialState };
+            const listeners = [];
+
+            const store = {
+                /** Returns the current state */
+                getState() { return { ...state }; },
+
+                /**
+                 * dispatch - Dispatches an action through middleware and reducer.
+                 * @param {Object} action - The action to dispatch
+                 */
+                dispatch(action) {
+                    // Run middleware pipeline
+                    let processedAction = action;
+                    for (const mw of middleware) {
+                        processedAction = mw(processedAction, state);
+                    }
+                    // Apply reducer
+                    state = reducer(state, processedAction);
+                    // Notify listeners
+                    listeners.forEach(fn => fn(state));
+                },
+
+                /**
+                 * subscribe - Registers a listener for state changes.
+                 * @param {Function} fn - Listener function
+                 * @returns {Function} Unsubscribe function
+                 */
+                subscribe(fn) {
+                    listeners.push(fn);
+                    return () => {
+                        const idx = listeners.indexOf(fn);
+                        if (idx > -1) listeners.splice(idx, 1);
+                    };
+                }
+            };
+            return store;
+        }
+
+        /** Logger middleware — logs every action */
+        const loggerMiddleware = (action, state) => {
+            console.log('[Redux Logger]', action.type, action.payload);
+            return action;
+        };
+
+        /** Todo reducer — handles all todo actions */
+        const todoReducer = (state, action) => {
+            switch (action.type) {
+                case 'ADD_TODO':
+                    return {
+                        ...state,
+                        todos: [...state.todos, {
+                            id: Date.now(),
+                            text: action.payload,
+                            completed: false
+                        }]
+                    };
+                case 'TOGGLE_TODO':
+                    return {
+                        ...state,
+                        todos: state.todos.map(t =>
+                            t.id === action.payload ? { ...t, completed: !t.completed } : t
+                        )
+                    };
+                case 'REMOVE_TODO':
+                    return {
+                        ...state,
+                        todos: state.todos.filter(t => t.id !== action.payload)
+                    };
+                case 'SET_FILTER':
+                    return { ...state, filter: action.payload };
+                default:
+                    return state;
+            }
+        };
+
+        // Create the todo store
+        const todoStore = createStore(
+            todoReducer,
+            { todos: [], filter: 'ALL' },
+            [loggerMiddleware]
+        );
+
+        // Subscribe to store changes and re-render the todo UI
+        todoStore.subscribe((state) => {
+            renderTodos(state);
+        });
+
+        /**
+         * renderTodos - Renders the todo list from store state.
+         * @param {Object} state - Current store state
+         */
+        function renderTodos(state) {
+            const list = document.getElementById('todoList');
+            // Apply filter
+            let filtered = state.todos;
+            if (state.filter === 'ACTIVE') filtered = filtered.filter(t => !t.completed);
+            if (state.filter === 'COMPLETED') filtered = filtered.filter(t => t.completed);
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<li class="list-group-item text-muted">No todos</li>';
+            } else {
+                list.innerHTML = filtered.map(t => `
+                    <li class="list-group-item d-flex justify-content-between align-items-center ${t.completed ? 'list-group-item-secondary' : ''}">
+                        <span style="cursor:pointer;text-decoration:${t.completed?'line-through':'none'}"
+                              onclick="todoStore.dispatch({type:'TOGGLE_TODO',payload:${t.id}})">
+                            ${t.text}
+                        </span>
+                        <button class="btn btn-sm btn-outline-danger" onclick="todoStore.dispatch({type:'REMOVE_TODO',payload:${t.id}})">&times;</button>
+                    </li>
+                `).join('');
+            }
+
+            // Update stats
+            document.getElementById('todoTotal').textContent = state.todos.length;
+            document.getElementById('todoActive').textContent = state.todos.filter(t => !t.completed).length;
+            document.getElementById('todoCompleted').textContent = state.todos.filter(t => t.completed).length;
+
+            // Update filter buttons
+            ['All', 'Active', 'Completed'].forEach(f => {
+                const btn = document.getElementById('filter' + f);
+                btn.classList.toggle('active', state.filter === f.toUpperCase());
+            });
+
+            // Update inspector
+            document.getElementById('reduxStateInspector').textContent = JSON.stringify(state, null, 2);
+        }
+
+        /** Adds a new todo to the store */
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            const text = input.value.trim();
+            if (text) {
+                todoStore.dispatch({ type: 'ADD_TODO', payload: text });
+                input.value = '';
+            }
+        }
+
+        /** Sets the current filter */
+        function setFilter(filter) {
+            todoStore.dispatch({ type: 'SET_FILTER', payload: filter });
+        }
+
+        /* ==================================================================
+           SECTION 5: FRAMEWORK-AGNOSTIC STATE ADAPTER
+           ================================================================== */
+
+        /** Adapter state — framework-agnostic state container */
+        const adapterState = { count: 0 };
+
+        /** Current framework simulation mode */
+        let adapterMode = 'vanilla';
+
+        /**
+         * adapterSwitchFramework - Switches the simulated framework mode.
+         * The same state is rendered differently based on the "framework" selected.
+         */
+        function adapterSwitchFramework() {
+            adapterMode = document.getElementById('adapterFramework').value;
+            adapterRender();
+            adapterLog('Switched to ' + adapterMode + ' mode');
+        }
+
+        /**
+         * adapterRender - Renders the adapter component based on current framework mode.
+         * Demonstrates that the same state can be bridged to different rendering strategies.
+         */
+        function adapterRender() {
+            const count = adapterState.count;
+            const badge = document.getElementById('adapterCount');
+            const msg = document.getElementById('adapterMessage');
+            badge.textContent = count;
+
+            // Different rendering strategies per "framework"
+            switch (adapterMode) {
+                case 'vanilla':
+                    msg.innerHTML = `<span class="text-muted">Direct DOM update. Count: ${count}</span>`;
+                    break;
+                case 'react':
+                    msg.innerHTML = `<span class="text-info">React-like: Virtual DOM diff applied. Count: ${count}</span>`;
+                    break;
+                case 'vue':
+                    msg.innerHTML = `<span class="text-success">Vue-like: Proxy trap triggered render. Count: ${count}</span>`;
+                    break;
+                case 'angular':
+                    msg.innerHTML = `<span class="text-danger">Angular-like: Change detection cycle. Count: ${count}</span>`;
+                    break;
+            }
+
+            // Highlight animation
+            badge.classList.add('highlight');
+            setTimeout(() => badge.classList.remove('highlight'), 300);
+        }
+
+        /** Logs a message to the adapter log */
+        function adapterLog(msg) {
+            const log = document.getElementById('adapterLog');
+            const line = document.createElement('div');
+            line.textContent = `[${new Date().toLocaleTimeString()}] [${adapterMode}] ${msg}`;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Proxy-wrapped adapter state to auto-render on changes
+        const adapterStateProxy = new Proxy(adapterState, {
+            set(target, prop, value) {
+                target[prop] = value;
+                adapterRender();
+                adapterLog(`State changed: ${prop} = ${value}`);
+                return true;
+            }
+        });
+
+        // Override the global adapterState with the proxy
+        // (Buttons use `adapterState.count++` which will trigger the proxy)
+        Object.defineProperty(window, 'adapterState', {
+            get() { return adapterStateProxy; },
+            set() {}
+        });
+
+        /* ==================================================================
+           INITIALIZATION
+           ================================================================== */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize React-like render
+            reactLikeRender();
+
+            // Initialize Vue reactive display (already done by watchEffect)
+
+            // Initialize Angular state
+            angularDetectChanges();
+
+            // Initialize Redux store render
+            renderTodos(todoStore.getState());
+
+            // Initialize adapter
+            adapterRender();
+        });
+    </script>
+</body>
+</html>

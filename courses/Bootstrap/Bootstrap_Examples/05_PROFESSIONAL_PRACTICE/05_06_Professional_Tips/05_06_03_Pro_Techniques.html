@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 05_06_03_Pro_Techniques.html                                  -->
+<!-- Advanced Techniques: CSS Custom Properties, Container         -->
+<!-- Queries, Cascade Layers                                       -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Techniques - CSS Custom Properties, Container Queries</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* ============================================================ */
+        <!-- TECHNIQUE 1: CSS CUSTOM PROPERTIES WITH BOOTSTRAP           -->
+        <!-- Bootstrap 5 uses CSS custom properties extensively.         -->
+        <!-- You can override them to retheme without Sass.              -->
+        /* ============================================================ */
+
+        /* Override Bootstrap's CSS custom properties for theming */
+        :root {
+            /* Bootstrap reads these for component colors */
+            --bs-primary: #6f42c1;
+            --bs-primary-rgb: 111, 66, 193;
+            /* Custom project variables */
+            --pt-shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
+            --pt-shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+            --pt-shadow-lg: 0 8px 24px rgba(0,0,0,0.16);
+            --pt-radius-lg: 1rem;
+            --pt-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Dark theme variant using custom properties */
+        [data-bs-theme="dark"] {
+            --pt-shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+            --pt-shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        /* ============================================================ */
+        <!-- TECHNIQUE 2: CASCADE LAYERS (@layer)                        -->
+        <!-- Organize CSS into layers to control cascade order.          -->
+        <!-- Bootstrap goes in one layer, your overrides in another.     -->
+        /* ============================================================ */
+        @layer bootstrap-overrides {
+            .pt-layered-card {
+                /* This will win over bootstrap layer regardless of order */
+                border-radius: var(--pt-radius-lg);
+                box-shadow: var(--pt-shadow-md);
+                transition: var(--pt-transition);
+            }
+            .pt-layered-card:hover {
+                box-shadow: var(--pt-shadow-lg);
+                transform: translateY(-2px);
+            }
+        }
+
+        /* ============================================================ */
+        <!-- TECHNIQUE 3: CONTAINER QUERIES                              -->
+        <!-- Style components based on their container size, not         -->
+        <!-- viewport. Perfect for reusable card components.             -->
+        /* ============================================================ */
+        .pt-query-container {
+            /* Establish a containment context for container queries */
+            container-type: inline-size;
+            container-name: card-container;
+        }
+
+        .pt-responsive-component {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        /* When the container is wider than 400px, go horizontal */
+        @container card-container (min-width: 400px) {
+            .pt-responsive-component {
+                flex-direction: row;
+                align-items: center;
+            }
+            .pt-responsive-component .pt-component-img {
+                max-width: 150px;
+            }
+        }
+
+        /* When the container is wider than 600px, show more info */
+        @container card-container (min-width: 600px) {
+            .pt-responsive-component {
+                padding: 2rem;
+                gap: 2rem;
+            }
+            .pt-responsive-component .pt-extra-info {
+                display: block !important;
+            }
+        }
+
+        /* ============================================================ -->
+        <!-- TECHNIQUE 4: MODERN CSS FEATURES WITH BOOTSTRAP             -->
+        /* ============================================================ */
+        .pt-glass-card {
+            /* Glassmorphism effect */
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--pt-radius-lg);
+        }
+
+        .pt-clamp-text {
+            /* Clamp text to 3 lines without JS */
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .pt-aspect-card {
+            /* Modern aspect-ratio instead of padding hack */
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+        }
+
+        /* ============================================================ -->
+        <!-- TECHNIQUE 5: :has() SELECTOR                                -->
+        /* ============================================================ */
+        /* Style parent based on child state */
+        .pt-has-checked:has(input:checked) {
+            border-color: var(--bs-primary);
+            background-color: rgba(111, 66, 193, 0.05);
+        }
+
+        .pt-grid-auto {
+            /* Auto-fill grid that works with Bootstrap's system */
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Pro Techniques</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMenu" aria-controls="navMenu"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#custom-props">Custom Properties</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#cascade-layers">Cascade Layers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#container-queries">Container Queries</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#modern-css">Modern CSS</a></li>
+                </ul>
+            </div>
+            <!-- Theme toggle button for dark mode demo -->
+            <button class="btn btn-outline-light ms-2" id="themeToggle" type="button">Toggle Theme</button>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="bg-dark text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold">&#128640; Pro Techniques</h1>
+            <p class="lead">CSS Custom Properties, Container Queries, Cascade Layers, and modern CSS with Bootstrap 5.</p>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- CSS CUSTOM PROPERTIES SECTION                                -->
+    <!-- Show how Bootstrap 5 leverages CSS custom properties         -->
+    <!-- ============================================================ -->
+    <section id="custom-props" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">1. CSS Custom Properties</h2>
+            <p class="text-muted mb-4">Bootstrap 5 is built on CSS custom properties. Override them to retheme without compiling Sass.</p>
+
+            <div class="row g-4">
+                <!-- Demo: Themed buttons using CSS vars -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Themed via CSS Variables</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>The primary color on this page is purple because we set <code>--bs-primary</code> in <code>:root</code>.</p>
+                            <button class="btn btn-primary mb-2">Primary Button</button>
+                            <button class="btn btn-outline-primary mb-2">Outline Primary</button>
+                            <span class="badge bg-primary">Primary Badge</span>
+                            <div class="alert alert-primary mt-3">
+                                This alert is also themed via <code>--bs-primary</code>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Demo: Custom property powered shadows -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Custom Shadow System</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="p-3 mb-3 rounded" style="box-shadow: var(--pt-shadow-sm);">
+                                <strong>Small Shadow</strong> - <code>--pt-shadow-sm</code>
+                            </div>
+                            <div class="p-3 mb-3 rounded" style="box-shadow: var(--pt-shadow-md);">
+                                <strong>Medium Shadow</strong> - <code>--pt-shadow-md</code>
+                            </div>
+                            <div class="p-3 rounded" style="box-shadow: var(--pt-shadow-lg);">
+                                <strong>Large Shadow</strong> - <code>--pt-shadow-lg</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CASCADE LAYERS SECTION                                       -->
+    <!-- @layer allows organizing CSS into priority groups             -->
+    <!-- ============================================================ -->
+    <section id="cascade-layers" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">2. Cascade Layers (@layer)</h2>
+            <p class="text-muted mb-4">Cascade layers let you control specificity order without <code>!important</code>.</p>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>How Cascade Layers Work</h5>
+                            <pre class="bg-dark text-success p-3 rounded"><code>/* Define layer order (later = higher priority) */
+@layer reset, bootstrap, overrides;
+
+@layer reset {
+    /* Low priority: base resets */
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+}
+
+@layer bootstrap {
+    /* Medium: Bootstrap styles (from CDN) */
+}
+
+@layer overrides {
+    /* High priority: your overrides */
+    .card {
+        border-radius: 1rem;
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card pt-layered-card">
+                        <div class="card-body">
+                            <h5>Layered Card Demo</h5>
+                            <p>This card uses styles from the <code>@layer overrides</code> block, which takes priority over Bootstrap's defaults without <code>!important</code>.</p>
+                            <p>Notice the rounded corners and shadow - defined in our override layer.</p>
+                            <button class="btn btn-primary">Layered Button</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CONTAINER QUERIES SECTION                                    -->
+    <!-- Components that adapt to their container, not viewport       -->
+    <!-- ============================================================ -->
+    <section id="container-queries" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">3. Container Queries</h2>
+            <p class="text-muted mb-4">Resize your browser to see the components below adapt based on their <em>container</em> width.</p>
+
+            <!-- Full-width container query demo -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5>Full Width Container (col-12)</h5>
+                    <div class="pt-query-container border rounded p-3">
+                        <div class="card pt-responsive-component">
+                            <img src="https://placehold.co/200x150/6f42c1/white?text=Image"
+                                 class="img-fluid rounded pt-component-img" alt="Component image">
+                            <div>
+                                <h5>Adaptive Component</h5>
+                                <p class="mb-2">This component changes layout based on container width, not viewport. At 400px+ container width, it goes horizontal.</p>
+                                <p class="pt-extra-info d-none text-muted">Extra info visible at 600px+ container width.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Narrow container query demo -->
+                <div class="col-md-4">
+                    <h5>Narrow (col-md-4)</h5>
+                    <div class="pt-query-container border rounded p-3">
+                        <div class="card pt-responsive-component">
+                            <img src="https://placehold.co/200x150/198754/white?text=Image"
+                                 class="img-fluid rounded pt-component-img" alt="Component image">
+                            <div>
+                                <h5>Card</h5>
+                                <p class="mb-0">In a narrow container, this stacks vertically.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Medium container query demo -->
+                <div class="col-md-8">
+                    <h5>Medium (col-md-8)</h5>
+                    <div class="pt-query-container border rounded p-3">
+                        <div class="card pt-responsive-component">
+                            <img src="https://placehold.co/200x150/ffc107/black?text=Image"
+                                 class="img-fluid rounded pt-component-img" alt="Component image">
+                            <div>
+                                <h5>Adaptive Card</h5>
+                                <p class="mb-0">In a wider container, this goes horizontal.</p>
+                                <p class="pt-extra-info d-none text-muted">Extra details shown at 600px+.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODERN CSS SECTION                                           -->
+    <!-- :has(), aspect-ratio, line-clamp, subgrid, etc.              -->
+    <!-- ============================================================ -->
+    <section id="modern-css" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">4. Modern CSS Features</h2>
+
+            <div class="row g-4">
+                <!-- :has() selector demo -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header"><h5 class="mb-0">:has() Selector</h5></div>
+                        <div class="card-body">
+                            <p>Select a parent element based on its children. Click the checkbox:</p>
+                            <div class="border rounded p-3 pt-has-checked transition">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="hasDemo">
+                                    <label class="form-check-label" for="hasDemo">
+                                        Check me - the parent card highlights!
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- line-clamp demo -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header"><h5 class="mb-0">Line Clamp (No JS)</h5></div>
+                        <div class="card-body">
+                            <p class="pt-clamp-text">
+                                This paragraph uses CSS line clamping to limit display to 3 lines.
+                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+                                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
+                                ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+                                aliquip ex ea commodo consequat. Duis aute irure dolor in
+                                reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+                                pariatur. This text continues but is clamped at 3 lines.
+                            </p>
+                            <small class="text-muted">Uses <code>-webkit-line-clamp: 3</code></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- aspect-ratio demo -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header"><h5 class="mb-0">Aspect Ratio</h5></div>
+                        <div class="card-body">
+                            <p>No more padding hacks! Use <code>aspect-ratio</code> directly:</p>
+                            <img src="https://placehold.co/600x338/0d6efd/white?text=16:9+Ratio"
+                                 class="img-fluid rounded pt-aspect-card w-100" alt="Aspect ratio demo">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CSS Grid auto-fill -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header"><h5 class="mb-0">Auto-Fill Grid</h5></div>
+                        <div class="card-body">
+                            <p>Combine CSS Grid with Bootstrap spacing:</p>
+                            <div class="pt-grid-auto">
+                                <div class="p-3 bg-primary text-white rounded text-center">Item 1</div>
+                                <div class="p-3 bg-success text-white rounded text-center">Item 2</div>
+                                <div class="p-3 bg-warning rounded text-center">Item 3</div>
+                                <div class="p-3 bg-danger text-white rounded text-center">Item 4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Pro Techniques. Professional Practice Series.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* Theme toggle to demonstrate CSS custom property theming */
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-bs-theme');
+            html.setAttribute('data-bs-theme', current === 'dark' ? 'light' : 'dark');
+        });
+    </script>
+</body>
+</html>

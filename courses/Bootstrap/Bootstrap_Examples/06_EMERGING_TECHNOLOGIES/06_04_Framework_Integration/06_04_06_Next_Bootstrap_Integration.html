@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_04_06: Next.js Bootstrap Integration                       -->
+<!-- Demonstrates Next.js Bootstrap patterns: SSR, SSG, App Router, -->
+<!-- server components, client components, and next/image          -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Next.js Bootstrap Integration</title>
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- ============================================================= -->
+    <!-- Next.js Bootstrap Integration Reference                       -->
+    <!-- Next.js supports SSR, SSG, ISR, and App Router architecture  -->
+    <!-- Bootstrap integrates via react-bootstrap or direct CDN/css   -->
+    <!-- ============================================================= -->
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-dark">Next.js + Bootstrap 5</h1>
+            <p class="lead text-muted">App Router, Server Components, SSR, and SSG</p>
+        </div>
+
+        <div class="alert alert-dark" role="alert">
+            <strong>Next.js Pattern:</strong> App Router uses file-based routing with <code>app/</code> directory. Server Components render on the client by default.
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Next.js App Router File Structure                            -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">App Router File Structure</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>app/
+├── layout.tsx          // Root layout (wraps all pages, imports Bootstrap CSS)
+├── page.tsx            // Homepage (Server Component by default)
+├── globals.css         // Global styles, @import Bootstrap
+├── loading.tsx         // Loading UI (Suspense fallback)
+├── error.tsx           // Error boundary
+├── not-found.tsx       // 404 page
+├── dashboard/
+│   ├── page.tsx        // /dashboard route
+│   ├── loading.tsx     // Dashboard loading state
+│   └── settings/
+│       └── page.tsx    // /dashboard/settings route
+├── components/
+│   ├── Navbar.tsx      // Client Component ("use client")
+│   ├── CardGrid.tsx    // Server Component (default)
+│   └── Modal.tsx       // Client Component
+└── api/
+    └── users/
+        └── route.ts    // API route handler</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Next.js Root Layout with Bootstrap                           -->
+        <!-- layout.tsx wraps all pages - ideal for importing global CSS  -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Root Layout (layout.tsx) - Bootstrap Import</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>// app/layout.tsx - Root layout wraps ALL pages
+// Bootstrap CSS imported once here, available everywhere
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Navbar } from '@/components/Navbar';
+
+export const metadata = {
+  title: 'My Next.js App',
+  description: 'Next.js with Bootstrap 5',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    &lt;html lang="en"&gt;
+      &lt;body&gt;
+        {/* Navbar is a client component for interactivity */}
+        &lt;Navbar /&gt;
+
+        {/* Bootstrap container for consistent layout */}
+        &lt;main className="container py-4"&gt;
+          {children}
+        &lt;/main&gt;
+
+        {/* Bootstrap footer */}
+        &lt;footer className="bg-dark text-white text-center py-3 mt-5"&gt;
+          &lt;p className="mb-0"&gt;&copy; 2024 Next.js Bootstrap App&lt;/p&gt;
+        &lt;/footer&gt;
+
+        {/* Bootstrap JS bundle for interactive components */}
+        &lt;Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" /&gt;
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Next.js Server Components                                    -->
+        <!-- Server Components render on the server, send HTML to client  -->
+        <!-- Can directly fetch data, access databases, file system       -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Server Components (Default in App Router)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>// app/dashboard/page.tsx - Server Component (no "use client" directive)
+// Can fetch data directly - no useEffect needed!
+
+async function getUsers() {
+  // Direct database or API call - runs on server
+  const res = await fetch('https://jsonplaceholder.typicode.com/users', {
+    // Next.js extended fetch with caching options
+    next: { revalidate: 60 } // ISR: revalidate every 60 seconds
+  });
+  return res.json();
+}
+
+export default async function DashboardPage() {
+  // Data fetched at request time (SSR) or build time (SSG)
+  const users = await getUsers();
+
+  return (
+    &lt;div&gt;
+      &lt;h1 className="mb-4"&gt;Dashboard&lt;/h1&gt;
+
+      {/* Bootstrap grid for user cards */}
+      &lt;div className="row"&gt;
+        {users.map((user: any) =&gt; (
+          &lt;div key={user.id} className="col-md-4 mb-3"&gt;
+            &lt;div className="card h-100 shadow-sm"&gt;
+              &lt;div className="card-body"&gt;
+                &lt;h5 className="card-title"&gt;{user.name}&lt;/h5&gt;
+                &lt;p className="card-text text-muted"&gt;
+                  {user.email}&lt;br /&gt;
+                  {user.company.name}
+                &lt;/p&gt;
+                &lt;button className="btn btn-primary btn-sm"&gt;View Profile&lt;/button&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+
+      {/* Server Component can import and render Client Components */}
+      &lt;AddUserButton /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Next.js Client Components                                    -->
+        <!-- "use client" directive enables interactivity (hooks, events) -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Client Components ("use client")</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>'use client';
+// components/Navbar.tsx - Client Component
+// Required for: useState, useEffect, event handlers, browser APIs
+
+import { useState } from 'react';
+import Link from 'next/link'; // Next.js client-side navigation
+
+export function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    &lt;nav className="navbar navbar-expand-lg navbar-dark bg-dark"&gt;
+      &lt;div className="container"&gt;
+        &lt;Link href="/" className="navbar-brand"&gt;
+          Next.js App
+        &lt;/Link&gt;
+
+        {/* Bootstrap responsive toggle */}
+        &lt;button
+          className="navbar-toggler"
+          type="button"
+          onClick={() =&gt; setIsOpen(!isOpen)}
+        &gt;
+          &lt;span className="navbar-toggler-icon"&gt;&lt;/span&gt;
+        &lt;/button&gt;
+
+        &lt;div className={`collapse navbar-collapse ${isOpen ? 'show' : ''}`}&gt;
+          &lt;ul className="navbar-nav me-auto"&gt;
+            &lt;li className="nav-item"&gt;
+              &lt;Link href="/" className="nav-link"&gt;Home&lt;/Link&gt;
+            &lt;/li&gt;
+            &lt;li className="nav-item"&gt;
+              &lt;Link href="/dashboard" className="nav-link"&gt;Dashboard&lt;/Link&gt;
+            &lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/nav&gt;
+  );
+}
+
+// components/AddUserButton.tsx - Client interactivity
+'use client';
+import { useState, useTransition } from 'react';
+
+export function AddUserButton() {
+  const [isPending, startTransition] = useTransition();
+
+  const handleAdd = () =&gt; {
+    startTransition(async () =&gt; {
+      // Server Action - calls server-side function
+      await addUser(formData);
+    });
+  };
+
+  return (
+    &lt;button
+      className="btn btn-success mt-3"
+      onClick={handleAdd}
+      disabled={isPending}
+    &gt;
+      {isPending ? (
+        &lt;&gt;&lt;span className="spinner-border spinner-border-sm me-2"&gt;&lt;/span&gt;Adding...&lt;/&gt;
+      ) : 'Add User'}
+    &lt;/button&gt;
+  );
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Next.js Data Fetching Patterns                               -->
+        <!-- SSR, SSG, ISR strategies with Bootstrap loading states       -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Data Fetching: SSR, SSG, ISR</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>// STATIC SITE GENERATION (SSG) - builds at build time
+// app/blog/page.tsx
+export default async function BlogPage() {
+  const posts = await fetch('https://api.example.com/posts').then(r =&gt; r.json());
+  // Default behavior: static generation with caching
+  return (
+    &lt;div className="row"&gt;
+      {posts.map(post =&gt; (
+        &lt;div key={post.id} className="col-md-6 mb-3"&gt;
+          &lt;div className="card"&gt;
+            &lt;div className="card-body"&gt;
+              &lt;h5&gt;{post.title}&lt;/h5&gt;
+              &lt;p&gt;{post.excerpt}&lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}
+
+// SERVER-SIDE RENDERING (SSR) - runs on every request
+// Forces dynamic rendering
+export const dynamic = 'force-dynamic';
+
+// INCREMENTAL STATIC REGENERATION (ISR)
+// Revalidates in background after specified time
+const res = await fetch('https://api.example.com/data', {
+  next: { revalidate: 3600 } // Revalidate every hour
+});
+
+// LOADING UI - shown while server component fetches
+// app/dashboard/loading.tsx
+export default function Loading() {
+  return (
+    &lt;div className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}&gt;
+      &lt;div className="text-center"&gt;
+        &lt;div className="spinner-border text-primary mb-3" role="status"&gt;
+          &lt;span className="visually-hidden"&gt;Loading...&lt;/span&gt;
+        &lt;/div&gt;
+        &lt;p className="text-muted"&gt;Loading dashboard...&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+// ERROR BOUNDARY - catches errors in page
+// app/dashboard/error.tsx
+'use client';
+export default function Error({ error, reset }) {
+  return (
+    &lt;div className="alert alert-danger"&gt;
+      &lt;h4&gt;Something went wrong!&lt;/h4&gt;
+      &lt;p&gt;{error.message}&lt;/p&gt;
+      &lt;button className="btn btn-danger" onClick={() =&gt; reset()}&gt;
+        Try Again
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Next.js Server Actions                                       -->
+        <!-- Server Actions handle form submissions on the server         -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Server Actions & Forms</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>// app/actions.ts - Server Actions
+'use server';
+
+export async function createUser(formData: FormData) {
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+
+  // Direct database access - runs on server only
+  await db.user.create({ data: { name, email } });
+
+  // Revalidate cached data
+  revalidatePath('/users');
+}
+
+// components/UserForm.tsx - Form with Server Action
+'use client';
+import { useFormStatus } from 'react-dom';
+import { createUser } from '@/app/actions';
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    &lt;button type="submit" className="btn btn-primary" disabled={pending}&gt;
+      {pending ? (
+        &lt;&gt;&lt;span className="spinner-border spinner-border-sm me-2"&gt;&lt;/span&gt;Creating...&lt;/&gt;
+      ) : 'Create User'}
+    &lt;/button&gt;
+  );
+}
+
+export function UserForm() {
+  return (
+    &lt;form action={createUser}&gt;
+      &lt;div className="mb-3"&gt;
+        &lt;label className="form-label"&gt;Name&lt;/label&gt;
+        &lt;input name="name" className="form-control" required /&gt;
+      &lt;/div&gt;
+      &lt;div className="mb-3"&gt;
+        &lt;label className="form-label"&gt;Email&lt;/label&gt;
+        &lt;input name="email" type="email" className="form-control" required /&gt;
+      &lt;/div&gt;
+      &lt;SubmitButton /&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Next.js Bootstrap Integration Reference                       -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Next.js + Bootstrap Best Practices</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr><th>Pattern</th><th>Approach</th><th>Notes</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>CSS Import</td><td>Import in layout.tsx</td><td>Available globally, one import</td></tr>
+                        <tr><td>JS Interactivity</td><td>next/script or use client</td><td>Bootstrap JS needs client-side</td></tr>
+                        <tr><td>Image Optimization</td><td>next/image</td><td>Automatic lazy loading, WebP</td></tr>
+                        <tr><td>Link Navigation</td><td>next/link</td><td>Client-side routing, prefetching</td></tr>
+                        <tr><td>Metadata</td><td>export metadata</td><td>SEO with dynamic page titles</td></tr>
+                        <tr><td>Font Loading</td><td>next/font</td><td>Optimized Google Fonts loading</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

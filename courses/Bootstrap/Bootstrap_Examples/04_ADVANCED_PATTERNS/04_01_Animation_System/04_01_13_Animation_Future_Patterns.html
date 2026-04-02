@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_13_Animation_Future_Patterns.html                        -->
+<!-- Future Animation Patterns with Bootstrap 5                     -->
+<!-- Covers: View Transitions API, Scroll-driven Animations,        -->
+<!--         @starting-style, animation-composition, anchor pos,    -->
+<!--         CSS Nesting for animations, popover transitions        -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_01_13 - Future Animation Patterns</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* SCROLL-DRIVEN ANIMATIONS (Chrome 115+)                       */
+        /* animation-timeline: scroll() links animation progress to     */
+        /* the scroll position of the nearest scroll container.         */
+        /* ============================================================= */
+        @keyframes scrollReveal {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes scrollParallax {
+            from { transform: translateY(60px); }
+            to   { transform: translateY(-60px); }
+        }
+
+        @keyframes scrollRotate {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        @keyframes scrollColorShift {
+            from { background-color: #0d6efd; }
+            to   { background-color: #6610f2; }
+        }
+
+        @keyframes scrollScaleBar {
+            from { transform: scaleX(0); }
+            to   { transform: scaleX(1); }
+        }
+
+        @keyframes scrollFadeWidth {
+            from { width: 0%; }
+            to   { width: 100%; }
+        }
+
+        /* Scroll-driven card reveal */
+        .scroll-card {
+            animation: scrollReveal linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 100%;
+        }
+
+        /* Scroll-driven parallax element */
+        .scroll-parallax {
+            animation: scrollParallax linear both;
+            animation-timeline: view();
+            animation-range: entry 0% exit 100%;
+        }
+
+        /* Scroll-driven rotation */
+        .scroll-rotate {
+            animation: scrollRotate linear both;
+            animation-timeline: view();
+            animation-range: entry 0% exit 100%;
+        }
+
+        /* Scroll-driven color shift */
+        .scroll-color {
+            animation: scrollColorShift linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 50%;
+        }
+
+        /* Scroll-driven progress bar */
+        .scroll-progress-bar {
+            transform-origin: left;
+            animation: scrollScaleBar linear both;
+            animation-timeline: scroll();
+        }
+
+        /* Fixed scroll progress indicator */
+        .scroll-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0d6efd, #6610f2);
+            z-index: 9999;
+            transform-origin: left;
+            animation: scrollScaleBar linear both;
+            animation-timeline: scroll();
+        }
+
+        /* --------------------------------------------------------- */
+        /* @starting-style (Chrome 117+)                             */
+        /* Allows defining the starting style for transitions on     */
+        /* elements that are first painted or inserted into the DOM. */
+        /* Solves the "entry animation" problem without JS.          */
+        /* --------------------------------------------------------- */
+        .starting-style-card {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+
+            @starting-style {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+
+        /* Fallback for browsers without @starting-style */
+        @supports not (opacity: 1) {
+            @starting-style {
+                .starting-style-card {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+        }
+
+        /* --------------------------------------------------------- */
+        /* animation-composition (Chrome 112+)                       */
+        /* Controls how multiple animations on the same property     */
+        /* are combined: replace (default), add, accumulate          */
+        /* --------------------------------------------------------- */
+        @keyframes baseRotate {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(90deg); }
+        }
+        @keyframes addTranslate {
+            from { transform: translateX(0); }
+            to   { transform: translateX(100px); }
+        }
+
+        .compose-replace {
+            animation: baseRotate 2s linear infinite alternate,
+                       addTranslate 3s linear infinite alternate;
+            /* Default: replace — last animation wins */
+        }
+
+        .compose-add {
+            animation: baseRotate 2s linear infinite alternate,
+                       addTranslate 3s linear infinite alternate;
+            animation-composition: add;
+            /* add — transforms are added together */
+        }
+
+        .compose-accumulate {
+            animation: baseRotate 2s linear infinite alternate,
+                       addTranslate 3s linear infinite alternate;
+            animation-composition: accumulate;
+            /* accumulate — values are combined intelligently */
+        }
+
+        /* --------------------------------------------------------- */
+        /* CSS NESTING FOR ANIMATIONS (Chrome 120+)                  */
+        /* Native CSS nesting reduces repetition in animation CSS    */
+        /* --------------------------------------------------------- */
+        .nested-card {
+            animation: scrollReveal 0.6s ease-out forwards;
+            opacity: 0;
+
+            &.visible {
+                opacity: 1;
+            }
+
+            &:hover {
+                transform: translateY(-4px);
+                transition: transform 0.3s ease;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                animation: none;
+                opacity: 1;
+            }
+        }
+
+        /* Fallback for browsers without nesting support */
+        @supports not (selector(&)) {
+            .nested-card {
+                animation: scrollReveal 0.6s ease-out forwards;
+                opacity: 0;
+            }
+            .nested-card.visible { opacity: 1; }
+            .nested-card:hover {
+                transform: translateY(-4px);
+                transition: transform 0.3s ease;
+            }
+        }
+
+        /* --------------------------------------------------------- */
+        /* ANIMATION TIMELINE NAMED SCROLL                           */
+        /* Named scroll containers for targeted scroll animations    */
+        /* --------------------------------------------------------- */
+        @keyframes timelineProgress {
+            from { width: 0%; }
+            to   { width: 100%; }
+        }
+
+        .named-timeline-section {
+            timeline-scope: --section-progress;
+        }
+
+        .section-progress-bar {
+            position: sticky;
+            top: 0;
+            height: 4px;
+            background: #0d6efd;
+            animation: timelineProgress linear;
+            animation-timeline: --section-progress;
+        }
+
+        /* --------------------------------------------------------- */
+        /* VIEW TRANSITIONS FALLBACK                                 */
+        /* Graceful fallback when View Transitions API unavailable   */
+        /* --------------------------------------------------------- */
+        .vt-supported .page-content {
+            animation: scrollReveal 0.4s ease-out;
+        }
+
+        /* --------------------------------------------------------- */
+        /* FUTURE FEATURE SUPPORT BANNER                             */
+        /* --------------------------------------------------------- */
+        .feature-badge {
+            font-size: 0.65rem;
+            vertical-align: middle;
+        }
+
+        .spaced-section {
+            min-height: 50vh;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Scroll Progress Indicator -->
+    <div class="scroll-indicator"></div>
+
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">Future Animation Patterns</h1>
+                <p class="lead text-muted">
+                    Cutting-edge CSS animation features: View Transitions, scroll-driven animations,
+                    @starting-style, and more.
+                </p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: SCROLL-DRIVEN ANIMATIONS                           -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                1. Scroll-Driven Animations
+                <span class="badge bg-info feature-badge">Chrome 115+</span>
+            </h2>
+            <p class="text-muted">
+                <code>animation-timeline: scroll()</code> and <code>view()</code> link animation
+                progress to scroll position — no JavaScript needed.
+            </p>
+
+            <div class="alert alert-info small">
+                <strong>Syntax:</strong>
+                <code>animation-timeline: scroll()</code> (scroll container) or
+                <code>animation-timeline: view()</code> (element visibility).
+                <code>animation-range</code> controls when the animation starts/ends.
+            </div>
+
+            <div class="bg-dark text-white p-3 rounded mb-3 small">
+                <code>animation-range: entry 0% entry 100%</code> — Element fully enters viewport<br>
+                <code>animation-range: entry 0% exit 100%</code> — From entering to fully exiting<br>
+                <code>animation-range: cover 0% cover 100%</code> — While element is in viewport
+            </div>
+
+            <!-- Scroll-driven cards -->
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="scroll-card card">
+                        <div class="card-body">
+                            <h5>Scroll Card 1</h5>
+                            <p class="small mb-0">Reveals as you scroll it into view. Uses <code>animation-timeline: view()</code>.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="scroll-card card">
+                        <div class="card-body">
+                            <h5>Scroll Card 2</h5>
+                            <p class="small mb-0">Each card animates independently based on its viewport position.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="scroll-card card">
+                        <div class="card-body">
+                            <h5>Scroll Card 3</h5>
+                            <p class="small mb-0">No IntersectionObserver needed — pure CSS scroll animation.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Spacer for scroll demos -->
+        <div style="height: 20vh"></div>
+
+        <!-- Scroll color shift -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">Scroll-Driven Color Shift</h2>
+            <div class="scroll-color p-5 rounded text-white text-center">
+                <h3>Background Changes on Scroll</h3>
+                <p class="mb-0">Color shifts from blue to purple as you scroll through this section.</p>
+            </div>
+        </section>
+
+        <div style="height: 20vh"></div>
+
+        <!-- Scroll rotation -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">Scroll-Driven Rotation</h2>
+            <div class="text-center">
+                <div class="scroll-rotate d-inline-block bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:100px;height:100px;font-size:2rem">
+                    &#9881;
+                </div>
+                <p class="text-muted mt-2">This gear rotates as you scroll.</p>
+            </div>
+        </section>
+
+        <div style="height: 20vh"></div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: @starting-style                                    -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                2. @starting-style
+                <span class="badge bg-info feature-badge">Chrome 117+</span>
+            </h2>
+            <p class="text-muted">
+                <code>@starting-style</code> defines the initial state for elements when they are first
+                rendered, enabling entry transitions without JavaScript class toggling.
+            </p>
+            <button class="btn btn-primary mb-3" id="addStartingCardBtn">Add Card (Entry Transition)</button>
+            <div class="row g-3" id="startingContainer"></div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6>CSS</h6>
+                    <pre class="bg-dark text-light p-2 rounded small mb-0"><code>.card {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.5s, transform 0.5s;
+
+    @starting-style {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <div style="height: 20vh"></div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: animation-composition                              -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                3. animation-composition
+                <span class="badge bg-info feature-badge">Chrome 112+</span>
+            </h2>
+            <p class="text-muted">
+                Controls how multiple animations targeting the same property combine.
+            </p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6>replace (default)</h6>
+                            <div class="compose-replace bg-primary text-white mx-auto d-flex align-items-center justify-content-center rounded"
+                                 style="width:60px;height:60px">
+                                R
+                            </div>
+                            <small class="text-muted d-block mt-2">Last animation overwrites</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6>add</h6>
+                            <div class="compose-add bg-success text-white mx-auto d-flex align-items-center justify-content-center rounded"
+                                 style="width:60px;height:60px">
+                                A
+                            </div>
+                            <small class="text-muted d-block mt-2">Transforms add together</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6>accumulate</h6>
+                            <div class="compose-accumulate bg-warning text-dark mx-auto d-flex align-items-center justify-content-center rounded"
+                                 style="width:60px;height:60px">
+                                C
+                            </div>
+                            <small class="text-muted d-block mt-2">Values combine intelligently</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div style="height: 20vh"></div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: CSS NESTING                                        -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                4. CSS Nesting for Animations
+                <span class="badge bg-info feature-badge">Chrome 120+</span>
+            </h2>
+            <p class="text-muted">
+                Native CSS nesting reduces repetition in animation stylesheets.
+            </p>
+            <div class="nested-card card mb-3">
+                <div class="card-body">
+                    <h5>Nested Animation Styles</h5>
+                    <p class="mb-0">
+                        This card uses native CSS nesting. Hover, visible state,
+                        and reduced-motion overrides are all within the same rule block.
+                    </p>
+                </div>
+            </div>
+            <button class="btn btn-outline-primary" id="toggleNestedBtn">Toggle Visible</button>
+        </section>
+
+        <div style="height: 20vh"></div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: VIEW TRANSITIONS API                               -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                5. View Transitions API
+                <span class="badge bg-info feature-badge">Chrome 111+</span>
+            </h2>
+            <p class="text-muted">
+                The View Transitions API enables smooth animated transitions between DOM states
+                (page navigations, content swaps) with minimal JavaScript.
+            </p>
+            <button class="btn btn-primary mb-3" id="viewTransitionBtn">Swap Content (View Transition)</button>
+            <div class="card" id="viewTransitionContainer">
+                <div class="card-body" id="vtContent">
+                    <h5>Content A</h5>
+                    <p class="mb-0">Click the button to swap this content with a view transition animation.</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6>JavaScript</h6>
+                    <pre class="bg-dark text-light p-2 rounded small mb-0"><code>// View Transitions API
+if (document.startViewTransition) {
+    document.startViewTransition(() => {
+        // Swap DOM content here
+        container.innerHTML = newContent;
+    });
+} else {
+    // Fallback: instant swap
+    container.innerHTML = newContent;
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <div style="height: 20vh"></div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: FEATURE SUPPORT TABLE                              -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Browser Support Summary</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped small">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Feature</th>
+                            <th>Chrome</th>
+                            <th>Firefox</th>
+                            <th>Safari</th>
+                            <th>Edge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Scroll-driven Animations</td>
+                            <td class="text-success">115+</td>
+                            <td class="text-warning">Behind flag</td>
+                            <td class="text-warning">TP</td>
+                            <td class="text-success">115+</td>
+                        </tr>
+                        <tr>
+                            <td>@starting-style</td>
+                            <td class="text-success">117+</td>
+                            <td class="text-success">129+</td>
+                            <td class="text-success">17.5+</td>
+                            <td class="text-success">117+</td>
+                        </tr>
+                        <tr>
+                            <td>animation-composition</td>
+                            <td class="text-success">112+</td>
+                            <td class="text-warning">Behind flag</td>
+                            <td class="text-danger">No</td>
+                            <td class="text-success">112+</td>
+                        </tr>
+                        <tr>
+                            <td>View Transitions API</td>
+                            <td class="text-success">111+</td>
+                            <td class="text-warning">Behind flag</td>
+                            <td class="text-warning">TP</td>
+                            <td class="text-success">111+</td>
+                        </tr>
+                        <tr>
+                            <td>CSS Nesting</td>
+                            <td class="text-success">120+</td>
+                            <td class="text-success">117+</td>
+                            <td class="text-success">17.2+</td>
+                            <td class="text-success">120+</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ----------------------------------------------------------- */
+        /* @starting-style DEMO                                        */
+        /* Dynamically adds cards that animate in via @starting-style  */
+        /* ----------------------------------------------------------- */
+        let cardNum = 0;
+        document.getElementById('addStartingCardBtn').addEventListener('click', function () {
+            cardNum++;
+            const col = document.createElement('div');
+            col.className = 'col-md-4';
+            col.innerHTML = `
+                <div class="starting-style-card card">
+                    <div class="card-body">
+                        <h5>Entry Card ${cardNum}</h5>
+                        <p class="small mb-0">This card uses @starting-style for its entry transition.</p>
+                    </div>
+                </div>`;
+            document.getElementById('startingContainer').appendChild(col);
+        });
+
+        /* ----------------------------------------------------------- */
+        /* NESTED CARD TOGGLE                                          */
+        /* ----------------------------------------------------------- */
+        document.getElementById('toggleNestedBtn').addEventListener('click', function () {
+            document.querySelector('.nested-card').classList.toggle('visible');
+        });
+
+        /* ----------------------------------------------------------- */
+        /* VIEW TRANSITIONS API                                        */
+        /* Smoothly swaps content using document.startViewTransition   */
+        /* ----------------------------------------------------------- */
+        let vtState = 'A';
+        document.getElementById('viewTransitionBtn').addEventListener('click', function () {
+            const container = document.getElementById('vtContent');
+            const newContent = vtState === 'A'
+                ? `<h5>Content B</h5><p class="mb-0">This content was swapped with a view transition. The old content faded out and this one faded in.</p>`
+                : `<h5>Content A</h5><p class="mb-0">Click the button to swap this content with a view transition animation.</p>`;
+            vtState = vtState === 'A' ? 'B' : 'A';
+
+            if (document.startViewTransition) {
+                document.startViewTransition(function () {
+                    container.innerHTML = newContent;
+                });
+            } else {
+                container.innerHTML = newContent;
+            }
+        });
+    </script>
+</body>
+</html>

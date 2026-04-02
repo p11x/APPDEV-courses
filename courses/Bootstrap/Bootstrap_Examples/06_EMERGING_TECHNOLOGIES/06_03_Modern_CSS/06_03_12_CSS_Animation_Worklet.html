@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_03_12_CSS_Animation_Worklet.html                             -->
+<!-- Animation worklet for performance                              -->
+<!-- Bootstrap 5.3.3 + CSS Animation Worklet API                   -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06_03_12 - CSS Animation Worklet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* ANIMATION WORKLET OVERVIEW                                    */
+        /* The CSS Animation Worklet API runs animations on a dedicated */
+        /* thread, independent of the main JavaScript thread. This      */
+        /* prevents jank when the main thread is busy.                  */
+        /*                                                               */
+        /* Key concepts:                                                 */
+        /*   - Worklet: lightweight JS context for animation logic      */
+        /*   - Animator: class with animate() method in the worklet     */
+        /*   - CSS.registerAnimator(): registers custom animation       */
+        /*   - animation-timeline: links CSS to worklet animators       */
+        /*                                                               */
+        /* Note: Animation Worklet is currently only supported in       */
+        /* Chromium-based browsers. This file includes fallbacks.       */
+        /* ============================================================= */
+
+        /* ============================================================= */
+        /* FALLBACK ANIMATIONS (for non-worklet browsers)                */
+        /* These CSS animations work everywhere as a fallback.          */
+        /* ============================================================= */
+
+        /* Smooth ticking animation */
+        @keyframes tick {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Bounce animation */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        /* Marquee scroll */
+        @keyframes marquee {
+            from { transform: translateX(100%); }
+            to { transform: translateX(-100%); }
+        }
+
+        /* Wave animation */
+        @keyframes wave {
+            0% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-10px) rotate(5deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(10px) rotate(-5deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+
+        /* ============================================================= */
+        /* ANIMATED ELEMENTS                                             */
+        /* ============================================================= */
+
+        /* Clock hand - smooth ticking */
+        .clock-hand {
+            width: 4px;
+            height: 60px;
+            background: #e74c3c;
+            transform-origin: bottom center;
+            animation: tick 4s linear infinite;
+            margin: 0 auto;
+            border-radius: 2px;
+        }
+
+        /* Bouncing ball */
+        .bounce-ball {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        /* Pulsing circle */
+        .pulse-circle {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Marquee text */
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .marquee-text {
+            display: inline-block;
+            animation: marquee 8s linear infinite;
+            font-weight: 600;
+            color: #6c5ce7;
+        }
+
+        /* Wave bars */
+        .wave-bar {
+            width: 8px;
+            height: 40px;
+            background: #0984e3;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 0 2px;
+        }
+
+        .wave-bar:nth-child(1) { animation: wave 1.2s ease-in-out infinite 0s; }
+        .wave-bar:nth-child(2) { animation: wave 1.2s ease-in-out infinite 0.1s; }
+        .wave-bar:nth-child(3) { animation: wave 1.2s ease-in-out infinite 0.2s; }
+        .wave-bar:nth-child(4) { animation: wave 1.2s ease-in-out infinite 0.3s; }
+        .wave-bar:nth-child(5) { animation: wave 1.2s ease-in-out infinite 0.4s; }
+        .wave-bar:nth-child(6) { animation: wave 1.2s ease-in-out infinite 0.5s; }
+        .wave-bar:nth-child(7) { animation: wave 1.2s ease-in-out infinite 0.6s; }
+        .wave-bar:nth-child(8) { animation: wave 1.2s ease-in-out infinite 0.7s; }
+
+        /* ============================================================= */
+        /* SCROLL-LINKED ANIMATION FALLBACK                              */
+        /* Using CSS scroll-driven animations as a worklet alternative. */
+        /* ============================================================= */
+
+        .scroll-linked-card {
+            animation: reveal-card linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 40%;
+        }
+
+        @keyframes reveal-card {
+            from { opacity: 0; transform: translateY(60px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ============================================================= */
+        /* VISUAL STYLES                                                 */
+        /* ============================================================= */
+
+        .demo-stage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .clock-face {
+            width: 120px;
+            height: 120px;
+            border: 4px solid #2d3436;
+            border-radius: 50%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 0;
+            position: relative;
+        }
+
+        .clock-center {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #2d3436;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+
+        <!-- Page header -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">CSS Animation Worklet</h1>
+                <p class="lead text-muted">High-performance animations on a dedicated thread</p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: CONCEPT EXPLANATION                                -->
+        <!-- The Animation Worklet runs off the main thread, preventing   -->
+        <!-- animation jank during heavy JavaScript execution.            -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">1. Why Animation Worklet?</h2>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Problem: Main Thread Jank</h5>
+                            <p class="text-muted">
+                                CSS animations and requestAnimationFrame run on the main thread.
+                                When JavaScript blocks the main thread (heavy computation, layout),
+                                animations stutter and drop frames.
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Solution: Animation Worklet</h5>
+                            <p class="text-muted">
+                                The Animation Worklet runs on a separate thread. Animations continue
+                                smoothly even when the main thread is busy. Similar to how
+                                CSS transitions on compositor properties already work.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: FALLBACK ANIMATIONS                                -->
+        <!-- These CSS keyframe animations demonstrate the types of       -->
+        <!-- effects that benefit from Animation Worklet performance.     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">2. Continuous Animations</h2>
+            <p class="text-muted mb-3">
+                Animations like these benefit most from off-thread execution.
+            </p>
+
+            <div class="row">
+                <!-- Clock animation -->
+                <div class="col-md-4 mb-3">
+                    <div class="demo-stage">
+                        <div class="clock-face">
+                            <div class="clock-center"></div>
+                            <div class="clock-hand"></div>
+                        </div>
+                    </div>
+                    <p class="text-center text-muted small mt-2">Ticking Clock</p>
+                </div>
+
+                <!-- Bounce animation -->
+                <div class="col-md-4 mb-3">
+                    <div class="demo-stage">
+                        <div class="bounce-ball"></div>
+                    </div>
+                    <p class="text-center text-muted small mt-2">Bouncing Ball</p>
+                </div>
+
+                <!-- Pulse animation -->
+                <div class="col-md-4 mb-3">
+                    <div class="demo-stage">
+                        <div class="pulse-circle"></div>
+                    </div>
+                    <p class="text-center text-muted small mt-2">Pulsing Circle</p>
+                </div>
+            </div>
+
+            <!-- Wave animation -->
+            <div class="demo-stage mt-3">
+                <div class="d-flex align-items-end" style="height:60px;">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: CODE EXAMPLE                                       -->
+        <!-- Shows how to register a custom animator with the Worklet API. -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">3. Animation Worklet Code Example</h2>
+
+            <div class="card">
+                <div class="card-body">
+                    <pre class="bg-dark text-success p-3 rounded mb-0"><code>// Step 1: Define the animator class in a worklet
+// (in a separate file: animator.js)
+class SpringAnimator {
+    constructor(options) {
+        this.currentTime = options.currentTime;
+    }
+
+    animate(target, timing) {
+        // Spring physics calculation
+        const progress = timing.progress;
+        const spring = 1 - Math.cos(progress * Math.PI * 4)
+                     * Math.exp(-progress * 3);
+        target.style.transform = `scale(${spring})`;
+    }
+}
+
+// Step 2: Register the animator
+CSS.registerAnimator('spring-bounce', SpringAnimator);
+
+// Step 3: Use in CSS (hypothetical syntax)
+/*
+.my-element {
+    animation: spring-bounce 1s linear;
+    animation-timeline: scroll();
+}
+*/
+
+// Step 4: Load the worklet
+if ('animationWorklet' in CSS) {
+    CSS.animationWorklet.addModule('animator.js');
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: MARQUEE EXAMPLE                                    -->
+        <!-- A practical marquee using CSS animation (fallback for worklet). -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">4. Marquee Animation</h2>
+
+            <div class="marquee-container bg-light rounded p-3">
+                <span class="marquee-text">
+                    This text scrolls continuously - Animation Worklet keeps it smooth even under heavy main thread load
+                </span>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: SCROLL-LINKED FALLBACK                             -->
+        <!-- Using CSS scroll-driven animations as the modern alternative -->
+        <!-- to Animation Worklet for scroll-linked effects.             -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">5. Scroll-Linked Animation (Fallback)</h2>
+            <p class="text-muted mb-3">
+                CSS <code>animation-timeline: view()</code> provides the same off-thread benefits.
+            </p>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card scroll-linked-card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5>Card 1</h5>
+                            <p class="text-muted small mb-0">Reveals on scroll</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card scroll-linked-card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5>Card 2</h5>
+                            <p class="text-muted small mb-0">Reveals on scroll</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card scroll-linked-card shadow-sm">
+                        <div class="card-body text-center">
+                            <h5>Card 3</h5>
+                            <p class="text-muted small mb-0">Reveals on scroll</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Animation Worklet detection and loading -->
+    <script>
+        /* ============================================================= */
+        /* ANIMATION WORKLET FEATURE DETECTION                           */
+        /* Check if the browser supports Animation Worklet before       */
+        /* attempting to load worklet modules.                          */
+        /* ============================================================= */
+
+        // Feature detection for Animation Worklet
+        const hasAnimationWorklet = 'animationWorklet' in CSS;
+
+        if (hasAnimationWorklet) {
+            console.log('Animation Worklet is supported');
+            // CSS.animationWorklet.addModule('animator.js');
+        } else {
+            console.log('Animation Worklet not supported - using CSS fallbacks');
+        }
+    </script>
+</body>
+</html>

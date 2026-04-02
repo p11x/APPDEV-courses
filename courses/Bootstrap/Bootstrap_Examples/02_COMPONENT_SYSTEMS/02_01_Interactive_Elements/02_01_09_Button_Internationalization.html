@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ========================================== -->
+    <!-- 02_01_09: Button Internationalization       -->
+    <!-- RTL support, i18n patterns, locale-aware   -->
+    <!-- formatting, direction switching            -->
+    <!-- ========================================== -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02_01_09 - Button Internationalization</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* RTL-aware button using logical properties */
+        .btn-rtl-safe {
+            padding-inline-start: 1rem;
+            padding-inline-end: 0.5rem;
+            border-start-start-radius: 0.5rem;
+            border-end-end-radius: 0.5rem;
+            border-start-end-radius: 0;
+            border-end-start-radius: 0;
+        }
+
+        /* Icon that flips in RTL */
+        .icon-flip-rtl {
+            transition: transform 0.2s;
+        }
+        [dir="rtl"] .icon-flip-rtl {
+            transform: scaleX(-1);
+        }
+
+        /* Locale switcher styling */
+        .locale-btn {
+            min-width: 44px;
+            min-height: 44px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold text-primary mb-4">Button Internationalization</h1>
+        <p class="lead text-muted mb-5">RTL support, i18n patterns, locale-aware formatting, and direction switching.</p>
+
+        <!-- ========================================== -->
+        <!-- SECTION 1: RTL/LTR TOGGLE                  -->
+        <!-- Demonstrates direction switching and its   -->
+        <!-- effect on button layout and icons.         -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. RTL/LTR Direction Toggle</h2>
+            <div class="card p-4">
+                <div class="mb-3">
+                    <button class="btn btn-outline-primary me-2" onclick="setDirection('ltr')">LTR Mode</button>
+                    <button class="btn btn-outline-primary" onclick="setDirection('rtl')">RTL Mode</button>
+                </div>
+
+                <!-- Direction-aware button group -->
+                <div id="directionDemo" dir="ltr">
+                    <div class="btn-group mb-3" role="group">
+                        <button type="button" class="btn btn-primary">
+                            <span class="icon-flip-rtl" aria-hidden="true">&#8592;</span> Back
+                        </button>
+                        <button type="button" class="btn btn-primary">Home</button>
+                        <button type="button" class="btn btn-primary">
+                            Next <span class="icon-flip-rtl" aria-hidden="true">&#8594;</span>
+                        </button>
+                    </div>
+
+                    <!-- Arrow icon that flips in RTL -->
+                    <div class="mt-2">
+                        <button class="btn btn-success">
+                            Continue <span class="icon-flip-rtl" aria-hidden="true">&#10140;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 2: LOGICAL PROPERTIES IN BUTTONS  -->
+        <!-- Using CSS logical properties so buttons   -->
+        <!-- work correctly in both LTR and RTL.       -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. CSS Logical Properties</h2>
+            <div class="card p-4">
+                <div dir="ltr" class="mb-3">
+                    <small class="text-muted">LTR:</small><br>
+                    <button class="btn btn-rtl-safe btn-primary">Start-aligned Icon &#9733;</button>
+                </div>
+                <div dir="rtl">
+                    <small class="text-muted">RTL:</small><br>
+                    <button class="btn btn-rtl-safe btn-primary">&#9733; Start-aligned Icon</button>
+                </div>
+
+                <pre class="bg-dark text-light p-3 rounded small mt-3"><code>/* Physical (breaks in RTL) */
+padding-left: 1rem;
+border-top-left-radius: 0.5rem;
+
+/* Logical (works in both) */
+padding-inline-start: 1rem;
+border-start-start-radius: 0.5rem;</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 3: TRANSLATED BUTTON LABELS       -->
+        <!-- Pattern for managing button text across   -->
+        <!-- multiple languages.                       -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Translated Button Labels</h2>
+            <div class="card p-4">
+                <div class="mb-3">
+                    <label class="form-label small">Select Language:</label>
+                    <select class="form-select" style="max-width:200px;" onchange="setLanguage(this.value)">
+                        <option value="en">English</option>
+                        <option value="es">Espa&ntilde;ol</option>
+                        <option value="fr">Fran&ccedil;ais</option>
+                        <option value="ar">&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;</option>
+                        <option value="ja">&#26085;&#26412;&#35486;</option>
+                        <option value="he">&#1506;&#1489;&#1512;&#1497;&#1514;</option>
+                    </select>
+                </div>
+
+                <!-- Buttons with translatable content -->
+                <button class="btn btn-primary me-2" id="btnSave" data-i18n="save">Save</button>
+                <button class="btn btn-secondary me-2" id="btnCancel" data-i18n="cancel">Cancel</button>
+                <button class="btn btn-danger me-2" id="btnDelete" data-i18n="delete">Delete</button>
+                <button class="btn btn-success" id="btnConfirm" data-i18n="confirm">Confirm</button>
+
+                <pre class="bg-dark text-light p-3 rounded small mt-3"><code>// i18n dictionary pattern
+const translations = {
+    en: { save: 'Save', cancel: 'Cancel' },
+    es: { save: 'Guardar', cancel: 'Cancelar' },
+    ar: { save: '\u062D\u0641\u0638', cancel: '\u0625\u0644\u063A\u0627\u0621' }
+};
+// Apply: btn.textContent = translations[locale][key];</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 4: TEXT DIRECTION AUTO-DETECTION  -->
+        <!-- Detecting script direction from content.  -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Text Direction Auto-Detection</h2>
+            <div class="card p-4">
+                <p class="text-muted small">Enter text and the button will auto-set direction:</p>
+                <input type="text" class="form-control mb-3" style="max-width:300px;" id="dirInput"
+                       placeholder="Type in any language..." oninput="autoDetectDirection(this.value)">
+                <button class="btn btn-primary" id="autoDirBtn">Auto-Direction Button</button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 5: NUMBER FORMATTING              -->
+        <!-- Locale-aware number formatting in button  -->
+        <!-- labels (e.g., "1,000" vs "1.000").       -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Locale-Aware Number Formatting</h2>
+            <div class="card p-4">
+                <div class="mb-3">
+                    <label class="form-label small">Number Locale:</label>
+                    <select class="form-select" style="max-width:200px;" onchange="formatNumber(this.value)">
+                        <option value="en-US">en-US (1,234.56)</option>
+                        <option value="de-DE">de-DE (1.234,56)</option>
+                        <option value="fr-FR">fr-FR (1 234,56)</option>
+                        <option value="ar-SA">ar-SA (&#1633;&#1638;&#1634;&#1635;&#1643;&#1635;&#1638;)</option>
+                        <option value="ja-JP">ja-JP (1,234)</option>
+                    </select>
+                </div>
+                <button class="btn btn-outline-primary me-2" id="btnItemCount">Items: 1,234.56</button>
+                <button class="btn btn-outline-success me-2" id="btnPrice">Price: $9,999.99</button>
+                <button class="btn btn-outline-info" id="btnPercentage">Progress: 85.5%</button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 6: CULTURAL COLOR CONSIDERATIONS  -->
+        <!-- Button colors and icons may have different -->
+        <!-- cultural meanings.                        -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Cultural Considerations</h2>
+            <div class="card p-4">
+                <p class="text-muted small">
+                    Colors and icons have different meanings across cultures.
+                    These buttons note cultural considerations.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Color Meanings</h6>
+                        <button class="btn btn-danger me-2 mb-2">Red: Western=Danger, China=Luck</button>
+                        <button class="btn btn-warning me-2 mb-2">Yellow: Western=Caution, Japan=Courage</button>
+                        <button class="btn btn-success me-2 mb-2">Green: Universal=Go/Safe</button>
+                        <button class="btn btn-dark me-2 mb-2">Black: Western=Formal, East Asia=Mourning</button>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Directional Icons</h6>
+                        <button class="btn btn-outline-primary me-2 mb-2">
+                            <span class="icon-flip-rtl" aria-hidden="true">&#8592;</span> Back
+                        </button>
+                        <button class="btn btn-outline-primary me-2 mb-2">
+                            Forward <span class="icon-flip-rtl" aria-hidden="true">&#8594;</span>
+                        </button>
+                        <p class="text-muted small mt-2">Arrow icons should flip in RTL layouts.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 7: LOCALE SWITCHER COMPONENT      -->
+        <!-- Complete locale switcher with flags and   -->
+        <!-- language names.                           -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Locale Switcher Component</h2>
+            <div class="card p-4">
+                <div class="btn-group" role="group" aria-label="Language selector">
+                    <button type="button" class="btn btn-outline-primary locale-btn active" data-locale="en" title="English" onclick="switchLocale(this)">
+                        &#127468;&#127463; EN
+                    </button>
+                    <button type="button" class="btn btn-outline-primary locale-btn" data-locale="es" title="Spanish" onclick="switchLocale(this)">
+                        &#127466;&#127480; ES
+                    </button>
+                    <button type="button" class="btn btn-outline-primary locale-btn" data-locale="fr" title="French" onclick="switchLocale(this)">
+                        &#127467;&#127479; FR
+                    </button>
+                    <button type="button" class="btn btn-outline-primary locale-btn" data-locale="ar" title="Arabic" onclick="switchLocale(this)">
+                        &#127462;&#127466; AR
+                    </button>
+                    <button type="button" class="btn btn-outline-primary locale-btn" data-locale="ja" title="Japanese" onclick="switchLocale(this)">
+                        &#127471;&#127477; JA
+                    </button>
+                </div>
+                <div class="mt-2 text-muted small" id="localeInfo">Current: English (LTR)</div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        /* i18n translation dictionary */
+        const translations = {
+            en: { save: 'Save', cancel: 'Cancel', delete: 'Delete', confirm: 'Confirm', dir: 'ltr' },
+            es: { save: 'Guardar', cancel: 'Cancelar', delete: 'Eliminar', confirm: 'Confirmar', dir: 'ltr' },
+            fr: { save: 'Enregistrer', cancel: 'Annuler', delete: 'Supprimer', confirm: 'Confirmer', dir: 'ltr' },
+            ar: { save: '\u062D\u0641\u0638', cancel: '\u0625\u0644\u063A\u0627\u0621', delete: '\u062D\u0630\u0641', confirm: '\u062A\u0623\u0643\u064A\u062F', dir: 'rtl' },
+            ja: { save: '\u4FDD\u5B58', cancel: '\u30AD\u30E3\u30F3\u30BB\u30EB', delete: '\u524A\u9664', confirm: '\u78BA\u8A8D', dir: 'ltr' },
+            he: { save: '\u05E9\u05DE\u05D5\u05E8', cancel: '\u05D1\u05D9\u05D8\u05D5\u05DC', delete: '\u05DE\u05D7\u05E7', confirm: '\u05D0\u05D9\u05E9\u05D5\u05E8', dir: 'rtl' }
+        };
+
+        /* Set text direction */
+        function setDirection(dir) {
+            document.getElementById('directionDemo').setAttribute('dir', dir);
+        }
+
+        /* Set language and update all translatable buttons */
+        function setLanguage(lang) {
+            const t = translations[lang] || translations.en;
+            document.querySelectorAll('[data-i18n]').forEach(btn => {
+                const key = btn.getAttribute('data-i18n');
+                if (t[key]) btn.textContent = t[key];
+            });
+            /* Set document direction */
+            document.getElementById('directionDemo').setAttribute('dir', t.dir);
+        }
+
+        /* Auto-detect text direction from Unicode ranges */
+        function autoDetectDirection(text) {
+            const btn = document.getElementById('autoDirBtn');
+            /* RTL character ranges: Arabic, Hebrew, etc. */
+            const rtlRegex = /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+            const hasRtl = rtlRegex.test(text);
+            btn.setAttribute('dir', hasRtl ? 'rtl' : 'ltr');
+            btn.textContent = text || 'Auto-Direction Button';
+        }
+
+        /* Format numbers using Intl.NumberFormat */
+        function formatNumber(locale) {
+            const num = 1234.56;
+            const price = 9999.99;
+            const pct = 0.855;
+
+            const nf = new Intl.NumberFormat(locale);
+            const cf = new Intl.NumberFormat(locale, { style: 'currency', currency: locale.startsWith('ar') ? 'SAR' : 'USD' });
+            const pf = new Intl.NumberFormat(locale, { style: 'percent' });
+
+            document.getElementById('btnItemCount').textContent = 'Items: ' + nf.format(num);
+            document.getElementById('btnPrice').textContent = 'Price: ' + cf.format(price);
+            document.getElementById('btnPercentage').textContent = 'Progress: ' + pf.format(pct);
+        }
+
+        /* Locale switcher */
+        function switchLocale(btn) {
+            document.querySelectorAll('.locale-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const locale = btn.getAttribute('data-locale');
+            const t = translations[locale];
+            const localeNames = { en: 'English', es: 'Spanish', fr: 'French', ar: 'Arabic', ja: 'Japanese', he: 'Hebrew' };
+            document.getElementById('localeInfo').textContent =
+                'Current: ' + (localeNames[locale] || locale) + ' (' + t.dir.toUpperCase() + ')';
+            setLanguage(locale);
+        }
+    </script>
+</body>
+</html>

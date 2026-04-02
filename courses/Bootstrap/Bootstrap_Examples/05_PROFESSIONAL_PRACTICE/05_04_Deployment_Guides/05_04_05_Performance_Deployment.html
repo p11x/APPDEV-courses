@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<!--
+  05_04_05_Performance_Deployment.html
+  Performance-focused Deployment — Bootstrap 5.3.3
+
+  This file demonstrates best practices for deploying Bootstrap-based
+  projects with a strong emphasis on performance: Core Web Vitals,
+  Lighthouse optimization, lazy loading, critical CSS, resource hints,
+  image optimization, and performance budgets.
+
+  All major HTML elements, Bootstrap classes, and attributes are
+  annotated with inline comments for educational clarity.
+-->
+
+<!-- ================================================================
+     HTML5 Root Element
+     lang="en" — helps search engines and screen readers identify
+     the page language. data-bs-theme can be set here for global
+     Bootstrap dark/light theming in v5.3+.
+     ================================================================ -->
+<html lang="en">
+<head>
+    <!-- ============================================================
+         Meta charset — must appear within the first 1024 bytes.
+         Ensures UTF-8 decoding so all characters render correctly.
+         ============================================================ -->
+    <meta charset="UTF-8">
+
+    <!-- ============================================================
+         Viewport meta — essential for responsive design.
+         width=device-width  → match device width
+         initial-scale=1.0   → no zoom on load
+         ============================================================ -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ============================================================
+         <meta name="theme-color"> — sets the browser toolbar colour
+         on mobile devices. bg-success hex ≈ #198754.
+         ============================================================ -->
+    <meta name="theme-color" content="#198754">
+
+    <!-- ============================================================
+         Meta description — used by search engines for snippets.
+         Keep under 160 characters for optimal display.
+         ============================================================ -->
+    <meta name="description" content="Performance-focused Deployment — Bootstrap 5 guide covering Core Web Vitals, Lighthouse, lazy loading, critical CSS, resource hints, image optimization, and performance budgets.">
+
+    <!-- Page title displayed in browser tab and search results -->
+    <title>Performance-focused Deployment — Bootstrap 5</title>
+
+    <!-- ============================================================
+         RESOURCE HINTS — preload, prefetch, preconnect
+         These <link rel="…"> tags instruct the browser to begin
+         DNS/TLS negotiation or download critical assets early,
+         improving LCP and TTFB metrics.
+         ============================================================ -->
+
+    <!-- preconnect — establish early TCP+TLS handshake to the CDN -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    <!-- dns-prefetch — lightweight fallback for older browsers -->
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+    <!-- ============================================================
+         Preload — fetch the Bootstrap CSS as high-priority before
+         the browser discovers it in the normal parsing flow.
+         as="style" indicates the resource type so the browser can
+         set the correct priority.
+         ============================================================ -->
+    <link rel="preload"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          as="style"
+          crossorigin="anonymous">
+
+    <!-- ============================================================
+         Bootstrap 5.3.3 CSS (CDN)
+         integrity — SRI hash ensures the file has not been tampered
+         with (Subresource Integrity).
+         crossorigin — required when integrity is used on a CDN.
+         ============================================================ -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZcR2iqMTN"
+          crossorigin="anonymous">
+
+    <!-- ============================================================
+         CRITICAL CSS — inline above-the-fold styles.
+         In production, extract critical CSS with a tool such as
+         critical (npm) or Penthouse and paste it here so the
+         first paint does not wait for an external stylesheet.
+         The snippet below styles the hero section, which is
+         immediately visible (LCP candidate).
+         ============================================================ -->
+    <style>
+        /* Hero section critical path — above the fold */
+        .hero-performance {
+            background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
+            color: #fff;
+            padding: 5rem 0;
+        }
+        .hero-performance h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+        }
+        /* Prevent CLS — reserve space for images & embeds */
+        img, video, iframe {
+            max-width: 100%;
+            height: auto;
+        }
+        /* Avoid layout shift for lazy-loaded images without
+           explicit width/height by using aspect-ratio */
+        .ratio img {
+            object-fit: cover;
+        }
+    </style>
+
+    <!-- ============================================================
+         Optional: custom styles placed AFTER Bootstrap override
+         defaults without !important. In production bundle these
+         into a single minified CSS file to reduce HTTP requests
+         and improve FCP (First Contentful Paint).
+         ============================================================ -->
+    <style>
+        /* Smooth scrolling for same-page anchor links */
+        html { scroll-behavior: smooth; }
+
+        /* Code blocks — dark background for readability */
+        .code-block {
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            border-radius: .5rem;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-size: .875rem;
+        }
+        /* Syntax colours */
+        .code-block .key   { color: #89b4fa; }
+        .code-block .str   { color: #a6e3a1; }
+        .code-block .num   { color: #fab387; }
+        .code-block .cm    { color: #6c7086; font-style: italic; }
+        .code-block .tag   { color: #f38ba8; }
+        .code-block .attr  { color: #cba6f7; }
+        .code-block .punc  { color: #9399b2; }
+
+        /* Anchor offset so fixed navbar doesn't hide headings */
+        section[id] { scroll-margin-top: 80px; }
+
+        /* Custom list bullet colour */
+        .perf-list li::marker { color: #198754; }
+    </style>
+</head>
+
+<!-- ================================================================
+     body — The visible document.
+     class="bg-light" gives the page a light grey background using
+     Bootstrap's utility class. data-bs-theme is not set so the
+     default light theme applies.
+     ================================================================ -->
+<body class="bg-light">
+
+    <!-- ============================================================
+         NAVBAR — Bootstrap responsive navigation bar.
+         navbar-expand-lg — collapses into a hamburger below lg
+         breakpoint (≥992 px).
+         bg-success — green background (matches theme-color meta).
+         navbar-dark — light text on dark background.
+         fixed-top — pins the bar to the top of the viewport.
+         ============================================================ -->
+    <nav class="navbar navbar-expand-lg bg-success navbar-dark fixed-top">
+        <!-- container-fluid — full-width container; use 'container'
+             instead for a centred, max-width container. -->
+        <div class="container-fluid">
+            <!-- navbar-brand — logo / site name link -->
+            <a class="navbar-brand fw-bold" href="#">
+                <!-- Bootstrap icon (SVG inline for zero HTTP request) -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                     fill="currentColor" class="bi bi-speedometer2 me-1"
+                     viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4zM3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707zM2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10zm9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5zm.754-4.246a.39.39 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.39.39 0 0 0-.029-.518z"/>
+                    <path fill-rule="evenodd"
+                          d="M0 10a8 8 0 1 1 15.547 2.661c-.442 1.253-1.845 1.602-2.932 1.25C11.309 13.488 9.475 13 8 13c-1.474 0-3.31.488-4.615.911-1.087.352-2.49.003-2.932-1.25A7.988 7.988 0 0 1 0 10zm8-7a7 7 0 0 0-6.603 9.329c.203.575.923.876 1.68.63C4.397 12.533 6.358 12 8 12s3.604.532 4.923.96c.757.245 1.477-.056 1.68-.631A7 7 0 0 0 8 3z"/>
+                </svg>
+                PerfDeploy
+            </a>
+
+            <!-- navbar-toggler — hamburger button visible below
+                 lg breakpoint. data-bs-toggle/collapse/target are
+                 Bootstrap Collapse data attributes. -->
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNav"
+                    aria-controls="mainNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- collapse navbar-collapse — content shown/hidden by
+                 the toggler. id matches data-bs-target above. -->
+            <div class="collapse navbar-collapse" id="mainNav">
+                <!-- navbar-nav — <ul> of navigation links.
+                     ms-auto pushes items to the right. -->
+                <ul class="navbar-nav ms-auto">
+                    <!-- nav-item / nav-link — individual link.
+                         aria-current="page" marks the active page
+                         for screen readers. -->
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page"
+                           href="#vitals">Core Web Vitals</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#lighthouse">Lighthouse</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#lazy">Lazy Loading</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#critical">Critical CSS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#hints">Resource Hints</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#images">Images</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#budget">Budget</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav><!-- /.navbar -->
+
+    <!-- ============================================================
+         HERO SECTION — LCP (Largest Contentful Paint) candidate.
+         Uses the critical CSS inlined in <head> so it renders
+         instantly without waiting for external CSS.
+         ============================================================ -->
+    <header class="hero-performance text-center" id="top">
+        <!-- container — centered, responsive max-width container -->
+        <div class="container py-5 mt-5">
+            <!-- display-4 — Bootstrap typography utility for a
+                 large heading. fw-bold adds font-weight: 700. -->
+            <h1 class="display-4 fw-bold mb-3">
+                Performance-focused Deployment
+            </h1>
+            <!-- lead — larger muted paragraph for sub-headlines -->
+            <p class="lead mb-4">
+                Master Core Web Vitals, Lighthouse audits, lazy loading,
+                critical CSS extraction, resource hints, image optimization,
+                and performance budgets to ship fast Bootstrap&nbsp;5 sites.
+            </p>
+            <!-- d-flex justify-content-center — flexbox centre
+                 wrapper for badge row. gap-2 adds spacing. -->
+            <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
+                <!-- badge — pill-shaped labels with contextual colours.
+                     bg-* + text-* set background and text colours. -->
+                <span class="badge bg-light text-success fs-6">LCP</span>
+                <span class="badge bg-light text-success fs-6">FID / INP</span>
+                <span class="badge bg-light text-success fs-6">CLS</span>
+                <span class="badge bg-light text-success fs-6">Lighthouse</span>
+                <span class="badge bg-light text-success fs-6">Lazy Load</span>
+                <span class="badge bg-light text-success fs-6">Critical CSS</span>
+            </div>
+            <!-- anchor CTA — btn-lg makes the button prominent.
+                 btn-light / text-success creates a contrast button. -->
+            <a href="#vitals" class="btn btn-light btn-lg text-success fw-semibold">
+                Start Learning ↓
+            </a>
+        </div>
+    </header><!-- /hero -->
+
+    <!-- ============================================================
+         MAIN CONTENT
+         ============================================================ -->
+    <main class="container my-5">
+
+        <!-- ========================================================
+             SECTION 1 — Core Web Vitals
+             ======================================================== -->
+        <section id="vitals" class="mb-5">
+            <!-- section heading with decorative bottom border -->
+            <h2 class="border-bottom border-success border-3 pb-2 mb-4">
+                1 &middot; Core Web Vitals
+            </h2>
+
+            <p class="mb-4">
+                Core Web Vitals are three user-centric performance metrics
+                Google uses as ranking signals. Optimising them is the
+                foundation of any performance-focused deployment.
+            </p>
+
+            <!-- ====================================================
+                 CARD GROUP — row + col responsive grid.
+                 g-4 adds gutter spacing between cards.
+                 ==================================================== -->
+            <div class="row g-4 mb-4">
+                <!-- col-md-4 — each card takes 1/3 on ≥md screens,
+                     full width on smaller. -->
+                <div class="col-md-4">
+                    <!-- card — Bootstrap card component.
+                         h-100 ensures equal height across row. -->
+                    <div class="card h-100 border-success">
+                        <!-- card-header — distinct top section -->
+                        <div class="card-header bg-success text-white fw-bold">
+                            LCP
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">Largest Contentful Paint</h5>
+                            <p class="card-text">
+                                Measures loading performance — the time until the
+                                largest visible element finishes rendering.
+                            </p>
+                            <!-- table — compact bordered table for thresholds -->
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="table-success">
+                                    <tr><th>Rating</th><th>Value</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Good</td><td>≤&nbsp;2.5&nbsp;s</td></tr>
+                                    <tr><td>Needs Improvement</td><td>≤&nbsp;4.0&nbsp;s</td></tr>
+                                    <tr><td>Poor</td><td>&gt;&nbsp;4.0&nbsp;s</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-header bg-success text-white fw-bold">
+                            FID / INP
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">Interaction to Next Paint</h5>
+                            <p class="card-text">
+                                Measures interactivity — how quickly the page
+                                responds to user input (click, tap, key).
+                            </p>
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="table-success">
+                                    <tr><th>Rating</th><th>Value</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Good</td><td>≤&nbsp;200&nbsp;ms</td></tr>
+                                    <tr><td>Needs Improvement</td><td>≤&nbsp;500&nbsp;ms</td></tr>
+                                    <tr><td>Poor</td><td>&gt;&nbsp;500&nbsp;ms</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-header bg-success text-white fw-bold">
+                            CLS
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">Cumulative Layout Shift</h5>
+                            <p class="card-text">
+                                Measures visual stability — how much the page
+                                layout moves after initial render.
+                            </p>
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="table-success">
+                                    <tr><th>Rating</th><th>Value</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Good</td><td>≤&nbsp;0.10</td></tr>
+                                    <tr><td>Needs Improvement</td><td>≤&nbsp;0.25</td></tr>
+                                    <tr><td>Poor</td><td>&gt;&nbsp;0.25</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /.row -->
+
+            <!-- Alert — contextual feedback. alert-success for
+                 positive emphasis. alert-dismissible adds a close
+                 button (data-bs-dismiss). -->
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <!-- strong — emphasise key phrase -->
+                <strong>Tip:</strong> Use the
+                <a href="https://web.dev/vitals/" class="alert-link"
+                   target="_blank" rel="noopener">web.dev/vitals</a>
+                documentation to stay current with metric definitions.
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             SECTION 2 — Lighthouse Optimization
+             ======================================================== -->
+        <section id="lighthouse" class="mb-5">
+            <h2 class="border-bottom border-success border-3 pb-2 mb-4">
+                2 &middot; Lighthouse Optimization
+            </h2>
+
+            <p>
+                Lighthouse (built into Chrome DevTools) audits Performance,
+                Accessibility, Best Practices, SEO, and PWA. Target a score
+                of 90+ in every category for production.
+            </p>
+
+            <!-- Progress bars — visual score indicators.
+                 role="progressbar" and aria-* for accessibility. -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Performance</label>
+                <div class="progress mb-3">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: 95%;" aria-valuenow="95"
+                         aria-valuemin="0" aria-valuemax="100">95</div>
+                </div>
+
+                <label class="form-label fw-semibold">Accessibility</label>
+                <div class="progress mb-3">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: 92%;" aria-valuenow="92"
+                         aria-valuemin="0" aria-valuemax="100">92</div>
+                </div>
+
+                <label class="form-label fw-semibold">Best Practices</label>
+                <div class="progress mb-3">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: 96%;" aria-valuenow="96"
+                         aria-valuemin="0" aria-valuemax="100">96</div>
+                </div>
+
+                <label class="form-label fw-semibold">SEO</label>
+                <div class="progress mb-3">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: 100%;" aria-valuenow="100"
+                         aria-valuemin="0" aria-valuemax="100">100</div>
+                </div>
+            </div>
+
+            <!-- Code block — Lighthouse CI config -->
+            <h5>Lighthouse CI Configuration</h5>
+            <pre class="code-block mb-4"><code><span class="cm">// lighthouserc.js — automate Lighthouse in CI/CD pipelines</span>
+<span class="key">module</span><span class="punc">.</span><span class="key">exports</span> <span class="punc">=</span> <span class="punc">{</span>
+  <span class="key">ci</span><span class="punc">:</span> <span class="punc">{</span>
+    <span class="key">collect</span><span class="punc">:</span> <span class="punc">{</span>
+      <span class="key">startServerCommand</span><span class="punc">:</span> <span class="str">'npm run preview'</span><span class="punc">,</span>
+      <span class="key">startServerReadyPattern</span><span class="punc">:</span> <span class="str">'ready in'</span><span class="punc">,</span>
+      <span class="key">url</span><span class="punc">:</span> <span class="punc">[</span><span class="str">'http://localhost:4173/'</span><span class="punc">]</span><span class="punc">,</span>
+      <span class="key">numberOfRuns</span><span class="punc">:</span> <span class="num">3</span><span class="punc">,</span>
+    <span class="punc">},</span>
+    <span class="key">assert</span><span class="punc">:</span> <span class="punc">{</span>
+      <span class="key">assertions</span><span class="punc">:</span> <span class="punc">{</span>
+        <span class="str">'categories:performance'</span><span class="punc">:</span> <span class="punc">[</span><span class="str">'error'</span><span class="punc">,</span> <span class="punc">{</span> <span class="key">minScore</span><span class="punc">:</span> <span class="num">0.9</span> <span class="punc">}]</span><span class="punc">,</span>
+        <span class="str">'categories:accessibility'</span><span class="punc">:</span> <span class="punc">[</span><span class="str">'error'</span><span class="punc">,</span> <span class="punc">{</span> <span class="key">minScore</span><span class="punc">:</span> <span class="num">0.9</span> <span class="punc">}]</span><span class="punc">,</span>
+      <span class="punc">},</span>
+    <span class="punc">},</span>
+    <span class="key">upload</span><span class="punc">:</span> <span class="punc">{</span>
+      <span class="key">target</span><span class="punc">:</span> <span class="str">'temporary-public-storage'</span><span class="punc">,</span>
+    <span class="punc">},</span>
+  <span class="punc">},</span>
+<span class="punc">};</span></code></pre>
+        </section>
+
+        <!-- ========================================================
+             SECTION 3 — Lazy Loading
+             ======================================================== -->
+        <section id="lazy" class="mb-5">
+            <h2 class="border-bottom border-success border-3 pb-2 mb-4">
+                3 &middot; Lazy Loading
+            </h2>
+
+            <p>
+                Lazy loading defers the download of off-screen images,
+                iframes, and videos until the user scrolls near them,
+                reducing initial page weight and speeding up LCP.
+            </p>
+
+            <div class="row g-4 mb-4">
+                <!-- Native lazy loading -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Native <code>loading="lazy"</code></h5>
+                            <p class="card-text">
+                                The simplest approach — add <code>loading="lazy"</code>
+                                to <code>&lt;img&gt;</code> and <code>&lt;iframe&gt;</code>
+                                tags. The browser handles scheduling automatically.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Intersection Observer API -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Intersection Observer</h5>
+                            <p class="card-text">
+                                For fine-grained control (fade-in animations,
+                                analytics triggers), use the
+                                <code>IntersectionObserver</code> API to load
+                                resources only when they enter the viewport.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code block — native lazy loading example -->
+            <h5>Native Lazy Loading</h5>
+            <pre class="code-block mb-4"><code><span class="cm">&lt;!-- loading="lazy" — browser defers fetch until near viewport --&gt;</span>
+<span class="punc">&lt;</span><span class="tag">img</span>
+  <span class="attr">src</span><span class="punc">=</span><span class="str">"hero-large.webp"</span>
+  <span class="attr">alt</span><span class="punc">=</span><span class="str">"Performance dashboard"</span>
+  <span class="attr">width</span><span class="punc">=</span><span class="str">"1200"</span>
+  <span class="attr">height</span><span class="punc">=</span><span class="str">"630"</span>
+  <span class="attr">loading</span><span class="punc">=</span><span class="str">"lazy"</span>
+  <span class="attr">decoding</span><span class="punc">=</span><span class="str">"async"</span>
+  <span class="attr">fetchpriority</span><span class="punc">=</span><span class="str">"low"</span>
+  <span class="attr">class</span><span class="punc">=</span><span class="str">"img-fluid rounded"</span>
+<span class="punc">/&gt;</span>
+
+<span class="cm">&lt;!-- fetchpriority="high" on the LCP hero image --&gt;</span>
+<span class="punc">&lt;</span><span class="tag">img</span>
+  <span class="attr">src</span><span class="punc">=</span><span class="str">"hero-lcp.webp"</span>
+  <span class="attr">fetchpriority</span><span class="punc">=</span><span class="str">"high"</span>
+  <span class="attr">loading</span><span class="punc">=</span><span class="str">"eager"</span>
+  <span class="attr">alt</span><span class="punc">=</span><span class="str">""</span>
+<span class="punc">/&gt;</span></code></pre>
+
+            <!-- Code block — Intersection Observer -->
+            <h5>Intersection Observer Pattern</h5>
+            <pre class="code-block mb-4"><code><span class="cm">// Defer image loading with IntersectionObserver</span>
+<span class="key">const</span> observer <span class="punc">=</span> <span class="key">new</span> <span class="key">IntersectionObserver</span><span class="punc">((</span><span class="key">entries</span><span class="punc">)</span> <span class="punc">=&gt;</span> <span class="punc">{</span>
+  <span class="key">entries</span><span class="punc">.</span><span class="key">forEach</span><span class="punc">((</span><span class="key">entry</span><span class="punc">)</span> <span class="punc">=&gt;</span> <span class="punc">{</span>
+    <span class="key">if</span> <span class="punc">(</span><span class="key">entry</span><span class="punc">.</span><span class="key">isIntersecting</span><span class="punc">)</span> <span class="punc">{</span>
+      <span class="key">const</span> img <span class="punc">=</span> <span class="key">entry</span><span class="punc">.</span><span class="key">target</span><span class="punc">;</span>
+      <span class="key">img</span><span class="punc">.</span><span class="key">src</span> <span class="punc">=</span> <span class="key">img</span><span class="punc">.</span><span class="key">dataset</span><span class="punc">.</span><span class="key">src</span><span class="punc">;</span>            <span class="cm">// swap data-src → src</span>
+      <span class="key">img</span><span class="punc">.</span><span class="key">classList</span><span class="punc">.</span><span class="key">add</span><span class="punc">(</span><span class="str">'loaded'</span><span class="punc">);</span>
+      <span class="key">observer</span><span class="punc">.</span><span class="key">unobserve</span><span class="punc">(</span><span class="key">img</span><span class="punc">);</span>              <span class="cm">// stop observing</span>
+    <span class="punc">}</span>
+  <span class="punc">});</span>
+<span class="punc">},</span> <span class="punc">{</span> <span class="key">rootMargin</span><span class="punc">:</span> <span class="str">'200px'</span> <span class="punc">});</span>            <span class="cm">// load 200 px early</span>
+
+<span class="key">document</span><span class="punc">.</span><span class="key">querySelectorAll</span><span class="punc">(</span><span class="str">'img[data-src]'</span><span class="punc">)</span>
+  <span class="punc">.</span><span class="key">forEach</span><span class="punc">((</span><span class="key">img</span><span class="punc">)</span> <span class="punc">=&gt;</span> <span class="key">observer</span><span class="punc">.</span><span class="key">observe</span><span class="punc">(</span><span class="key">img</span><span class="punc">));</span></code></pre>
+        </section>
+
+        <!-- ========================================================
+             SECTION 4 — Critical CSS
+             ======================================================== -->
+        <section id="critical" class="mb-5">
+            <h2 class="border-bottom border-success border-3 pb-2 mb-4">
+                4 &middot; Critical CSS
+            </h2>
+
+            <p>
+                Critical CSS is the minimal set of styles required to render
+                above-the-fold content. Inlining it eliminates a render-blocking
+                round-trip, improving First Contentful Paint (FCP).
+            </p>
+
+            <!-- Tabs — Bootstrap Nav tabs component.
+                 nav-tabs creates a tabbed interface.
+                 id="criticalTabs" links to tab-content below. -->
+            <ul class="nav nav-tabs mb-3" id="criticalTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <!-- nav-link with data-bs-toggle="tab".
+                         active + aria-selected marks the default tab. -->
+                    <button class="nav-link active" id="inline-tab"
+                            data-bs-toggle="tab" data-bs-target="#inlinePane"
+                            type="button" role="tab"
+                            aria-controls="inlinePane" aria-selected="true">
+                        Inline Approach
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="extract-tab"
+                            data-bs-toggle="tab" data-bs-target="#extractPane"
+                            type="button" role="tab"
+                            aria-controls="extractPane" aria-selected="false">
+                        Extraction Tools
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="preload-tab"
+                            data-bs-toggle="tab" data-bs-target="#preloadPane"
+                            type="button" role="tab"
+                            aria-controls="preloadPane" aria-selected="false">
+                        Preload Strategy
+                    </button>
+                </li>
+            </ul>
+
+            <!-- tab-content — container for tab panes -->
+            <div class="tab-content" id="criticalTabsContent">
+                <!-- tab-pane fade show active — visible by default.
+                     role="tabpanel" for accessibility. -->
+                <div class="tab-pane fade show active" id="inlinePane"
+                     role="tabpanel" aria-labelledby="inline-tab">
+                    <p>
+                        Place critical CSS inside a <code>&lt;style&gt;</code>
+                        tag in the <code>&lt;head&gt;</code>. Then load the full
+                        stylesheet asynchronously:
+                    </p>
+                    <pre class="code-block"><code><span class="cm">&lt;!-- Inline critical CSS --&gt;</span>
+<span class="punc">&lt;</span><span class="tag">style</span><span class="punc">&gt;</span>
+  <span class="cm">/* only above-the-fold rules */</span>
+  <span class="key">body</span> <span class="punc">{</span> <span class="key">margin</span><span class="punc">:</span> <span class="num">0</span><span class="punc">;</span> <span class="key">font-family</span><span class="punc">:</span> <span class="key">system-ui</span><span class="punc">;</span> <span class="punc">}</span>
+  <span class="key">.hero</span> <span class="punc">{</span> <span class="key">min-height</span><span class="punc">:</span> <span class="num">100vh</span><span class="punc">;</span> <span class="punc">}</span>
+<span class="punc">&lt;/</span><span class="tag">style</span><span class="punc">&gt;</span>
+
+<span class="cm">&lt;!-- Load full CSS async — onload swaps to "stylesheet" --&gt;</span>
+<span class="punc">&lt;</span><span class="tag">link</span> <span class="attr">rel</span><span class="punc">=</span><span class="str">"preload"</span> <span class="attr">as</span><span class="punc">=</span><span class="str">"style"</span>
+      <span class="attr">href</span><span class="punc">=</span><span class="str">"full.css"</span>
+      <span class="attr">onload</span><span class="punc">=</span><span class="str">"this.rel='stylesheet'"</span> <span class="punc">/&gt;</span></code></pre>
+                </div>
+
+                <div class="tab-pane fade" id="extractPane"
+                     role="tabpanel" aria-labelledby="extract-tab">
+                    <p>
+                        Automated tools extract critical CSS from your rendered
+                        HTML so you don't have to maintain it manually:
+                    </p>
+                    <ul class="perf-list">
+                        <li><strong>critical</strong> — npm package by Addy Osmani</li>
+                        <li><strong>Penthouse</strong> — headless Chromium-based extraction</li>
+                        <li><strong>critters</strong> — webpack/Next.js plugin</li>
+                    </ul>
+                    <pre class="code-block"><code><span class="cm"># Install critical globally</span>
+<span class="key">npm</span> install -g critical
+
+<span class="cm"># Extract and inline critical CSS</span>
+<span class="key">critical</span> https://example.com \
+  <span class="punc">--</span>base . \
+  <span class="punc">--</span>inline \
+  <span class="punc">--</span>css dist/css/main.css \
+  <span class="punc">--</span>dimensions 320x568 <span class="num">1200x900</span></code></pre>
+                </div>
+
+                <div class="tab-pane fade" id="preloadPane"
+                     role="tabpanel" aria-labelledby="preload-tab">
+                    <p>
+                        Preload the full CSS so it's fetched in parallel with
+                        the inlined critical styles, then applied without a
+                        flash of unstyled content (FOUC).
+                    </p>
+                    <pre class="code-block"><code><span class="cm">&lt;!-- Preload full CSS, then switch to stylesheet --&gt;</span>
+<span class="punc">&lt;</span><span class="tag">link</span> <span class="attr">rel</span><span class="punc">=</span><span class="str">"preload"</span> <span class="attr">as</span><span class="punc">=</span><span class="str">"style"</span>
+      <span class="attr">href</span><span class="punc">=</span><span class="str">"/css/main.min.css"</span>
+      <span class="attr">onload</span><span class="punc">=</span><span class="str">"this.onload=null;this.rel='stylesheet'"</span> <span class="punc">/&gt;</span>
+
+<span class="cm">&lt;!-- Noscript fallback for JS-disabled browsers --&gt;</span>
+<span class="punc">&lt;</span><span class="tag">noscript</span><span class="punc">&gt;&lt;</span><span class="tag">link</span> <span class="attr">rel</span><span class="punc">=</span><span class="str">"stylesheet"</span>
+      <span class="attr">href</span><span class="punc">=</span><span class="str">"/css/main.min.css"</span> <span class="punc">/&gt;&lt;/</span><span class="tag">noscript</span><span class="punc">&gt;</span></code></pre>
+                </div>
+            </div><!-- /.tab-content -->
+        </section>
+
+        <!-- ========================================================
+             SECTION 5 — Resource Hints
+             ======================================================== -->
+        <section id="hints" class="mb-5">
+            <h2 class="border-bottom border-success border-3 pb-2 mb-4">
+                5 &middot; Resource Hints
+            </h2>
+
+            <p>
+                Resource hints tell the browser which origins or assets to
+                prioritise, reducing DNS look-up, TLS handshake, and
+                connection times.
+            </p>
+
+            <!-- Accordion — Bootstrap component for collapsible panels.
+                 accordion-flush removes outer borders for a cleaner look. -->
+            <div class="accordion accordion-flush mb-4" id="hintsAccordion">
+
+                <!-- Accordion item 1 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="hintHead1">
+                        <button class="accordion-button" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#hintBody1"
+                                aria-expanded="true"
+                                aria-controls="hintBody1">
+                            <code>preconnect</code> — Open Connection Early
+                        </button>
+                    </h2>
+                    <div id="hintBody1"
+                         class="accordion-collapse collapse show"
+                         aria-labelledby="hintHead1"
+                         data-bs-parent="#hintsAccordion">
+                        <div class="accordion-body">
+                            <p>
+                                Establishes a full TCP + TLS handshake to a
+                                third-party origin before the browser discovers
+                                a resource that needs it.
+                            </p>
+                            <pre class="code-block"><code><span class="punc">&lt;</span><span class="tag">link</span> <span class="attr">rel</span><span class="punc">=</span><span class="str">"preconnect"</span>
+      <span class="attr">href</span><span class="punc">=</span><span class="str">"https://cdn.jsdelivr.net"</span>
+      <span class="attr">crossorigin</span> <span class="punc">/&gt;</span></code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accordion item 2 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="hintHead2">
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#hintBody2"
+                                aria-expanded="false"
+                                aria-controls="hintBody2">
+                            <code>dns-prefetch</code> — Resolve DNS Early
+                        </button>
+                    </h2>
+                    <div id="hintBody2"
+                         class="accordion-collapse collapse"
+                         aria-labelledby="hintHead2"
+                         data-bs-parent="#hintsAccordion">
+                        <div class="accordion-body">
+                            <p>
+                                Lightweight fallback for older browsers — only
+                                resolves DNS, does not open a full connection.
+                            </p>
+                            <pre class="code-block"><code><span class="punc">&lt;</span><span class="tag">link</span> <span class="attr">rel</span><span class="punc">=</span><span class="str">"dns-prefetch"</span>
+      <span class="attr">href</span><span class="punc">=</span><span class="str">"https://fonts.googleapis.com"</span> <span class="punc">/&gt;</span></code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accordion item 3 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="hintHead3">
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#hintBody3"
+                                aria-expanded="false"
+                                aria-controls="hintBody3">
+                            <code>preload</code> — Fetch Critical Resources Now
+                        </button>
+                    </h2>
+                    <div id="hintBody3"
+                         class="accordion-collapse collapse"
+                         aria-labelledby="hintHead3"
+                         data-bs-parent="#hintsAccordion">
+                        <div class="accordion-body">
+                            <p>
+                                Forces the browser to download a resource
+                                immediately at high priority — use sparingly
+                                for LCP assets.
+                            </p>
+                            <pre class="code-block"><code><span class="punc">&lt;</span><span class="tag">link</span> <span class="attr">rel</span><span class="punc">=</span><span class="str">"preload"</span>
+      <span class="attr">href</span><span class="punc">=</span><span class="str">"/fonts/inter-var.woff2"</span>
+      <span class="attr">as</span><span class="punc">=</span><span class="str">"font"</span>
+      <span class="attr">type</span><span class="punc">=</span><span class="str">"font/woff2"</span>
+      <span class="attr">crossorigin</span> <span class="punc">/&gt;</span></code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accordion item 4 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="hintHead4">
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#hintBody4"
+                                aria-expanded="false"
+                                aria-controls="hintBody4">
+                            <code>prefetch</code> — Fetch for Future Navigation
+                        </button>
+                    </h2>
+                    <div id="hintBody4"
+                         class="accordion-collapse collapse"
+                         aria-labelledby="hintHead4"
+                         data-bs-parent="#hintsAccordion">
+                        <div class="accordion-body">
+                            <p>
+                                Low-priority hint that downloads a resource
+                                likely needed for the <em>next</em> navigation.
+                                Good for SPA route chunks.
+                            </p>
+                            <pre class="code-block"><code><span class="punc">&lt;</span><span class="tag">link</span> <span class="attr">rel</span><span class="punc">=</span><span class="str">"prefetch"</span>
+      <span class="attr">href</span><span class="punc">=</span><span class="str">"/js/dashboard.chunk.js"</span>
+      <span class="attr">as</span><span class="punc">=</span><span class="str">"script"</span> <span class="punc">/&gt;</span></code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /.accordion -->
+        </section>
+
+        <!-- ========================================================
+             SECTION 6 — Image Optimization
+             ======================================================== -->
+        <section id="images" class="mb-5">
+            <h2 class="border-bottom border-success border-3 pb-2 mb-4">
+                6 &middot; Image Optimization
+            </h2>
+
+            <p>
+                Images often account for 50 %+ of page weight. Modern formats
+                (WebP, AVIF), responsive <code>&lt;picture&gt;</code>, and
+                explicit dimensions dramatically reduce transfer size and CLS.
+            </p>
+
+            <!-- Table — image format comparison -->
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Format</th>
+                            <th>Compression</th>
+                            <th>Transparency</th>
+                            <th>Animation</th>
+                            <th>Browser Support</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-success">WebP</span></td>
+                            <td>25-34 % smaller than JPEG</td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                            <td>97 %+</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-success">AVIF</span></td>
+                            <td>~50 % smaller than JPEG</td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                            <td>90 %+</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-secondary">JPEG</span></td>
+                            <td>Baseline</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>100 %</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-secondary">PNG</span></td>
+                            <td>Lossless, large</td>
+                            <td>Yes</td>
+                            <td>No</td>
+                            <td>100 %</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Code block — <picture> element -->
+            <h5>Responsive <code>&lt;picture&gt;</code> Element</h5>
+            <pre class="code-block mb-4"><code><span class="punc">&lt;</span><span class="tag">picture</span><span class="punc">&gt;</span>
+  <span class="cm">&lt;!-- AVIF for supporting browsers (smallest) --&gt;</span>
+  <span class="punc">&lt;</span><span class="tag">source</span>
+    <span class="attr">srcset</span><span class="punc">=</span><span class="str">"hero-800.avif 800w, hero-1200.avif 1200w"</span>
+    <span class="attr">sizes</span><span class="punc">=</span><span class="str">"(max-width: 768px) 100vw, 1200px"</span>
+    <span class="attr">type</span><span class="punc">=</span><span class="str">"image/avif"</span> <span class="punc">/&gt;</span>
+
+  <span class="cm">&lt;!-- WebP fallback --&gt;</span>
+  <span class="punc">&lt;</span><span class="tag">source</span>
+    <span class="attr">srcset</span><span class="punc">=</span><span class="str">"hero-800.webp 800w, hero-1200.webp 1200w"</span>
+    <span class="attr">sizes</span><span class="punc">=</span><span class="str">"(max-width: 768px) 100vw, 1200px"</span>
+    <span class="attr">type</span><span class="punc">=</span><span class="str">"image/webp"</span> <span class="punc">/&gt;</span>
+
+  <span class="cm">&lt;!-- JPEG ultimate fallback --&gt;</span>
+  <span class="punc">&lt;</span><span class="tag">img</span>
+    <span class="attr">src</span><span class="punc">=</span><span class="str">"hero-1200.jpg"</span>
+    <span class="attr">alt</span><span class="punc">=</span><span class="str">"Performance dashboard screenshot"</span>
+    <span class="attr">width</span><span class="punc">=</span><span class="str">"1200"</span>   <span class="cm">/* explicit width prevents CLS */</span>
+    <span class="attr">height</span><span class="punc">=</span><span class="str">"630"</span>    <span class="cm">/* explicit height prevents CLS */</span>
+    <span class="attr">loading</span><span class="punc">=</span><span class="str">"lazy"</span>   <span class="cm">/* native lazy load */</span>
+    <span class="attr">decoding</span><span class="punc">=</span><span class="str">"async"</span> <span class="cm">/* decode off main thread */</span>
+    <span class="attr">class</span><span class="punc">=</span><span class="str">"img-fluid rounded shadow"</span>
+  <span class="punc">/&gt;</span>
+<span class="punc">&lt;/</span><span class="tag">picture</span><span class="punc">&gt;</span></code></pre>
+
+            <!-- Alert — warning about CLS -->
+            <div class="alert alert-warning" role="alert">
+                <strong>CLS warning:</strong> Always set explicit
+                <code>width</code> and <code>height</code> on
+                <code>&lt;img&gt;</code> tags. Browsers use these to
+                reserve space and prevent layout shifts.
+            </div>
+        </section>
+
+        <!-- ========================================================
+             SECTION 7 — Performance Budgets
+             ======================================================== -->
+        <section id="budget" class="mb-5">
+            <h2 class="border-bottom border-success border-3 pb-2 mb-4">
+                7 &middot; Performance Budgets
+            </h2>
+
+            <p>
+                A performance budget sets concrete limits on bundle size,
+                number of requests, and metric targets. If a PR exceeds
+                the budget, CI fails and the change is rejected.
+            </p>
+
+            <div class="row g-4 mb-4">
+                <!-- Budget types -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            Budget Types
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Size budgets</strong> — total JS, CSS,
+                                image, and font file sizes (e.g. JS ≤&nbsp;170&nbsp;KB
+                                compressed).
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Quantity budgets</strong> — max number
+                                of HTTP requests per page.
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Metric budgets</strong> — LCP ≤&nbsp;2.5&nbsp;s,
+                                CLS ≤&nbsp;0.1, TBT ≤&nbsp;200&nbsp;ms.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            Enforcement Tools
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Webpack</strong> —
+                                <code>performance.maxAssetSize</code>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Bundlewatch</strong> — tracks sizes
+                                across PRs
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Lighthouse CI</strong> — metric
+                                assertions in CI pipeline
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Size Limit</strong> — GitHub Action
+                                for JS budgets
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code block — Webpack performance config -->
+            <h5>Webpack Performance Configuration</h5>
+            <pre class="code-block mb-4"><code><span class="cm">// webpack.config.js — enforce size budgets at build time</span>
+<span class="key">module</span><span class="punc">.</span><span class="key">exports</span> <span class="punc">=</span> <span class="punc">{</span>
+  <span class="key">performance</span><span class="punc">:</span> <span class="punc">{</span>
+    <span class="key">hints</span><span class="punc">:</span> <span class="str">'error'</span><span class="punc">,</span>           <span class="cm">// 'warning' | 'error' | false</span>
+    <span class="key">maxAssetSize</span><span class="punc">:</span> <span class="num">170</span> <span class="punc">*</span> <span class="num">1024</span><span class="punc">,</span>  <span class="cm">// 170 KB per asset</span>
+    <span class="key">maxEntrypointSize</span><span class="punc">:</span> <span class="num">300</span> <span class="punc">*</span> <span class="num">1024</span><span class="punc">,</span> <span class="cm">// 300 KB total entry</span>
+    <span class="key">assetFilter</span><span class="punc">:</span> <span class="punc">(</span><span class="key">asset</span><span class="punc">)</span> <span class="punc">=&gt;</span>
+      <span class="cm">/* only check JS & CSS bundles */</span>
+      <span class="punc">/</span><span class="key">\</span><span class="punc">.</span><span class="punc">(</span><span class="key">js</span><span class="punc">|</span><span class="key">css</span><span class="punc">)</span><span class="key">$</span><span class="punc">/</span><span class="punc">.</span><span class="key">test</span><span class="punc">(</span><span class="key">asset</span><span class="punc">),</span>
+  <span class="punc">},</span>
+<span class="punc">};</span></code></pre>
+
+            <!-- Code block — size-limit config -->
+            <h5>Size Limit (GitHub Action)</h5>
+            <pre class="code-block mb-4"><code><span class="cm">// .size-limit.json</span>
+<span class="punc">[</span>
+  <span class="punc">{</span>
+    <span class="key">"name"</span><span class="punc">:</span> <span class="str">"Main JS bundle"</span><span class="punc">,</span>
+    <span class="key">"path"</span><span class="punc">:</span> <span class="str">"dist/main.*.js"</span><span class="punc">,</span>
+    <span class="key">"limit"</span><span class="punc">:</span> <span class="str">"170 KB"</span><span class="punc">,</span>
+    <span class="key">"gzip"</span><span class="punc">:</span> <span class="num">true</span>
+  <span class="punc">}</span><span class="punc">,</span>
+  <span class="punc">{</span>
+    <span class="key">"name"</span><span class="punc">:</span> <span class="str">"CSS bundle"</span><span class="punc">,</span>
+    <span class="key">"path"</span><span class="punc">:</span> <span class="str">"dist/style.*.css"</span><span class="punc">,</span>
+    <span class="key">"limit"</span><span class="punc">:</span> <span class="str">"50 KB"</span><span class="punc">,</span>
+    <span class="key">"gzip"</span><span class="punc">:</span> <span class="num">true</span>
+  <span class="punc">}</span>
+<span class="punc">]</span></code></pre>
+
+            <!-- Code block — GitHub Actions workflow -->
+            <h5>CI Workflow (GitHub Actions)</h5>
+            <pre class="code-block"><code><span class="cm"># .github/workflows/perf.yml</span>
+<span class="key">name</span><span class="punc">:</span> <span class="str">Performance Budget</span>
+<span class="key">on</span><span class="punc">:</span> <span class="punc">[</span><span class="str">pull_request</span><span class="punc">]</span>
+<span class="key">jobs</span><span class="punc">:</span>
+  <span class="key">budget</span><span class="punc">:</span>
+    <span class="key">runs-on</span><span class="punc">:</span> <span class="str">ubuntu-latest</span>
+    <span class="key">steps</span><span class="punc">:</span>
+      <span class="punc">-</span> <span class="key">uses</span><span class="punc">:</span> <span class="str">actions/checkout@v4</span>
+      <span class="punc">-</span> <span class="key">uses</span><span class="punc">:</span> <span class="str">actions/setup-node@v4</span>
+        <span class="key">with</span><span class="punc">:</span>
+          <span class="key">node-version</span><span class="punc">:</span> <span class="str">'20'</span>
+      <span class="punc">-</span> <span class="key">run</span><span class="punc">:</span> <span class="str">npm ci</span>
+      <span class="punc">-</span> <span class="key">run</span><span class="punc">:</span> <span class="str">npm run build</span>
+      <span class="punc">-</span> <span class="key">uses</span><span class="punc">:</span> <span class="str">andresz1/size-limit-action@v1</span>
+        <span class="key">with</span><span class="punc">:</span>
+          <span class="key">github_token</span><span class="punc">:</span> <span class="str">${{ secrets.GITHUB_TOKEN }}</span></code></pre>
+        </section>
+
+    </main><!-- /main -->
+
+    <!-- ============================================================
+         FOOTER — simple dark footer with bg-success to match theme.
+         ============================================================ -->
+    <footer class="bg-success text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <!-- Footer column 1 -->
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <h5 class="fw-bold">PerfDeploy</h5>
+                    <p class="mb-0 small">
+                        A Bootstrap&nbsp;5 reference for deploying fast,
+                        accessible web applications with confidence.
+                    </p>
+                </div>
+
+                <!-- Footer column 2 — quick links -->
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <h6 class="fw-bold">Sections</h6>
+                    <!-- list-unstyled removes bullets; small for compact text -->
+                    <ul class="list-unstyled small">
+                        <li><a href="#vitals" class="text-white text-decoration-none">Core Web Vitals</a></li>
+                        <li><a href="#lighthouse" class="text-white text-decoration-none">Lighthouse</a></li>
+                        <li><a href="#lazy" class="text-white text-decoration-none">Lazy Loading</a></li>
+                        <li><a href="#critical" class="text-white text-decoration-none">Critical CSS</a></li>
+                    </ul>
+                </div>
+
+                <!-- Footer column 3 -->
+                <div class="col-md-4">
+                    <h6 class="fw-bold">More Sections</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#hints" class="text-white text-decoration-none">Resource Hints</a></li>
+                        <li><a href="#images" class="text-white text-decoration-none">Image Optimization</a></li>
+                        <li><a href="#budget" class="text-white text-decoration-none">Performance Budgets</a></li>
+                        <li><a href="#top" class="text-white text-decoration-none">Back to Top ↑</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Horizontal rule — border-white for visibility on green -->
+            <hr class="border-white">
+
+            <!-- d-flex + justify-content-between puts text left and right -->
+            <div class="d-flex justify-content-between flex-wrap small">
+                <span>&copy; 2026 Performance-focused Deployment</span>
+                <span>Built with Bootstrap&nbsp;5.3.3</span>
+            </div>
+        </div>
+    </footer><!-- /footer -->
+
+    <!-- ============================================================
+         Bootstrap 5.3.3 JS Bundle (includes Popper)
+         Placed at end of <body> so the DOM is fully parsed before
+         scripts execute — eliminates render-blocking and improves
+         FCP / TTI metrics.
+
+         integrity — SRI hash for tamper protection.
+         crossorigin — required for SRI on CDN resources.
+         ============================================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+
+    <!-- ============================================================
+         Optional: defer non-critical JS to avoid blocking parse.
+         In production, bundle your own scripts and load with
+         type="module" or defer/async attributes.
+         ============================================================ -->
+</body>
+</html>

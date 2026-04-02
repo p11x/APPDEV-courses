@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_06_09_Integration_Testing.html                             -->
+<!-- Integration Testing Patterns for Cross-Browser Apps          -->
+<!-- Demonstrates testing strategies, automated testing setup,    -->
+<!-- and integration with Bootstrap components                    -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>04_06_09 - Integration Testing</title>
+    
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* ======================================================== */
+        /* TEST RESULT STYLES                                       */
+        /* Visual indicators for test pass/fail status             */
+        /* ======================================================== */
+        .test-pass {
+            border-left: 4px solid #198754;
+            background-color: #d1e7dd;
+        }
+        .test-fail {
+            border-left: 4px solid #dc3545;
+            background-color: #f8d7da;
+        }
+        .test-skip {
+            border-left: 4px solid #ffc107;
+            background-color: #fff3cd;
+        }
+        .test-running {
+            border-left: 4px solid #0d6efd;
+            background-color: #cfe2ff;
+        }
+
+        /* Test suite container */
+        .test-suite {
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .test-suite-header {
+            background: #212529;
+            color: white;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+        }
+        .test-case {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .test-case:last-child {
+            border-bottom: none;
+        }
+        .test-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .test-icon.pass { background: #198754; color: white; }
+        .test-icon.fail { background: #dc3545; color: white; }
+        .test-icon.skip { background: #ffc107; color: #333; }
+        .test-icon.running { background: #0d6efd; color: white; }
+
+        /* Loading spinner for async tests */
+        .spinner-test {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Code snippet styles */
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .comment { color: #6a9955; }
+        .code-block .function { color: #dcdcaa; }
+    </style>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- NAVIGATION                                                   -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Integration Testing</a>
+            <button class="navbar-toggler" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#strategies">Strategies</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#liveTests">Live Tests</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#ciSetup">CI Setup</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#patterns">Patterns</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HERO                                                         -->
+    <!-- ============================================================ -->
+    <header class="bg-purple text-white py-5" style="background: #6f42c1;">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Integration Testing</h1>
+            <p class="lead">
+                Automated and manual testing patterns for validating Bootstrap
+                components across multiple browsers and environments.
+            </p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: TESTING STRATEGIES                            -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="strategies">
+            <h2 class="border-bottom pb-2 mb-4">1. Cross-Browser Testing Strategies</h2>
+            
+            <div class="row">
+                <!-- Testing pyramid -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Testing Pyramid</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center">
+                                <!-- Visual pyramid representation -->
+                                <div class="bg-danger text-white p-2 rounded mx-auto mb-1" 
+                                     style="max-width:200px;font-size:0.8rem;">
+                                    E2E Tests (Few)
+                                </div>
+                                <div class="bg-warning p-2 rounded mx-auto mb-1" 
+                                     style="max-width:300px;font-size:0.8rem;">
+                                    Integration Tests (Some)
+                                </div>
+                                <div class="bg-success text-white p-2 rounded mx-auto" 
+                                     style="max-width:400px;font-size:0.8rem;">
+                                    Unit Tests (Many)
+                                </div>
+                            </div>
+                            <ul class="mt-3 small">
+                                <li><strong>Unit Tests:</strong> Test individual functions in isolation</li>
+                                <li><strong>Integration Tests:</strong> Test component interactions</li>
+                                <li><strong>E2E Tests:</strong> Test full user workflows across browsers</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testing approaches -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Testing Approaches</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <thead><tr><th>Approach</th><th>Tool</th></tr></thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Visual Regression</strong></td>
+                                        <td>BackstopJS, Percy</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Automated E2E</strong></td>
+                                        <td>Selenium, Playwright, Cypress</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Unit Tests</strong></td>
+                                        <td>Jest, Mocha, Vitest</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Component Tests</strong></td>
+                                        <td>Testing Library, Storybook</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Accessibility</strong></td>
+                                        <td>axe-core, Lighthouse</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Manual</strong></td>
+                                        <td>BrowserStack, Sauce Labs</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: LIVE IN-PAGE TESTS                            -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="liveTests">
+            <h2 class="border-bottom pb-2 mb-4">2. Live Integration Tests</h2>
+            <p class="text-muted">Run these tests to verify Bootstrap components work in your current browser.</p>
+            
+            <!-- Run all tests button -->
+            <div class="mb-4">
+                <button class="btn btn-primary btn-lg" onclick="runAllTests()" id="runAllBtn">
+                    Run All Tests
+                </button>
+                <button class="btn btn-outline-secondary btn-lg ms-2" onclick="resetTests()">
+                    Reset
+                </button>
+            </div>
+            
+            <!-- Test Suite 1: Bootstrap Core -->
+            <div class="test-suite mb-4" id="suite-core">
+                <div class="test-suite-header">
+                    Suite 1: Bootstrap Core
+                    <span class="float-end badge bg-secondary" id="coreCount">0/0</span>
+                </div>
+                <div class="test-case" id="test-css">
+                    <div class="test-icon skip" id="icon-css">?</div>
+                    <div class="flex-grow-1">
+                        <strong>Bootstrap CSS loaded</strong>
+                        <div class="small text-muted" id="result-css">Not run</div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-js">
+                    <div class="test-icon skip" id="icon-js">?</div>
+                    <div class="flex-grow-1">
+                        <strong>Bootstrap JS loaded</strong>
+                        <div class="small text-muted" id="result-js">Not run</div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-grid">
+                    <div class="test-icon skip" id="icon-grid">?</div>
+                    <div class="flex-grow-1">
+                        <strong>Grid system functional</strong>
+                        <div class="small text-muted" id="result-grid">Not run</div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-responsive">
+                    <div class="test-icon skip" id="icon-responsive">?</div>
+                    <div class="flex-grow-1">
+                        <strong>Responsive breakpoints</strong>
+                        <div class="small text-muted" id="result-responsive">Not run</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test Suite 2: Components -->
+            <div class="test-suite mb-4" id="suite-components">
+                <div class="test-suite-header">
+                    Suite 2: Bootstrap Components
+                    <span class="float-end badge bg-secondary" id="compCount">0/0</span>
+                </div>
+                <div class="test-case" id="test-modal">
+                    <div class="test-icon skip" id="icon-modal">?</div>
+                    <div class="flex-grow-1">
+                        <strong>Modal component</strong>
+                        <div class="small text-muted" id="result-modal">Not run</div>
+                    </div>
+                    <!-- Hidden modal for testing -->
+                    <div class="modal fade" id="testModalComponent" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-body">Test modal</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-dropdown">
+                    <div class="test-icon skip" id="icon-dropdown">?</div>
+                    <div class="flex-grow-1">
+                        <strong>Dropdown component</strong>
+                        <div class="small text-muted" id="result-dropdown">Not run</div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-tooltip">
+                    <div class="test-icon skip" id="icon-tooltip">?</div>
+                    <div class="flex-grow-1">
+                        <strong>Tooltip component</strong>
+                        <div class="small text-muted" id="result-tooltip">Not run</div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-collapse">
+                    <div class="test-icon skip" id="icon-collapse">?</div>
+                    <div class="flex-grow-1">
+                        <strong>Collapse component</strong>
+                        <div class="small text-muted" id="result-collapse">Not run</div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-toast">
+                    <div class="test-icon skip" id="icon-toast">?</div>
+                    <div class="flex-grow-1">
+                        <strong>Toast component</strong>
+                        <div class="small text-muted" id="result-toast">Not run</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test Suite 3: Browser APIs -->
+            <div class="test-suite mb-4" id="suite-apis">
+                <div class="test-suite-header">
+                    Suite 3: Browser API Support
+                    <span class="float-end badge bg-secondary" id="apiCount">0/0</span>
+                </div>
+                <div class="test-case" id="test-fetch">
+                    <div class="test-icon skip" id="icon-fetch">?</div>
+                    <div class="flex-grow-1">
+                        <strong>fetch() API</strong>
+                        <div class="small text-muted" id="result-fetch">Not run</div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-promises">
+                    <div class="test-icon skip" id="icon-promises">?</div>
+                    <div class="flex-grow-1">
+                        <strong>Promise API</strong>
+                        <div class="small text-muted" id="result-promises">Not run</div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-intersection">
+                    <div class="test-icon skip" id="icon-intersection">?</div>
+                    <div class="flex-grow-1">
+                        <strong>IntersectionObserver</strong>
+                        <div class="small text-muted" id="result-intersection">Not run</div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-cssGrid">
+                    <div class="test-icon skip" id="icon-cssGrid">?</div>
+                    <div class="flex-grow-1">
+                        <strong>CSS Grid support</strong>
+                        <div class="small text-muted" id="result-cssGrid">Not run</div>
+                    </div>
+                </div>
+                <div class="test-case" id="test-cssVars">
+                    <div class="test-icon skip" id="icon-cssVars">?</div>
+                    <div class="flex-grow-1">
+                        <strong>CSS Custom Properties</strong>
+                        <div class="small text-muted" id="result-cssVars">Not run</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test results summary -->
+            <div class="card" id="testSummary" style="display:none;">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Test Summary</h5>
+                </div>
+                <div class="card-body" id="summaryBody"></div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: CI/CD SETUP EXAMPLES                          -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="ciSetup">
+            <h2 class="border-bottom pb-2 mb-4">3. CI/CD Configuration Examples</h2>
+            
+            <div class="row">
+                <!-- GitHub Actions -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0">GitHub Actions (Playwright)</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre class="code-block mb-0"><code><span class="comment"># .github/workflows/cross-browser.yml</span>
+<span class="keyword">name</span>: Cross-Browser Tests
+<span class="keyword">on</span>: [push, pull_request]
+
+<span class="keyword">jobs</span>:
+  <span class="function">test</span>:
+    <span class="keyword">runs-on</span>: ubuntu-latest
+    <span class="keyword">strategy</span>:
+      <span class="keyword">matrix</span>:
+        <span class="keyword">browser</span>: [chromium, firefox, webkit]
+    <span class="keyword">steps</span>:
+      - <span class="keyword">uses</span>: actions/checkout@v4
+      - <span class="keyword">uses</span>: actions/setup-node@v4
+      - <span class="keyword">run</span>: npm ci
+      - <span class="keyword">run</span>: npx playwright install
+      - <span class="keyword">run</span>: >
+          npx playwright test
+          --project=${{ matrix.browser }}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Playwright config -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Playwright Config</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre class="code-block mb-0"><code><span class="comment">// playwright.config.js</span>
+<span class="keyword">export default</span> {
+  <span class="keyword">testDir</span>: <span class="string">'./tests'</span>,
+  <span class="keyword">projects</span>: [
+    {
+      <span class="keyword">name</span>: <span class="string">'chromium'</span>,
+      <span class="keyword">use</span>: { 
+        <span class="keyword">browserName</span>: <span class="string">'chromium'</span> 
+      },
+    },
+    {
+      <span class="keyword">name</span>: <span class="string">'firefox'</span>,
+      <span class="keyword">use</span>: { 
+        <span class="keyword">browserName</span>: <span class="string">'firefox'</span> 
+      },
+    },
+    {
+      <span class="keyword">name</span>: <span class="string">'webkit'</span>,
+      <span class="keyword">use</span>: { 
+        <span class="keyword">browserName</span>: <span class="string">'webkit'</span> 
+      },
+    },
+  ],
+};</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cypress config -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Cypress Cross-Browser Config</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="code-block mb-0"><code><span class="comment">// cypress.config.js</span>
+<span class="keyword">const</span> { defineConfig } = <span class="function">require</span>(<span class="string">'cypress'</span>);
+
+<span class="keyword">module</span>.<span class="keyword">exports</span> = <span class="function">defineConfig</span>({
+  <span class="keyword">e2e</span>: {
+    <span class="keyword">baseUrl</span>: <span class="string">'http://localhost:3000'</span>,
+    <span class="keyword">viewportWidth</span>: 1280,
+    <span class="keyword">viewportHeight</span>: 720,
+    <span class="comment">// Configure browsers</span>
+    <span class="keyword">browsers</span>: [
+      { <span class="keyword">name</span>: <span class="string">'chrome'</span>, <span class="keyword">channel</span>: <span class="string">'stable'</span> },
+      { <span class="keyword">name</span>: <span class="string">'firefox'</span>, <span class="keyword">channel</span>: <span class="string">'stable'</span> },
+      { <span class="keyword">name</span>: <span class="string">'edge'</span>, <span class="keyword">channel</span>: <span class="string">'stable'</span> },
+    ],
+  },
+  <span class="comment">// Component testing</span>
+  <span class="keyword">component</span>: {
+    <span class="keyword">devServer</span>: {
+      <span class="keyword">framework</span>: <span class="string">'react'</span>,
+      <span class="keyword">bundler</span>: <span class="string">'vite'</span>,
+    },
+  },
+});</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: TEST PATTERNS                                 -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="patterns">
+            <h2 class="border-bottom pb-2 mb-4">4. Test Patterns & Best Practices</h2>
+            
+            <div class="row">
+                <!-- Selector strategies -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Selector Strategies</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Prefer user-facing selectors for resilient tests:</p>
+                            <pre class="code-block mb-0 small"><code><span class="comment">// BEST: By role (accessible)</span>
+<span class="function">getByRole</span>(<span class="string">'button'</span>, { name: <span class="string">'Submit'</span> })
+<span class="function">getByRole</span>(<span class="string">'navigation'</span>)
+
+<span class="comment">// GOOD: By label (forms)</span>
+<span class="function">getByLabel</span>(<span class="string">'Email address'</span>)
+
+<span class="comment">// GOOD: By text content</span>
+<span class="function">getByText</span>(<span class="string">'Welcome back'</span>)
+
+<span class="comment">// OK: By test ID (last resort)</span>
+<span class="function">getByTestId</span>(<span class="string">'submit-btn'</span>)
+
+<span class="comment">// AVOID: CSS selectors (brittle)</span>
+document.querySelector(<span class="string">'.btn-primary'</span>)
+page.locator(<span class="string">'#myButton'</span>)</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Wait strategies -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Wait Strategies</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Avoid fixed waits; use smart waiting:</p>
+                            <pre class="code-block mb-0 small"><code><span class="comment">// BAD: Fixed timeout</span>
+<span class="function">setTimeout</span>(...); <span class="comment">// Flaky!</span>
+
+<span class="comment">// GOOD: Wait for element</span>
+<span class="keyword">await</span> page.<span class="function">waitForSelector</span>(
+  <span class="string">'.loaded'</span>
+);
+
+<span class="comment">// GOOD: Wait for network</span>
+<span class="keyword">await</span> page.<span class="function">waitForResponse</span>(
+  resp => resp.url().includes(<span class="string">'/api'</span>)
+);
+
+<span class="comment">// GOOD: Wait for navigation</span>
+<span class="keyword">await</span> page.<span class="function">waitForURL</span>(<span class="string">'/dashboard'</span>);
+
+<span class="comment">// GOOD: Auto-waiting (Playwright)</span>
+<span class="keyword">await</span> page.<span class="function">click</span>(<span class="string">'button'</span>);
+<span class="comment">// Automatically waits for element</span></code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Visual regression testing -->
+            <div class="card mt-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Visual Regression Testing Pattern</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Visual regression testing captures screenshots and compares them pixel-by-pixel
+                        across browsers and code changes.
+                    </p>
+                    <pre class="code-block mb-0"><code><span class="comment">// Playwright visual comparison</span>
+<span class="keyword">test</span>(<span class="string">'homepage matches snapshot'</span>, <span class="keyword">async</span> ({ page }) => {
+  <span class="keyword">await</span> page.<span class="function">goto</span>(<span class="string">'/'</span>);
+  <span class="keyword">await</span> <span class="function">expect</span>(page).<span class="function">toHaveScreenshot</span>(<span class="string">'homepage.png'</span>, {
+    <span class="keyword">maxDiffPixels</span>: 100, <span class="comment">// Tolerance</span>
+  });
+});
+
+<span class="comment">// Component-level screenshots</span>
+<span class="keyword">test</span>(<span class="string">'card component renders correctly'</span>, <span class="keyword">async</span> ({ page }) => {
+  <span class="keyword">await</span> page.<span class="function">goto</span>(<span class="string">'/components/card'</span>);
+  <span class="keyword">const</span> card = page.<span class="function">locator</span>(<span class="string">'.card'</span>).<span class="function">first</span>();
+  <span class="keyword">await</span> <span class="function">expect</span>(card).<span class="function">toHaveScreenshot</span>(<span class="string">'card-component.png'</span>);
+});
+
+<span class="comment">// Responsive screenshots</span>
+<span class="keyword">test</span>(<span class="string">'mobile layout'</span>, <span class="keyword">async</span> ({ page }) => {
+  <span class="keyword">await</span> page.<span class="function">setViewportSize</span>({ <span class="keyword">width</span>: 375, <span class="keyword">height</span>: 812 });
+  <span class="keyword">await</span> page.<span class="function">goto</span>(<span class="string">'/'</span>);
+  <span class="keyword">await</span> <span class="function">expect</span>(page).<span class="function">toHaveScreenshot</span>(<span class="string">'homepage-mobile.png'</span>);
+});</code></pre>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                       -->
+    <!-- ============================================================ -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Integration Testing &copy; 2024 | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- INTEGRATION TEST RUNNER                                      -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // TEST RUNNER
+        // Executes Bootstrap integration tests in the current browser
+        // ============================================================
+        var testResults = { passed: 0, failed: 0, skipped: 0, total: 0 };
+        
+        function updateTestIcon(testId, status) {
+            var icon = document.getElementById('icon-' + testId);
+            var result = document.getElementById('result-' + testId);
+            var testCase = document.getElementById('test-' + testId);
+            
+            icon.className = 'test-icon ' + status;
+            icon.textContent = status === 'pass' ? '\u2713' : 
+                               status === 'fail' ? '\u2717' : '?';
+            testCase.className = 'test-case test-' + status;
+        }
+        
+        function runTest(testId, testFn) {
+            testResults.total++;
+            var icon = document.getElementById('icon-' + testId);
+            var result = document.getElementById('result-' + testId);
+            
+            icon.className = 'test-icon running';
+            icon.textContent = '...';
+            result.textContent = 'Running...';
+            
+            // Small delay to show animation
+            setTimeout(function() {
+                try {
+                    var message = testFn();
+                    updateTestIcon(testId, 'pass');
+                    result.textContent = message || 'Passed';
+                    testResults.passed++;
+                } catch(e) {
+                    updateTestIcon(testId, 'fail');
+                    result.textContent = 'Failed: ' + e.message;
+                    testResults.failed++;
+                }
+                updateSummary();
+            }, 100);
+        }
+        
+        function updateSummary() {
+            document.getElementById('coreCount').textContent = testResults.passed + '/' + testResults.total;
+            document.getElementById('compCount').textContent = testResults.passed + '/' + testResults.total;
+            document.getElementById('apiCount').textContent = testResults.passed + '/' + testResults.total;
+        }
+        
+        function showSummary() {
+            var summary = document.getElementById('testSummary');
+            var body = document.getElementById('summaryBody');
+            summary.style.display = 'block';
+            
+            var total = testResults.passed + testResults.failed;
+            var pct = total > 0 ? Math.round(testResults.passed / total * 100) : 0;
+            var badgeClass = pct === 100 ? 'bg-success' : pct >= 75 ? 'bg-warning' : 'bg-danger';
+            
+            body.innerHTML = 
+                '<div class="row text-center">' +
+                '<div class="col"><div class="display-6 text-success">' + testResults.passed + '</div><small>Passed</small></div>' +
+                '<div class="col"><div class="display-6 text-danger">' + testResults.failed + '</div><small>Failed</small></div>' +
+                '<div class="col"><div class="display-6">' + total + '</div><small>Total</small></div>' +
+                '<div class="col"><span class="badge ' + badgeClass + ' fs-4">' + pct + '%</span><br><small>Pass Rate</small></div>' +
+                '</div>';
+        }
+        
+        function runAllTests() {
+            testResults = { passed: 0, failed: 0, skipped: 0, total: 0 };
+            
+            // Suite 1: Core
+            runTest('css', function() {
+                var link = document.querySelector('link[href*="bootstrap"]');
+                if (!link) throw new Error('Bootstrap CSS link not found');
+                return 'Bootstrap CSS is loaded from CDN';
+            });
+            
+            runTest('js', function() {
+                if (typeof bootstrap === 'undefined') throw new Error('bootstrap object not found');
+                return 'Bootstrap JS v' + (bootstrap.Tooltip?.VERSION || 'unknown') + ' loaded';
+            });
+            
+            runTest('grid', function() {
+                if (!CSS.supports('display', 'flex')) throw new Error('Flexbox not supported');
+                return 'Flexbox (grid foundation) is supported';
+            });
+            
+            runTest('responsive', function() {
+                var vw = window.innerWidth;
+                var breakpoint = vw >= 1400 ? 'xxl' : vw >= 1200 ? 'xl' : 
+                                 vw >= 992 ? 'lg' : vw >= 768 ? 'md' : 
+                                 vw >= 576 ? 'sm' : 'xs';
+                return 'Current breakpoint: ' + breakpoint + ' (' + vw + 'px)';
+            });
+            
+            // Suite 2: Components (with delay for async)
+            setTimeout(function() {
+                runTest('modal', function() {
+                    if (typeof bootstrap.Modal === 'undefined') throw new Error('Modal class not found');
+                    return 'bootstrap.Modal constructor available';
+                });
+                
+                runTest('dropdown', function() {
+                    if (typeof bootstrap.Dropdown === 'undefined') throw new Error('Dropdown class not found');
+                    return 'bootstrap.Dropdown constructor available';
+                });
+                
+                runTest('tooltip', function() {
+                    if (typeof bootstrap.Tooltip === 'undefined') throw new Error('Tooltip class not found');
+                    return 'bootstrap.Tooltip constructor available';
+                });
+                
+                runTest('collapse', function() {
+                    if (typeof bootstrap.Collapse === 'undefined') throw new Error('Collapse class not found');
+                    return 'bootstrap.Collapse constructor available';
+                });
+                
+                runTest('toast', function() {
+                    if (typeof bootstrap.Toast === 'undefined') throw new Error('Toast class not found');
+                    return 'bootstrap.Toast constructor available';
+                });
+            }, 500);
+            
+            // Suite 3: APIs (with more delay)
+            setTimeout(function() {
+                runTest('fetch', function() {
+                    if (typeof fetch !== 'function') throw new Error('fetch not available');
+                    return 'fetch() API is natively available';
+                });
+                
+                runTest('promises', function() {
+                    if (typeof Promise === 'undefined') throw new Error('Promise not available');
+                    return 'Promise API is natively available';
+                });
+                
+                runTest('intersection', function() {
+                    if (!('IntersectionObserver' in window)) throw new Error('IntersectionObserver not available');
+                    return 'IntersectionObserver API available';
+                });
+                
+                runTest('cssGrid', function() {
+                    if (!CSS.supports('display', 'grid')) throw new Error('CSS Grid not supported');
+                    return 'CSS Grid is supported';
+                });
+                
+                runTest('cssVars', function() {
+                    if (!CSS.supports('color', 'var(--x)')) throw new Error('CSS Variables not supported');
+                    return 'CSS Custom Properties are supported';
+                });
+                
+                setTimeout(showSummary, 500);
+            }, 1200);
+        }
+        
+        function resetTests() {
+            testResults = { passed: 0, failed: 0, skipped: 0, total: 0 };
+            document.getElementById('testSummary').style.display = 'none';
+            
+            var testIds = ['css','js','grid','responsive','modal','dropdown',
+                          'tooltip','collapse','toast','fetch','promises',
+                          'intersection','cssGrid','cssVars'];
+            
+            testIds.forEach(function(id) {
+                updateTestIcon(id, 'skip');
+                document.getElementById('result-' + id).textContent = 'Not run';
+                document.getElementById('icon-' + id).textContent = '?';
+            });
+            updateSummary();
+        }
+    </script>
+</body>
+</html>

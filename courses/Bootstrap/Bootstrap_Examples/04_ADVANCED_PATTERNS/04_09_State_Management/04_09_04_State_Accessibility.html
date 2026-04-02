@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_09_04_State_Accessibility.html
+     Accessible State Management
+     
+     Covers:
+     - ARIA live regions for state announcements
+     - Focus management during state transitions
+     - Screen reader announcements (polite vs assertive)
+     - Accessible state indicators (not just color)
+     - Keyboard-accessible state controls
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_09_04 - State Accessibility</title>
+    <!-- Bootstrap 5.3.3 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Visual-only state indicator — bad example */
+        .color-only-active { background-color: #198754 !important; }
+        /* Accessible state indicator — uses icon + text + color */
+        .a11y-indicator { display: inline-flex; align-items: center; gap: 0.4rem; }
+        /* Focus ring for keyboard navigation */
+        .focus-visible-ring:focus-visible { outline: 3px solid #0d6efd; outline-offset: 2px; }
+        /* Skip-to-content link (hidden until focused) */
+        .skip-link { position: absolute; top: -100px; left: 0; z-index: 9999; }
+        .skip-link:focus { top: 0; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Skip-to-content link for keyboard users — accessibility best practice -->
+    <a href="#main-content" class="skip-link btn btn-primary">Skip to main content</a>
+
+    <!-- ============================================================
+         ARIA LIVE REGIONS
+         These regions announce content changes to screen readers.
+         aria-live="polite" — waits for user to finish current task
+         aria-live="assertive" — interrupts immediately
+         ============================================================ -->
+    <!-- Polite live region for non-urgent announcements -->
+    <div aria-live="polite" aria-atomic="true" class="visually-hidden" id="livePolite"></div>
+    <!-- Assertive live region for urgent announcements -->
+    <div aria-live="assertive" aria-atomic="true" class="visually-hidden" id="liveAssertive"></div>
+
+    <div class="container py-5" id="main-content">
+        <!-- Page header -->
+        <h1 class="mb-2">04_09_04 - Accessible State Management</h1>
+        <p class="text-muted mb-4">Managing component state with full accessibility: ARIA, focus, screen readers, and keyboard navigation.</p>
+
+        <!-- ============================================================
+             SECTION 1: ARIA Live Regions
+             Announce state changes to screen readers automatically.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">1. ARIA Live Regions</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Live regions announce dynamic content changes to screen readers. Use <code>polite</code> for updates, <code>assertive</code> for alerts.</p>
+
+                <!-- Polite announcement demo -->
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <h6>Polite Announcement</h6>
+                        <p class="small text-muted">Waits until the screen reader finishes current speech.</p>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="politeMsg" placeholder="Message for polite region">
+                            <button class="btn btn-primary" onclick="announcePolite()">Announce Politely</button>
+                        </div>
+                    </div>
+                    <!-- Assertive announcement demo -->
+                    <div class="col-md-6 mb-3">
+                        <h6>Assertive Announcement</h6>
+                        <p class="small text-muted">Interrupts current speech immediately.</p>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="assertiveMsg" placeholder="Message for assertive region">
+                            <button class="btn btn-danger" onclick="announceAssertive()">Announce Urgently</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visible live region for demo purposes -->
+                <div class="alert alert-secondary" role="status" id="visibleLiveRegion">
+                    <strong>Visible Live Region:</strong> Announcements appear here for sighted users. Screen readers hear the hidden regions above.
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 2: Focus Management During State Changes
+             Move focus appropriately when state transitions occur.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">2. Focus Management</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Move focus when state changes: open modal → focus first element; close → return focus; error → focus error field.</p>
+
+                <!-- Simulated modal with focus trap -->
+                <button class="btn btn-primary mb-3" onclick="a11yOpenModal()" id="openModalBtn">
+                    Open Accessible Modal
+                </button>
+
+                <!-- Simulated modal overlay -->
+                <div id="a11yModal" class="border rounded p-4 bg-white shadow" style="display:none;" role="dialog"
+                     aria-modal="true" aria-labelledby="a11yModalTitle">
+                    <h5 id="a11yModalTitle">Accessible Modal</h5>
+                    <p>Tab is trapped within this modal. Focus starts on the first input.</p>
+                    <div class="mb-3">
+                        <label class="form-label" for="modalInput1">Name</label>
+                        <input type="text" class="form-control focus-visible-ring" id="modalInput1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="modalInput2">Email</label>
+                        <input type="email" class="form-control focus-visible-ring" id="modalInput2">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" onclick="a11ySubmitModal()">Submit</button>
+                        <button class="btn btn-outline-secondary" onclick="a11yCloseModal()" id="closeModalBtn">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Form with focus-on-error -->
+                <h6 class="mt-4">Focus on Error</h6>
+                <p class="small text-muted">Submit with empty fields — focus moves to first error.</p>
+                <form id="a11yForm" onsubmit="return a11yFormSubmit(event)" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="a11yName">Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control focus-visible-ring" id="a11yName" required>
+                            <div class="invalid-feedback" id="a11yNameError">Name is required.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="a11yEmail">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control focus-visible-ring" id="a11yEmail" required>
+                            <div class="invalid-feedback" id="a11yEmailError">Valid email is required.</div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">Validate & Focus Error</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 3: Accessible State Indicators
+             Don't rely solely on color — use icons, text, and ARIA.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">3. Accessible State Indicators (Not Just Color)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Color-only indicators fail colorblind users and screen readers. Use icons, text, and ARIA attributes together.</p>
+
+                <!-- Bad: color-only indicator -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Bad: Color Only</h6>
+                        <div class="d-flex gap-2">
+                            <button class="btn color-only-active text-white" id="colorOnlyBtn1">Active</button>
+                            <button class="btn btn-secondary" id="colorOnlyBtn2" onclick="toggleColorOnly()">Click to Toggle</button>
+                        </div>
+                        <p class="small text-muted mt-1">Screen readers can't distinguish state. Colorblind users can't either.</p>
+                    </div>
+                    <!-- Good: icon + text + ARIA -->
+                    <div class="col-md-6">
+                        <h6 class="text-success">Good: Icon + Text + ARIA</h6>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-success a11y-indicator" id="a11yStateBtn"
+                                    aria-pressed="true" onclick="toggleA11yState()">
+                                <span aria-hidden="true" id="a11yIcon">&#10003;</span>
+                                <span id="a11yLabel">Active</span>
+                            </button>
+                        </div>
+                        <p class="small text-muted mt-1">Icon + text for sighted users. <code>aria-pressed</code> for screen readers.</p>
+                    </div>
+                </div>
+
+                <!-- Status badges with sr-only text -->
+                <h6>Status Badges</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-success">
+                        <span aria-hidden="true">&#10003;</span> Online
+                        <span class="visually-hidden">(status: online)</span>
+                    </span>
+                    <span class="badge bg-warning text-dark">
+                        <span aria-hidden="true">&#9888;</span> Pending
+                        <span class="visually-hidden">(status: pending)</span>
+                    </span>
+                    <span class="badge bg-danger">
+                        <span aria-hidden="true">&#10007;</span> Offline
+                        <span class="visually-hidden">(status: offline)</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 4: Keyboard-Accessible State Controls
+             All state controls must be operable via keyboard.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">4. Keyboard-Accessible State Controls</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">All interactive state controls must work with keyboard: Tab, Enter, Space, Arrow keys.</p>
+
+                <!-- Tab-based state navigation -->
+                <h6>Tab Panel State (Arrow key navigation)</h6>
+                <div class="card">
+                    <!-- Tab list with ARIA roles -->
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" role="tablist" id="a11yTabList">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" role="tab" aria-selected="true"
+                                        id="a11yTab1" aria-controls="a11yPanel1" tabindex="0"
+                                        onkeydown="a11yTabKey(event, 0)">General</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" role="tab" aria-selected="false"
+                                        id="a11yTab2" aria-controls="a11yPanel2" tabindex="-1"
+                                        onkeydown="a11yTabKey(event, 1)">Security</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" role="tab" aria-selected="false"
+                                        id="a11yTab3" aria-controls="a11yPanel3" tabindex="-1"
+                                        onkeydown="a11yTabKey(event, 2)">Notifications</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Tab panels -->
+                    <div class="card-body">
+                        <div role="tabpanel" id="a11yPanel1" aria-labelledby="a11yTab1">
+                            <p>General settings panel. Use <kbd>Arrow</kbd> keys to navigate tabs.</p>
+                        </div>
+                        <div role="tabpanel" id="a11yPanel2" aria-labelledby="a11yTab2" style="display:none;">
+                            <p>Security settings panel.</p>
+                        </div>
+                        <div role="tabpanel" id="a11yPanel3" aria-labelledby="a11yTab3" style="display:none;">
+                            <p>Notification settings panel.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 5: Screen Reader State Announcements
+             Practical patterns for announcing common state changes.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">5. Screen Reader State Announcements</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Common state change patterns with proper screen reader announcements.</p>
+
+                <!-- Loading state announcement -->
+                <div class="mb-3">
+                    <h6>Loading State</h6>
+                    <button class="btn btn-primary btn-sm" onclick="a11yLoad()" id="a11yLoadBtn">Load Data</button>
+                    <div id="a11yLoadStatus" class="mt-2" role="status" aria-live="polite"></div>
+                </div>
+
+                <!-- Count update announcement -->
+                <div class="mb-3">
+                    <h6>Count Update</h6>
+                    <button class="btn btn-outline-primary btn-sm" onclick="a11yCount()">Add Item</button>
+                    <span class="badge bg-primary ms-2" role="status" aria-live="polite" aria-atomic="true" id="a11yCountBadge">
+                        0 items
+                    </span>
+                </div>
+
+                <!-- Toast notification (Bootstrap 5 pattern) -->
+                <div class="mb-3">
+                    <h6>Toast Notification</h6>
+                    <button class="btn btn-info btn-sm" onclick="a11yShowToast()">Show Toast</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Toast container (live region for notifications) -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="a11yToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="a11yToastBody">Toast message</div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================================
+        // SECTION 1: ARIA Live Region Announcements
+        // ========================================================
+
+        /**
+         * Announces a message via the polite live region
+         * Screen readers will speak this after finishing current speech
+         */
+        function announcePolite() {
+            const msg = document.getElementById('politeMsg').value || 'Polite announcement test';
+            // Set content of hidden live region
+            document.getElementById('livePolite').textContent = msg;
+            // Also show visually for demo
+            document.getElementById('visibleLiveRegion').innerHTML =
+                `<strong>Polite:</strong> ${msg}`;
+            // Clear after a moment to allow re-announcement of same text
+            setTimeout(() => {
+                document.getElementById('livePolite').textContent = '';
+            }, 1000);
+        }
+
+        /**
+         * Announces a message via the assertive live region
+         * Screen readers will interrupt current speech immediately
+         */
+        function announceAssertive() {
+            const msg = document.getElementById('assertiveMsg').value || 'Urgent announcement test';
+            document.getElementById('liveAssertive').textContent = msg;
+            document.getElementById('visibleLiveRegion').innerHTML =
+                `<strong class="text-danger">Assertive:</strong> ${msg}`;
+            setTimeout(() => {
+                document.getElementById('liveAssertive').textContent = '';
+            }, 1000);
+        }
+
+        // ========================================================
+        // SECTION 2: Focus Management
+        // ========================================================
+
+        /** Previously focused element (to restore focus on modal close) */
+        let previousFocus = null;
+
+        /**
+         * Opens simulated modal with focus trap
+         */
+        function a11yOpenModal() {
+            // Save current focus to restore later
+            previousFocus = document.activeElement;
+            // Show modal
+            const modal = document.getElementById('a11yModal');
+            modal.style.display = '';
+            // Move focus to first input
+            document.getElementById('modalInput1').focus();
+            // Announce to screen readers
+            document.getElementById('liveAssertive').textContent = 'Dialog opened. Name field has focus.';
+            // Set up focus trap
+            document.addEventListener('keydown', a11yFocusTrap);
+        }
+
+        /**
+         * Closes simulated modal and restores focus
+         */
+        function a11yCloseModal() {
+            document.getElementById('a11yModal').style.display = 'none';
+            // Remove focus trap
+            document.removeEventListener('keydown', a11yFocusTrap);
+            // Restore focus to the element that opened the modal
+            if (previousFocus) previousFocus.focus();
+            // Announce closure
+            document.getElementById('livePolite').textContent = 'Dialog closed.';
+        }
+
+        /**
+         * Traps Tab focus within the modal
+         * @param {KeyboardEvent} e - Key event
+         */
+        function a11yFocusTrap(e) {
+            if (e.key !== 'Tab') return;
+            const modal = document.getElementById('a11yModal');
+            const focusable = modal.querySelectorAll('input, button');
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+
+        /** Modal submit handler */
+        function a11ySubmitModal() {
+            document.getElementById('liveAssertive').textContent = 'Form submitted successfully.';
+            a11yCloseModal();
+        }
+
+        /**
+         * Form validation with focus moved to first error field
+         * @param {Event} e - Submit event
+         */
+        function a11yFormSubmit(e) {
+            e.preventDefault();
+            // Clear previous validation state
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+            const name = document.getElementById('a11yName');
+            const email = document.getElementById('a11yEmail');
+            let firstError = null;
+
+            // Validate name
+            if (!name.value.trim()) {
+                name.classList.add('is-invalid');
+                if (!firstError) firstError = name;
+            }
+            // Validate email
+            if (!email.value.trim() || !email.value.includes('@')) {
+                email.classList.add('is-invalid');
+                if (!firstError) firstError = email;
+            }
+
+            // Focus first error field — critical for accessibility
+            if (firstError) {
+                firstError.focus();
+                // Announce error count
+                const errorCount = document.querySelectorAll('.is-invalid').length;
+                document.getElementById('liveAssertive').textContent =
+                    `Form has ${errorCount} error${errorCount > 1 ? 's' : ''}. Correct the highlighted fields.`;
+                return false;
+            }
+
+            // Success
+            document.getElementById('livePolite').textContent = 'Form submitted successfully!';
+            return false;
+        }
+
+        // ========================================================
+        // SECTION 3: Accessible State Indicators
+        // ========================================================
+
+        /** Color-only toggle (bad example) */
+        function toggleColorOnly() {
+            const btn = document.getElementById('colorOnlyBtn1');
+            btn.classList.toggle('color-only-active');
+        }
+
+        /** Accessible toggle with icon, text, and aria-pressed */
+        function toggleA11yState() {
+            const btn = document.getElementById('a11yStateBtn');
+            const icon = document.getElementById('a11yIcon');
+            const label = document.getElementById('a11yLabel');
+            const pressed = btn.getAttribute('aria-pressed') === 'true';
+
+            // Toggle aria-pressed (screen readers announce this)
+            btn.setAttribute('aria-pressed', !pressed);
+
+            if (!pressed) {
+                // Becoming active
+                icon.innerHTML = '&#10003;';
+                label.textContent = 'Active';
+                btn.className = 'btn btn-outline-success a11y-indicator';
+                btn.classList.add('active');
+            } else {
+                // Becoming inactive
+                icon.innerHTML = '&#10007;';
+                label.textContent = 'Inactive';
+                btn.className = 'btn btn-outline-secondary a11y-indicator';
+            }
+
+            // Announce state change
+            document.getElementById('livePolite').textContent =
+                `Button is now ${!pressed ? 'active' : 'inactive'}`;
+        }
+
+        // ========================================================
+        // SECTION 4: Keyboard-Accessible Tabs
+        // ========================================================
+
+        /** All tab buttons */
+        const a11yTabs = () => document.querySelectorAll('#a11yTabList button[role="tab"]');
+
+        /**
+         * Switches to a specific tab
+         * @param {number} idx - Tab index
+         */
+        function a11ySwitchTab(idx) {
+            const tabs = a11yTabs();
+            const panels = [
+                document.getElementById('a11yPanel1'),
+                document.getElementById('a11yPanel2'),
+                document.getElementById('a11yPanel3')
+            ];
+
+            // Deactivate all tabs
+            tabs.forEach((tab, i) => {
+                tab.classList.remove('active');
+                tab.setAttribute('aria-selected', 'false');
+                tab.setAttribute('tabindex', '-1');
+                panels[i].style.display = 'none';
+            });
+
+            // Activate selected tab
+            tabs[idx].classList.add('active');
+            tabs[idx].setAttribute('aria-selected', 'true');
+            tabs[idx].setAttribute('tabindex', '0');
+            tabs[idx].focus();
+            panels[idx].style.display = '';
+
+            // Announce tab change
+            document.getElementById('livePolite').textContent =
+                `${tabs[idx].textContent} tab selected`;
+        }
+
+        /**
+         * Handles arrow key navigation in tab list
+         * WAI-ARIA Tabs pattern: Left/Right arrows move between tabs
+         * @param {KeyboardEvent} e - Key event
+         * @param {number} currentIdx - Current tab index
+         */
+        function a11yTabKey(e, currentIdx) {
+            const tabs = a11yTabs();
+            let newIdx = currentIdx;
+
+            if (e.key === 'ArrowRight') {
+                newIdx = (currentIdx + 1) % tabs.length;
+            } else if (e.key === 'ArrowLeft') {
+                newIdx = (currentIdx - 1 + tabs.length) % tabs.length;
+            } else if (e.key === 'Home') {
+                newIdx = 0;
+            } else if (e.key === 'End') {
+                newIdx = tabs.length - 1;
+            } else {
+                return; // Don't prevent default for other keys
+            }
+
+            e.preventDefault();
+            a11ySwitchTab(newIdx);
+        }
+
+        // ========================================================
+        // SECTION 5: Screen Reader State Announcements
+        // ========================================================
+
+        /** Item counter for loading demo */
+        let a11yItemCount = 0;
+
+        /**
+         * Simulates a loading state with proper announcements
+         */
+        function a11yLoad() {
+            const btn = document.getElementById('a11yLoadBtn');
+            const status = document.getElementById('a11yLoadStatus');
+
+            // Start loading state
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+            status.innerHTML = '<div class="alert alert-info py-1 mb-0">Loading data, please wait...</div>';
+
+            // Announce loading to screen readers (assertive — important)
+            document.getElementById('liveAssertive').textContent = 'Loading data, please wait.';
+
+            // Simulate async operation
+            setTimeout(() => {
+                // Complete loading
+                btn.disabled = false;
+                btn.textContent = 'Load Data';
+                status.innerHTML = '<div class="alert alert-success py-1 mb-0">Data loaded successfully. 42 records retrieved.</div>';
+
+                // Announce completion (polite — not urgent)
+                document.getElementById('livePolite').textContent = 'Data loaded successfully. 42 records retrieved.';
+            }, 2000);
+        }
+
+        /**
+         * Increments item count with screen reader announcement
+         */
+        function a11yCount() {
+            a11yItemCount++;
+            const badge = document.getElementById('a11yCountBadge');
+            badge.textContent = `${a11yItemCount} item${a11yItemCount !== 1 ? 's' : ''}`;
+            // aria-live on the badge auto-announces the change
+        }
+
+        /**
+         * Shows a Bootstrap toast notification
+         * Toast container has aria-live="assertive" for screen readers
+         */
+        function a11yShowToast() {
+            const toastEl = document.getElementById('a11yToast');
+            document.getElementById('a11yToastBody').textContent =
+                `State updated at ${new Date().toLocaleTimeString()}`;
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+    </script>
+</body>
+</html>

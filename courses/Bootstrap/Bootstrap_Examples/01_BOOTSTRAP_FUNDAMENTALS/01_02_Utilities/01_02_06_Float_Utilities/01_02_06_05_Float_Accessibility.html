@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 - Float Accessibility</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-border {
+            border: 3px dashed #dc3545;
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+
+    <!-- ========================================== -->
+    <!-- PAGE HEADER                                 -->
+    <!-- ========================================== -->
+    <h1 class="display-4 fw-bold text-primary mb-3">Float Accessibility</h1>
+    <p class="lead text-muted mb-5">
+        Float utilities affect document flow and visual layout, which can create
+        accessibility issues if not handled carefully. This guide covers best practices
+        for maintaining accessible designs when using floats.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: DOM ORDER PRESERVATION           -->
+    <!-- Floats preserve DOM order unlike flex      -->
+    <!-- order utilities, making them safer for AT. -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-4 mb-3">1. Floats Preserve DOM Order</h2>
+    <div class="alert alert-success">
+        <strong>Advantage:</strong> Unlike <code>flex-order</code> or <code>flex-row-reverse</code>,
+        float utilities do <em>not</em> change visual reading order. Screen readers and keyboard
+        navigation follow the same sequence as the visual layout.
+    </div>
+    <div class="demo-border">
+        <div class="clearfix">
+            <div class="float-start bg-primary text-white p-3 rounded me-3 mb-2" style="width: 200px;">
+                <strong>First</strong><br>
+                <small>DOM order: 1</small>
+            </div>
+            <div class="float-end bg-success text-white p-3 rounded mb-2" style="width: 200px;">
+                <strong>Last</strong><br>
+                <small>DOM order: 2</small>
+            </div>
+            <p>
+                The "First" element appears on the left and "Last" on the right. A screen reader
+                reads them in the same left-to-right sequence. No reordering mismatch exists.
+            </p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: CLEARFIX FOR READING FLOW        -->
+    <!-- Without clearfix, subsequent content may   -->
+    <!-- overlap floats, confusing AT users.        -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">2. Always Use Clearfix</h2>
+    <p>
+        Without <code>clearfix</code>, content after floated elements can overlap them,
+        creating confusing reading order for screen reader users.
+    </p>
+    <div class="demo-border">
+        <div class="alert alert-danger mb-2">
+            <strong>Bad:</strong> Without clearfix, the alert below overlaps the floated content.
+        </div>
+        <div class="border rounded p-2 mb-3" style="background: #fff3cd;">
+            <div class="float-start bg-primary text-white p-2 rounded me-2" style="width: 150px;">
+                Floated box
+            </div>
+            <!-- No clearfix — next element overlaps -->
+        </div>
+        <div class="border rounded p-2" style="background: #d1e7dd;">
+            <p class="mb-2"><strong>Good:</strong> With clearfix, the section below starts cleanly.</p>
+            <div class="clearfix">
+                <div class="float-start bg-primary text-white p-2 rounded me-2" style="width: 150px;">
+                    Floated box
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: ALTERNATIVE TEXT FOR IMAGES      -->
+    <!-- Floated images must have meaningful alt    -->
+    <!-- text since they're part of the content.    -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">3. Meaningful Alt Text on Floated Images</h2>
+    <p>
+        Images floated for text wrapping must still convey meaning through <code>alt</code>
+        attributes. Decorative images should use <code>alt=""</code>.
+    </p>
+    <div class="demo-border">
+        <div class="clearfix">
+            <img src="https://via.placeholder.com/150x150/0d6efd/ffffff?text=Photo"
+                 class="float-start me-3 mb-2 rounded"
+                 alt="A mountain landscape with snow-capped peaks at sunset">
+            <p>
+                This image has a descriptive <code>alt</code> attribute that conveys its content
+                to screen reader users. If the image were purely decorative, use <code>alt=""</code>
+                and <code>role="presentation"</code> instead.
+            </p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: COLOR CONTRAST                  -->
+    <!-- Text wrapping around floats may create    -->
+    <!-- irregular reading widths — ensure contrast. -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">4. Color Contrast in Wrapped Text</h2>
+    <p>
+        When text wraps around a floated element with a colored background, ensure the text
+        maintains sufficient contrast ratio (4.5:1 for normal text per WCAG AA).
+    </p>
+    <div class="demo-border">
+        <div class="clearfix">
+            <div class="float-start bg-dark text-white p-3 rounded me-3 mb-2" style="width: 150px;">
+                High contrast
+            </div>
+            <p>
+                This text is on a light background, maintaining high contrast even as it wraps
+                next to the dark floated box. Always test contrast in wrapped layouts because
+                the narrow text column may make readability harder.
+            </p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 5: RESPONSIVE FLOAT & SCREEN READERS -->
+    <!-- Responsive float changes can create        -->
+    <!-- disconnect between visual and DOM order.   -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">5. Responsive Float Considerations</h2>
+    <div class="alert alert-warning">
+        When using <code>float-md-end</code> to move an element to the right on desktop,
+        the DOM order stays the same — but the visual distance between elements increases.
+        Ensure the content still reads logically at all breakpoints.
+    </div>
+    <div class="demo-border">
+        <div class="clearfix">
+            <div class="float-none float-md-end bg-warning text-dark p-3 rounded ms-md-3 mb-2"
+                 style="width: 200px;">
+                <strong>Important Notice</strong>
+            </div>
+            <p>
+                On mobile, this notice appears above the text. On medium screens, it floats right.
+                In both cases, the DOM order is unchanged — the notice comes first in the HTML,
+                matching its visual priority on mobile.
+            </p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 6: FOCUS ORDER WITH FLOATS          -->
+    <!-- Focusable elements inside floats follow    -->
+    <!-- DOM order, not visual position.            -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">6. Focusable Elements in Floated Containers</h2>
+    <p>
+        Buttons and links inside floated elements maintain their DOM tab order. This is generally
+        consistent with visual order, unlike flex reordering.
+    </p>
+    <div class="demo-border">
+        <div class="clearfix">
+            <div class="float-start me-3 mb-2">
+                <button class="btn btn-primary">Tab 1 (DOM first)</button>
+            </div>
+            <div class="float-end mb-2">
+                <button class="btn btn-success">Tab 2 (DOM second)</button>
+            </div>
+            <p class="mt-2">
+                Press Tab to navigate: focus moves from "Tab 1" (left) to "Tab 2" (right),
+                matching the visual left-to-right reading order.
+            </p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 7: REDUCED MOTION                   -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">7. Respect Reduced Motion Preferences</h2>
+    <p>
+        If you animate floated elements, respect <code>prefers-reduced-motion</code>.
+    </p>
+    <div class="demo-border">
+        <div class="clearfix">
+            <div class="float-start bg-primary text-white p-3 rounded me-3 mb-2"
+                 style="width: 150px; transition: transform 0.3s;"
+                 onmouseover="this.style.transform='scale(1.05)'"
+                 onmouseout="this.style.transform='scale(1)'">
+                Hover me
+            </div>
+            <p>
+                This box has a subtle scale animation on hover. Users with
+                <code>prefers-reduced-motion: reduce</code> should not see the animation.
+                Add this CSS to respect their preference:
+            </p>
+        </div>
+        <pre class="bg-dark text-white p-3 rounded"><code>@media (prefers-reduced-motion: reduce) {
+  .animated-float { transition: none; }
+}</code></pre>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- BEST PRACTICES SUMMARY                      -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">Accessibility Best Practices Summary</h2>
+    <ol class="list-group list-group-numbered">
+        <li class="list-group-item">
+            <strong>Floats preserve DOM order</strong> — safer than flex reordering for screen readers
+        </li>
+        <li class="list-group-item">
+            <strong>Always use clearfix</strong> — prevents content overlap that confuses AT users
+        </li>
+        <li class="list-group-item">
+            <strong>Meaningful alt text</strong> — floated images need proper descriptions
+        </li>
+        <li class="list-group-item">
+            <strong>Test contrast</strong> — wrapped text columns may reduce readability
+        </li>
+        <li class="list-group-item">
+            <strong>Verify focus order</strong> — tab through floated layouts at every breakpoint
+        </li>
+        <li class="list-group-item">
+            <strong>Test with screen readers</strong> — NVDA, VoiceOver, and JAWS may interpret layouts differently
+        </li>
+        <li class="list-group-item">
+            <strong>Respect reduced motion</strong> — disable animations when <code>prefers-reduced-motion</code> is set
+        </li>
+    </ol>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

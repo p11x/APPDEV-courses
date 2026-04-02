@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_06_08_Accessibility_Cross_Browser.html                     -->
+<!-- Accessibility (A11y) Across Browsers                         -->
+<!-- Demonstrates ARIA patterns, keyboard navigation, screen     -->
+<!-- reader compatibility, and cross-browser a11y concerns       -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>04_06_08 - Accessibility Across Browsers</title>
+    
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* ======================================================== */
+        /* ACCESSIBILITY-FOCUSED CSS                               */
+        /* Styles that enhance usability across browsers and       */
+        /* assistive technologies                                  */
+        /* ======================================================== */
+
+        /* Focus styles that work consistently across browsers */
+        /* Remove default and apply custom - consistent cross-browser */
+        :focus {
+            outline: none;
+        }
+        :focus-visible {
+            outline: 3px solid #0d6efd;
+            outline-offset: 2px;
+        }
+        /* Fallback for browsers without :focus-visible */
+        @supports not selector(:focus-visible) {
+            :focus {
+                outline: 3px solid #0d6efd;
+                outline-offset: 2px;
+            }
+        }
+
+        /* Skip navigation link */
+        /* Hidden until focused via keyboard (Tab key) */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #0d6efd;
+            color: white;
+            padding: 8px 16px;
+            z-index: 10000;
+            text-decoration: none;
+            border-radius: 0 0 4px 0;
+            transition: top 0.2s;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Reduced motion preference */
+        /* Respects user's OS setting for reduced animations */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (forced-colors: active) {
+            .custom-button {
+                border: 2px solid ButtonText;
+            }
+            .card {
+                border: 1px solid CanvasText;
+            }
+        }
+
+        /* Dark mode preference */
+        @media (prefers-color-scheme: dark) {
+            .dark-mode-aware {
+                background-color: #212529;
+                color: #f8f9fa;
+            }
+        }
+
+        /* Visible focus indicator for interactive elements */
+        .a11y-btn:focus-visible {
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.5);
+        }
+
+        /* Screen reader only - visually hidden but accessible */
+        /* Different from Bootstrap's .visually-hidden for education */
+        .sr-only-custom {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus trap indicator */
+        .focus-trap-container {
+            border: 2px dashed #0d6efd;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Touch target size indicators */
+        .touch-target-demo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #dee2e6;
+            border-radius: 0.375rem;
+            margin: 0.25rem;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- SKIP NAVIGATION LINK                                         -->
+    <!-- First focusable element - allows keyboard users to skip      -->
+    <!-- past navigation to main content. Critical for a11y.          -->
+    <!-- ============================================================ -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- ============================================================ -->
+    <!-- NAVIGATION with ARIA landmarks                               -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top" 
+         aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand" href="#">A11y Lab</a>
+            <button class="navbar-toggler" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#navContent"
+                    aria-controls="navContent" aria-expanded="false" 
+                    aria-label="Toggle navigation menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#aria">ARIA</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#keyboard">Keyboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#forms">Forms</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#media">Media</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HERO with proper heading hierarchy                           -->
+    <!-- ============================================================ -->
+    <header class="bg-dark text-white py-5">
+        <div class="container">
+            <!-- h1 is the main heading - only one per page -->
+            <h1 class="display-4 fw-bold">Accessibility Across Browsers</h1>
+            <p class="lead">
+                ARIA attributes, keyboard navigation, screen reader support,
+                and cross-browser accessibility patterns.
+            </p>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- MAIN CONTENT - target of skip link                           -->
+    <!-- ============================================================ -->
+    <main class="container my-5" id="main-content">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: ARIA ATTRIBUTES                               -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="aria" aria-labelledby="ariaHeading">
+            <h2 class="border-bottom pb-2 mb-4" id="ariaHeading">1. ARIA Attributes</h2>
+            
+            <!-- ARIA live regions -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">ARIA Live Regions</h3>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">
+                        Live regions announce dynamic content changes to screen readers.
+                        Different <code>aria-live</code> values control urgency.
+                    </p>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <h4 class="h6">aria-live="polite"</h4>
+                            <p class="small text-muted">Waits for user to pause</p>
+                            <div aria-live="polite" aria-atomic="true" 
+                                 class="border rounded p-3 bg-light" id="politeRegion">
+                                Status updates appear here.
+                            </div>
+                            <button class="btn btn-sm btn-primary mt-2 a11y-btn" 
+                                    onclick="updateLiveRegion('polite')">
+                                Trigger polite update
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h4 class="h6">aria-live="assertive"</h4>
+                            <p class="small text-muted">Interrupts immediately</p>
+                            <div aria-live="assertive" aria-atomic="true" 
+                                 class="border rounded p-3 bg-light" id="assertiveRegion">
+                                Alerts appear here.
+                            </div>
+                            <button class="btn btn-sm btn-danger mt-2 a11y-btn" 
+                                    onclick="updateLiveRegion('assertive')">
+                                Trigger assertive update
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h4 class="h6">role="status"</h4>
+                            <p class="small text-muted">Implicit polite live region</p>
+                            <div role="status" aria-atomic="true" 
+                                 class="border rounded p-3 bg-light" id="statusRegion">
+                                Status messages.
+                            </div>
+                            <button class="btn btn-sm btn-success mt-2 a11y-btn" 
+                                    onclick="updateLiveRegion('status')">
+                                Trigger status update
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ARIA expanded/state -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">ARIA States & Properties</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 class="h6">aria-expanded toggle</h4>
+                            <button class="btn btn-outline-primary a11y-btn" 
+                                    id="expandBtn"
+                                    aria-expanded="false" 
+                                    aria-controls="expandContent"
+                                    onclick="toggleExpanded()">
+                                Show More (aria-expanded: false)
+                            </button>
+                            <div id="expandContent" class="mt-2 p-3 bg-light rounded" hidden>
+                                This content is revealed when aria-expanded becomes true.
+                                Screen readers announce the state change.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="h6">aria-pressed toggle</h4>
+                            <button class="btn btn-outline-secondary a11y-btn" 
+                                    id="pressBtn"
+                                    aria-pressed="false"
+                                    onclick="togglePressed()">
+                                Favorite (Not pressed)
+                            </button>
+                            <p class="small text-muted mt-2">
+                                aria-pressed indicates toggle button state to screen readers.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ARIA labels -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">ARIA Labeling</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 class="h6">aria-label</h4>
+                            <!-- Icon-only button needs aria-label for screen readers -->
+                            <button class="btn btn-primary a11y-btn" aria-label="Close dialog">
+                                <!-- X icon without visible text -->
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <button class="btn btn-success a11y-btn ms-2" aria-label="Save document">
+                                <span aria-hidden="true">&#128190;</span>
+                            </button>
+                            <button class="btn btn-danger a11y-btn ms-2" aria-label="Delete item">
+                                <span aria-hidden="true">&#128465;</span>
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <h4 class="h6">aria-labelledby</h4>
+                            <h5 id="cardTitle1">Sales Report</h5>
+                            <div aria-labelledby="cardTitle1" role="region" 
+                                 class="border rounded p-3 bg-light">
+                                <p class="small mb-0">
+                                    This region is programmatically associated with the heading
+                                    above via aria-labelledby.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: KEYBOARD NAVIGATION                           -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="keyboard" aria-labelledby="keyboardHeading">
+            <h2 class="border-bottom pb-2 mb-4" id="keyboardHeading">2. Keyboard Navigation</h2>
+            
+            <!-- Tab order -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Tab Order & Focus Management</h3>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">
+                        Natural tab order follows DOM order. Use <code>tabindex</code> carefully:
+                    </p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4 class="h6">tabindex="0"</h4>
+                            <p class="small">Adds to natural tab order</p>
+                            <div tabindex="0" class="border rounded p-3 bg-light" 
+                                 style="cursor:pointer;">
+                                Focusable div (tabindex="0")
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="h6">tabindex="-1"</h4>
+                            <p class="small">Programmatic focus only</p>
+                            <button class="btn btn-primary a11y-btn" 
+                                    onclick="document.getElementById('negTab').focus()">
+                                Focus the div below
+                            </button>
+                            <div id="negTab" tabindex="-1" class="border rounded p-3 bg-light mt-2">
+                                tabindex="-1" - not in tab order
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="h6">tabindex > 0 (Avoid!)</h4>
+                            <p class="small text-danger">Anti-pattern - breaks natural order</p>
+                            <button tabindex="1" class="btn btn-outline-danger a11y-btn">
+                                tabindex="1" (don't do this)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Roving tabindex -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Roving Tabindex Pattern</h3>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">
+                        Arrow keys navigate within a group. Only one item is in the tab order at a time.
+                    </p>
+                    <div role="toolbar" aria-label="Text formatting" class="btn-group" id="toolbar">
+                        <button class="btn btn-outline-secondary a11y-btn" tabindex="0" 
+                                data-toolbar-item aria-pressed="false" title="Bold">
+                            <strong>B</strong>
+                        </button>
+                        <button class="btn btn-outline-secondary a11y-btn" tabindex="-1" 
+                                data-toolbar-item aria-pressed="false" title="Italic">
+                            <em>I</em>
+                        </button>
+                        <button class="btn btn-outline-secondary a11y-btn" tabindex="-1" 
+                                data-toolbar-item aria-pressed="false" title="Underline">
+                            <u>U</u>
+                        </button>
+                        <button class="btn btn-outline-secondary a11y-btn" tabindex="-1" 
+                                data-toolbar-item aria-pressed="false" title="Strikethrough">
+                            <s>S</s>
+                        </button>
+                    </div>
+                    <p class="small text-muted mt-2 mb-0">
+                        Use <kbd>Arrow Left/Right</kbd> to navigate, <kbd>Space</kbd> to toggle.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: ACCESSIBLE FORMS                              -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="forms" aria-labelledby="formsHeading">
+            <h2 class="border-bottom pb-2 mb-4" id="formsHeading">3. Accessible Forms</h2>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form novalidate aria-label="Contact form">
+                        <!-- Every input needs an associated label -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <!-- for attribute links label to input -->
+                                <label for="a11yName" class="form-label">
+                                    Full Name <span class="text-danger" aria-hidden="true">*</span>
+                                    <span class="sr-only-custom">(required)</span>
+                                </label>
+                                <input type="text" class="form-control" id="a11yName" 
+                                       required aria-required="true"
+                                       aria-describedby="nameHelp">
+                                <div id="nameHelp" class="form-text">
+                                    Enter your first and last name.
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="a11yEmail" class="form-label">
+                                    Email <span class="text-danger" aria-hidden="true">*</span>
+                                    <span class="sr-only-custom">(required)</span>
+                                </label>
+                                <input type="email" class="form-control" id="a11yEmail" 
+                                       required aria-required="true"
+                                       aria-describedby="emailHelp emailError"
+                                       aria-invalid="false">
+                                <div id="emailHelp" class="form-text">
+                                    We'll never share your email.
+                                </div>
+                                <div id="emailError" class="invalid-feedback" role="alert">
+                                    Please enter a valid email address.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fieldset groups related inputs -->
+                        <fieldset class="mb-3">
+                            <legend class="col-form-label">Notification Preferences</legend>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       id="notifEmail" name="notifications" checked>
+                                <label class="form-check-label" for="notifEmail">
+                                    Email notifications
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       id="notifSMS" name="notifications">
+                                <label class="form-check-label" for="notifSMS">
+                                    SMS notifications
+                                </label>
+                            </div>
+                        </fieldset>
+                        
+                        <!-- Radio group with fieldset -->
+                        <fieldset class="mb-3">
+                            <legend class="col-form-label">Preferred Contact Method</legend>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" 
+                                       name="contactMethod" id="contactEmail" checked>
+                                <label class="form-check-label" for="contactEmail">Email</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" 
+                                       name="contactMethod" id="contactPhone">
+                                <label class="form-check-label" for="contactPhone">Phone</label>
+                            </div>
+                        </fieldset>
+                        
+                        <!-- Error summary - common a11y pattern -->
+                        <div class="alert alert-danger d-none" role="alert" 
+                             aria-labelledby="errorSummaryHeading" id="errorSummary">
+                            <h3 class="h6 alert-heading" id="errorSummaryHeading">
+                                There are errors in your submission
+                            </h3>
+                            <ul class="mb-0" id="errorList"></ul>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary a11y-btn">Submit Form</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: MEDIA ACCESSIBILITY                           -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="media" aria-labelledby="mediaHeading">
+            <h2 class="border-bottom pb-2 mb-4" id="mediaHeading">4. Media Accessibility</h2>
+            
+            <!-- Image alt text -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Image Alt Text</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <h4 class="h6">Informative image</h4>
+                            <div class="bg-light rounded p-5 text-center">
+                                <svg width="100" height="100" aria-hidden="true">
+                                    <rect width="100" height="100" fill="#0d6efd" rx="10"/>
+                                    <text x="50" y="55" text-anchor="middle" fill="white" font-size="14">IMG</text>
+                                </svg>
+                            </div>
+                            <p class="small mt-2">
+                                <code>alt="Description of image content"</code>
+                            </p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h4 class="h6">Decorative image</h4>
+                            <div class="bg-light rounded p-5 text-center">
+                                <svg width="100" height="100" aria-hidden="true">
+                                    <rect width="100" height="100" fill="#6c757d" rx="10"/>
+                                    <text x="50" y="55" text-anchor="middle" fill="white" font-size="14">DEC</text>
+                                </svg>
+                            </div>
+                            <p class="small mt-2">
+                                <code>alt=""</code> (empty - screen reader skips it)
+                            </p>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <h4 class="h6">Complex image</h4>
+                            <div class="bg-light rounded p-5 text-center">
+                                <svg width="100" height="100" aria-hidden="true">
+                                    <rect width="100" height="100" fill="#198754" rx="10"/>
+                                    <text x="50" y="55" text-anchor="middle" fill="white" font-size="14">CHART</text>
+                                </svg>
+                            </div>
+                            <p class="small mt-2">
+                                <code>alt="Chart showing..."</code> + <code>aria-describedby</code>
+                                pointing to detailed description
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Color contrast -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">Color Contrast (WCAG Requirements)</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 rounded" style="background:#0d6efd;color:white;">
+                                <strong>AAA Pass</strong>
+                                <p class="small mb-0">White on #0d6efd<br>Ratio: 8.59:1</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 rounded" style="background:#ffc107;color:#212529;">
+                                <strong>AA Pass</strong>
+                                <p class="small mb-0">Dark on #ffc107<br>Ratio: 1.81:1 (large text only)</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3 rounded" style="background:#ccc;color:#aaa;">
+                                <strong>Fail</strong>
+                                <p class="small mb-0">Low contrast<br>Ratio: 1.63:1</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        WCAG AA requires 4.5:1 for normal text, 3:1 for large text (18px+ or 14px bold).
+                        Bootstrap's default color combinations are designed to meet AA standards.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 5: CROSS-BROWSER A11Y CONCERNS                   -->
+        <!-- ======================================================== -->
+        <section class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">5. Cross-Browser A11y Concerns</h2>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Issue</th>
+                            <th>Chrome</th>
+                            <th>Firefox</th>
+                            <th>Safari</th>
+                            <th>Edge</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Focus ring style</td>
+                            <td>Blue ring</td>
+                            <td>Dotted outline</td>
+                            <td>Blue ring</td>
+                            <td>Blue ring</td>
+                            <td>Custom :focus-visible</td>
+                        </tr>
+                        <tr>
+                            <td>ARIA live regions</td>
+                            <td>Full support</td>
+                            <td>Full support</td>
+                            <td>Partial*</td>
+                            <td>Full support</td>
+                            <td>Test with VoiceOver</td>
+                        </tr>
+                        <tr>
+                            <td>role="alert"</td>
+                            <td>Works</td>
+                            <td>Works</td>
+                            <td>Needs testing</td>
+                            <td>Works</td>
+                            <td>Use assertive live</td>
+                        </tr>
+                        <tr>
+                            <td>Scroll margin</td>
+                            <td>Supported</td>
+                            <td>Supported</td>
+                            <td>Supported</td>
+                            <td>Supported</td>
+                            <td>scroll-margin-top on targets</td>
+                        </tr>
+                        <tr>
+                            <td>:focus-visible</td>
+                            <td>86+</td>
+                            <td>85+</td>
+                            <td>15.4+</td>
+                            <td>86+</td>
+                            <td>@supports fallback</td>
+                        </tr>
+                        <tr>
+                            <td>prefers-reduced-motion</td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                            <td>@media query</td>
+                        </tr>
+                        <tr>
+                            <td>forced-colors</td>
+                            <td>Yes</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>Yes</td>
+                            <td>Use system colors</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                       -->
+    <!-- ============================================================ -->
+    <footer class="bg-dark text-white py-4" role="contentinfo">
+        <div class="container text-center">
+            <p class="mb-0">Accessibility Across Browsers &copy; 2024 | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- ACCESSIBILITY SCRIPTS                                        -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // LIVE REGION UPDATES
+        // Demonstrates programmatic aria-live announcements
+        // ============================================================
+        var updateCounter = 0;
+        function updateLiveRegion(type) {
+            updateCounter++;
+            var regions = {
+                polite: 'politeRegion',
+                assertive: 'assertiveRegion',
+                status: 'statusRegion'
+            };
+            var messages = {
+                polite: 'Update #' + updateCounter + ': Content refreshed at ' + new Date().toLocaleTimeString(),
+                assertive: 'Alert #' + updateCounter + ': Important notification!',
+                status: 'Status #' + updateCounter + ': Operation completed successfully.'
+            };
+            var el = document.getElementById(regions[type]);
+            el.textContent = messages[type];
+        }
+
+        // ============================================================
+        // ARIA EXPANDED TOGGLE
+        // ============================================================
+        function toggleExpanded() {
+            var btn = document.getElementById('expandBtn');
+            var content = document.getElementById('expandContent');
+            var isExpanded = btn.getAttribute('aria-expanded') === 'true';
+            
+            btn.setAttribute('aria-expanded', !isExpanded);
+            content.hidden = isExpanded;
+            btn.textContent = isExpanded ? 'Show More (aria-expanded: false)' : 'Show Less (aria-expanded: true)';
+        }
+
+        // ============================================================
+        // ARIA PRESSED TOGGLE
+        // ============================================================
+        function togglePressed() {
+            var btn = document.getElementById('pressBtn');
+            var isPressed = btn.getAttribute('aria-pressed') === 'true';
+            
+            btn.setAttribute('aria-pressed', !isPressed);
+            btn.textContent = !isPressed ? 'Favorite (Pressed)' : 'Favorite (Not pressed)';
+            btn.classList.toggle('btn-outline-secondary', isPressed);
+            btn.classList.toggle('btn-secondary', !isPressed);
+        }
+
+        // ============================================================
+        // ROVING TABINDEX TOOLBAR
+        // Arrow key navigation within a toolbar group
+        // ============================================================
+        (function() {
+            var toolbar = document.getElementById('toolbar');
+            if (!toolbar) return;
+            
+            var items = toolbar.querySelectorAll('[data-toolbar-item]');
+            
+            toolbar.addEventListener('keydown', function(e) {
+                var currentIndex = Array.from(items).indexOf(document.activeElement);
+                if (currentIndex === -1) return;
+                
+                var newIndex;
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    newIndex = (currentIndex + 1) % items.length;
+                    e.preventDefault();
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    newIndex = (currentIndex - 1 + items.length) % items.length;
+                    e.preventDefault();
+                } else if (e.key === ' ' || e.key === 'Enter') {
+                    var pressed = items[currentIndex].getAttribute('aria-pressed') === 'true';
+                    items[currentIndex].setAttribute('aria-pressed', !pressed);
+                    items[currentIndex].classList.toggle('active', !pressed);
+                    e.preventDefault();
+                    return;
+                } else {
+                    return;
+                }
+                
+                // Move tabindex
+                items[currentIndex].setAttribute('tabindex', '-1');
+                items[newIndex].setAttribute('tabindex', '0');
+                items[newIndex].focus();
+            });
+        })();
+
+        // ============================================================
+        // FORM VALIDATION WITH A11Y
+        // Demonstrates accessible error handling
+        // ============================================================
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var emailInput = document.getElementById('a11yEmail');
+            var errorSummary = document.getElementById('errorSummary');
+            var errorList = document.getElementById('errorList');
+            
+            // Reset
+            emailInput.classList.remove('is-invalid');
+            emailInput.setAttribute('aria-invalid', 'false');
+            errorSummary.classList.add('d-none');
+            
+            // Validate
+            if (!emailInput.value.includes('@')) {
+                emailInput.classList.add('is-invalid');
+                emailInput.setAttribute('aria-invalid', 'true');
+                errorSummary.classList.remove('d-none');
+                errorList.innerHTML = '<li><a href="#a11yEmail">Please enter a valid email address</a></li>';
+                emailInput.focus();
+                return;
+            }
+            
+            alert('Form submitted successfully!');
+        });
+    </script>
+</body>
+</html>

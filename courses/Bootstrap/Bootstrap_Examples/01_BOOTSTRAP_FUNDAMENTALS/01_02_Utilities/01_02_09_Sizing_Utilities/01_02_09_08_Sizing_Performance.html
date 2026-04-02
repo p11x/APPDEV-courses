@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 01_02_09_08_Sizing_Performance.html                            -->
+<!-- Bootstrap 5 Sizing Utilities - Performance Considerations      -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <!-- Required meta tags for responsive design -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 Sizing Utilities - Performance</title>
+    <!-- Bootstrap 5 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-box {
+            background-color: #e9ecef;
+            border: 2px solid #6c757d;
+            padding: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        /* Performance demo: custom class for comparison */
+        .custom-width-50 { width: 50%; }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+
+        <h1 class="mb-4">Sizing Utilities - Performance</h1>
+        <p class="lead">Best practices for using sizing utilities without impacting page performance.</p>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: CSS File Size Impact                              -->
+        <!-- Bootstrap sizing utilities are lightweight                   -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">1. CSS File Size Impact</h2>
+        <p>Bootstrap's sizing utilities add minimal overhead to the CSS file.</p>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Utility Group</th>
+                        <th>Approximate Size</th>
+                        <th>Number of Classes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Width utilities</td><td>~0.3 KB</td><td>5 classes</td></tr>
+                    <tr><td>Height utilities</td><td>~0.3 KB</td><td>5 classes</td></tr>
+                    <tr><td>Max-width</td><td>~0.1 KB</td><td>1 class</td></tr>
+                    <tr><td>Max-height</td><td>~0.1 KB</td><td>1 class</td></tr>
+                    <tr><td>Viewport utilities</td><td>~0.8 KB</td><td>11 classes</td></tr>
+                    <tr><td>Responsive variants</td><td>~3.5 KB</td><td>~50 classes</td></tr>
+                    <tr class="table-secondary"><td><strong>Total</strong></td><td><strong>~5.1 KB</strong></td><td><strong>~73 classes</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: Using !important - Trade-offs                     -->
+        <!-- Sizing utilities use !important for predictable overrides    -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">2. The !important Trade-off</h2>
+        <p>All sizing utilities use <code>!important</code>. This ensures predictable overrides but can make custom styling harder.</p>
+
+        <!-- Demonstrating !important override -->
+        <div class="bg-light p-3 border rounded mb-3">
+            <h4>Override Demonstration</h4>
+            <div class="demo-box w-50" style="width: 80%; background-color: #ffc107;">
+                <code>.w-50</code> overrides inline style: <code>width: 80%</code>
+                <br><small>The <code>!important</code> flag in <code>.w-50</code> wins.</small>
+            </div>
+        </div>
+
+        <div class="alert alert-warning">
+            <strong>Tip:</strong> If you need custom widths not in Bootstrap (e.g., 33%), create a custom utility class rather than fighting <code>!important</code>.
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: Avoiding Layout Thrashing                         -->
+        <!-- Proper sizing prevents reflows                               -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">3. Avoiding Layout Thrashing</h2>
+        <p>Sizing utilities help prevent layout shifts (CLS - Cumulative Layout Shift) by giving elements predictable dimensions.</p>
+
+        <!-- Good: Image with explicit dimensions -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">Good Practice</div>
+                    <div class="card-body">
+                        <img src="https://via.placeholder.com/400x200/28a745/ffffff?text=With+Dimensions" class="img-fluid w-100" alt="Image with proper sizing" style="height: 200px; object-fit: cover;">
+                        <p class="mt-2 mb-0"><small>Image has explicit height + object-fit. No layout shift.</small></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">Bad Practice</div>
+                    <div class="card-body">
+                        <img src="https://via.placeholder.com/400x200/dc3545/ffffff?text=No+Dimensions" class="img-fluid w-100" alt="Image without proper sizing">
+                        <p class="mt-2 mb-0"><small>Image loads and pushes content down (layout shift).</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: Content-Visibility for Large Lists                -->
+        <!-- Performance optimization using CSS content-visibility        -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">4. Content Visibility Optimization</h2>
+        <p>For pages with many elements, combine sizing utilities with <code>content-visibility: auto</code> for better rendering performance.</p>
+
+        <div class="bg-dark text-success p-3 rounded">
+            <pre class="mb-0"><code>/* Custom CSS for performance */
+.lazy-section {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px; /* estimated height */
+}
+
+/* HTML with sizing utility */
+&lt;div class="lazy-section w-100"&gt;
+    &lt;!-- heavy content here --&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: Responsive Images Performance                     -->
+        <!-- srcset + sizing utilities for optimal image loading          -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">5. Responsive Image Performance</h2>
+        <p>Combine sizing utilities with <code>srcset</code> and <code>loading="lazy"</code> for optimal image loading.</p>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="https://via.placeholder.com/400x300/007bff/ffffff?text=Lazy+Image+1" class="card-img-top img-fluid" loading="lazy" alt="Lazy loaded image 1" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <code>loading="lazy"</code> - Browser defers loading until near viewport.
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="https://via.placeholder.com/400x300/28a745/ffffff?text=Lazy+Image+2" class="card-img-top img-fluid" loading="lazy" alt="Lazy loaded image 2" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        Combine with <code>.img-fluid</code> (includes <code>max-width: 100%</code>).
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="https://via.placeholder.com/400x300/dc3545/ffffff?text=Lazy+Image+3" class="card-img-top img-fluid" loading="lazy" alt="Lazy loaded image 3" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <code>object-fit: cover</code> prevents distortion with fixed height.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: Utility-First Performance Tips                    -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">6. Performance Best Practices</h2>
+
+        <div class="accordion" id="perfAccordion">
+            <!-- Tip 1 -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#tip1">
+                        1. Prefer utility classes over custom CSS
+                    </button>
+                </h2>
+                <div id="tip1" class="accordion-collapse collapse show" data-bs-parent="#perfAccordion">
+                    <div class="accordion-body">
+                        <p>Utility classes are already in the CSS bundle. Custom CSS adds bytes. Using <code>.w-50</code> is better than writing <code>.my-custom-width { width: 50% }</code> in a custom stylesheet.</p>
+                        <p class="mb-0"><strong>Savings:</strong> ~0 bytes vs. custom CSS that adds to your bundle.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Tip 2 -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tip2">
+                        2. Use aspect-ratio for media containers
+                    </button>
+                </h2>
+                <div id="tip2" class="accordion-collapse collapse" data-bs-parent="#perfAccordion">
+                    <div class="accordion-body">
+                        <p>Prevent layout shifts by reserving space for images and videos with explicit sizing or aspect ratio.</p>
+                        <pre class="mb-0"><code>&lt;div class="ratio ratio-16x9 w-100"&gt;
+    &lt;img src="photo.jpg" alt="..."&gt;
+&lt;/div&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+            <!-- Tip 3 -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tip3">
+                        3. Avoid percentage heights when possible
+                    </button>
+                </h2>
+                <div id="tip3" class="accordion-collapse collapse" data-bs-parent="#perfAccordion">
+                    <div class="accordion-body">
+                        <p>Percentage-based heights (<code>.h-50</code>, <code>.h-100</code>) require the browser to calculate parent heights first, which can cause extra reflows. Use viewport units (<code>.vh-100</code>) or explicit pixel values when possible.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Tip 4 -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tip4">
+                        4. Limit responsive breakpoint usage
+                    </button>
+                </h2>
+                <div id="tip4" class="accordion-collapse collapse" data-bs-parent="#perfAccordion">
+                    <div class="accordion-body">
+                        <p>Each responsive variant (e.g., <code>.w-md-50</code>) adds a CSS rule. Use only the breakpoints you actually need. If the layout doesn't change at xl, don't add <code>.w-xl-*</code> classes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7: Benchmark Comparison                              -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">7. Quick Benchmark: Utility vs Custom CSS</h2>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Approach</th>
+                        <th>CSS Added</th>
+                        <th>Specificity</th>
+                        <th>Maintainability</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Bootstrap utility (.w-50)</td>
+                        <td>0 bytes (already included)</td>
+                        <td>High (!important)</td>
+                        <td>High (standard classes)</td>
+                    </tr>
+                    <tr>
+                        <td>Inline style</td>
+                        <td>0 bytes CSS, but no caching</td>
+                        <td>Highest (inline)</td>
+                        <td>Low (scattered)</td>
+                    </tr>
+                    <tr>
+                        <td>Custom class</td>
+                        <td>~50+ bytes per class</td>
+                        <td>Variable</td>
+                        <td>Medium</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="alert alert-success mt-4">
+            <strong>Bottom line:</strong> Bootstrap sizing utilities are highly optimized. Use them freely for standard sizing needs and reserve custom CSS only for values not covered by Bootstrap.
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle from CDN (includes Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

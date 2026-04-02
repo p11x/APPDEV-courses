@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_14_Performance_Future_Patterns.html
+     Topic: Future Performance Patterns
+     
+     Covers emerging web performance techniques: View Transitions API,
+     Speculation Rules API, fetchpriority, 103 Early Hints, and
+     upcoming CSS features that impact performance.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Future Performance Patterns - Bootstrap 5</title>
+
+    <style>
+        .hero-future { background: linear-gradient(135deg, #0d6efd 0%, #6610f2 50%, #d63384 100%); color: white; padding: 4rem 0; }
+        .code-dark { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.82rem; overflow-x: auto; }
+        .status-new { background: #198754; color: white; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; }
+        .status-exp { background: #ffc107; color: #212529; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; }
+        .speculation-demo { border: 2px dashed #0d6efd; padding: 1.5rem; border-radius: 0.5rem; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Future Patterns</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#viewtransitions">View Transitions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#speculation">Speculation</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#earlyhints">Early Hints</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#css">CSS Future</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-future text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Future Performance Patterns</h1>
+            <p class="lead mt-2">Emerging APIs and techniques for next-generation web performance.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: VIEW TRANSITIONS API
+         ============================================================ -->
+    <section id="viewtransitions" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">View Transitions API <span class="status-new">New</span></h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <p>The View Transitions API enables smooth animated transitions between page states without complex JavaScript animation libraries.</p>
+                            <div class="code-dark">
+// Enable view transitions (CSS)<br>
+::view-transition-old(root) {<br>
+&nbsp;&nbsp;animation: fade-out 0.3s ease-out;<br>
+}<br>
+::view-transition-new(root) {<br>
+&nbsp;&nbsp;animation: fade-in 0.3s ease-in;<br>
+}<br><br>
+// Named transitions for specific elements<br>
+.hero-image {<br>
+&nbsp;&nbsp;view-transition-name: hero;<br>
+}<br><br>
+// JS trigger for SPA navigation<br>
+document.startViewTransition(() => {<br>
+&nbsp;&nbsp;updateDOM(); // DOM changes happen here<br>
+});
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Bootstrap Card Transition Demo</h5></div>
+                        <div class="card-body">
+                            <p class="small text-muted">Click cards to see the transition:</p>
+                            <div class="row g-2" id="cardGrid">
+                                <div class="col-6">
+                                    <div class="card" style="view-transition-name:card-1" onclick="showDetail(this)">
+                                        <img src="https://picsum.photos/200/120?random=1" class="card-img-top" alt="Card 1" loading="lazy" width="200" height="120">
+                                        <div class="card-body p-2">
+                                            <small>Card 1</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="card" style="view-transition-name:card-2" onclick="showDetail(this)">
+                                        <img src="https://picsum.photos/200/120?random=2" class="card-img-top" alt="Card 2" loading="lazy" width="200" height="120">
+                                        <div class="card-body p-2">
+                                            <small>Card 2</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="cardDetail" class="mt-3" style="display:none"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: SPECULATION RULES API
+         ============================================================ -->
+    <section id="speculation" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Speculation Rules API <span class="status-new">New</span></h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <p>The Speculation Rules API tells the browser to prefetch or prerender pages the user is likely to navigate to.</p>
+                            <div class="code-dark">
+&lt;!-- Declarative speculation rules --&gt;<br>
+&lt;script type="speculationrules"&gt;<br>
+{<br>
+&nbsp;&nbsp;"prefetch": [{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"source": "list",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"urls": [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"/products",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"/about",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"/contact"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;]<br>
+&nbsp;&nbsp;}],<br>
+&nbsp;&nbsp;"prerender": [{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"source": "document",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"where": {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"href_matches": "/*"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}]<br>
+}<br>
+&lt;/script&gt;
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Prefetch vs Prerender</h5>
+                            <table class="table">
+                                <thead>
+                                    <tr><th>Strategy</th><th>Saves</th><th>Cost</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Prefetch</strong></td>
+                                        <td>DNS + TCP + download</td>
+                                        <td>Low (network only)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Prerender</strong></td>
+                                        <td>Everything (instant nav)</td>
+                                        <td>High (full render)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="speculation-demo">
+                                <strong>Navigate instantly</strong><br>
+                                <small class="text-muted">Prerendered pages load in &lt;50ms</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: 103 EARLY HINTS
+         ============================================================ -->
+    <section id="earlyhints" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">103 Early Hints <span class="status-exp">Experimental</span></h2>
+
+            <div class="card">
+                <div class="card-body">
+                    <p>103 Early Hints allows the server to send preload/preconnect hints before the final response is ready, letting the browser start fetching critical resources during server processing.</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Server sends (during processing):</h6>
+                            <div class="code-dark">
+HTTP/1.1 103 Early Hints<br>
+Link: &lt;/css/bootstrap.min.css&gt;;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rel=preload; as=style<br>
+Link: &lt;/js/app.js&gt;;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rel=preload; as=script
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Timeline comparison:</h6>
+                            <div class="code-dark">
+WITHOUT Early Hints:<br>
+[Server processing... 800ms]<br>
+[Browser receives HTML, parses, fetches CSS]<br>
+Total: 800ms + 200ms = 1000ms<br><br>
+WITH Early Hints:<br>
+[Server processing... 800ms]<br>
+  [Browser starts fetching CSS at 50ms]<br>
+  [CSS ready when HTML arrives]<br>
+Total: 800ms (parallel!) = 800ms
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: FUTURE CSS PERFORMANCE FEATURES
+         ============================================================ -->
+    <section id="css" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">CSS Performance Features</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Container Queries</h5>
+                            <span class="status-new">Stable</span>
+                            <p class="small mt-2">Components adapt to their container width, not viewport. Enables truly reusable responsive components.</p>
+                            <div class="code-dark">
+.card-container {<br>
+&nbsp;&nbsp;container-type: inline-size;<br>
+}<br>
+@container (min-width: 400px) {<br>
+&nbsp;&nbsp;.card { flex-direction: row; }<br>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>CSS Anchor Positioning</h5>
+                            <span class="status-exp">Experimental</span>
+                            <p class="small mt-2">Position elements relative to other elements without JavaScript. Replaces many Popper.js use cases.</p>
+                            <div class="code-dark">
+.tooltip {<br>
+&nbsp;&nbsp;position-anchor: --trigger;<br>
+&nbsp;&nbsp;top: anchor(bottom);<br>
+&nbsp;&nbsp;left: anchor(center);<br>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Scroll-Driven Animations</h5>
+                            <span class="status-new">Stable</span>
+                            <p class="small mt-2">CSS-only scroll-linked animations without JavaScript scroll listeners. Offloaded to compositor thread.</p>
+                            <div class="code-dark">
+.progress {<br>
+&nbsp;&nbsp;animation: grow linear;<br>
+&nbsp;&nbsp;animation-timeline: scroll();<br>
+}<br>
+@keyframes grow {<br>
+&nbsp;&nbsp;from { width: 0; }<br>
+&nbsp;&nbsp;to { width: 100%; }<br>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Future Performance Patterns &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+
+    <script>
+        // View Transitions demo
+        function showDetail(el) {
+            if (!document.startViewTransition) {
+                toggleDetail(el);
+                return;
+            }
+            document.startViewTransition(() => toggleDetail(el));
+        }
+
+        function toggleDetail(el) {
+            const grid = document.getElementById('cardGrid');
+            const detail = document.getElementById('cardDetail');
+            if (detail.style.display === 'none') {
+                detail.style.display = 'block';
+                detail.innerHTML = `
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Expanded View</h5>
+                            <p class="small">This transition was animated by the View Transitions API.</p>
+                            <button class="btn btn-sm btn-outline-primary" onclick="showDetail()">Back</button>
+                        </div>
+                    </div>`;
+                grid.style.display = 'none';
+            } else {
+                detail.style.display = 'none';
+                grid.style.display = '';
+            }
+        }
+    </script>
+</body>
+</html>

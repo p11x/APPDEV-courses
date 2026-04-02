@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================ -->
+    <!-- CORE META TAGS                               -->
+    <!-- ============================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bootstrap 5 CSS Architecture Patterns - Understanding how Bootstrap organizes its CSS">
+    <meta name="author" content="Bootstrap Course">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- ============================================ -->
+    <!-- TITLE                                        -->
+    <!-- ============================================ -->
+    <title>01_01_04 - CSS Architecture</title>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 CSS CDN                          -->
+    <!-- ============================================ -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aV76Ug"
+        crossorigin="anonymous"
+    >
+
+    <!-- Bootstrap Icons CDN -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <!-- ============================================ -->
+    <!-- CUSTOM STYLES                                -->
+    <!-- ============================================ -->
+    <!--
+        These styles demonstrate CSS architecture patterns that Bootstrap follows.
+        In production, you would define these in your custom SASS files.
+    -->
+    <style>
+        /*
+            BEM NAMING CONVENTION DEMONSTRATION
+            BEM = Block Element Modifier
+            Block:  .card (standalone component)
+            Element: .card__header (part of the block)
+            Modifier: .card--featured (variation of the block)
+
+            Bootstrap doesn't strictly use BEM, but uses a similar
+            component-based naming approach: .component-subcomponent
+        */
+        .arch-block {
+            border: 2px solid #0d6efd;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+        }
+        .arch-block__header {
+            font-weight: 700;
+            color: #0d6efd;
+            margin-bottom: 0.5rem;
+        }
+        .arch-block__content {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .arch-block--highlighted {
+            border-color: #ffc107;
+            background-color: #fff8e1;
+        }
+
+        /*
+            Specificity visualization.
+            Shows how different selector types have different specificity weights.
+        */
+        .specificity-demo .inline-style {
+            color: red; /* Specificity: 1,0,0,0 (highest - inline style) */
+        }
+        .specificity-demo #id-selector {
+            color: blue; /* Specificity: 0,1,0,0 */
+        }
+        .specificity-demo .class-selector {
+            color: green; /* Specificity: 0,0,1,0 */
+        }
+        .specificity-demo p {
+            color: orange; /* Specificity: 0,0,0,1 (lowest) */
+        }
+
+        /*
+            Layer visualization.
+            Shows how Bootstrap's CSS is organized in layers.
+        */
+        .css-layer {
+            padding: 1rem;
+            border-left: 4px solid;
+            margin-bottom: 0.75rem;
+            border-radius: 0 0.375rem 0.375rem 0;
+        }
+        .css-layer--reboot { border-color: #6c757d; background-color: #f8f9fa; }
+        .css-layer--type { border-color: #0d6efd; background-color: #e7f1ff; }
+        .css-layer--layout { border-color: #198754; background-color: #d1e7dd; }
+        .css-layer--components { border-color: #ffc107; background-color: #fff8e1; }
+        .css-layer--utilities { border-color: #dc3545; background-color: #f8d7da; }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================ -->
+    <!-- NAVIGATION BAR                               -->
+    <!-- ============================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-layers me-2"></i>CSS Architecture
+            </a>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#layers">Layers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#specificity">Specificity</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#naming">Naming</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#customization">Customization</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================ -->
+    <!-- HERO SECTION                                 -->
+    <!-- ============================================ -->
+    <header class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">CSS Architecture Patterns</h1>
+            <p class="lead mb-0">
+                Understanding how Bootstrap organizes its CSS into logical layers,
+                manages specificity, and uses consistent naming conventions.
+            </p>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT                                 -->
+    <!-- ============================================ -->
+    <main class="container py-5">
+
+        <!-- ============================================ -->
+        <!-- CSS LAYERS SECTION                           -->
+        <!-- ============================================ -->
+        <!--
+            Bootstrap's CSS is organized into distinct layers.
+            Each layer builds upon the previous one.
+            Understanding this order is critical for customization.
+        -->
+        <section class="mb-5" id="layers">
+            <h2 class="mb-4">
+                <i class="bi bi-stack me-2"></i>CSS Layers
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <p class="lead">
+                        Bootstrap organizes its CSS into 5 distinct layers, each building upon the previous.
+                        This layered architecture ensures predictable cascading behavior.
+                    </p>
+
+                    <!--
+                        Visual representation of CSS layers from bottom to top.
+                        Each layer uses a colored left border and background to distinguish it.
+                    -->
+                    <div class="css-layer css-layer--reboot">
+                        <strong>Layer 1: Reboot</strong> (CSS Reset)
+                        <p class="mb-0 small text-muted">
+                            Normalizes browser defaults. Sets box-sizing: border-box on all elements.
+                            Removes margins, normalizes headings, forms, tables.
+                        </p>
+                    </div>
+                    <div class="css-layer css-layer--type">
+                        <strong>Layer 2: Type & Root</strong> (Base Styles)
+                        <p class="mb-0 small text-muted">
+                            Sets root font-size, body defaults, link styles, heading styles.
+                            Defines CSS custom properties on <code>:root</code>.
+                        </p>
+                    </div>
+                    <div class="css-layer css-layer--layout">
+                        <strong>Layer 3: Layout</strong> (Grid & Containers)
+                        <p class="mb-0 small text-muted">
+                            Container, row, column classes. Flex utilities, display utilities.
+                            The grid system lives in this layer.
+                        </p>
+                    </div>
+                    <div class="css-layer css-layer--components">
+                        <strong>Layer 4: Components</strong> (Cards, Buttons, Forms, etc.)
+                        <p class="mb-0 small text-muted">
+                            All Bootstrap components. Each has a base class (e.g., <code>.btn</code>)
+                            and modifier classes (e.g., <code>.btn-primary</code>).
+                        </p>
+                    </div>
+                    <div class="css-layer css-layer--utilities">
+                        <strong>Layer 5: Utilities</strong> (Override Everything)
+                        <p class="mb-0 small text-muted">
+                            Highest specificity. <code>!important</code> used on some utilities.
+                            Classes like <code>.d-flex</code>, <code>.text-center</code>, <code>.bg-primary</code>.
+                        </p>
+                    </div>
+
+                    <!--
+                        Explanation of why layer order matters.
+                    -->
+                    <div class="alert alert-info mt-4 mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        <strong>Why order matters:</strong> Because CSS follows the "last rule wins"
+                        principle (when specificity is equal), utilities must come last to be able
+                        to override component styles. Reboot must come first to establish a
+                        consistent baseline across browsers.
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <!--
+                        Bootstrap's SASS import order matches the layer order.
+                        This card shows the actual import sequence.
+                    -->
+                    <div class="card sticky-lg-top">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-file-earmark-code me-2"></i>SASS Import Order
+                            </h5>
+                            <p class="card-text text-muted small">
+                                <code>bootstrap.scss</code> imports files in layer order:
+                            </p>
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div class="text-success">// Layer 1: Foundation</div>
+                                <div>@import "reboot";</div>
+                                <div class="mt-1 text-success">// Layer 2: Base</div>
+                                <div>@import "root";</div>
+                                <div>@import "type";</div>
+                                <div class="mt-1 text-success">// Layer 3: Layout</div>
+                                <div>@import "containers";</div>
+                                <div>@import "grid";</div>
+                                <div>@import "helpers";</div>
+                                <div class="mt-1 text-success">// Layer 4: Components</div>
+                                <div>@import "buttons";</div>
+                                <div>@import "forms";</div>
+                                <div>@import "card";</div>
+                                <div>@import "modal";</div>
+                                <div>@import "navbar";</div>
+                                <div class="mt-1 text-success">// Layer 5: Utilities (last!)</div>
+                                <div>@import "utilities/api";</div>
+                                <div>@import "utilities/display";</div>
+                                <div>@import "utilities/flex";</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SPECIFICITY SECTION                          -->
+        <!-- ============================================ -->
+        <!--
+            CSS specificity determines which rule wins when multiple rules
+            target the same element. Understanding specificity is essential
+            for customizing Bootstrap effectively.
+        -->
+        <section class="mb-5" id="specificity">
+            <h2 class="mb-4">
+                <i class="bi bi-bullseye me-2"></i>Specificity
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Specificity Hierarchy</h5>
+                            <p class="card-text">
+                                CSS specificity is calculated as a 4-part value: <code>(a,b,c,d)</code>
+                            </p>
+                            <!--
+                                Table showing specificity weights for different selector types.
+                            -->
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Selector Type</th>
+                                        <th>Weight</th>
+                                        <th>Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Inline styles</td>
+                                        <td><code>1,0,0,0</code></td>
+                                        <td><code>style="color:red"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ID selector</td>
+                                        <td><code>0,1,0,0</code></td>
+                                        <td><code>#myId</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Class / Attribute / Pseudo-class</td>
+                                        <td><code>0,0,1,0</code></td>
+                                        <td><code>.btn-primary</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Element / Pseudo-element</td>
+                                        <td><code>0,0,0,1</code></td>
+                                        <td><code>div</code>, <code>::before</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Universal selector</td>
+                                        <td><code>0,0,0,0</code></td>
+                                        <td><code>*</code></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="alert alert-warning mb-0 mt-3">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <code>!important</code> overrides all specificity. Bootstrap uses it
+                                sparingly, mainly on utility classes to ensure they always win.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Bootstrap's Specificity Strategy</h5>
+                            <p class="card-text">
+                                Bootstrap keeps component specificity low (single class selectors)
+                                so you can easily override with your own class-based selectors.
+                            </p>
+
+                            <!--
+                                Examples of Bootstrap's low-specificity selectors.
+                            -->
+                            <div class="bg-dark text-white p-3 rounded font-monospace small mb-3">
+                                <div class="text-success">// Bootstrap uses single-class selectors</div>
+                                <div>.btn { ... } <span class="text-muted">/* 0,0,1,0 */</span></div>
+                                <div>.card { ... } <span class="text-muted">/* 0,0,1,0 */</span></div>
+                                <div class="mt-2 text-success">// Compound selectors for variants</div>
+                                <div>.btn-primary { ... } <span class="text-muted">/* 0,0,1,0 */</span></div>
+                                <div>.card-body { ... } <span class="text-muted">/* 0,0,1,0 */</span></div>
+                                <div class="mt-2 text-success">// Utilities use !important to win</div>
+                                <div>.text-center { text-align: center !important; }</div>
+                                <div>.d-flex { display: flex !important; }</div>
+                            </div>
+
+                            <h6>Overriding Bootstrap</h6>
+                            <p class="card-text text-muted small">
+                                To override Bootstrap, use equal or higher specificity:
+                            </p>
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div class="text-success">// Same specificity - wins by order</div>
+                                <div>.btn-primary { background-color: purple; }</div>
+                                <div class="mt-2 text-success">// Higher specificity</div>
+                                <div>.my-theme .btn-primary { ... }</div>
+                                <div class="mt-2 text-success">// Best: Use Bootstrap's variables</div>
+                                <div>$primary: purple; <span class="text-muted">// Before importing</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- NAMING CONVENTIONS SECTION                   -->
+        <!-- ============================================ -->
+        <!--
+            Bootstrap uses a consistent naming convention for its classes.
+            Understanding the pattern helps you predict class names
+            and extend Bootstrap effectively.
+        -->
+        <section class="mb-5" id="naming">
+            <h2 class="mb-4">
+                <i class="bi bi-tag me-2"></i>Naming Conventions
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Bootstrap's Naming Pattern</h5>
+                            <p class="card-text">
+                                Bootstrap uses a <strong>component-modifier</strong> pattern
+                                with hyphens as delimiters. This is not BEM, but serves the same purpose.
+                            </p>
+
+                            <!--
+                                Breakdown of Bootstrap class name structure.
+                            -->
+                            <div class="bg-light p-3 rounded mb-3">
+                                <div class="font-monospace text-center fs-5 mb-3">
+                                    <span class="text-primary fw-bold">component</span>
+                                    <span class="text-muted">-</span>
+                                    <span class="text-success fw-bold">sub-component</span>
+                                    <span class="text-muted">-</span>
+                                    <span class="text-danger fw-bold">modifier</span>
+                                </div>
+                                <div class="row text-center small text-muted">
+                                    <div class="col-4">
+                                        <code>nav</code><br>
+                                        <code>card</code><br>
+                                        <code>btn</code>
+                                    </div>
+                                    <div class="col-4">
+                                        <code>-item</code><br>
+                                        <code>-body</code><br>
+                                        <code>-group</code>
+                                    </div>
+                                    <div class="col-4">
+                                        <code>-primary</code><br>
+                                        <code>-lg</code><br>
+                                        <code>-active</code>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--
+                                Concrete examples of Bootstrap naming.
+                            -->
+                            <h6>Examples</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled font-monospace small">
+                                        <li class="mb-1"><code>.nav</code> - Component</li>
+                                        <li class="mb-1"><code>.nav-item</code> - Sub-component</li>
+                                        <li class="mb-1"><code>.nav-link</code> - Sub-component</li>
+                                        <li class="mb-1"><code>.nav-tabs</code> - Variant</li>
+                                        <li class="mb-1"><code>.nav-pills</code> - Variant</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled font-monospace small">
+                                        <li class="mb-1"><code>.btn</code> - Component</li>
+                                        <li class="mb-1"><code>.btn-primary</code> - Color variant</li>
+                                        <li class="mb-1"><code>.btn-lg</code> - Size variant</li>
+                                        <li class="mb-1"><code>.btn-group</code> - Wrapper</li>
+                                        <li class="mb-1"><code>.btn-outline-primary</code> - Outline + color</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        Live demonstration of naming convention with actual Bootstrap elements.
+                    -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Naming in Action</h5>
+                            <p class="card-text text-muted small">
+                                Hover over elements to see their class names:
+                            </p>
+                            <!-- nav component with sub-components and variants -->
+                            <ul class="nav nav-tabs mb-3">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#">.nav .nav-item .nav-link.active</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#">.nav-link</a>
+                                </li>
+                            </ul>
+                            <!-- btn component with size and color variants -->
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <button class="btn btn-primary">.btn .btn-primary</button>
+                                <button class="btn btn-outline-danger btn-sm">.btn .btn-outline-danger .btn-sm</button>
+                                <button class="btn btn-success btn-lg">.btn .btn-success .btn-lg</button>
+                            </div>
+                            <!-- card component with sub-components -->
+                            <div class="card" style="max-width: 300px;">
+                                <div class="card-header">.card-header</div>
+                                <div class="card-body">.card-body</div>
+                                <div class="card-footer">.card-footer</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!--
+                        BEM comparison card.
+                        Shows how BEM differs from Bootstrap's approach.
+                    -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">BEM vs Bootstrap</h5>
+                            <p class="card-text text-muted small">
+                                BEM uses <code>__</code> for elements and <code>--</code> for modifiers.
+                                Bootstrap uses hyphens for everything.
+                            </p>
+                            <table class="table table-sm small font-monospace">
+                                <thead>
+                                    <tr>
+                                        <th>BEM</th>
+                                        <th>Bootstrap</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>.card</code></td>
+                                        <td><code>.card</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>.card__header</code></td>
+                                        <td><code>.card-header</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>.card--dark</code></td>
+                                        <td><code>.card-dark</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>.btn--primary--lg</code></td>
+                                        <td><code>.btn-primary.btn-lg</code></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!--
+                        Custom component example using BEM-like naming.
+                    -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">Your Custom Components</h5>
+                            <p class="card-text text-muted small">
+                                Follow Bootstrap's pattern for consistency:
+                            </p>
+                            <!-- Custom component using BEM-like naming -->
+                            <div class="arch-block">
+                                <div class="arch-block__header">.arch-block__header</div>
+                                <div class="arch-block__content">.arch-block__content</div>
+                            </div>
+                            <div class="arch-block arch-block--highlighted">
+                                <div class="arch-block__header">.arch-block--highlighted</div>
+                                <div class="arch-block__content">With modifier class</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- CUSTOMIZATION STRATEGIES SECTION             -->
+        <!-- ============================================ -->
+        <!--
+            Different approaches to customizing Bootstrap's CSS.
+            Ranges from simple to advanced.
+        -->
+        <section id="customization">
+            <h2 class="mb-4">
+                <i class="bi bi-sliders me-2"></i>Customization Strategies
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">
+                                <i class="bi bi-1-circle me-2"></i>Override CSS
+                            </h5>
+                            <p class="card-text">
+                                Add your own CSS after Bootstrap. Use equal or higher specificity
+                                to override default styles.
+                            </p>
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div class="text-success">/* After Bootstrap CSS */</div>
+                                <div>.btn-primary {</div>
+                                <div>&nbsp;&nbsp;background: purple;</div>
+                                <div>}</div>
+                            </div>
+                            <div class="mt-3">
+                                <span class="badge bg-success">Easy</span>
+                                <span class="badge bg-warning text-dark">Limited</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 border-warning">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">
+                                <i class="bi bi-2-circle me-2"></i>SASS Variables
+                            </h5>
+                            <p class="card-text">
+                                Override Bootstrap's <code>!default</code> variables before
+                                importing Bootstrap's SASS. Changes propagate everywhere.
+                            </p>
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div class="text-success">// Before importing Bootstrap</div>
+                                <div>$primary: #8b5cf6;</div>
+                                <div>$border-radius: 0.5rem;</div>
+                                <div>$enable-gradients: true;</div>
+                                <div class="mt-1">@import "bootstrap";</div>
+                            </div>
+                            <div class="mt-3">
+                                <span class="badge bg-warning text-dark">Medium</span>
+                                <span class="badge bg-success">Recommended</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 border-danger">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">
+                                <i class="bi bi-3-circle me-2"></i>Selective Imports
+                            </h5>
+                            <p class="card-text">
+                                Import only the Bootstrap parts you need.
+                                Reduces CSS bundle size significantly.
+                            </p>
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div class="text-success">// Only what you need</div>
+                                <div>@import "functions";</div>
+                                <div>@import "variables";</div>
+                                <div>@import "mixins";</div>
+                                <div>@import "reboot";</div>
+                                <div>@import "grid";</div>
+                                <div>@import "buttons";</div>
+                                <div class="text-muted">// Skip: modals, carousels, etc.</div>
+                            </div>
+                            <div class="mt-3">
+                                <span class="badge bg-danger">Advanced</span>
+                                <span class="badge bg-success">Best perf</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================ -->
+    <!-- FOOTER                                       -->
+    <!-- ============================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>CSS Architecture</h5>
+                    <p class="text-muted mb-0">
+                        Bootstrap's CSS architecture: layers, specificity, naming conventions, and customization strategies.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-github"></i></a>
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <p class="text-center text-muted mb-0">
+                &copy; 2024 Bootstrap Course. Built with Bootstrap 5.3.3
+            </p>
+        </div>
+    </footer>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 JAVASCRIPT BUNDLE CDN            -->
+    <!-- ============================================ -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- ============================================ -->
+    <!-- CUSTOM JAVASCRIPT                            -->
+    <!-- ============================================ -->
+    <script>
+        console.log('Bootstrap version:', bootstrap.Tooltip.VERSION || '5.3.3');
+
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(
+            tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl)
+        );
+    </script>
+</body>
+</html>

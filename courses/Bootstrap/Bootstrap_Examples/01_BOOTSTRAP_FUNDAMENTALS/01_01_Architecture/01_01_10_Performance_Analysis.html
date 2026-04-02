@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================ -->
+    <!-- CORE META TAGS                               -->
+    <!-- ============================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bootstrap 5 Performance Analysis - Measuring and optimizing Bootstrap performance">
+    <meta name="author" content="Bootstrap Course">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- ============================================ -->
+    <!-- TITLE                                        -->
+    <!-- ============================================ -->
+    <title>01_01_10 - Performance Analysis</title>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 CSS CDN                          -->
+    <!-- ============================================ -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aV76Ug"
+        crossorigin="anonymous"
+    >
+
+    <!-- Bootstrap Icons CDN -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <!-- ============================================ -->
+    <!-- CUSTOM STYLES                                -->
+    <!-- ============================================ -->
+    <style>
+        /*
+            Metric card styling for performance numbers.
+        */
+        .metric-card {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            transition: transform 0.2s;
+        }
+        .metric-card:hover { transform: translateY(-2px); }
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .metric-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+
+        /*
+            Waterfall bar styling for network timing visualization.
+        */
+        .waterfall-bar {
+            height: 20px;
+            border-radius: 3px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 0.7rem;
+            color: white;
+            font-family: monospace;
+        }
+
+        /*
+            Terminal styling.
+        */
+        .perf-terminal {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        .perf-terminal .cmd { color: #dcdcaa; }
+        .perf-terminal .url { color: #ce9178; }
+        .perf-terminal .green { color: #6a9955; }
+        .perf-terminal .red { color: #f44747; }
+        .perf-terminal .yellow { color: #dcdcaa; }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================ -->
+    <!-- NAVIGATION BAR                               -->
+    <!-- ============================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-speedometer2 me-2"></i>Performance Analysis
+            </a>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#metrics">Metrics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tools">Tools</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#optimization">Optimization</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#monitoring">Monitoring</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================ -->
+    <!-- HERO SECTION                                 -->
+    <!-- ============================================ -->
+    <header class="bg-danger text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Performance Analysis</h1>
+            <p class="lead mb-0">
+                Measuring, analyzing, and optimizing Bootstrap's impact on page load performance.
+                Understanding Core Web Vitals and optimization strategies.
+            </p>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT                                 -->
+    <!-- ============================================ -->
+    <main class="container py-5">
+
+        <!-- ============================================ -->
+        <!-- KEY METRICS SECTION                          -->
+        <!-- ============================================ -->
+        <!--
+            Core Web Vitals are Google's metrics for user experience.
+            Bootstrap's CSS and JS can impact these metrics if not optimized.
+        -->
+        <section class="mb-5" id="metrics">
+            <h2 class="mb-4">
+                <i class="bi bi-speedometer me-2"></i>Key Performance Metrics
+            </h2>
+
+            <!--
+                Metric cards showing Bootstrap's typical performance impact.
+            -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-3 col-6">
+                    <div class="card metric-card bg-light">
+                        <div class="card-body">
+                            <div class="metric-value text-primary">277 KB</div>
+                            <div class="metric-label">Full CSS (unminified)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card metric-card bg-light">
+                        <div class="card-body">
+                            <div class="metric-value text-success">~50 KB</div>
+                            <div class="metric-label">CSS (minified)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card metric-card bg-light">
+                        <div class="card-body">
+                            <div class="metric-value text-warning">~78 KB</div>
+                            <div class="metric-label">JS Bundle (min)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card metric-card bg-light">
+                        <div class="card-body">
+                            <div class="metric-value text-info">~12 KB</div>
+                            <div class="metric-label">JS (gzip compressed)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Core Web Vitals</h5>
+                            <p class="card-text text-muted">
+                                Google's Core Web Vitals measure real-world user experience.
+                                Bootstrap can affect all three metrics.
+                            </p>
+
+                            <!--
+                                Table explaining each Core Web Vital and Bootstrap's impact.
+                            -->
+                            <div class="table-responsive">
+                                <table class="table table-bordered small">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Metric</th>
+                                            <th>Measures</th>
+                                            <th>Good</th>
+                                            <th>Bootstrap Impact</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <strong>LCP</strong><br>
+                                                <span class="text-muted">Largest Contentful Paint</span>
+                                            </td>
+                                            <td>How fast the main content loads</td>
+                                            <td><span class="badge bg-success">< 2.5s</span></td>
+                                            <td>
+                                                Large CSS files delay rendering.
+                                                Use <code>&lt;link rel="preload"&gt;</code> for critical CSS.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>FID / INP</strong><br>
+                                                <span class="text-muted">Interaction to Next Paint</span>
+                                            </td>
+                                            <td>How fast the page responds to input</td>
+                                            <td><span class="badge bg-success">< 200ms</span></td>
+                                            <td>
+                                                Large JS bundles block the main thread.
+                                                Use async/defer or load only needed components.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>CLS</strong><br>
+                                                <span class="text-muted">Cumulative Layout Shift</span>
+                                            </td>
+                                            <td>Visual stability (elements moving)</td>
+                                            <td><span class="badge bg-success">< 0.1</span></td>
+                                            <td>
+                                                Web fonts and lazy-loaded content can cause shifts.
+                                                Set explicit dimensions on images and containers.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!--
+                        Network waterfall visualization.
+                        Shows how Bootstrap files load in the network timeline.
+                    -->
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-bar-chart-steps me-2"></i>Network Waterfall
+                            </h5>
+                            <p class="card-text text-muted small">
+                                Approximate loading timeline:
+                            </p>
+                            <div class="waterfall-bar bg-primary" style="width: 100%;">
+                                HTML (5 KB)
+                            </div>
+                            <div class="waterfall-bar bg-success" style="width: 85%; margin-left: 10%;">
+                                bootstrap.min.css (50 KB)
+                            </div>
+                            <div class="waterfall-bar bg-warning" style="width: 70%; margin-left: 15%;">
+                                bootstrap-icons.css (80 KB)
+                            </div>
+                            <div class="waterfall-bar bg-danger" style="width: 50%; margin-left: 25%;">
+                                bootstrap.bundle.min.js (78 KB)
+                            </div>
+                            <div class="waterfall-bar bg-info" style="width: 20%; margin-left: 40%;">
+                                Custom JS (5 KB)
+                            </div>
+                            <p class="text-muted small mt-3 mb-0">
+                                CSS blocks rendering. JS can be async.
+                                Optimize the critical path for fastest LCP.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- MEASUREMENT TOOLS SECTION                    -->
+        <!-- ============================================ -->
+        <!--
+            Tools for measuring Bootstrap's performance impact.
+        -->
+        <section class="mb-5" id="tools">
+            <h2 class="mb-4">
+                <i class="bi bi-speedometer2 me-2"></i>Measurement Tools
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-browser-chrome me-2"></i>Chrome DevTools
+                            </h5>
+                            <p class="card-text small">
+                                Built-in performance profiling in Chrome.
+                            </p>
+                            <ul class="list-unstyled small mb-0">
+                                <li class="mb-2">
+                                    <strong>Network Tab:</strong> See file sizes, load times, and order
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Performance Tab:</strong> Record page load, see rendering timeline
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Coverage Tab:</strong> See unused CSS/JS bytes
+                                </li>
+                                <li class="mb-0">
+                                    <strong>Lighthouse Tab:</strong> Automated performance audit
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-lightning me-2"></i>Lighthouse
+                            </h5>
+                            <p class="card-text small">
+                                Google's automated page quality tool.
+                            </p>
+                            <div class="perf-terminal small">
+                                <div><span class="green"># CLI usage</span></div>
+                                <div><span class="cmd">npx</span> lighthouse <span class="url">https://yoursite.com</span></div>
+                                <div class="mt-1"><span class="green"># With specific categories</span></div>
+                                <div><span class="cmd">npx</span> lighthouse <span class="url">url</span> \</div>
+                                <div>&nbsp;&nbsp;--only-categories=performance</div>
+                                <div class="mt-1"><span class="green"># Output as JSON</span></div>
+                                <div><span class="cmd">npx</span> lighthouse <span class="url">url</span> \</div>
+                                <div>&nbsp;&nbsp;--output=json \</div>
+                                <div>&nbsp;&nbsp;--output-path=./report.json</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-globe me-2"></i>Web Tools
+                            </h5>
+                            <p class="card-text small">
+                                Online performance testing services.
+                            </p>
+                            <ul class="list-unstyled small mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-link-45deg me-1"></i>
+                                    <strong>PageSpeed Insights</strong>
+                                    <br><span class="text-muted">pagespeed.web.dev</span>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-link-45deg me-1"></i>
+                                    <strong>WebPageTest</strong>
+                                    <br><span class="text-muted">webpagetest.org</span>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-link-45deg me-1"></i>
+                                    <strong>GTmetrix</strong>
+                                    <br><span class="text-muted">gtmetrix.com</span>
+                                </li>
+                                <li class="mb-0">
+                                    <i class="bi bi-link-45deg me-1"></i>
+                                    <strong>bundlesize</strong>
+                                    <br><span class="text-muted">Track bundle sizes in CI</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- OPTIMIZATION STRATEGIES                      -->
+        <!-- ============================================ -->
+        <!--
+            Practical strategies for improving Bootstrap's performance impact.
+        -->
+        <section class="mb-5" id="optimization">
+            <h2 class="mb-4">
+                <i class="bi bi-lightning-charge me-2"></i>Optimization Strategies
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">1. Critical CSS</h5>
+                            <p class="card-text text-muted small">
+                                Inline critical above-the-fold CSS to eliminate render-blocking requests.
+                            </p>
+                            <div class="perf-terminal small">
+                                <div><span class="green">&lt;!-- Inline critical CSS --&gt;</span></div>
+                                <div>&lt;<span class="cmd">style</span>&gt;</div>
+                                <div>&nbsp;&nbsp;<span class="green">/* Only navbar, hero, first section */</span></div>
+                                <div>&nbsp;&nbsp;.navbar { ... }</div>
+                                <div>&nbsp;&nbsp;.hero { ... }</div>
+                                <div>&lt;/<span class="cmd">style</span>&gt;</div>
+                                <div class="mt-1"><span class="green">&lt;!-- Load rest asynchronously --&gt;</span></div>
+                                <div>&lt;<span class="cmd">link</span> rel=<span class="url">"preload"</span></div>
+                                <div>&nbsp;&nbsp;href=<span class="url">"bootstrap.min.css"</span></div>
+                                <div>&nbsp;&nbsp;as=<span class="url">"style"</span></div>
+                                <div>&nbsp;&nbsp;onload=<span class="url">"this.rel='stylesheet'"</span>&gt;</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">2. Async/Defer JS</h5>
+                            <p class="card-text text-muted small">
+                                Prevent JavaScript from blocking HTML parsing.
+                            </p>
+                            <div class="perf-terminal small">
+                                <div><span class="green">&lt;!-- Blocks parsing (avoid) --&gt;</span></div>
+                                <div>&lt;<span class="cmd">script</span> src=<span class="url">"bootstrap.bundle.js"</span>&gt;&lt;/script&gt;</div>
+                                <div class="mt-1"><span class="green">&lt;!-- Async: loads in parallel, executes ASAP --&gt;</span></div>
+                                <div>&lt;<span class="cmd">script</span> <span class="cmd">async</span></div>
+                                <div>&nbsp;&nbsp;src=<span class="url">"bootstrap.bundle.js"</span>&gt;&lt;/script&gt;</div>
+                                <div class="mt-1"><span class="green">&lt;!-- Defer: loads in parallel, executes after HTML --&gt;</span></div>
+                                <div>&lt;<span class="cmd">script</span> <span class="cmd">defer</span></div>
+                                <div>&nbsp;&nbsp;src=<span class="url">"bootstrap.bundle.js"</span>&gt;&lt;/script&gt;</div>
+                                <div class="mt-1"><span class="green">&lt;!-- Best: at end of body --&gt;</span></div>
+                                <div>&lt;/body&gt;</div>
+                                <div>&lt;<span class="cmd">script</span></div>
+                                <div>&nbsp;&nbsp;src=<span class="url">"bootstrap.bundle.js"</span>&gt;&lt;/script&gt;</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">3. CDN Caching</h5>
+                            <p class="card-text text-muted small">
+                                Leverage browser caching and CDN edge servers.
+                            </p>
+                            <div class="perf-terminal small">
+                                <div><span class="green">// CDN with SRI (recommended)</span></div>
+                                <div>&lt;<span class="cmd">link</span></div>
+                                <div>&nbsp;&nbsp;href=<span class="url">"https://cdn.jsdelivr.net/npm/"</span></div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="url">"bootstrap@5.3.3/dist/css/"</span></div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="url">"bootstrap.min.css"</span></div>
+                                <div>&nbsp;&nbsp;integrity=<span class="url">"sha384-..."</span></div>
+                                <div>&nbsp;&nbsp;crossorigin=<span class="url">"anonymous"</span>&gt;</div>
+                                <div class="mt-1"><span class="green">// Benefits:</span></div>
+                                <div><span class="green">// - Cached across sites using same CDN</span></div>
+                                <div><span class="green">// - Served from nearest edge server</span></div>
+                                <div><span class="green">// - HTTP/2 multiplexing</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">4. Compression</h5>
+                            <p class="card-text text-muted small">
+                                Enable gzip or Brotli compression on your server.
+                            </p>
+                            <div class="perf-terminal small">
+                                <div><span class="green">// Nginx config</span></div>
+                                <div>gzip on;</div>
+                                <div>gzip_types text/css application/javascript;</div>
+                                <div>gzip_min_length 1000;</div>
+                                <div class="mt-1"><span class="green">// Size comparison</span></div>
+                                <div><span class="red">bootstrap.min.css: 50 KB</span></div>
+                                <div><span class="yellow">gzip: ~12 KB (76% smaller)</span></div>
+                                <div><span class="green">Brotli: ~10 KB (80% smaller)</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- MONITORING SECTION                           -->
+        <!-- ============================================ -->
+        <!--
+            Continuous performance monitoring strategies.
+        -->
+        <section id="monitoring">
+            <h2 class="mb-4">
+                <i class="bi bi-graph-up me-2"></i>Continuous Monitoring
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Bundle Size Tracking</h5>
+                            <p class="card-text text-muted small">
+                                Track your CSS and JS bundle sizes over time.
+                                Set budgets to prevent regressions.
+                            </p>
+                            <div class="perf-terminal small">
+                                <div><span class="green"># Install bundlesize</span></div>
+                                <div><span class="cmd">npm</span> install <span class="cmd">--save-dev</span> bundlesize</div>
+                                <div class="mt-1"><span class="green">// package.json</span></div>
+                                <div><span class="url">"bundlesize"</span>: [{</div>
+                                <div>&nbsp;&nbsp;<span class="url">"path"</span>: <span class="url">"./dist/css/bootstrap.min.css"</span>,</div>
+                                <div>&nbsp;&nbsp;<span class="url">"maxSize"</span>: <span class="url">"55 kB"</span></div>
+                                <div>}]</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Performance Budget</h5>
+                            <p class="card-text text-muted small">
+                                Set performance budgets in Lighthouse CI to catch regressions.
+                            </p>
+                            <div class="perf-terminal small">
+                                <div><span class="green">// lighthouserc.js</span></div>
+                                <div>module.exports = {</div>
+                                <div>&nbsp;&nbsp;ci: {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;assert: {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assertions: {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="url">"resource-summary:stylesheet:size"</span>:</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[<span class="url">"error"</span>, {maxNumericValue: 60000}],</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="url">"resource-summary:script:size"</span>:</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[<span class="url">"error"</span>, {maxNumericValue: 85000}],</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="url">"first-contentful-paint"</span>:</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[<span class="url">"warn"</span>, {maxNumericValue: 2000}]</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                                <div>&nbsp;&nbsp;}</div>
+                                <div>};</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================ -->
+    <!-- FOOTER                                       -->
+    <!-- ============================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Performance Analysis</h5>
+                    <p class="text-muted mb-0">
+                        Measuring and optimizing Bootstrap's impact on page performance and Core Web Vitals.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-github"></i></a>
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <p class="text-center text-muted mb-0">
+                &copy; 2024 Bootstrap Course. Built with Bootstrap 5.3.3
+            </p>
+        </div>
+    </footer>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 JAVASCRIPT BUNDLE CDN            -->
+    <!-- ============================================ -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- ============================================ -->
+    <!-- CUSTOM JAVASCRIPT                            -->
+    <!-- ============================================ -->
+    <script>
+        console.log('Bootstrap version:', bootstrap.Tooltip.VERSION || '5.3.3');
+
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(
+            tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl)
+        );
+    </script>
+</body>
+</html>

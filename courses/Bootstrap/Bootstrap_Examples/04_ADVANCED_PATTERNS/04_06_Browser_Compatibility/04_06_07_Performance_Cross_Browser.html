@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_06_07_Performance_Cross_Browser.html                       -->
+<!-- Performance Across Browsers                                  -->
+<!-- Demonstrates performance optimization strategies that work   -->
+<!-- consistently across different browser engines                -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>04_06_07 - Performance Across Browsers</title>
+    
+    <!-- Preconnect to CDN for faster resource loading -->
+    <!-- DNS prefetch resolves domain before resources are requested -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* ======================================================== */
+        /* PERFORMANCE-OPTIMIZED CSS PATTERNS                      */
+        /* These patterns ensure consistent performance across     */
+        /* all browser engines                                     */
+        /* ======================================================== */
+
+        /* Use will-change sparingly for animated elements */
+        /* Tells browser to optimize for upcoming changes */
+        .will-change-demo {
+            will-change: transform, opacity;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        .will-change-demo:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+
+        /* GPU-accelerated animations using transform and opacity */
+        /* These properties are composited, avoiding layout/paint */
+        .gpu-animated {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            /* Promote to own layer for GPU compositing */
+            transform: translateZ(0);
+        }
+
+        /* Content-visibility for off-screen rendering optimization */
+        /* Browser skips rendering elements not in viewport */
+        .cv-auto {
+            content-visibility: auto;
+            contain-intrinsic-size: 0 500px;
+        }
+
+        /* Font-display for consistent font loading */
+        @font-face {
+            font-family: 'DemoFont';
+            src: local('Arial');
+            font-display: swap; /* Show fallback, swap when loaded */
+        }
+
+        /* Efficient selector patterns */
+        /* GOOD: Class selectors (fast) */
+        .efficient-selector { color: #333; }
+        /* AVOID: Universal selector with expensive combinators */
+        /* * > * > div { } - slow, don't use */
+
+        /* Critical CSS inlining pattern - above the fold styles */
+        .hero-section {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0d6efd, #6f42c1);
+            color: white;
+        }
+
+        /* Contain property for rendering isolation */
+        .contained-section {
+            contain: layout style paint; /* Strict containment */
+        }
+
+        /* Placeholder shimmer for perceived performance */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- NAVIGATION                                                   -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Performance Lab</a>
+            <button class="navbar-toggler" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#cssPerf">CSS Performance</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#animPerf">Animations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#loadingPerf">Loading</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#metrics">Metrics</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HERO                                                         -->
+    <!-- ============================================================ -->
+    <header class="hero-section py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">Cross-Browser Performance</h1>
+            <p class="lead">
+                Optimization techniques for consistent performance across
+                Chrome, Firefox, Safari, and Edge.
+            </li>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: CSS PERFORMANCE                               -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="cssPerf">
+            <h2 class="border-bottom pb-2 mb-4">1. CSS Performance Patterns</h2>
+            
+            <div class="row">
+                <!-- Efficient selectors -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Efficient CSS Selectors</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Selectors are evaluated right-to-left. Prefer specific, fast selectors:</p>
+                            <pre class="bg-light p-2 rounded small"><code>/* FAST - Class selector */
+.nav-link { }
+.btn-primary { }
+
+/* SLOWER - Descendant combinator */
+.nav .nav-link { }
+
+/* SLOWEST - Universal + deep nesting */
+div > * > .class { }
+
+/* Avoid in performance-critical CSS */
+:not() /* with complex selectors */
+:has() /* expensive in large DOMs */</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- contain property -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">CSS Containment</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Isolate rendering scope for browser optimization:</p>
+                            <pre class="bg-light p-2 rounded small"><code>/* Full containment - most restrictive */
+.card {
+  contain: layout style paint;
+}
+
+/* Size containment - skip size calc */
+.virtual-list-item {
+  contain: size;
+}
+
+/* Layout containment - isolate layout */
+.sidebar {
+  contain: layout;
+}
+
+/* content-visibility: auto */
+/* Skips rendering off-screen content */
+.below-fold {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 300px;
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- will-change -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0">will-change Property</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Hint to browser about upcoming changes. Use sparingly!</p>
+                            <div class="text-center mb-3">
+                                <div class="will-change-demo d-inline-block bg-primary text-white p-3 rounded"
+                                     style="cursor:pointer;">
+                                    Hover me (will-change: transform)
+                                </div>
+                            </div>
+                            <pre class="bg-light p-2 rounded small mb-0"><code>/* DO: Apply to elements that will animate */
+.animated-element {
+  will-change: transform, opacity;
+}
+
+/* DON'T: Apply to too many elements */
+/* Each will-change creates a new layer,
+   consuming GPU memory */
+* { will-change: all; } /* NEVER DO THIS */</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Layout thrashing -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">Avoid Layout Thrashing</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Reading and writing layout properties in a loop forces repeated reflows:</p>
+                            <pre class="bg-light p-2 rounded small"><code>// BAD: Layout thrashing
+elements.forEach(el => {
+  const height = el.offsetHeight; // READ
+  el.style.height = height + 10 + 'px'; // WRITE
+  const width = el.offsetWidth; // READ (reflow!)
+  el.style.width = width + 10 + 'px'; // WRITE
+});
+
+// GOOD: Batch reads, then writes
+const heights = elements.map(
+  el => el.offsetHeight // All READs
+);
+const widths = elements.map(
+  el => el.offsetWidth // All READs
+);
+elements.forEach((el, i) => {
+  el.style.height = heights[i] + 10 + 'px';
+  el.style.width = widths[i] + 10 + 'px';
+}); // All WRITEs</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: ANIMATION PERFORMANCE                         -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="animPerf">
+            <h2 class="border-bottom pb-2 mb-4">2. Animation Performance</h2>
+            
+            <div class="alert alert-info">
+                <strong>GPU-Accelerated Properties:</strong> Only <code>transform</code>, 
+                <code>opacity</code>, <code>filter</code>, and <code>clip-path</code> are
+                composited (GPU-rendered). Animating <code>width</code>, <code>height</code>,
+                <code>top</code>, <code>left</code>, <code>margin</code> triggers layout/paint
+                and is expensive.
+            </div>
+            
+            <!-- Animation comparison -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">GPU vs CPU Animation Comparison</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-success">GPU: transform + opacity</h6>
+                            <div class="border rounded p-3" style="overflow:hidden;">
+                                <div class="gpu-animated bg-success text-white p-2 rounded d-inline-block"
+                                     id="gpuBox" style="cursor:pointer;">
+                                    Click to animate
+                                </div>
+                            </div>
+                            <p class="small text-muted mt-2">Composited - no layout/paint</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-danger">CPU: width + height (avoid!)</h6>
+                            <div class="border rounded p-3" style="overflow:hidden;">
+                                <div class="bg-danger text-white p-2 rounded d-inline-block"
+                                     id="cpuBox" style="cursor:pointer;transition:width 0.3s,height 0.3s;">
+                                    Click to animate
+                                </div>
+                            </div>
+                            <p class="small text-muted mt-2">Triggers layout + paint (expensive)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CSS vs JS animations -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">CSS vs JavaScript Animations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Aspect</th>
+                                    <th>CSS Transitions/Animations</th>
+                                    <th>JavaScript (Web Animations API)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Performance</td>
+                                    <td class="table-success">Can be compositor-only</td>
+                                    <td class="table-warning">Main thread unless compositor</td>
+                                </tr>
+                                <tr>
+                                    <td>Control</td>
+                                    <td class="table-warning">Limited (start/end, keyframes)</td>
+                                    <td class="table-success">Full control (pause, reverse, etc.)</td>
+                                </tr>
+                                <tr>
+                                    <td>Scroll-linked</td>
+                                    <td class="table-warning">Not natively</td>
+                                    <td class="table-success">ScrollTimeline support</td>
+                                </tr>
+                                <tr>
+                                    <td>Browser Support</td>
+                                    <td class="table-success">Universal</td>
+                                    <td class="table-warning">Web Animations API not in all browsers</td>
+                                </tr>
+                                <tr>
+                                    <td>Use Case</td>
+                                    <td>Simple state transitions</td>
+                                    <td>Complex, interactive animations</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: LOADING PERFORMANCE                           -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="loadingPerf">
+            <h2 class="border-bottom pb-2 mb-4">3. Loading Performance Strategies</h2>
+            
+            <!-- Resource hints -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Resource Hints</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Hint</th>
+                                    <th>HTML</th>
+                                    <th>Purpose</th>
+                                    <th>Browser Support</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>dns-prefetch</strong></td>
+                                    <td><code>&lt;link rel="dns-prefetch" href="..."&gt;</code></td>
+                                    <td>Resolve DNS before request</td>
+                                    <td>All browsers</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>preconnect</strong></td>
+                                    <td><code>&lt;link rel="preconnect" href="..."&gt;</code></td>
+                                    <td>DNS + TCP + TLS early</td>
+                                    <td>All modern browsers</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>preload</strong></td>
+                                    <td><code>&lt;link rel="preload" href="..." as="..."&gt;</code></td>
+                                    <td>Fetch critical resource early</td>
+                                    <td>All modern browsers</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>prefetch</strong></td>
+                                    <td><code>&lt;link rel="prefetch" href="..."&gt;</code></td>
+                                    <td>Fetch next-page resources</td>
+                                    <td>Chrome, Firefox, Edge</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>modulepreload</strong></td>
+                                    <td><code>&lt;link rel="modulepreload" href="..."&gt;</code></td>
+                                    <td>Preload ES modules</td>
+                                    <td>Chrome, Edge</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lazy loading -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Lazy Loading Images</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Native lazy loading with <code>loading="lazy"</code> is supported
+                        in all modern browsers. No JavaScript needed.
+                    </p>
+                    <pre class="bg-light p-3 rounded small"><code>&lt;!-- Native lazy loading --&gt;
+&lt;img src="photo.jpg" loading="lazy" alt="..." 
+     width="400" height="300"&gt;
+
+&lt;!-- Always set width/height to prevent layout shift --&gt;
+&lt;!-- loading="lazy" should NOT be used on above-fold images --&gt;
+&lt;img src="hero.jpg" loading="eager" alt="..."&gt;</code></pre>
+                </div>
+            </div>
+            
+            <!-- Skeleton loading -->
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Skeleton Loading (Perceived Performance)</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Show placeholder UI while content loads:</p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="skeleton" style="height:150px;"></div>
+                                <div class="card-body">
+                                    <div class="skeleton mb-2" style="height:20px;width:80%;"></div>
+                                    <div class="skeleton mb-2" style="height:14px;width:100%;"></div>
+                                    <div class="skeleton" style="height:14px;width:60%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="skeleton" style="height:150px;"></div>
+                                <div class="card-body">
+                                    <div class="skeleton mb-2" style="height:20px;width:70%;"></div>
+                                    <div class="skeleton mb-2" style="height:14px;width:90%;"></div>
+                                    <div class="skeleton" style="height:14px;width:50%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="skeleton" style="height:150px;"></div>
+                                <div class="card-body">
+                                    <div class="skeleton mb-2" style="height:20px;width:60%;"></div>
+                                    <div class="skeleton mb-2" style="height:14px;width:85%;"></div>
+                                    <div class="skeleton" style="height:14px;width:75%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: PERFORMANCE METRICS                           -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="metrics">
+            <h2 class="border-bottom pb-2 mb-4">4. Core Web Vitals & Metrics</h2>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card border-success h-100">
+                        <div class="card-body text-center">
+                            <h5 class="text-success">LCP</h5>
+                            <p class="display-6 fw-bold" id="lcpValue">--</p>
+                            <p class="small text-muted">Largest Contentful Paint</p>
+                            <p class="small">Target: &lt; 2.5s</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-warning h-100">
+                        <div class="card-body text-center">
+                            <h5 class="text-warning">FID / INP</h5>
+                            <p class="display-6 fw-bold" id="fidValue">--</p>
+                            <p class="small text-muted">Interaction to Next Paint</p>
+                            <p class="small">Target: &lt; 200ms</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card border-danger h-100">
+                        <div class="card-body text-center">
+                            <h5 class="text-danger">CLS</h5>
+                            <p class="display-6 fw-bold" id="clsValue">--</p>
+                            <p class="small text-muted">Cumulative Layout Shift</p>
+                            <p class="small">Target: &lt; 0.1</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance timing -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Page Load Timing</h5>
+                </div>
+                <div class="card-body">
+                    <div id="timingResults" class="table-responsive">
+                        <p class="text-muted">Measuring page load performance...</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="measurePerformance()">
+                        Measure Performance
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                       -->
+    <!-- ============================================================ -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Performance Across Browsers &copy; 2024 | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <!-- ============================================================ -->
+    <!-- BOOTSTRAP JS - DEFERRED                                     -->
+    <!-- ============================================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+
+    <!-- ============================================================ -->
+    <!-- PERFORMANCE MEASUREMENT SCRIPTS                             -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // ANIMATION DEMOS
+        // ============================================================
+        document.getElementById('gpuBox').addEventListener('click', function() {
+            this.style.transform = this.style.transform === 'translateX(200px)' 
+                ? 'translateX(0)' : 'translateX(200px)';
+        });
+        document.getElementById('cpuBox').addEventListener('click', function() {
+            this.style.width = this.style.width === '250px' ? '150px' : '250px';
+            this.style.height = this.style.height === '80px' ? '40px' : '80px';
+        });
+
+        // ============================================================
+        // PERFORMANCE MEASUREMENT
+        // Uses Performance API for cross-browser metrics
+        // ============================================================
+        function measurePerformance() {
+            var results = document.getElementById('timingResults');
+            var timing = performance.timing;
+            var nav = performance.getEntriesByType('navigation')[0];
+            
+            var metrics = {
+                'DNS Lookup': timing.domainLookupEnd - timing.domainLookupStart,
+                'TCP Connection': timing.connectEnd - timing.connectStart,
+                'TLS Handshake': timing.secureConnectionStart > 0 
+                    ? timing.connectEnd - timing.secureConnectionStart : 'N/A',
+                'Time to First Byte (TTFB)': timing.responseStart - timing.requestStart,
+                'Content Download': timing.responseEnd - timing.responseStart,
+                'DOM Interactive': timing.domInteractive - timing.navigationStart,
+                'DOM Content Loaded': timing.domContentLoadedEventEnd - timing.navigationStart,
+                'DOM Complete': timing.domComplete - timing.navigationStart,
+                'Load Event': timing.loadEventEnd - timing.navigationStart
+            };
+            
+            var html = '<table class="table table-bordered table-sm"><thead class="table-light"><tr><th>Metric</th><th>Time (ms)</th><th>Status</th></tr></thead><tbody>';
+            for (var key in metrics) {
+                var val = metrics[key];
+                var status = val === 'N/A' ? '<span class="badge bg-secondary">N/A</span>' :
+                    val < 100 ? '<span class="badge bg-success">Fast</span>' :
+                    val < 500 ? '<span class="badge bg-warning">OK</span>' :
+                    '<span class="badge bg-danger">Slow</span>';
+                html += '<tr><td>' + key + '</td><td>' + val + '</td><td>' + status + '</td></tr>';
+            }
+            html += '</tbody></table>';
+            results.innerHTML = html;
+        }
+
+        // ============================================================
+        // CORE WEB VITALS MEASUREMENT
+        // Uses PerformanceObserver API (not available in all browsers)
+        // ============================================================
+        (function() {
+            // LCP - Largest Contentful Paint
+            if ('PerformanceObserver' in window) {
+                try {
+                    var lcpObserver = new PerformanceObserver(function(entryList) {
+                        var entries = entryList.getEntries();
+                        var lastEntry = entries[entries.length - 1];
+                        document.getElementById('lcpValue').textContent = 
+                            Math.round(lastEntry.startTime) + 'ms';
+                    });
+                    lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+                } catch(e) {
+                    document.getElementById('lcpValue').textContent = 'N/A';
+                }
+                
+                // CLS - Cumulative Layout Shift
+                try {
+                    var clsValue = 0;
+                    var clsObserver = new PerformanceObserver(function(entryList) {
+                        entryList.getEntries().forEach(function(entry) {
+                            if (!entry.hadRecentInput) {
+                                clsValue += entry.value;
+                            }
+                        });
+                        document.getElementById('clsValue').textContent = clsValue.toFixed(4);
+                    });
+                    clsObserver.observe({ type: 'layout-shift', buffered: true });
+                } catch(e) {
+                    document.getElementById('clsValue').textContent = 'N/A';
+                }
+            } else {
+                document.getElementById('lcpValue').textContent = 'N/A';
+                document.getElementById('clsValue').textContent = 'N/A';
+                document.getElementById('fidValue').textContent = 'N/A';
+            }
+        })();
+
+        // Auto-measure on load
+        window.addEventListener('load', function() {
+            setTimeout(measurePerformance, 100);
+        });
+    </script>
+</body>
+</html>

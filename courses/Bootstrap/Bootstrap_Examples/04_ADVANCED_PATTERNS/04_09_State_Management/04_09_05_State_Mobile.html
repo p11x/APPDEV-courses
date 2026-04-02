@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_09_05_State_Mobile.html
+     Mobile-Optimized State Patterns
+     
+     Covers:
+     - Touch state tracking (tap, long press, swipe)
+     - Gesture state (pinch, rotate, multi-touch)
+     - Offline/online state detection
+     - Network-aware state (connection type)
+     - Viewport and orientation state
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport meta — critical for mobile rendering -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>04_09_05 - State Mobile</title>
+    <!-- Bootstrap 5.3.3 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Touch target area — min 44x44px per WCAG */
+        .touch-target { min-width: 44px; min-height: 44px; }
+        /* Touch feedback ripple */
+        .touch-ripple { position: relative; overflow: hidden; }
+        .touch-ripple::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.1); opacity: 0; transition: opacity 0.15s; }
+        .touch-ripple:active::after { opacity: 1; }
+        /* Gesture area styling */
+        .gesture-area { touch-action: none; user-select: none; min-height: 200px; border: 2px dashed #dee2e6; display: flex; align-items: center; justify-content: center; }
+        /* Swipe card styling */
+        .swipe-card { transition: transform 0.3s, opacity 0.3s; cursor: grab; }
+        .swipe-card.swiping { transition: none; cursor: grabbing; }
+        /* Offline banner */
+        .offline-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- ============================================================
+         OFFLINE BANNER
+         Shown when the browser detects loss of network connectivity.
+         Hidden by default; toggled via online/offline events.
+         ============================================================ -->
+    <div class="offline-banner alert alert-danger text-center mb-0 rounded-0" id="offlineBanner" style="display:none;">
+        <strong>You are offline.</strong> Some features may be unavailable.
+    </div>
+
+    <div class="container py-5">
+        <!-- Page header -->
+        <h1 class="mb-2">04_09_05 - Mobile State Patterns</h1>
+        <p class="text-muted mb-4">Touch, gesture, offline, and responsive state management for mobile devices.</p>
+
+        <!-- ============================================================
+             SECTION 1: Touch State
+             Track tap, long press, and touch duration.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">1. Touch State Tracking</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Track touch events: tap, long press, touch duration. Min 44px touch targets.</p>
+
+                <!-- Touch interaction area -->
+                <div class="border rounded p-4 bg-white text-center mb-3" id="touchArea"
+                     ontouchstart="touchStart(event)" ontouchend="touchEnd(event)"
+                     onmousedown="touchStart(event)" onmouseup="touchEnd(event)"
+                     style="min-height:120px; cursor:pointer;">
+                    <p class="mb-0">Touch / Click this area</p>
+                    <small class="text-muted">(Long press for 500ms+ to trigger long press)</small>
+                </div>
+
+                <!-- Touch state display -->
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="card">
+                            <div class="card-body py-2">
+                                <small class="text-muted">State</small>
+                                <div id="touchState" class="badge bg-secondary">idle</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="card">
+                            <div class="card-body py-2">
+                                <small class="text-muted">Duration</small>
+                                <div id="touchDuration" class="fw-bold">0ms</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="card">
+                            <div class="card-body py-2">
+                                <small class="text-muted">Type</small>
+                                <div id="touchType" class="fw-bold">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Touch log -->
+                <div class="mt-3">
+                    <small class="text-muted">Touch Log:</small>
+                    <div class="bg-dark text-light p-2 rounded" style="max-height:150px;overflow-y:auto;font-family:monospace;font-size:0.8rem;" id="touchLog"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 2: Swipe Gesture State
+             Detect horizontal swipe gestures on cards.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">2. Swipe Gesture State</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Swipe cards left/right. Like a mobile card stack.</p>
+
+                <!-- Swipeable cards container -->
+                <div class="position-relative" style="height:180px;" id="swipeContainer">
+                    <!-- Card 3 (bottom) -->
+                    <div class="card swipe-card position-absolute w-100" id="swipeCard3" style="top:8px;">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Card 3</h5>
+                            <p class="card-text">Swipe me left or right</p>
+                        </div>
+                    </div>
+                    <!-- Card 2 (middle) -->
+                    <div class="card swipe-card position-absolute w-100" id="swipeCard2" style="top:4px;">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Card 2</h5>
+                            <p class="card-text">Swipe me left or right</p>
+                        </div>
+                    </div>
+                    <!-- Card 1 (top — active) -->
+                    <div class="card swipe-card position-absolute w-100" id="swipeCard1">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Card 1</h5>
+                            <p class="card-text">Swipe me left or right</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Swipe state info -->
+                <div class="mt-3 text-center">
+                    <span class="badge bg-info" id="swipeDirection">Direction: --</span>
+                    <span class="badge bg-warning ms-2" id="swipeDistance">Distance: 0px</span>
+                    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="resetSwipe()">Reset Cards</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 3: Gesture State (Pinch/Zoom simulation)
+             Simulate pinch-zoom with mouse wheel on desktop.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">3. Gesture State (Pinch/Zoom)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Pinch-zoom gesture tracking. On desktop, use scroll wheel to simulate.</p>
+
+                <!-- Gesture target area -->
+                <div class="gesture-area rounded" id="gestureArea"
+                     onwheel="gestureWheel(event)">
+                    <div id="gestureContent" style="transition:transform 0.1s;">
+                        <div class="display-1" id="gestureEmoji">&#128269;</div>
+                        <p class="text-center" id="gestureScaleText">Scale: 1.0x</p>
+                    </div>
+                </div>
+
+                <!-- Gesture state -->
+                <div class="row text-center mt-3">
+                    <div class="col-4">
+                        <div class="card"><div class="card-body py-2">
+                            <small class="text-muted">Scale</small>
+                            <div id="gestureScale" class="fw-bold">1.0x</div>
+                        </div></div>
+                    </div>
+                    <div class="col-4">
+                        <div class="card"><div class="card-body py-2">
+                            <small class="text-muted">State</small>
+                            <div id="gestureState" class="badge bg-secondary">idle</div>
+                        </div></div>
+                    </div>
+                    <div class="col-4">
+                        <div class="card"><div class="card-body py-2">
+                            <small class="text-muted">Delta</small>
+                            <div id="gestureDelta" class="fw-bold">0</div>
+                        </div></div>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary mt-2" onclick="gestureReset()">Reset Zoom</button>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 4: Online/Offline State
+             Detect and respond to network connectivity changes.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">4. Online/Offline State</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Detect online/offline state. Sync data when connection returns.</p>
+
+                <!-- Connection status display -->
+                <div class="row text-center mb-3">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100" id="onlineCard">
+                            <div class="card-body">
+                                <div class="display-4" id="onlineIcon">&#127760;</div>
+                                <h5 id="onlineStatus">Checking...</h5>
+                                <p class="small text-muted" id="onlineDetail"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Connection info -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Connection Info</h6>
+                                <table class="table table-sm">
+                                    <tr><td>Type</td><td id="connType">--</td></tr>
+                                    <tr><td>Effective Type</td><td id="connEffective">--</td></tr>
+                                    <tr><td>Downlink</td><td id="connDownlink">--</td></tr>
+                                    <tr><td>RTT</td><td id="connRTT">--</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Offline queue simulation -->
+                <h6>Offline Queue</h6>
+                <p class="small text-muted">Actions queued while offline are synced when back online.</p>
+                <div class="d-flex gap-2 mb-2">
+                    <button class="btn btn-sm btn-primary" onclick="offlineQueueAction('Save')">Save</button>
+                    <button class="btn btn-sm btn-info" onclick="offlineQueueAction('Update')">Update</button>
+                    <button class="btn btn-sm btn-warning" onclick="offlineQueueAction('Delete')">Delete</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="offlineClearQueue()">Clear Queue</button>
+                </div>
+                <div class="bg-dark text-light p-2 rounded" style="max-height:150px;overflow-y:auto;font-family:monospace;font-size:0.8rem;" id="offlineQueue">
+                    <div class="text-success">[Queue] Empty</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 5: Viewport & Orientation State
+             Track screen size, orientation, and responsive breakpoints.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">5. Viewport & Orientation State</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Track viewport dimensions, orientation, and Bootstrap breakpoints.</p>
+
+                <div class="row text-center">
+                    <!-- Viewport info -->
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <small class="text-muted">Viewport</small>
+                                <div class="fw-bold" id="vpSize">--</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Orientation -->
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <small class="text-muted">Orientation</small>
+                                <div class="fw-bold" id="vpOrientation">--</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Bootstrap breakpoint -->
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <small class="text-muted">Bootstrap BP</small>
+                                <div class="fw-bold" id="vpBreakpoint">--</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Device pixel ratio -->
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <small class="text-muted">DPR</small>
+                                <div class="fw-bold" id="vpDPR">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Responsive state demo -->
+                <div class="alert alert-secondary" id="responsiveDemo">
+                    <strong>Responsive indicator:</strong> <span id="respLabel">--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ========================================================
+        // SECTION 1: Touch State Tracking
+        // ========================================================
+
+        /** Touch start timestamp */
+        let touchStartTime = 0;
+        /** Long press threshold in ms */
+        const LONG_PRESS_MS = 500;
+        /** Touch timer for long press detection */
+        let touchTimer = null;
+
+        /**
+         * Handles touch/mouse start event
+         * @param {Event} e - Touch or mouse event
+         */
+        function touchStart(e) {
+            touchStartTime = Date.now();
+            document.getElementById('touchState').textContent = 'active';
+            document.getElementById('touchState').className = 'badge bg-success';
+            document.getElementById('touchType').textContent = e.touches ? 'touch' : 'mouse';
+
+            // Start long press timer
+            touchTimer = setTimeout(() => {
+                document.getElementById('touchType').textContent = 'LONG PRESS';
+                document.getElementById('touchType').className = 'fw-bold text-danger';
+                touchLog('Long press detected');
+            }, LONG_PRESS_MS);
+
+            touchLog(`${e.touches ? 'Touch' : 'Mouse'} start`);
+        }
+
+        /**
+         * Handles touch/mouse end event
+         * @param {Event} e - Touch or mouse event
+         */
+        function touchEnd(e) {
+            clearTimeout(touchTimer);
+            const duration = Date.now() - touchStartTime;
+            document.getElementById('touchDuration').textContent = duration + 'ms';
+            document.getElementById('touchState').textContent = 'released';
+            document.getElementById('touchState').className = 'badge bg-secondary';
+
+            if (duration < LONG_PRESS_MS) {
+                document.getElementById('touchType').textContent = 'TAP';
+                document.getElementById('touchType').className = 'fw-bold';
+            }
+
+            touchLog(`Released after ${duration}ms`);
+        }
+
+        /**
+         * Logs a touch event
+         * @param {string} msg - Log message
+         */
+        function touchLog(msg) {
+            const log = document.getElementById('touchLog');
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // ========================================================
+        // SECTION 2: Swipe Gesture State
+        // ========================================================
+
+        /** Swipe tracking state */
+        let swipeStartX = 0;
+        let swipeCurrentX = 0;
+        let swiping = false;
+        const SWIPE_THRESHOLD = 100;
+
+        /** Get the topmost swipeable card */
+        function getTopCard() {
+            return document.getElementById('swipeCard1');
+        }
+
+        // Attach swipe listeners to container
+        const swipeContainer = document.getElementById('swipeContainer');
+
+        swipeContainer.addEventListener('pointerdown', (e) => {
+            swiping = true;
+            swipeStartX = e.clientX;
+            const card = getTopCard();
+            card.classList.add('swiping');
+        });
+
+        swipeContainer.addEventListener('pointermove', (e) => {
+            if (!swiping) return;
+            swipeCurrentX = e.clientX;
+            const dx = swipeCurrentX - swipeStartX;
+            const card = getTopCard();
+            card.style.transform = `translateX(${dx}px) rotate(${dx * 0.05}deg)`;
+            document.getElementById('swipeDirection').textContent =
+                `Direction: ${dx > 0 ? 'Right' : 'Left'}`;
+            document.getElementById('swipeDistance').textContent = `Distance: ${Math.abs(dx)}px`;
+        });
+
+        swipeContainer.addEventListener('pointerup', () => {
+            if (!swiping) return;
+            swiping = false;
+            const dx = swipeCurrentX - swipeStartX;
+            const card = getTopCard();
+            card.classList.remove('swiping');
+
+            if (Math.abs(dx) > SWIPE_THRESHOLD) {
+                // Swipe detected — fly card off screen
+                card.style.transform = `translateX(${dx > 0 ? '400px' : '-400px'}) rotate(${dx * 0.1}deg)`;
+                card.style.opacity = '0';
+                touchLog(`Card swiped ${dx > 0 ? 'right' : 'left'}`);
+            } else {
+                // Not enough — snap back
+                card.style.transform = '';
+            }
+            swipeCurrentX = swipeStartX;
+        });
+
+        /** Reset all swipe cards to initial state */
+        function resetSwipe() {
+            for (let i = 1; i <= 3; i++) {
+                const card = document.getElementById('swipeCard' + i);
+                card.style.transform = '';
+                card.style.opacity = '';
+            }
+            document.getElementById('swipeDirection').textContent = 'Direction: --';
+            document.getElementById('swipeDistance').textContent = 'Distance: 0px';
+        }
+
+        // ========================================================
+        // SECTION 3: Gesture State (Pinch/Zoom)
+        // ========================================================
+
+        /** Current scale factor */
+        let gestureScale = 1.0;
+        /** Min/max scale limits */
+        const GESTURE_MIN = 0.5;
+        const GESTURE_MAX = 3.0;
+
+        /**
+         * Handles wheel events to simulate pinch-zoom
+         * @param {WheelEvent} e - Wheel event
+         */
+        function gestureWheel(e) {
+            e.preventDefault();
+            // Determine zoom direction
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            gestureScale = Math.min(GESTURE_MAX, Math.max(GESTURE_MIN, gestureScale + delta));
+
+            // Apply transform
+            const content = document.getElementById('gestureContent');
+            content.style.transform = `scale(${gestureScale})`;
+
+            // Update state displays
+            document.getElementById('gestureScale').textContent = gestureScale.toFixed(1) + 'x';
+            document.getElementById('gestureScaleText').textContent = `Scale: ${gestureScale.toFixed(1)}x`;
+            document.getElementById('gestureDelta').textContent = (delta > 0 ? '+' : '') + delta.toFixed(1);
+
+            if (gestureScale > 1.5) {
+                document.getElementById('gestureState').textContent = 'zoomed in';
+                document.getElementById('gestureState').className = 'badge bg-success';
+            } else if (gestureScale < 0.8) {
+                document.getElementById('gestureState').textContent = 'zoomed out';
+                document.getElementById('gestureState').className = 'badge bg-warning';
+            } else {
+                document.getElementById('gestureState').textContent = 'normal';
+                document.getElementById('gestureState').className = 'badge bg-secondary';
+            }
+        }
+
+        /** Resets gesture zoom to default */
+        function gestureReset() {
+            gestureScale = 1.0;
+            document.getElementById('gestureContent').style.transform = 'scale(1)';
+            document.getElementById('gestureScale').textContent = '1.0x';
+            document.getElementById('gestureScaleText').textContent = 'Scale: 1.0x';
+            document.getElementById('gestureState').textContent = 'idle';
+            document.getElementById('gestureState').className = 'badge bg-secondary';
+            document.getElementById('gestureDelta').textContent = '0';
+        }
+
+        // ========================================================
+        // SECTION 4: Online/Offline State
+        // ========================================================
+
+        /** Queued actions when offline */
+        let offlineQueue = [];
+
+        /**
+         * Updates the online/offline status display
+         */
+        function updateOnlineStatus() {
+            const online = navigator.onLine;
+            document.getElementById('offlineBanner').style.display = online ? 'none' : '';
+            document.getElementById('onlineIcon').textContent = online ? '🟢' : '🔴';
+            document.getElementById('onlineStatus').textContent = online ? 'Online' : 'Offline';
+            document.getElementById('onlineDetail').textContent = online
+                ? 'Connected to the internet'
+                : 'No network connection detected';
+            document.getElementById('onlineCard').className =
+                `card h-100 border-${online ? 'success' : 'danger'}`;
+
+            // Sync queue when back online
+            if (online && offlineQueue.length > 0) {
+                offlineSyncQueue();
+            }
+
+            // Network Information API (if available)
+            if ('connection' in navigator) {
+                const conn = navigator.connection;
+                document.getElementById('connType').textContent = conn.type || '--';
+                document.getElementById('connEffective').textContent = conn.effectiveType || '--';
+                document.getElementById('connDownlink').textContent = conn.downlink ? conn.downlink + ' Mbps' : '--';
+                document.getElementById('connRTT').textContent = conn.rtt ? conn.rtt + 'ms' : '--';
+            }
+        }
+
+        /**
+         * Adds an action to the offline queue
+         * @param {string} action - Action name
+         */
+        function offlineQueueAction(action) {
+            const entry = {
+                action,
+                timestamp: new Date().toLocaleTimeString(),
+                synced: navigator.onLine
+            };
+            offlineQueue.push(entry);
+            renderOfflineQueue();
+        }
+
+        /** Renders the offline queue */
+        function renderOfflineQueue() {
+            const container = document.getElementById('offlineQueue');
+            if (offlineQueue.length === 0) {
+                container.innerHTML = '<div class="text-success">[Queue] Empty</div>';
+                return;
+            }
+            container.innerHTML = offlineQueue.map((e, i) =>
+                `<div class="${e.synced ? 'text-success' : 'text-warning'}">[${e.timestamp}] ${e.action} ${e.synced ? '(synced)' : '(pending)'}</div>`
+            ).join('');
+        }
+
+        /** Simulates syncing the offline queue */
+        function offlineSyncQueue() {
+            offlineQueue.forEach(e => e.synced = true);
+            renderOfflineQueue();
+            const container = document.getElementById('offlineQueue');
+            const syncMsg = document.createElement('div');
+            syncMsg.className = 'text-info';
+            syncMsg.textContent = `[${new Date().toLocaleTimeString()}] All queued actions synced`;
+            container.appendChild(syncMsg);
+        }
+
+        /** Clears the offline queue */
+        function offlineClearQueue() {
+            offlineQueue = [];
+            renderOfflineQueue();
+        }
+
+        // ========================================================
+        // SECTION 5: Viewport & Orientation State
+        // ========================================================
+
+        /**
+         * Updates viewport and orientation state display
+         */
+        function updateViewportState() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+
+            // Viewport size
+            document.getElementById('vpSize').textContent = `${w} x ${h}`;
+
+            // Orientation
+            const orientation = w > h ? 'Landscape' : 'Portrait';
+            document.getElementById('vpOrientation').textContent = orientation;
+
+            // Device pixel ratio
+            document.getElementById('vpDPR').textContent = window.devicePixelRatio + 'x';
+
+            // Bootstrap breakpoint detection
+            let bp;
+            if (w < 576) bp = 'xs (<576)';
+            else if (w < 768) bp = 'sm (576-767)';
+            else if (w < 992) bp = 'md (768-991)';
+            else if (w < 1200) bp = 'lg (992-1199)';
+            else if (w < 1400) bp = 'xl (1200-1399)';
+            else bp = 'xxl (1400+)';
+            document.getElementById('vpBreakpoint').textContent = bp;
+
+            // Responsive label
+            const label = w < 576 ? 'Phone (portrait)' :
+                w < 768 ? 'Phone (landscape)' :
+                w < 992 ? 'Tablet' :
+                w < 1200 ? 'Desktop (small)' :
+                w < 1400 ? 'Desktop (large)' : 'Desktop (wide)';
+            document.getElementById('respLabel').textContent = label;
+        }
+
+        // ========================================================
+        // EVENT LISTENERS
+        // ========================================================
+
+        /** Online/offline events */
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        /** Resize and orientation events */
+        window.addEventListener('resize', updateViewportState);
+        window.addEventListener('orientationchange', updateViewportState);
+
+        /** Initialize on load */
+        document.addEventListener('DOMContentLoaded', () => {
+            updateOnlineStatus();
+            updateViewportState();
+        });
+    </script>
+</body>
+</html>

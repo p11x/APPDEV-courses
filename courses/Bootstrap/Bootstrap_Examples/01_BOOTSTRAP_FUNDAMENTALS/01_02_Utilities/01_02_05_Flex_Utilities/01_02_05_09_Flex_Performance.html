@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 - Flex Performance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .perf-box {
+            padding: 1.5rem;
+            color: #fff;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 0.375rem;
+            border: 2px solid #fff;
+        }
+        .demo-border {
+            border: 3px dashed #dc3545;
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        /* Forced layout measurement indicator */
+        .layout-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+
+    <!-- ========================================== -->
+    <!-- PAGE HEADER                                 -->
+    <!-- ========================================== -->
+    <h1 class="display-4 fw-bold text-primary mb-3">Flex Performance Considerations</h1>
+    <p class="lead text-muted mb-5">
+        Flexbox is one of the most performant CSS layout mechanisms available. This page covers
+        how to maximize rendering performance when using Bootstrap flex utilities, covering
+        layout thrashing, paint optimization, and browser rendering behavior.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: LAYOUT (REFLOW) COST             -->
+    <!-- Flex containers trigger layout recalc      -->
+    <!-- when children change size.                 -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-4 mb-3">1. Layout (Reflow) Cost</h2>
+    <div class="alert alert-info">
+        <strong>How browsers render:</strong> Every frame goes through
+        <em>Style → Layout → Paint → Composite</em>. Flex layout changes trigger
+        the <strong>Layout</strong> step, which is computationally expensive.
+    </div>
+    <p>
+        Flex containers with many children can be costly to reflow. Each child's size depends on
+        its siblings, so changing one item may recalculate all items.
+    </p>
+    <div class="demo-border">
+        <div class="d-flex flex-wrap gap-2">
+            <div class="perf-box bg-primary">Item</div>
+            <div class="perf-box bg-secondary">Item</div>
+            <div class="perf-box bg-success">Item</div>
+            <div class="perf-box bg-danger">Item</div>
+            <div class="perf-box bg-warning text-dark">Item</div>
+            <div class="perf-box bg-info text-dark">Item</div>
+        </div>
+    </div>
+    <p class="text-muted">
+        Each flex item's width is calculated relative to siblings. With <code>flex-grow: 1</code>,
+        adding or removing items recalculates the entire row.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: USE flex-shrink-0 WISELY         -->
+    <!-- Preventing shrink avoids recalculation    -->
+    <!-- but may cause overflow.                    -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">2. <code>flex-shrink-0</code> — Prevent Unnecessary Recalc</h2>
+    <p>
+        By default, flex items <strong>shrink</strong> to fit the container. Setting
+        <code>flex-shrink-0</code> prevents shrinking, reducing layout recalculations
+        when the container resizes.
+    </p>
+    <div class="demo-border">
+        <p class="mb-2 fw-semibold">With shrink (default) — items compress:</p>
+        <div class="d-flex gap-2 mb-3" style="max-width: 400px;">
+            <div class="perf-box bg-primary" style="width: 200px;">200px</div>
+            <div class="perf-box bg-secondary" style="width: 200px;">200px</div>
+            <div class="perf-box bg-success" style="width: 200px;">200px</div>
+        </div>
+        <p class="mb-2 fw-semibold">With <code>flex-shrink-0</code> — items keep size, overflow:</p>
+        <div class="d-flex gap-2" style="max-width: 400px; overflow-x: auto;">
+            <div class="perf-box bg-primary flex-shrink-0" style="width: 200px;">200px</div>
+            <div class="perf-box bg-secondary flex-shrink-0" style="width: 200px;">200px</div>
+            <div class="perf-box bg-success flex-shrink-0" style="width: 200px;">200px</div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: AVOID NESTED FLEX CONTAINERS     -->
+    <!-- Deeply nested flex layouts increase        -->
+    <!-- layout computation complexity.             -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">3. Minimize Nesting Depth</h2>
+    <p>
+        Each nested flex container multiplies layout calculations. Prefer flat structures
+        with Bootstrap's grid or <code>gap</code> utilities over deeply nested flex hierarchies.
+    </p>
+    <div class="demo-border">
+        <!-- Flat structure (preferred) -->
+        <p class="mb-2 fw-semibold text-success">Flat — better performance:</p>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <div class="perf-box bg-primary" style="flex: 1 1 150px;">Flat 1</div>
+            <div class="perf-box bg-secondary" style="flex: 1 1 150px;">Flat 2</div>
+            <div class="perf-box bg-success" style="flex: 1 1 150px;">Flat 3</div>
+        </div>
+        <!-- Nested structure (less performant) -->
+        <p class="mb-2 fw-semibold text-danger">Nested — more layout cost:</p>
+        <div class="d-flex gap-2">
+            <div class="d-flex flex-column gap-2" style="flex: 1;">
+                <div class="perf-box bg-primary">Nested 1a</div>
+                <div class="perf-box bg-secondary">Nested 1b</div>
+            </div>
+            <div class="d-flex flex-column gap-2" style="flex: 1;">
+                <div class="perf-box bg-success">Nested 2a</div>
+                <div class="perf-box bg-warning text-dark">Nested 2b</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: USE gap INSTEAD OF MARGINS       -->
+    <!-- gap avoids margin collapse issues and      -->
+    <!-- is more performant than per-item margins.  -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">4. Use <code>gap</code> Instead of Margins</h2>
+    <p>
+        The <code>gap</code> utility is more efficient than individual margin classes because
+        the browser calculates spacing once at the container level rather than per item.
+    </p>
+    <div class="demo-border">
+        <p class="mb-2 fw-semibold text-danger">Less efficient — margin on every item:</p>
+        <div class="d-flex flex-wrap mb-3">
+            <div class="perf-box bg-danger me-2 mb-2">m-2</div>
+            <div class="perf-box bg-danger me-2 mb-2">m-2</div>
+            <div class="perf-box bg-danger me-2 mb-2">m-2</div>
+            <div class="perf-box bg-danger me-2 mb-2">m-2</div>
+        </div>
+        <p class="mb-2 fw-semibold text-success">More efficient — gap on container:</p>
+        <div class="d-flex flex-wrap gap-2">
+            <div class="perf-box bg-success">gap-2</div>
+            <div class="perf-box bg-success">gap-2</div>
+            <div class="perf-box bg-success">gap-2</div>
+            <div class="perf-box bg-success">gap-2</div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 5: CONTENT-CONTAINER WIDTH          -->
+    <!-- Setting explicit widths on flex items      -->
+    <!-- reduces the browser's layout work.         -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">5. Provide Hints with Width Constraints</h2>
+    <p>
+        When the browser knows approximate item sizes, layout is faster. Use
+        <code>flex-basis</code> or <code>min-width</code> to help the flex algorithm.
+    </p>
+    <div class="demo-border">
+        <div class="d-flex flex-wrap gap-2">
+            <div class="perf-box bg-primary" style="flex: 1 1 30%;">30% basis</div>
+            <div class="perf-box bg-secondary" style="flex: 1 1 30%;">30% basis</div>
+            <div class="perf-box bg-success" style="flex: 1 1 30%;">30% basis</div>
+        </div>
+    </div>
+    <p class="text-muted">
+        Providing <code>flex-basis</code> values lets the browser skip content measurement
+        and allocate space more efficiently.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 6: COMPOSITING & HARDWARE ACCEL     -->
+    <!-- Flex changes that only affect paint (not   -->
+    <!-- layout) can be GPU-composited.             -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">6. Composite-Only Properties</h2>
+    <p>
+        Flex layout triggers Layout and Paint. For animations, prefer <code>transform</code>
+        and <code>opacity</code> which only trigger Composite (GPU-accelerated).
+    </p>
+    <div class="demo-border">
+        <div class="d-flex gap-3 align-items-center">
+            <div class="perf-box bg-primary" style="transition: transform 0.3s;"
+                 onmouseover="this.style.transform='scale(1.1)'"
+                 onmouseout="this.style.transform='scale(1)'">
+                Hover (transform)
+            </div>
+            <div class="perf-box bg-secondary" style="transition: opacity 0.3s;"
+                 onmouseover="this.style.opacity='0.5'"
+                 onmouseout="this.style.opacity='1'">
+                Hover (opacity)
+            </div>
+            <div class="perf-box bg-warning text-dark" style="transition: width 0.3s;"
+                 onmouseover="this.style.width='250px'"
+                 onmouseout="this.style.width=''">
+                Hover (width — causes reflow)
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 7: LARGE FLEX CONTAINERS            -->
+    <!-- For lists of 100+ items, consider          -->
+    <!-- virtualization or CSS containment.         -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">7. Large Lists &amp; Containment</h2>
+    <p>
+        For containers with many flex items, apply <code>contain: layout</code> to scope
+        layout recalculations within the container.
+    </p>
+    <div class="demo-border">
+        <div class="d-flex flex-wrap gap-1" style="contain: layout; max-height: 200px; overflow-y: auto;">
+            <!-- 20 items to simulate a larger list -->
+            <span class="badge bg-primary p-2">1</span>
+            <span class="badge bg-secondary p-2">2</span>
+            <span class="badge bg-success p-2">3</span>
+            <span class="badge bg-danger p-2">4</span>
+            <span class="badge bg-warning text-dark p-2">5</span>
+            <span class="badge bg-info text-dark p-2">6</span>
+            <span class="badge bg-dark p-2">7</span>
+            <span class="badge bg-primary p-2">8</span>
+            <span class="badge bg-secondary p-2">9</span>
+            <span class="badge bg-success p-2">10</span>
+            <span class="badge bg-danger p-2">11</span>
+            <span class="badge bg-warning text-dark p-2">12</span>
+            <span class="badge bg-info text-dark p-2">13</span>
+            <span class="badge bg-dark p-2">14</span>
+            <span class="badge bg-primary p-2">15</span>
+            <span class="badge bg-secondary p-2">16</span>
+            <span class="badge bg-success p-2">17</span>
+            <span class="badge bg-danger p-2">18</span>
+            <span class="badge bg-warning text-dark p-2">19</span>
+            <span class="badge bg-info text-dark p-2">20</span>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- PERFORMANCE TIPS TABLE                      -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">Performance Tips Summary</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr><th>Technique</th><th>Why</th><th>Impact</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Use <code>gap</code> over margins</td><td>Container-level spacing</td><td>Less layout work</td></tr>
+            <tr><td><code>flex-shrink-0</code> for fixed items</td><td>Prevents recalc on resize</td><td>Fewer reflows</td></tr>
+            <tr><td>Flat flex structures</td><td>Reduces nesting depth</td><td>O(n) vs O(n²) layout</td></tr>
+            <tr><td>Set <code>flex-basis</code></td><td>Hints item sizes to browser</td><td>Faster layout</td></tr>
+            <tr><td><code>contain: layout</code></td><td>Scopes reflow to container</td><td>Isolated recalcs</td></tr>
+            <tr><td>Animate <code>transform</code> not <code>width</code></td><td>Composite-only = GPU</td><td>60fps animations</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

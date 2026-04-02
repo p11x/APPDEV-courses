@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         03_01_01 - CSS Grid Integration with Bootstrap
+         ============================================
+         This file demonstrates how to combine Bootstrap's
+         flexbox-based 12-column grid system with native CSS Grid
+         for complex two-dimensional layouts that Bootstrap alone
+         cannot easily achieve.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <!-- Viewport meta tag ensures proper rendering on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_01 - CSS Grid Integration with Bootstrap</title>
+
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <!-- Custom styles for CSS Grid integration examples -->
+    <style>
+        /* ============================================
+           CSS GRID UTILITY CLASSES
+           These classes extend Bootstrap's grid system
+           with native CSS Grid capabilities
+        ================================================ */
+
+        /* Basic CSS Grid container - enables grid layout on a Bootstrap column */
+        .css-grid-container {
+            display: grid;
+            /* Default: 3 equal columns */
+            grid-template-columns: repeat(3, 1fr);
+            /* 10px gap between grid items */
+            gap: 10px;
+        }
+
+        /* Grid item styling with distinct background colors */
+        .css-grid-item {
+            background-color: #e9ecef;
+            border: 2px solid #6c757d;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* ============================================
+           HYBRID LAYOUT: Bootstrap Row + CSS Grid Columns
+           Use Bootstrap for horizontal structure,
+           CSS Grid for vertical/hybrid cell layouts
+        ================================================ */
+        .hybrid-grid {
+            display: grid;
+            /* 2-column layout: sidebar 1fr, main 3fr */
+            grid-template-columns: 1fr 3fr;
+            /* Fixed header row, flexible content row, fixed footer row */
+            grid-template-rows: auto 1fr auto;
+            /* Named grid areas for semantic placement */
+            grid-template-areas:
+                "header header"
+                "sidebar main"
+                "footer footer";
+            min-height: 400px;
+            gap: 10px;
+        }
+
+        /* Assign named grid areas to child elements */
+        .area-header { grid-area: header; background: #0d6efd; color: white; padding: 15px; border-radius: 8px; }
+        .area-sidebar { grid-area: sidebar; background: #198754; color: white; padding: 15px; border-radius: 8px; }
+        .area-main { grid-area: main; background: #ffc107; color: #212529; padding: 15px; border-radius: 8px; }
+        .area-footer { grid-area: footer; background: #dc3545; color: white; padding: 15px; border-radius: 8px; }
+
+        /* ============================================
+           RESPONSIVE CSS GRID WITH BOOTSTRAP BREAKPOINTS
+           Using media queries aligned with Bootstrap's
+           sm (576px), md (768px), lg (992px), xl (1200px), xxl (1400px)
+        ================================================ */
+        .responsive-css-grid {
+            display: grid;
+            gap: 15px;
+            /* Default: single column on mobile */
+            grid-template-columns: 1fr;
+        }
+
+        /* Medium screens and up: 2 columns */
+        @media (min-width: 768px) {
+            .responsive-css-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Large screens and up: 4 columns */
+        @media (min-width: 992px) {
+            .responsive-css-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* ============================================
+           CSS GRID OVERLAY ON BOOTSTRAP
+           Layering CSS Grid on top of Bootstrap columns
+           to create overlapping card layouts
+        ================================================ */
+        .overlay-grid {
+            display: grid;
+            /* 12-column CSS Grid mimicking Bootstrap's column count */
+            grid-template-columns: repeat(12, 1fr);
+            gap: 10px;
+            position: relative;
+        }
+
+        /* Span specific column ranges like Bootstrap's col-6, col-4, etc. */
+        .grid-col-4 { grid-column: span 4; }
+        .grid-col-6 { grid-column: span 6; }
+        .grid-col-8 { grid-column: span 8; }
+        .grid-col-12 { grid-column: span 12; }
+
+        /* Make grid items visually distinct */
+        .grid-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        /* ============================================
+           NESTED CSS GRID inside Bootstrap container
+           Demonstrating CSS Grid within Bootstrap's
+           container > row > col structure
+        ================================================ */
+        .nested-css-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .nested-item {
+            background: #6f42c1;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* ============================================
+           GRID WITH BOOTSTRAP UTILITIES
+           Using Bootstrap spacing, color, and typography
+           utilities within CSS Grid items
+        ================================================ */
+        .styled-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 150px);
+            gap: 1rem;
+        }
+
+        /* Make colored section boxes */
+        .styled-grid .box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: 600;
+            color: white;
+        }
+
+        /* ============================================
+           SUBGRID SIMULATION (pre-subgrid browsers)
+           Creating a subgrid effect using nested grids
+           that share alignment with the parent grid
+        ================================================ */
+        .parent-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .subgrid-wrapper {
+            /* Span all 3 parent columns to create a full-width child */
+            grid-column: 1 / -1;
+            /* Inner grid that mirrors the parent's 3-column layout */
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .subgrid-cell {
+            background: #20c997;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* ============================================
+           BOOTSTRAP COLUMN GAP OVERRIDE WITH CSS GRID
+           Replacing Bootstrap gutter system with
+           CSS Grid gap property for more control
+        ================================================ */
+        .gap-grid {
+            display: grid;
+            /* Different row and column gaps */
+            grid-template-columns: repeat(4, 1fr);
+            column-gap: 5px;
+            row-gap: 20px;
+        }
+
+        .gap-item {
+            background: #fd7e14;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main container using Bootstrap's responsive container -->
+    <div class="container my-5">
+
+        <!-- ============================================
+             SECTION 1: Basic CSS Grid within Bootstrap
+             Wrapping a CSS Grid inside a Bootstrap column
+        ================================================ -->
+        <section class="mb-5">
+            <h1 class="mb-4">03_01_01 - CSS Grid Integration with Bootstrap</h1>
+            <h2 class="h4 mb-3">1. Basic CSS Grid Inside Bootstrap Column</h2>
+            <p class="text-muted mb-3">
+                CSS Grid is placed inside a Bootstrap <code>.col</code> to combine
+                Bootstrap's responsive column system with CSS Grid's two-dimensional layout.
+            </p>
+
+            <!-- Bootstrap row to hold the grid container -->
+            <div class="row">
+                <div class="col-md-12">
+                    <!-- CSS Grid container inside a Bootstrap column -->
+                    <div class="css-grid-container">
+                        <!-- Each item is a CSS Grid item, not a Bootstrap col -->
+                        <div class="css-grid-item">Grid Item 1</div>
+                        <div class="css-grid-item">Grid Item 2</div>
+                        <div class="css-grid-item">Grid Item 3</div>
+                        <div class="css-grid-item">Grid Item 4</div>
+                        <div class="css-grid-item">Grid Item 5</div>
+                        <div class="css-grid-item">Grid Item 6</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 2: Hybrid Layout
+             Using named grid areas with Bootstrap wrapper
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Hybrid Layout: Bootstrap + CSS Grid Named Areas</h2>
+            <p class="text-muted mb-3">
+                Named grid areas provide a semantic, readable way to define layout regions.
+                This hybrid approach uses Bootstrap for page-level structure and CSS Grid
+                for the application-like dashboard layout.
+            </p>
+
+            <!-- Bootstrap row constrains the hybrid grid width -->
+            <div class="row">
+                <div class="col-12">
+                    <!-- Hybrid grid using named areas -->
+                    <div class="hybrid-grid">
+                        <div class="area-header">
+                            <strong>Header</strong> - Spans full width (grid-area: header)
+                        </div>
+                        <div class="area-sidebar">
+                            <strong>Sidebar</strong> - Fixed 1fr width (grid-area: sidebar)
+                        </div>
+                        <div class="area-main">
+                            <strong>Main Content</strong> - Takes 3fr width (grid-area: main)
+                            <p class="mt-2 mb-0">This area fills the remaining space with 3x the sidebar width.</p>
+                        </div>
+                        <div class="area-footer">
+                            <strong>Footer</strong> - Spans full width (grid-area: footer)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 3: Responsive CSS Grid
+             Aligning with Bootstrap's breakpoint system
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Responsive CSS Grid Aligned to Bootstrap Breakpoints</h2>
+            <p class="text-muted mb-3">
+                This responsive CSS Grid uses media queries that match Bootstrap's breakpoint
+                system (sm: 576px, md: 768px, lg: 992px, xl: 1200px, xxl: 1400px).
+            </p>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="responsive-css-grid">
+                        <!-- 8 items that reflow from 1col -> 2col -> 4col -->
+                        <div class="css-grid-item">Responsive 1</div>
+                        <div class="css-grid-item">Responsive 2</div>
+                        <div class="css-grid-item">Responsive 3</div>
+                        <div class="css-grid-item">Responsive 4</div>
+                        <div class="css-grid-item">Responsive 5</div>
+                        <div class="css-grid-item">Responsive 6</div>
+                        <div class="css-grid-item">Responsive 7</div>
+                        <div class="css-grid-item">Responsive 8</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 4: CSS Grid Overlay (12-column mimic)
+             Replicating Bootstrap's 12-column system in CSS Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. 12-Column CSS Grid Overlay (Bootstrap-like)</h2>
+            <p class="text-muted mb-3">
+                This uses <code>grid-template-columns: repeat(12, 1fr)</code> to mirror
+                Bootstrap's 12-column system, allowing column spans identical to
+                <code>.col-4</code>, <code>.col-6</code>, <code>.col-8</code>.
+            </p>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="overlay-grid">
+                        <!-- Row 1: Two col-6 items -->
+                        <div class="grid-card grid-col-6">grid-col-6</div>
+                        <div class="grid-card grid-col-6">grid-col-6</div>
+
+                        <!-- Row 2: col-4 + col-8 -->
+                        <div class="grid-card grid-col-4">grid-col-4</div>
+                        <div class="grid-card grid-col-8">grid-col-8</div>
+
+                        <!-- Row 3: Three col-4 items -->
+                        <div class="grid-card grid-col-4">grid-col-4</div>
+                        <div class="grid-card grid-col-4">grid-col-4</div>
+                        <div class="grid-card grid-col-4">grid-col-4</div>
+
+                        <!-- Row 4: Full width -->
+                        <div class="grid-card grid-col-12">grid-col-12 (full width)</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 5: Nested CSS Grid with auto-fit
+             Using minmax() and auto-fit for fluid card grids
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Nested CSS Grid with auto-fit and minmax()</h2>
+            <p class="text-muted mb-3">
+                <code>grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))</code>
+                creates a fluid grid that automatically wraps items based on available space.
+            </p>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="nested-css-grid">
+                        <div class="nested-item">Auto 1</div>
+                        <div class="nested-item">Auto 2</div>
+                        <div class="nested-item">Auto 3</div>
+                        <div class="nested-item">Auto 4</div>
+                        <div class="nested-item">Auto 5</div>
+                        <div class="nested-item">Auto 6</div>
+                        <div class="nested-item">Auto 7</div>
+                        <div class="nested-item">Auto 8</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 6: Styled Grid with Bootstrap Utilities
+             Combining Bootstrap color/spacing utilities
+             within CSS Grid items
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. CSS Grid with Bootstrap Utility Classes</h2>
+            <p class="text-muted mb-3">
+                Bootstrap utility classes (bg-*, text-*, p-*, etc.) work seamlessly inside
+                CSS Grid items because they are standard HTML elements.
+            </p>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="styled-grid">
+                        <!-- Using Bootstrap bg-* classes on CSS Grid items -->
+                        <div class="box bg-primary">Primary</div>
+                        <div class="box bg-secondary">Secondary</div>
+                        <div class="box bg-success">Success</div>
+                        <div class="box bg-danger">Danger</div>
+                        <div class="box bg-warning text-dark">Warning</div>
+                        <div class="box bg-info text-dark">Info</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 7: Subgrid Simulation
+             Simulating CSS subgrid behavior for browsers
+             that don't yet support it
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Subgrid Simulation (Nested Grid Alignment)</h2>
+            <p class="text-muted mb-3">
+                This pattern simulates CSS <code>subgrid</code> by nesting grids with
+                matching column definitions so child items align with parent columns.
+            </p>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="parent-grid">
+                        <!-- Top row: direct parent grid items -->
+                        <div class="css-grid-item">Parent 1</div>
+                        <div class="css-grid-item">Parent 2</div>
+                        <div class="css-grid-item">Parent 3</div>
+
+                        <!-- Subgrid row: spans all parent columns, uses same 3-col layout -->
+                        <div class="subgrid-wrapper">
+                            <div class="subgrid-cell">Sub A</div>
+                            <div class="subgrid-cell">Sub B</div>
+                            <div class="subgrid-cell">Sub C</div>
+                        </div>
+
+                        <!-- Another parent row -->
+                        <div class="css-grid-item">Parent 4</div>
+                        <div class="css-grid-item">Parent 5</div>
+                        <div class="css-grid-item">Parent 6</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 8: Independent Row/Column Gaps
+             CSS Grid allows different row and column gaps
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Independent Row and Column Gaps</h2>
+            <p class="text-muted mb-3">
+                Unlike Bootstrap's uniform gutter system, CSS Grid's <code>column-gap</code>
+                and <code>row-gap</code> properties allow independent spacing control.
+            </p>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="gap-grid">
+                        <div class="gap-item">5px col / 20px row</div>
+                        <div class="gap-item">5px col / 20px row</div>
+                        <div class="gap-item">5px col / 20px row</div>
+                        <div class="gap-item">5px col / 20px row</div>
+                        <div class="gap-item">5px col / 20px row</div>
+                        <div class="gap-item">5px col / 20px row</div>
+                        <div class="gap-item">5px col / 20px row</div>
+                        <div class="gap-item">5px col / 20px row</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 9: Key Differences Summary
+             Bootstrap Grid vs CSS Grid comparison
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">9. Bootstrap Grid vs CSS Grid - When to Use Which</h2>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-primary h-100">
+                        <div class="card-header bg-primary text-white">
+                            <strong>Use Bootstrap Grid When:</strong>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li>Simple one-dimensional (row OR column) layouts</li>
+                                <li>You need responsive breakpoints out of the box</li>
+                                <li>Content-driven height (rows expand with content)</li>
+                                <li>Rapid prototyping with pre-built classes</li>
+                                <li>Alignment with other Bootstrap components</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success h-100">
+                        <div class="card-header bg-success text-white">
+                            <strong>Use CSS Grid When:</strong>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li>Complex two-dimensional (row AND column) layouts</li>
+                                <li>Named grid areas for semantic placement</li>
+                                <li>Items need to span multiple rows AND columns</li>
+                                <li>Overlapping or layered elements</li>
+                                <li>Precise control over gaps and alignment</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap 5.3.3 JavaScript Bundle (includes Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

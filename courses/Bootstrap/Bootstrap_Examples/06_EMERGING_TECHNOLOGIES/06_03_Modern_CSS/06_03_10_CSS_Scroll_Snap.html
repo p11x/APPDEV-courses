@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_03_10_CSS_Scroll_Snap.html                                   -->
+<!-- Scroll snap: scroll-snap-type, scroll-snap-align               -->
+<!-- Bootstrap 5.3.3 + CSS Scroll Snap                              -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06_03_10 - CSS Scroll Snap</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* SCROLL SNAP BASICS                                            */
+        /* scroll-snap-type defines how the container snaps:            */
+        /*   - x/y/both: which axis snaps                               */
+        /*   - mandatory/proximity: snap strictness                     */
+        /* scroll-snap-align defines where items snap to:               */
+        /*   - start/center/end: alignment within the snap area        */
+        /* ============================================================= */
+
+        /* Horizontal snap container */
+        .snap-x-container {
+            /* Enable horizontal scroll snapping */
+            scroll-snap-type: x mandatory;
+
+            /* Horizontal scroll layout */
+            display: flex;
+            overflow-x: auto;
+            gap: 16px;
+            padding: 16px;
+            scroll-behavior: smooth;
+
+            /* Hide scrollbar for cleaner look */
+            scrollbar-width: thin;
+        }
+
+        /* Snap item: each slide snaps to the start */
+        .snap-item {
+            /* Align this item to the start of the snap container */
+            scroll-snap-align: start;
+
+            /* Prevent shrinking */
+            flex: 0 0 300px;
+            height: 250px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        /* ============================================================= */
+        /* SNAP ALIGNMENT VALUES                                         */
+        /* start: item snaps to start of container                      */
+        /* center: item snaps to center of container                    */
+        /* end: item snaps to end of container                          */
+        /* ============================================================= */
+
+        .snap-align-start .snap-item { scroll-snap-align: start; }
+        .snap-align-center .snap-item { scroll-snap-align: center; }
+        .snap-align-end .snap-item { scroll-snap-align: end; }
+
+        /* ============================================================= */
+        /* VERTICAL SCROLL SNAP                                          */
+        /* scroll-snap-type: y mandatory snaps vertically.              */
+        /* ============================================================= */
+
+        .snap-y-container {
+            /* Enable vertical scroll snapping */
+            scroll-snap-type: y mandatory;
+            overflow-y: auto;
+            height: 400px;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+        }
+
+        .snap-y-item {
+            scroll-snap-align: start;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* ============================================================= */
+        /* SNAP STOP                                                     */
+        /* scroll-snap-stop: always prevents scrolling past a snap      */
+        /* point. normal allows skipping.                               */
+        /* ============================================================= */
+
+        .snap-stop-item {
+            /* Force stop at this snap point */
+            scroll-snap-stop: always;
+        }
+
+        /* ============================================================= */
+        /* PROXIMITY SNAPPING                                            */
+        /* proximity is less strict than mandatory - snaps only when    */
+        /* the scroll position is close to a snap point.               */
+        /* ============================================================= */
+
+        .snap-proximity-container {
+            scroll-snap-type: x proximity;
+            display: flex;
+            overflow-x: auto;
+            gap: 16px;
+            padding: 16px;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+        }
+
+        /* ============================================================= */
+        /* GALLERY SNAP                                                  */
+        /* Practical image gallery with centered snapping.              */
+        /* ============================================================= */
+
+        .gallery-container {
+            scroll-snap-type: x mandatory;
+            display: flex;
+            overflow-x: auto;
+            gap: 24px;
+            padding: 24px;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+        }
+
+        /* Hide scrollbar on gallery */
+        .gallery-container::-webkit-scrollbar { display: none; }
+
+        .gallery-item {
+            scroll-snap-align: center;
+            flex: 0 0 80%;
+            max-width: 600px;
+            height: 350px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* ============================================================= */
+        /* VISUAL STYLES                                                 */
+        /* ============================================================= */
+
+        .gradient-1 { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .gradient-2 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .gradient-3 { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .gradient-4 { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .gradient-5 { background: linear-gradient(135deg, #fa709a, #fee140); }
+        .gradient-6 { background: linear-gradient(135deg, #a18cd1, #fbc2eb); }
+        .gradient-7 { background: linear-gradient(135deg, #ffecd2, #fcb69f); }
+        .gradient-8 { background: linear-gradient(135deg, #ff9a9e, #fecfef); }
+
+        .snap-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+
+        <!-- Page header -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">CSS Scroll Snap</h1>
+                <p class="lead text-muted">scroll-snap-type, scroll-snap-align, scroll-snap-stop</p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: HORIZONTAL SNAP - MANDATORY                        -->
+        <!-- Mandatory snapping: the scroll always lands on a snap point. -->
+        <!-- Items snap to the start edge of the container.              -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">1. Horizontal Snap (mandatory, start)</h2>
+            <p class="text-muted mb-3">
+                <code>scroll-snap-type: x mandatory</code> + <code>scroll-snap-align: start</code>
+            </p>
+
+            <!-- Horizontal scroll container with snap -->
+            <div class="snap-x-container snap-align-start">
+                <div class="snap-item gradient-1">Slide 1</div>
+                <div class="snap-item gradient-2">Slide 2</div>
+                <div class="snap-item gradient-3">Slide 3</div>
+                <div class="snap-item gradient-4">Slide 4</div>
+                <div class="snap-item gradient-5">Slide 5</div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: CENTER ALIGNED SNAP                                -->
+        <!-- Center snapping: items snap to the center of the viewport.   -->
+        <!-- Great for image galleries and carousels.                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">2. Center-Aligned Snap</h2>
+            <p class="text-muted mb-3">
+                <code>scroll-snap-align: center</code> snaps items to the center.
+            </p>
+
+            <div class="snap-x-container snap-align-center" style="padding:24px;">
+                <div class="snap-item gradient-1" style="flex:0 0 250px;">Center 1</div>
+                <div class="snap-item gradient-2" style="flex:0 0 250px;">Center 2</div>
+                <div class="snap-item gradient-3" style="flex:0 0 250px;">Center 3</div>
+                <div class="snap-item gradient-4" style="flex:0 0 250px;">Center 4</div>
+                <div class="snap-item gradient-5" style="flex:0 0 250px;">Center 5</div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: VERTICAL SNAP                                      -->
+        <!-- Vertical snapping: scroll-snap-type: y mandatory. Each       -->
+        <!-- section snaps to fill the viewport height.                   -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">3. Vertical Snap</h2>
+            <p class="text-muted mb-3">
+                <code>scroll-snap-type: y mandatory</code> with full-height sections.
+            </p>
+
+            <!-- Vertical scroll container -->
+            <div class="snap-y-container">
+                <div class="snap-y-item gradient-1">
+                    <div class="text-center">
+                        <h3>Section 1</h3>
+                        <p class="opacity-75">Scroll down to snap</p>
+                    </div>
+                </div>
+                <div class="snap-y-item gradient-2">
+                    <div class="text-center">
+                        <h3>Section 2</h3>
+                        <p class="opacity-75">Snap snaps to the start</p>
+                    </div>
+                </div>
+                <div class="snap-y-item gradient-3">
+                    <div class="text-center">
+                        <h3>Section 3</h3>
+                        <p class="opacity-75">Keep scrolling</p>
+                    </div>
+                </div>
+                <div class="snap-y-item gradient-4">
+                    <div class="text-center">
+                        <h3>Section 4</h3>
+                        <p class="opacity-75">Last section</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: PROXIMITY SNAPPING                                 -->
+        <!-- Proximity: only snaps when scroll position is near a snap    -->
+        <!-- point. More forgiving than mandatory.                       -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">4. Proximity Snapping</h2>
+            <p class="text-muted mb-3">
+                <code>scroll-snap-type: x proximity</code> - snaps only when close to a point.
+            </p>
+
+            <div class="snap-proximity-container">
+                <div class="snap-item gradient-6" style="flex:0 0 280px;">Prox 1</div>
+                <div class="snap-item gradient-7" style="flex:0 0 280px;">Prox 2</div>
+                <div class="snap-item gradient-8" style="flex:0 0 280px;">Prox 3</div>
+                <div class="snap-item gradient-1" style="flex:0 0 280px;">Prox 4</div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: IMAGE GALLERY WITH SNAP                            -->
+        <!-- Practical image gallery carousel using scroll snap.          -->
+        <!-- Center-aligned with large items for a polished feel.         -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">5. Image Gallery Carousel</h2>
+            <p class="text-muted mb-3">
+                A practical gallery with centered snap points and navigation.
+            </p>
+
+            <!-- Gallery container with navigation -->
+            <div class="position-relative">
+                <!-- Previous button -->
+                <button class="snap-nav-btn" style="left:8px;" onclick="document.getElementById('gallery').scrollBy({left:-400,behavior:'smooth'})">❮</button>
+
+                <!-- Snap gallery -->
+                <div class="gallery-container" id="gallery">
+                    <div class="gallery-item gradient-1">Gallery Image 1</div>
+                    <div class="gallery-item gradient-2">Gallery Image 2</div>
+                    <div class="gallery-item gradient-3">Gallery Image 3</div>
+                    <div class="gallery-item gradient-4">Gallery Image 4</div>
+                    <div class="gallery-item gradient-5">Gallery Image 5</div>
+                </div>
+
+                <!-- Next button -->
+                <button class="snap-nav-btn" style="right:8px;" onclick="document.getElementById('gallery').scrollBy({left:400,behavior:'smooth'})">❯</button>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

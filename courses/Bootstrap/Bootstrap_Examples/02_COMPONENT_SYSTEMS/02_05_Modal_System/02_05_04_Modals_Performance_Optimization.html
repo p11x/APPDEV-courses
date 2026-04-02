@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================ -->
+    <!-- 02_05_04 - MODALS PERFORMANCE OPTIMIZATION                    -->
+    <!-- Covers: Lazy loading, virtual modals, DOM management         -->
+    <!-- ============================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modals Performance Optimization - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .example-section { border-bottom: 2px solid #dee2e6; padding-bottom: 2rem; margin-bottom: 2rem; }
+        .perf-metric { font-family: monospace; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Page Header -->
+    <div class="container-fluid bg-info text-white py-4 mb-5">
+        <div class="container">
+            <h1 class="display-4">Modals: Performance Optimization</h1>
+            <p class="lead">Lazy loading, virtual modals, DOM management, and memory optimization</p>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: LAZY MODAL CREATION                           -->
+        <!-- Instead of defining all modals in HTML upfront, create   -->
+        <!-- them on-demand with JavaScript to reduce initial DOM.     -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">1. Lazy Modal Creation</h2>
+            <p>Create modals on-demand instead of loading them all upfront.</p>
+
+            <button type="button" class="btn btn-primary" id="lazyModalBtn">
+                Open Lazy Modal (Created on Click)
+            </button>
+
+            <div class="alert alert-info mt-3">
+                <strong>Performance benefit:</strong> Modal HTML is only added to the DOM when needed, reducing initial page weight.
+            </div>
+
+            <script>
+                // Lazy modal creation - modal HTML is generated only when needed
+                document.getElementById('lazyModalBtn').addEventListener('click', function() {
+                    // Check if modal already exists in DOM
+                    let existingModal = document.getElementById('lazyCreatedModal');
+                    if (existingModal) {
+                        // Reuse existing modal instance
+                        const bsModal = bootstrap.Modal.getOrCreateInstance(existingModal);
+                        bsModal.show();
+                        return;
+                    }
+
+                    // Create modal HTML dynamically
+                    const modalHTML = `
+                        <div class="modal fade" id="lazyCreatedModal" tabindex="-1" aria-labelledby="lazyCreatedLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="lazyCreatedLabel">Lazy-Created Modal</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>This modal was <strong>created dynamically</strong> when you clicked the button.</p>
+                                        <p>It was not present in the initial page HTML.</p>
+                                        <p>Created at: <code>${new Date().toLocaleTimeString()}</code></p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Append to body
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                    // Get the new element and show it
+                    const modalEl = document.getElementById('lazyCreatedModal');
+                    const bsModal = new bootstrap.Modal(modalEl);
+                    bsModal.show();
+
+                    // Optional: Remove from DOM after closing to free memory
+                    modalEl.addEventListener('hidden.bs.modal', function() {
+                        // Clean up to prevent DOM bloat
+                        // modalEl.remove(); // Uncomment to remove after close
+                    });
+                });
+            </script>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: SINGLE MODAL PATTERN                          -->
+        <!-- Use one modal element and dynamically update its content  -->
+        <!-- instead of creating multiple modal elements.              -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">2. Single Modal Pattern (Reused Modal)</h2>
+            <p>One modal element serves multiple purposes by updating content dynamically.</p>
+
+            <!-- Trigger buttons with data attributes for content -->
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <button type="button" class="btn btn-outline-primary dynamic-modal-btn"
+                        data-title="User Profile"
+                        data-body="<p>Profile settings and preferences.</p><p>This content was loaded dynamically.</p>"
+                        data-footer='<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="button" class="btn btn-primary">Save Profile</button>'>
+                    View Profile
+                </button>
+                <button type="button" class="btn btn-outline-success dynamic-modal-btn"
+                        data-title="Order Details"
+                        data-body="<p>Order #12345 - <span class='badge bg-success'>Shipped</span></p><p>Total: $99.99</p>"
+                        data-footer='<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="button" class="btn btn-success">Track Order</button>'>
+                    View Order
+                </button>
+                <button type="button" class="btn btn-outline-warning dynamic-modal-btn"
+                        data-title="Settings"
+                        data-body="<p>Application settings and configuration.</p>"
+                        data-footer='<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button type="button" class="btn btn-warning">Apply</button>'>
+                    Settings
+                </button>
+            </div>
+
+            <!-- Single reusable modal -->
+            <div class="modal fade" id="reusableModal" tabindex="-1" aria-labelledby="reusableModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <!-- Title updated dynamically -->
+                            <h5 class="modal-title" id="reusableModalLabel">Modal Title</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <!-- Body content updated dynamically -->
+                        <div class="modal-body" id="reusableModalBody">
+                            <!-- Content injected by JavaScript -->
+                        </div>
+                        <!-- Footer buttons updated dynamically -->
+                        <div class="modal-footer" id="reusableModalFooter">
+                            <!-- Buttons injected by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                // Single modal pattern: update content before showing
+                document.querySelectorAll('.dynamic-modal-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const title = this.getAttribute('data-title');
+                        const body = this.getAttribute('data-body');
+                        const footer = this.getAttribute('data-footer');
+
+                        // Update modal content
+                        document.getElementById('reusableModalLabel').textContent = title;
+                        document.getElementById('reusableModalBody').innerHTML = body;
+                        document.getElementById('reusableModalFooter').innerHTML = footer;
+
+                        // Show the modal
+                        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('reusableModal'));
+                        modal.show();
+                    });
+                });
+            </script>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: CONTENT PRELOADING                             -->
+        <!-- Preload modal content before the user clicks to show it.  -->
+        <!-- Useful for modals with heavy content or API calls.        -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">3. Content Preloading</h2>
+            <p>Preload heavy content when the page loads so modals open instantly.</p>
+
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#preloadedModal">
+                Open Preloaded Content Modal
+            </button>
+
+            <div class="modal fade" id="preloadedModal" tabindex="-1" aria-labelledby="preloadedLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="preloadedLabel">Preloaded Content</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Content placeholder that gets replaced -->
+                            <div id="preloadedContent">
+                                <div class="d-flex align-items-center">
+                                    <div class="spinner-border text-primary me-3" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <span>Loading content...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                // Preload content when page loads
+                (function() {
+                    const content = `
+                        <h6>Preloaded Data</h6>
+                        <p>This content was fetched/loaded when the page initialized, not when the modal opened.</p>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead><tr><th>ID</th><th>Name</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    <tr><td>1</td><td>Alpha</td><td><span class="badge bg-success">Active</span></td></tr>
+                                    <tr><td>2</td><td>Beta</td><td><span class="badge bg-warning">Pending</span></td></tr>
+                                    <tr><td>3</td><td>Gamma</td><td><span class="badge bg-success">Active</span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+
+                    // Simulate async preloading
+                    setTimeout(function() {
+                        document.getElementById('preloadedContent').innerHTML = content;
+                    }, 500);
+                })();
+            </script>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: MODAL CLEANUP AND MEMORY MANAGEMENT            -->
+        <!-- Properly dispose of modal instances to prevent memory     -->
+        <!-- leaks, especially with dynamically created modals.        -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">4. Modal Cleanup & Memory Management</h2>
+            <p>Properly dispose of modal instances to prevent memory leaks.</p>
+
+            <button type="button" class="btn btn-danger" id="createAndDisposeBtn">
+                Create, Show, Then Dispose Modal
+            </button>
+
+            <div class="alert alert-warning mt-3">
+                <strong>Memory tip:</strong> Always call <code>.dispose()</code> on modal instances you no longer need, especially for dynamically created modals.
+            </div>
+
+            <!-- Performance metrics display -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6>DOM Metrics</h6>
+                    <p>Modal elements in DOM: <span class="perf-metric" id="modalCount">0</span></p>
+                    <p>Total <code>.modal</code> elements: <span class="perf-metric" id="totalModals">0</span></p>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="updateMetrics()">Refresh Metrics</button>
+                </div>
+            </div>
+
+            <script>
+                function updateMetrics() {
+                    document.getElementById('modalCount').textContent = document.querySelectorAll('.modal').length;
+                    document.getElementById('totalModals').textContent = document.querySelectorAll('[class*="modal"]').length;
+                }
+
+                document.getElementById('createAndDisposeBtn').addEventListener('click', function() {
+                    const id = 'tempModal_' + Date.now();
+                    const html = `
+                        <div class="modal fade" id="${id}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Temporary Modal</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>This modal will be <strong>disposed</strong> after closing.</p>
+                                        <p>Instance ID: <code>${id}</code></p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close & Dispose</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', html);
+                    const el = document.getElementById(id);
+                    const modal = new bootstrap.Modal(el);
+
+                    // Dispose on close to free memory
+                    el.addEventListener('hidden.bs.modal', function() {
+                        modal.dispose();
+                        el.remove();
+                        updateMetrics();
+                    });
+
+                    modal.show();
+                    updateMetrics();
+                });
+
+                // Initial metrics
+                updateMetrics();
+            </script>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 5: EVENT HANDLER OPTIMIZATION                     -->
+        <!-- Use event delegation for modal triggers to reduce the     -->
+        <!-- number of event listeners.                                -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">5. Event Handler Optimization</h2>
+            <p>Use event delegation instead of individual listeners for modal triggers.</p>
+
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6>Anti-pattern (Many Listeners)</h6>
+                    <pre class="mb-0"><code>// Bad: One listener per button
+document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('click', handler);
+});</code></pre>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6>Best Practice (Event Delegation)</h6>
+                    <pre class="mb-0"><code>// Good: One listener on parent container
+document.addEventListener('click', function(e) {
+    if (e.target.matches('[data-modal-trigger]')) {
+        handleModalTrigger(e.target);
+    }
+});</code></pre>
+                </div>
+            </div>
+
+            <!-- Delegated modal triggers -->
+            <div class="mt-3" id="delegatedContainer">
+                <button class="btn btn-outline-primary me-2" data-delegated-modal="Feature A">Feature A</button>
+                <button class="btn btn-outline-primary me-2" data-delegated-modal="Feature B">Feature B</button>
+                <button class="btn btn-outline-primary" data-delegated-modal="Feature C">Feature C</button>
+            </div>
+
+            <script>
+                // Single delegated event handler for all modal triggers
+                document.getElementById('delegatedContainer').addEventListener('click', function(e) {
+                    const trigger = e.target.closest('[data-delegated-modal]');
+                    if (!trigger) return;
+
+                    const featureName = trigger.getAttribute('data-delegated-modal');
+                    // Dynamically create or show modal based on feature
+                    let modalEl = document.getElementById('delegatedModal');
+                    if (!modalEl) {
+                        const html = `
+                            <div class="modal fade" id="delegatedModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog"><div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="delegatedModalTitle"></h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body" id="delegatedModalBody"></div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div></div>
+                            </div>
+                        `;
+                        document.body.insertAdjacentHTML('beforeend', html);
+                        modalEl = document.getElementById('delegatedModal');
+                    }
+                    document.getElementById('delegatedModalTitle').textContent = featureName;
+                    document.getElementById('delegatedModalBody').innerHTML = '<p>Details for <strong>' + featureName + '</strong>.</p><p>Using event delegation for optimal performance.</p>';
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                });
+            </script>
+        </section>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

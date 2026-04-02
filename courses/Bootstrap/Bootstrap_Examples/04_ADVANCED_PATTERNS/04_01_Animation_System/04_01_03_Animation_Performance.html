@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_03_Animation_Performance.html                            -->
+<!-- Animation Performance with Bootstrap 5                        -->
+<!-- Covers: GPU acceleration, will-change, transform vs top/left, -->
+<!--         composite layers, paint optimization, layout thrash,  -->
+<!--         requestAnimationFrame, performance budgets             -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_01_03 - Animation Performance</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* GPU-ACCELERATED PROPERTIES                                    */
+        /* The browser renders in stages:                                */
+        /*   1. LAYOUT (reflow) — computes geometry (width, height,     */
+        /*      top, left, margin). VERY expensive.                     */
+        /*   2. PAINT — fills in pixels (background-color, shadow, etc) */
+        /*      Moderately expensive.                                   */
+        /*   3. COMPOSITE — combines layers (transform, opacity).       */
+        /*      CHEAPEST — runs on the GPU.                             */
+        /*                                                               */
+        /* Always prefer animating transform and opacity for 60fps.     */
+        /* ============================================================= */
+
+        /* --------------------------------------------------------- */
+        /* GOOD: GPU-composited properties                           */
+        /* transform and opacity are handled entirely on the GPU     */
+        /* compositor thread, bypassing layout and paint.            */
+        /* --------------------------------------------------------- */
+        .gpu-good {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .gpu-good:hover {
+            /* translate, scale, rotate all use the GPU */
+            transform: translateX(50px) scale(1.1) rotate(5deg);
+            opacity: 0.8;
+        }
+
+        /* --------------------------------------------------------- */
+        /* BAD: Layout-triggering properties                         */
+        /* These cause expensive reflows because the browser must    */
+        /* recalculate layout geometry.                              */
+        /* --------------------------------------------------------- */
+        .layout-bad {
+            position: relative;
+            /* DO NOT animate: top, left, width, height, margin */
+            /* These force layout recalculation on every frame    */
+            transition: left 0.3s ease;
+        }
+        .layout-bad:hover {
+            left: 50px; /* BAD: triggers layout */
+        }
+
+        /* --------------------------------------------------------- */
+        /* WILL-CHANGE PROPERTY                                      */
+        /* Tells the browser which properties will change so it can */
+        /* optimize ahead of time by creating a GPU layer.           */
+        /*                                                               */
+        /* IMPORTANT: Remove will-change after animation completes   */
+        /* to free GPU memory. Overuse causes memory issues on       */
+        /* mobile devices.                                           */
+        /* --------------------------------------------------------- */
+        .will-change-demo {
+            /* Hint to browser: prepare for transform and opacity changes */
+            will-change: transform, opacity;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .will-change-demo:hover {
+            transform: scale(1.15);
+            opacity: 0.7;
+        }
+
+        /* --------------------------------------------------------- */
+        /* WILL-CHANGE: ANIMATION-SPECIFIC USAGE                     */
+        /* Only apply will-change during the animation, remove after */
+        /* --------------------------------------------------------- */
+        .will-change-animated {
+            /* No will-change by default — element is static */
+            transition: transform 0.4s ease;
+        }
+        .will-change-animated.animating {
+            /* Add will-change only while animation is active */
+            will-change: transform;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        /* --------------------------------------------------------- */
+        /* TRANSFORM VS TOP/LEFT COMPARISON                          */
+        /* Side-by-side demonstration of performance difference      */
+        /* --------------------------------------------------------- */
+        .perf-compare-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 0.5rem;
+            position: relative;
+        }
+
+        /* Good: uses transform (GPU-accelerated) */
+        .transform-move {
+            background: #198754;
+            transition: transform 0.5s ease;
+        }
+        .transform-move.move {
+            transform: translateX(300px);
+        }
+
+        /* Bad: uses left (triggers layout) */
+        .left-move {
+            background: #dc3545;
+            transition: left 0.5s ease;
+            left: 0;
+        }
+        .left-move.move {
+            left: 300px;
+        }
+
+        /* --------------------------------------------------------- */
+        /* COMPOSITE LAYER PROMOTION                                 */
+        /* The browser promotes elements to their own GPU layer      */
+        /* when certain conditions are met. This avoids repainting   */
+        /* the entire page when the element changes.                 */
+        /* --------------------------------------------------------- */
+        /* Trigger layer promotion with:                             */
+        /*   - will-change: transform                                */
+        /*   - transform: translateZ(0) (hack, but works)            */
+        /*   - position: fixed                                       */
+        /*   - opacity < 1                                           */
+        /*   - filter                                                */
+        /*   - 3D transforms                                         */
+        /* --------------------------------------------------------- */
+        .layer-promoted {
+            /* Force GPU layer — element gets its own compositing layer */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        /* --------------------------------------------------------- */
+        /* REQUESTANIMATIONFRAME FOR JS ANIMATIONS                   */
+        /* For JavaScript-driven animations, always use              */
+        /* requestAnimationFrame instead of setInterval/setTimeout   */
+        /* because:                                                  */
+        /*   - rAF is synced to the display refresh rate (60Hz)      */
+        /*   - rAF pauses in background tabs (saves battery)         */
+        /*   - rAF batches DOM reads/writes automatically            */
+        /* --------------------------------------------------------- */
+        .raf-box {
+            width: 50px;
+            height: 50px;
+            background: #0d6efd;
+            border-radius: 50%;
+            position: absolute;
+            /* will-change hints the browser to prepare for movement */
+            will-change: transform;
+        }
+
+        /* --------------------------------------------------------- */
+        /* LAYOUT THRASHING PREVENTION                               */
+        /* Layout thrashing = reading and writing layout properties  */
+        /* in an alternating loop, forcing repeated reflows.         */
+        /* Fix: batch all reads, then all writes.                    */
+        /* --------------------------------------------------------- */
+
+        /* --------------------------------------------------------- */
+        /* PERFORMANCE BUDGET INDICATOR                              */
+        /* Visual indicator showing frame budget (16.6ms for 60fps) */
+        /* --------------------------------------------------------- */
+        .frame-budget-bar {
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .frame-budget-fill {
+            height: 100%;
+            background: #198754;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        .frame-budget-fill.warning { background: #ffc107; }
+        .frame-budget-fill.danger  { background: #dc3545; }
+
+        /* --------------------------------------------------------- */
+        /* CONTAIN PROPERTY                                          */
+        /* Tells the browser an element's contents are independent   */
+        /* from the rest of the page, enabling optimizations.        */
+        /* Values: layout | style | paint | size | content | strict  */
+        /* --------------------------------------------------------- */
+        .contain-demo {
+            /* Restricts the browser's rendering scope to this element */
+            contain: layout style;
+        }
+
+        /* --------------------------------------------------------- */
+        /* CONTENT-VISIBILITY                                        */
+        /* Skips rendering of off-screen elements entirely.          */
+        /* Dramatically improves initial page load performance.      */
+        /* --------------------------------------------------------- */
+        .content-visibility-demo {
+            content-visibility: auto;
+            contain-intrinsic-size: 0 500px;
+        }
+
+        /* --------------------------------------------------------- */
+        /* ANIMATED CARD WITH OPTIMAL PERFORMANCE                    */
+        /* Combines all best practices for smooth animation          */
+        /* --------------------------------------------------------- */
+        .optimal-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            will-change: transform;
+            transform: translateZ(0); /* Force GPU layer */
+        }
+        .optimal-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+        /* Remove will-change after transition completes (via JS) */
+        .optimal-card.settled {
+            will-change: auto;
+        }
+
+        /* --------------------------------------------------------- */
+        /* ANIMATION PERFORMANCE MONITORING STYLE                    */
+        /* Visual overlays for FPS display                           */
+        /* --------------------------------------------------------- */
+        #fps-counter {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- FPS Counter Overlay -->
+    <div id="fps-counter">FPS: --</div>
+
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">Animation Performance</h1>
+                <p class="lead text-muted">
+                    GPU acceleration, will-change, transform optimization, and 60fps techniques.
+                </p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: GPU vs LAYOUT PROPERTIES                           -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. GPU-Accelerated vs Layout-Triggering Properties</h2>
+            <div class="alert alert-success">
+                <strong>FAST (Composite Only):</strong> <code>transform</code>, <code>opacity</code>,
+                <code>filter</code>, <code>perspective</code>
+            </div>
+            <div class="alert alert-danger">
+                <strong>SLOW (Triggers Layout):</strong> <code>top</code>, <code>left</code>,
+                <code>width</code>, <code>height</code>, <code>margin</code>, <code>padding</code>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h6 class="text-success">GOOD: transform</h6>
+                            <div class="perf-compare-box transform-move" id="transformBox">
+                            </div>
+                            <small class="text-muted">Uses GPU compositor thread</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <h6 class="text-danger">BAD: left property</h6>
+                            <div class="perf-compare-box left-move" id="leftBox">
+                            </div>
+                            <small class="text-muted">Triggers layout reflow</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary mt-3" id="compareBtn">Animate Both</button>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: WILL-CHANGE                                        -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. will-change Property</h2>
+            <div class="alert alert-info">
+                <code>will-change</code> hints the browser to prepare for changes. Use sparingly —
+                each will-change declaration uses GPU memory. Never apply to too many elements at once.
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6>Always On</h6>
+                            <div class="will-change-demo bg-primary text-white p-3 rounded">
+                                Hover Me
+                            </div>
+                            <small class="text-muted">will-change always set</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6>Dynamic will-change</h6>
+                            <div class="will-change-animated bg-warning text-dark p-3 rounded"
+                                 id="dynamicWillChange" style="cursor:pointer">
+                                Click to Animate
+                            </div>
+                            <small class="text-muted">Added only during animation</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6>No will-change</h6>
+                            <div class="bg-secondary text-white p-3 rounded"
+                                 style="transition: transform 0.3s;"
+                                 onmouseover="this.style.transform='scale(1.1)'"
+                                 onmouseout="this.style.transform='scale(1)'">
+                                Hover Me
+                            </div>
+                            <small class="text-muted">Default — browser decides</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: RENDERING PIPELINE                                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Browser Rendering Pipeline</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Stage</th>
+                            <th>Triggers</th>
+                            <th>Cost</th>
+                            <th>Example Properties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-danger">
+                            <td><strong>Layout (Reflow)</strong></td>
+                            <td>Geometry changes</td>
+                            <td>VERY HIGH</td>
+                            <td><code>width, height, top, left, margin, padding</code></td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td><strong>Paint</strong></td>
+                            <td>Visual changes</td>
+                            <td>MEDIUM</td>
+                            <td><code>color, background, box-shadow, border-radius</code></td>
+                        </tr>
+                        <tr class="table-success">
+                            <td><strong>Composite</strong></td>
+                            <td>Layer transforms</td>
+                            <td>LOW (GPU)</td>
+                            <td><code>transform, opacity, filter</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="alert alert-warning">
+                <strong>Rule of thumb:</strong> Only <code>transform</code> and <code>opacity</code>
+                can be animated without triggering layout or paint. All other properties will
+                trigger at least paint, and many trigger layout.
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: FRAME BUDGET                                       -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Frame Budget (16.6ms for 60fps)</h2>
+            <p class="text-muted">
+                To maintain 60 frames per second, each frame must complete within ~16.6ms.
+                Click "Start Monitor" to see real-time frame timing.
+            </p>
+            <button class="btn btn-primary mb-3" id="startMonitorBtn">Start Performance Monitor</button>
+            <button class="btn btn-outline-secondary mb-3" id="stopMonitorBtn">Stop</button>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Frame Time (ms)</label>
+                    <div class="frame-budget-bar">
+                        <div class="frame-budget-fill" id="frameBar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted" id="frameTimeDisplay">--</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Animation Elements</label>
+                    <div id="stressTestContainer" class="d-flex flex-wrap gap-1">
+                        <!-- Stress test elements will be added here -->
+                    </div>
+                    <small class="text-muted">
+                        Add elements to stress-test compositing
+                    </small>
+                </div>
+            </div>
+            <button class="btn btn-outline-warning mt-2" id="addStressBtn">Add 50 Animated Elements</button>
+            <button class="btn btn-outline-danger mt-2" id="clearStressBtn">Clear</button>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: OPTIMAL CARD ANIMATION                             -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Optimal Card Animation (Best Practices)</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card optimal-card">
+                        <div class="card-body">
+                            <h5>Optimized Card</h5>
+                            <p class="mb-0">
+                                Uses transform + will-change + translateZ(0).
+                                will-change removed after transition via JS.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card optimal-card">
+                        <div class="card-body">
+                            <h5>Another Card</h5>
+                            <p class="mb-0">
+                                All animations are compositor-only.
+                                No layout or paint triggered on hover.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card optimal-card">
+                        <div class="card-body">
+                            <h5>Third Card</h5>
+                            <p class="mb-0">
+                                box-shadow also triggers paint, but
+                                is acceptable for infrequent hovers.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: LAYOUT THRASHING EXAMPLE                           -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Layout Thrashing Prevention</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <h6 class="text-danger">BAD: Read-Write Loop</h6>
+                            <pre class="bg-dark text-light p-2 rounded small"><code>// Forces layout on EACH iteration!
+items.forEach(el => {
+    const height = el.offsetHeight; // READ
+    el.style.height = height + 10 + 'px'; // WRITE
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h6 class="text-success">GOOD: Batch Reads, Then Writes</h6>
+                            <pre class="bg-dark text-light p-2 rounded small"><code>// Batch all reads first
+const heights = items.map(el => el.offsetHeight);
+// Then batch all writes
+items.forEach((el, i) => {
+    el.style.height = heights[i] + 10 + 'px';
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 7: CONTAIN & CONTENT-VISIBILITY                       -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. CSS contain & content-visibility</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>contain: layout style</h6>
+                            <p class="small text-muted">
+                                Tells the browser that changes inside this element don't affect
+                                outside layout. Enables rendering optimizations.
+                            </p>
+                            <div class="contain-demo bg-light p-3 border rounded">
+                                <p class="mb-0 small">
+                                    This container has <code>contain: layout style</code>.
+                                    Internal changes won't trigger external reflows.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>content-visibility: auto</h6>
+                            <p class="small text-muted">
+                                Skips rendering of off-screen content entirely.
+                                Dramatically improves page load performance for long pages.
+                            </p>
+                            <div class="content-visibility-demo bg-light p-3 border rounded">
+                                <p class="mb-0 small">
+                                    This element uses <code>content-visibility: auto</code>.
+                                    If off-screen, it won't be rendered at all.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 8: PERFORMANCE CHECKLIST                              -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Animation Performance Checklist</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Practice</th>
+                            <th>Do</th>
+                            <th>Don't</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Properties</td>
+                            <td class="text-success">Animate <code>transform</code> and <code>opacity</code></td>
+                            <td class="text-danger">Animate <code>top/left/width/height</code></td>
+                        </tr>
+                        <tr>
+                            <td>will-change</td>
+                            <td class="text-success">Apply temporarily, remove after</td>
+                            <td class="text-danger">Apply to 100+ elements</td>
+                        </tr>
+                        <tr>
+                            <td>JS Animations</td>
+                            <td class="text-success">Use <code>requestAnimationFrame</code></td>
+                            <td class="text-danger">Use <code>setInterval</code></td>
+                        </tr>
+                        <tr>
+                            <td>Layout</td>
+                            <td class="text-success">Batch reads then writes</td>
+                            <td class="text-danger">Interleave reads and writes</td>
+                        </tr>
+                        <tr>
+                            <td>Layers</td>
+                            <td class="text-success">Use <code>translateZ(0)</code> sparingly</td>
+                            <td class="text-danger">Promote every element to GPU</td>
+                        </tr>
+                        <tr>
+                            <td>contain</td>
+                            <td class="text-success">Use <code>contain: layout</code> on subtrees</td>
+                            <td class="text-danger">Ignore containment hints</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ----------------------------------------------------------- */
+        /* TRANSFORM VS LEFT COMPARISON                                */
+        /* ----------------------------------------------------------- */
+        const compareBtn = document.getElementById('compareBtn');
+        const transformBox = document.getElementById('transformBox');
+        const leftBox = document.getElementById('leftBox');
+
+        compareBtn.addEventListener('click', function () {
+            transformBox.classList.toggle('move');
+            leftBox.classList.toggle('move');
+        });
+
+        /* ----------------------------------------------------------- */
+        /* DYNAMIC WILL-CHANGE                                         */
+        /* Adds will-change before animation, removes after            */
+        /* ----------------------------------------------------------- */
+        const dynamicWC = document.getElementById('dynamicWillChange');
+        dynamicWC.addEventListener('click', function () {
+            this.classList.add('animating');
+            /* Remove will-change and class after animation completes */
+            setTimeout(() => {
+                this.classList.remove('animating');
+            }, 2000);
+        });
+
+        /* ----------------------------------------------------------- */
+        /* WILL-CHANGE CLEANUP ON CARDS                                */
+        /* ----------------------------------------------------------- */
+        document.querySelectorAll('.optimal-card').forEach(card => {
+            card.addEventListener('transitionend', function () {
+                this.classList.add('settled');
+            });
+            card.addEventListener('mouseenter', function () {
+                this.classList.remove('settled');
+            });
+        });
+
+        /* ----------------------------------------------------------- */
+        /* FPS COUNTER & FRAME MONITOR                                 */
+        /* Uses requestAnimationFrame to measure actual frame rate     */
+        /* ----------------------------------------------------------- */
+        const fpsCounter = document.getElementById('fps-counter');
+        const frameBar = document.getElementById('frameBar');
+        const frameTimeDisplay = document.getElementById('frameTimeDisplay');
+        let monitorRunning = false;
+        let lastTime = performance.now();
+        let frameCount = 0;
+        let fpsValue = 0;
+
+        function measureFPS() {
+            if (!monitorRunning) return;
+            const now = performance.now();
+            frameCount++;
+
+            if (now - lastTime >= 1000) {
+                fpsValue = frameCount;
+                frameCount = 0;
+                lastTime = now;
+
+                fpsCounter.textContent = `FPS: ${fpsValue}`;
+                fpsCounter.style.color = fpsValue >= 55 ? '#0f0' :
+                                         fpsValue >= 30 ? '#ff0' : '#f00';
+
+                /* Update frame bar — 16.6ms budget */
+                const frameTime = 1000 / Math.max(fpsValue, 1);
+                const pct = Math.min(frameTime / 16.6 * 100, 100);
+                frameBar.style.width = pct + '%';
+                frameBar.className = 'frame-budget-fill' +
+                    (pct > 80 ? ' danger' : pct > 50 ? ' warning' : '');
+                frameTimeDisplay.textContent = `${frameTime.toFixed(1)}ms per frame (budget: 16.6ms)`;
+            }
+
+            requestAnimationFrame(measureFPS);
+        }
+
+        document.getElementById('startMonitorBtn').addEventListener('click', function () {
+            if (!monitorRunning) {
+                monitorRunning = true;
+                lastTime = performance.now();
+                frameCount = 0;
+                requestAnimationFrame(measureFPS);
+                this.textContent = 'Monitoring...';
+            }
+        });
+
+        document.getElementById('stopMonitorBtn').addEventListener('click', function () {
+            monitorRunning = false;
+            document.getElementById('startMonitorBtn').textContent = 'Start Performance Monitor';
+            fpsCounter.textContent = 'FPS: --';
+        });
+
+        /* ----------------------------------------------------------- */
+        /* STRESS TEST: Add animated elements                          */
+        /* ----------------------------------------------------------- */
+        const stressContainer = document.getElementById('stressTestContainer');
+
+        document.getElementById('addStressBtn').addEventListener('click', function () {
+            for (let i = 0; i < 50; i++) {
+                const dot = document.createElement('div');
+                dot.style.cssText = `
+                    width: 10px; height: 10px; border-radius: 50%;
+                    background: hsl(${Math.random() * 360}, 70%, 50%);
+                    animation: spin ${0.5 + Math.random() * 2}s linear infinite;
+                    will-change: transform;
+                `;
+                stressContainer.appendChild(dot);
+            }
+        });
+
+        document.getElementById('clearStressBtn').addEventListener('click', function () {
+            stressContainer.innerHTML = '';
+        });
+    </script>
+</body>
+</html>

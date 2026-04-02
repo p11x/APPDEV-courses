@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ========================================== -->
+    <!-- 02_01_13: Button Animation Integration      -->
+    <!-- CSS transitions, hover effects, keyframes, -->
+    <!-- stagger animations, scroll-triggered       -->
+    <!-- ========================================== -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02_01_13 - Button Animation Integration</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ========================================== */
+        /* BUTTON ANIMATIONS                          */
+        /* ========================================== */
+
+        /* 1. Lift effect: translate + shadow on hover */
+        .btn-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-lift:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        .btn-lift:active {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 2. Scale effect: grow on hover */
+        .btn-scale {
+            transition: transform 0.15s ease;
+        }
+        .btn-scale:hover {
+            transform: scale(1.05);
+        }
+        .btn-scale:active {
+            transform: scale(0.98);
+        }
+
+        /* 3. Border fill: border animates in on hover */
+        .btn-border-fill {
+            position: relative;
+            border: 2px solid #0d6efd;
+            background: transparent;
+            color: #0d6efd;
+            overflow: hidden;
+            z-index: 1;
+            transition: color 0.3s ease;
+        }
+        .btn-border-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: #0d6efd;
+            z-index: -1;
+            transition: left 0.3s ease;
+        }
+        .btn-border-fill:hover {
+            color: white;
+        }
+        .btn-border-fill:hover::before {
+            left: 0;
+        }
+
+        /* 4. Shine effect: glossy sweep */
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                transparent 0%,
+                rgba(255,255,255,0.3) 50%,
+                transparent 100%
+            );
+            transform: rotate(30deg) translateX(-100%);
+            transition: transform 0.6s;
+        }
+        .btn-shine:hover::after {
+            transform: rotate(30deg) translateX(100%);
+        }
+
+        /* 5. Underline grow: text underline expands */
+        .btn-underline-grow {
+            background: transparent;
+            border: none;
+            color: #0d6efd;
+            padding: 0.5rem 1rem;
+            position: relative;
+        }
+        .btn-underline-grow::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #0d6efd;
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+        .btn-underline-grow:hover::after {
+            width: 80%;
+            left: 10%;
+        }
+
+        /* 6. Shake animation: attention-grabbing */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        .btn-shake:hover {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* 7. Bounce animation */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-12px); }
+            60% { transform: translateY(-6px); }
+        }
+        .btn-bounce {
+            transition: none;
+        }
+        .btn-bounce:hover {
+            animation: bounce 0.8s ease;
+        }
+
+        /* 8. Glow effect: pulsing border glow */
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(13,110,253,0.5); }
+            50% { box-shadow: 0 0 20px rgba(13,110,253,0.8), 0 0 40px rgba(13,110,253,0.4); }
+        }
+        .btn-glow {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        /* 9. Stagger entrance animation */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-stagger {
+            opacity: 0;
+            animation: slideUp 0.4s ease forwards;
+        }
+        .btn-stagger:nth-child(1) { animation-delay: 0.1s; }
+        .btn-stagger:nth-child(2) { animation-delay: 0.2s; }
+        .btn-stagger:nth-child(3) { animation-delay: 0.3s; }
+        .btn-stagger:nth-child(4) { animation-delay: 0.4s; }
+        .btn-stagger:nth-child(5) { animation-delay: 0.5s; }
+
+        /* 10. 3D press effect */
+        .btn-3d {
+            transform: perspective(500px) rotateX(0);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 4px 0 #0a58ca, 0 6px 10px rgba(0,0,0,0.15);
+        }
+        .btn-3d:hover {
+            transform: perspective(500px) translateY(-2px);
+            box-shadow: 0 6px 0 #0a58ca, 0 8px 14px rgba(0,0,0,0.15);
+        }
+        .btn-3d:active {
+            transform: perspective(500px) translateY(2px);
+            box-shadow: 0 2px 0 #0a58ca, 0 3px 6px rgba(0,0,0,0.15);
+        }
+
+        /* 11. Morphing icon animation */
+        @keyframes morphCheck {
+            0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(0deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .btn-morph .morph-icon {
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+        .btn-morph.success .morph-icon {
+            animation: morphCheck 0.4s ease forwards;
+        }
+
+        /* Reduced motion: disable all animations */
+        @media (prefers-reduced-motion: reduce) {
+            .btn-lift, .btn-scale, .btn-border-fill, .btn-shine,
+            .btn-underline-grow, .btn-shake, .btn-bounce, .btn-glow,
+            .btn-stagger, .btn-3d, .btn-morph {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold text-primary mb-4">Button Animation Integration</h1>
+        <p class="lead text-muted mb-5">
+            CSS transitions, hover effects, keyframe animations, and staggered entrances.
+        </p>
+
+        <!-- Lift Effect -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Lift Effect</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-primary btn-lift me-2">Lift Up</button>
+                <button type="button" class="btn btn-outline-primary btn-lift me-2">Lift Outline</button>
+                <button type="button" class="btn btn-success btn-lift">Lift Success</button>
+            </div>
+        </section>
+
+        <!-- Scale Effect -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Scale Effect</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-primary btn-scale me-2">Scale Hover</button>
+                <button type="button" class="btn btn-danger btn-scale me-2">Scale Danger</button>
+                <button type="button" class="btn btn-warning btn-scale">Scale Warning</button>
+            </div>
+        </section>
+
+        <!-- Border Fill -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Border Fill Animation</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-border-fill me-2">Fill In</button>
+                <button type="button" class="btn btn-border-fill me-2" style="--bs-btn-border-color: #198754; --bs-btn-color: #198754;">Green Fill</button>
+                <style>
+                    .btn-border-fill:nth-of-type(2) { border-color: #198754; color: #198754; }
+                    .btn-border-fill:nth-of-type(2)::before { background: #198754; }
+                    .btn-border-fill:nth-of-type(2):hover { color: white; }
+                </style>
+                <button type="button" class="btn btn-border-fill me-2" style="border-color:#dc3545;color:#dc3545;">Red Fill</button>
+            </div>
+        </section>
+
+        <!-- Shine Effect -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Shine / Gloss Sweep</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-primary btn-shine me-2">Shine Effect</button>
+                <button type="button" class="btn btn-success btn-shine me-2">Success Shine</button>
+                <button type="button" class="btn btn-dark btn-shine">Dark Shine</button>
+            </div>
+        </section>
+
+        <!-- Underline Grow -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Underline Grow</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-underline-grow me-2">Hover for Underline</button>
+                <button type="button" class="btn btn-underline-grow me-2">Another Link</button>
+                <button type="button" class="btn btn-underline-grow">Third Link</button>
+            </div>
+        </section>
+
+        <!-- Shake & Bounce -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Shake & Bounce</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-danger btn-shake me-2">Shake on Hover</button>
+                <button type="button" class="btn btn-primary btn-bounce me-2">Bounce on Hover</button>
+                <button type="button" class="btn btn-glow btn-outline-primary">Always Glowing</button>
+            </div>
+        </section>
+
+        <!-- Stagger Entrance -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Staggered Entrance</h2>
+            <div class="card p-4">
+                <p class="text-muted small">Buttons animate in with staggered delays:</p>
+                <button class="btn btn-primary me-2 btn-stagger" onclick="replayStagger()" id="staggerBtn">Replay Stagger</button>
+                <div class="mt-3 d-flex gap-2" id="staggerContainer">
+                    <button type="button" class="btn btn-outline-primary btn-stagger">1</button>
+                    <button type="button" class="btn btn-outline-primary btn-stagger">2</button>
+                    <button type="button" class="btn btn-outline-primary btn-stagger">3</button>
+                    <button type="button" class="btn btn-outline-primary btn-stagger">4</button>
+                    <button type="button" class="btn btn-outline-primary btn-stagger">5</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3D Press -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. 3D Press Effect</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-primary btn-3d me-2">3D Press</button>
+                <button type="button" class="btn btn-success btn-3d me-2">3D Success</button>
+                <button type="button" class="btn btn-danger btn-3d">3D Danger</button>
+            </div>
+        </section>
+
+        <!-- Morphing Icon -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">9. Morphing State Transition</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-primary btn-morph" id="morphBtn" onclick="morphSubmit()">
+                    <span class="morph-icon" aria-hidden="true">&#128190;</span> Save
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        /* Replay stagger animation */
+        function replayStagger() {
+            const container = document.getElementById('staggerContainer');
+            const buttons = container.querySelectorAll('.btn-stagger');
+            buttons.forEach(btn => {
+                btn.style.animation = 'none';
+                btn.offsetHeight; /* trigger reflow */
+                btn.style.animation = '';
+            });
+        }
+
+        /* Morphing button: save -> checkmark */
+        function morphSubmit() {
+            const btn = document.getElementById('morphBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+
+            setTimeout(() => {
+                btn.classList.add('success');
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-success');
+                btn.innerHTML = '<span class="morph-icon">&#10003;</span> Saved!';
+                btn.disabled = false;
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

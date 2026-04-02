@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================= -->
+    <!-- FILE: 02_04_14_Navbar_Maintenance_Automation.html              -->
+    <!-- TOPIC: Automated Maintenance Patterns for Navbars              -->
+    <!-- ============================================================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navbar Maintenance Automation - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-section { margin-bottom: 3rem; padding: 1.5rem; border: 1px solid #dee2e6; border-radius: 0.375rem; }
+        .demo-section h4 { margin-bottom: 1rem; border-bottom: 2px solid #0d6efd; padding-bottom: 0.5rem; }
+        code { font-size: 0.875rem; }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================= -->
+    <!-- DYNAMIC NAVBAR: Generated from configuration object             -->
+    <!-- ============================================================= -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" 
+         id="dynamicNavbar" 
+         aria-label="Dynamic navigation">
+        <!-- Content injected by JavaScript from config -->
+    </nav>
+
+    <div class="container my-4">
+        <h1 class="mb-4">Navbar Maintenance Automation</h1>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: CONFIG-DRIVEN NAVBAR                                -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>14.1 Configuration-Driven Navbar Generation</h4>
+            
+            <p>Define navbar structure in a configuration object. Generate HTML programmatically for consistency and maintainability.</p>
+            
+            <pre class="bg-light p-3"><code>/* ============================================================= */
+/* NAVBAR CONFIGURATION OBJECT                                      */
+/* Single source of truth for navbar structure                      */
+/* Used by renderer to generate HTML                                */
+/* Supports: brand, links, dropdowns, search, CTA buttons           */
+/* ============================================================= */
+
+const navbarConfig = {
+    brand: {
+        text: 'AutoNav',
+        href: '/',
+        logo: null  // Optional: { src: '/logo.svg', alt: 'Logo', width: 32 }
+    },
+    theme: 'dark',           // 'light' | 'dark'
+    background: 'bg-dark',   // Bootstrap bg class
+    breakpoint: 'lg',        // navbar-expand-{breakpoint}
+    sticky: false,           // sticky-top
+    ariaLabel: 'Dynamic navigation',
+    
+    links: [
+        {
+            text: 'Home',
+            href: '/',
+            active: true
+        },
+        {
+            text: 'Products',
+            href: '/products',
+            dropdown: [
+                { text: 'Software', href: '/products/software' },
+                { text: 'Hardware', href: '/products/hardware' },
+                { divider: true },
+                { text: 'All Products', href: '/products' }
+            ]
+        },
+        {
+            text: 'About',
+            href: '/about'
+        },
+        {
+            text: 'Contact',
+            href: '/contact'
+        }
+    ],
+    
+    search: {
+        enabled: true,
+        placeholder: 'Search...',
+        action: '/search'
+    },
+    
+    actions: [
+        { text: 'Log In', href: '/login', class: 'btn-outline-light' },
+        { text: 'Sign Up', href: '/signup', class: 'btn-light' }
+    ]
+};</code></pre>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: NAVBAR RENDERER                                     -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>14.2 Navbar Renderer Class</h4>
+            
+            <pre class="bg-light p-3"><code>/* ============================================================= */
+/* NAVBAR RENDERER                                                  */
+/* Takes config object and generates Bootstrap 5 navbar HTML        */
+/* Supports dynamic updates, ARIA attributes, and validation        */
+/* ============================================================= */
+
+class NavbarRenderer {
+    constructor(config) {
+        this.config = this.validate(config);
+    }
+    
+    validate(config) {
+        // Validate required fields
+        if (!config.brand || !config.brand.text) {
+            throw new Error('NavbarRenderer: brand.text is required');
+        }
+        if (!Array.isArray(config.links) || config.links.length === 0) {
+            throw new Error('NavbarRenderer: links array is required');
+        }
+        // Set defaults
+        return {
+            theme: 'dark',
+            background: 'bg-dark',
+            breakpoint: 'lg',
+            sticky: false,
+            ariaLabel: 'Main navigation',
+            search: { enabled: false },
+            actions: [],
+            ...config
+        };
+    }
+    
+    render() {
+        const c = this.config;
+        const collapseId = 'navCollapse_' + Math.random().toString(36).substr(2, 9);
+        
+        let html = '';
+        
+        // Navbar element
+        const classes = [
+            'navbar',
+            `navbar-expand-${c.breakpoint}`,
+            `navbar-${c.theme}`,
+            c.background,
+            c.sticky ? 'sticky-top' : ''
+        ].filter(Boolean).join(' ');
+        
+        html += `&lt;nav class="${classes}" aria-label="${c.ariaLabel}"&gt;\n`;
+        html += `  &lt;div class="container-fluid"&gt;\n`;
+        
+        // Brand
+        html += this.renderBrand();
+        
+        // Toggler
+        html += `    &lt;button class="navbar-toggler" type="button" ` +
+                `data-bs-toggle="collapse" data-bs-target="#${collapseId}" ` +
+                `aria-controls="${collapseId}" aria-expanded="false" ` +
+                `aria-label="Toggle navigation"&gt;\n` +
+                `      &lt;span class="navbar-toggler-icon"&gt;&lt;/span&gt;\n` +
+                `    &lt;/button&gt;\n`;
+        
+        // Collapse container
+        html += `    &lt;div class="collapse navbar-collapse" id="${collapseId}"&gt;\n`;
+        
+        // Nav links
+        html += this.renderLinks();
+        
+        // Search
+        if (c.search.enabled) {
+            html += this.renderSearch();
+        }
+        
+        // Action buttons
+        if (c.actions.length > 0) {
+            html += this.renderActions();
+        }
+        
+        html += `    &lt;/div&gt;\n`;
+        html += `  &lt;/div&gt;\n`;
+        html += `&lt;/nav&gt;`;
+        
+        return html;
+    }
+    
+    renderBrand() {
+        const b = this.config.brand;
+        let content = b.text;
+        if (b.logo) {
+            content = `&lt;img src="${b.logo.src}" alt="${b.logo.alt}" ` +
+                     `width="${b.logo.width}" class="me-2"&gt;${b.text}`;
+        }
+        return `    &lt;a class="navbar-brand" href="${b.href}"&gt;${content}&lt;/a&gt;\n`;
+    }
+    
+    renderLinks() {
+        let html = `      &lt;ul class="navbar-nav me-auto mb-2 mb-lg-0"&gt;\n`;
+        
+        this.config.links.forEach(link => {
+            const activeClass = link.active ? ' active' : '';
+            const ariaCurrent = link.active ? ' aria-current="page"' : '';
+            
+            if (link.dropdown) {
+                html += `        &lt;li class="nav-item dropdown"&gt;\n`;
+                html += `          &lt;a class="nav-link dropdown-toggle${activeClass}" ` +
+                       `href="${link.href}" data-bs-toggle="dropdown"&gt;${link.text}&lt;/a&gt;\n`;
+                html += `          &lt;ul class="dropdown-menu"&gt;\n`;
+                link.dropdown.forEach(item => {
+                    if (item.divider) {
+                        html += `            &lt;li&gt;&lt;hr class="dropdown-divider"&gt;&lt;/li&gt;\n`;
+                    } else {
+                        html += `            &lt;li&gt;&lt;a class="dropdown-item" ` +
+                               `href="${item.href}"&gt;${item.text}&lt;/a&gt;&lt;/li&gt;\n`;
+                    }
+                });
+                html += `          &lt;/ul&gt;\n`;
+                html += `        &lt;/li&gt;\n`;
+            } else {
+                html += `        &lt;li class="nav-item"&gt;\n`;
+                html += `          &lt;a class="nav-link${activeClass}"${ariaCurrent} ` +
+                       `href="${link.href}"&gt;${link.text}&lt;/a&gt;\n`;
+                html += `        &lt;/li&gt;\n`;
+            }
+        });
+        
+        html += `      &lt;/ul&gt;\n`;
+        return html;
+    }
+    
+    renderSearch() {
+        return `      &lt;form class="d-flex" role="search" ` +
+               `action="${this.config.search.action || '#'}"&gt;\n` +
+               `        &lt;input class="form-control me-2" type="search" ` +
+               `placeholder="${this.config.search.placeholder}" ` +
+               `aria-label="Search"&gt;\n` +
+               `        &lt;button class="btn btn-outline-light" ` +
+               `type="submit"&gt;Search&lt;/button&gt;\n` +
+               `      &lt;/form&gt;\n`;
+    }
+    
+    renderActions() {
+        let html = `      &lt;div class="d-flex"&gt;\n`;
+        this.config.actions.forEach(action => {
+            html += `        &lt;a href="${action.href}" ` +
+                   `class="btn ${action.class} ms-2"&gt;${action.text}&lt;/a&gt;\n`;
+        });
+        html += `      &lt;/div&gt;\n`;
+        return html;
+    }
+}
+
+// Usage:
+// const renderer = new NavbarRenderer(navbarConfig);
+// document.getElementById('navbarContainer').innerHTML = renderer.render();</code></pre>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: AUTOMATED LINK CHECKING                             -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>14.3 Automated Link Validation</h4>
+            
+            <button class="btn btn-primary btn-sm mb-3" onclick="validateLinks()">
+                Validate Navbar Links
+            </button>
+            <div id="linkValidationResults"></div>
+            
+            <pre class="bg-light p-3 mt-3"><code>/* ============================================================= */
+/* AUTOMATED LINK VALIDATION                                         */
+/* Checks all navbar links for:                                     */
+/* - Missing href attributes                                        */
+/* - Empty href values                                              */
+/* - Broken internal links                                          */
+/* - Accessibility issues (missing aria-label on icon-only links)   */
+/* ============================================================= */
+
+function validateNavbarLinks(navbarSelector) {
+    const nav = document.querySelector(navbarSelector);
+    const links = nav.querySelectorAll('a, button[data-bs-toggle]');
+    const issues = [];
+    
+    links.forEach((link, i) => {
+        const tag = link.tagName;
+        const text = link.textContent.trim();
+        
+        if (tag === 'A') {
+            // Check href
+            if (!link.hasAttribute('href')) {
+                issues.push({ severity: 'error', element: link, message: `Link #${i}: Missing href attribute` });
+            } else if (link.getAttribute('href') === '') {
+                issues.push({ severity: 'warning', element: link, message: `Link #${i}: Empty href value` });
+            }
+            
+            // Check accessible name
+            if (!text && !link.getAttribute('aria-label') && !link.querySelector('img[alt]')) {
+                issues.push({ severity: 'error', element: link, message: `Link #${i}: No accessible name (missing text, aria-label, or alt)` });
+            }
+            
+            // Check target="_blank" has rel
+            if (link.getAttribute('target') === '_blank' && !link.getAttribute('rel')?.includes('noopener')) {
+                issues.push({ severity: 'warning', element: link, message: `Link #${i}: target="_blank" without rel="noopener"` });
+            }
+        }
+    });
+    
+    return issues;
+}</code></pre>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: CSS AUDIT SCRIPT                                    -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>14.4 Navbar CSS Audit</h4>
+            
+            <button class="btn btn-success btn-sm mb-3" onclick="auditCSS()">
+                Audit Navbar CSS
+            </button>
+            <div id="cssAuditResults"></div>
+            
+            <pre class="bg-light p-3 mt-3"><code>/* ============================================================= */
+/* CSS AUDIT FOR NAVBARS                                            */
+/* Checks for:                                                      */
+/* - Deprecated Bootstrap 4 classes                                 */
+/* - Custom !important overrides                                    */
+/* - Missing responsive breakpoint classes                          */
+/* - Vendor prefix needs                                            */
+/* ============================================================= */
+
+function auditNavbarCSS(navbarSelector) {
+    const nav = document.querySelector(navbarSelector);
+    const results = { warnings: [], info: [] };
+    
+    // Check for deprecated BS4 classes
+    const deprecated = {
+        'navbar-toggler-right': 'Replaced by default behavior in BS5',
+        'navbar-toggler-left': 'Use order utilities instead',
+        'ml-auto': 'Use ms-auto in BS5',
+        'mr-auto': 'Use me-auto in BS5',
+        'pl-0': 'Use ps-0 in BS5',
+        'pr-0': 'Use pe-0 in BS5'
+    };
+    
+    nav.querySelectorAll('*').forEach(el => {
+        el.classList.forEach(cls => {
+            if (deprecated[cls]) {
+                results.warnings.push({
+                    element: el.outerHTML.substring(0, 50),
+                    message: `Deprecated class "${cls}": ${deprecated[cls]}`
+                });
+            }
+        });
+    });
+    
+    // Check for !important in inline styles
+    if (nav.style.cssText.includes('!important')) {
+        results.warnings.push({
+            element: 'navbar',
+            message: 'Inline style uses !important - consider specificity fixes'
+        });
+    }
+    
+    return results;
+}</code></pre>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* ============================================================= */
+        /* DYNAMIC NAVBAR RENDERER (Client-side)                           */
+        /* ============================================================= */
+        
+        const navbarConfig = {
+            brand: { text: 'AutoNav', href: '/' },
+            theme: 'dark',
+            background: 'bg-dark',
+            breakpoint: 'lg',
+            ariaLabel: 'Dynamic navigation',
+            links: [
+                { text: 'Home', href: '#', active: true },
+                { text: 'Products', href: '#', dropdown: [
+                    { text: 'Software', href: '#' },
+                    { text: 'Hardware', href: '#' },
+                    { divider: true },
+                    { text: 'All Products', href: '#' }
+                ]},
+                { text: 'About', href: '#' },
+                { text: 'Contact', href: '#' }
+            ],
+            search: { enabled: true, placeholder: 'Search...' },
+            actions: [
+                { text: 'Log In', href: '#', class: 'btn-outline-light' },
+                { text: 'Sign Up', href: '#', class: 'btn-light' }
+            ]
+        };
+        
+        // Simple renderer
+        (function renderNavbar() {
+            const c = navbarConfig;
+            const nav = document.getElementById('dynamicNavbar');
+            const collapseId = 'dynamicCollapse';
+            
+            let linksHTML = '';
+            c.links.forEach(function(link) {
+                const active = link.active ? ' active' : '';
+                const aria = link.active ? ' aria-current="page"' : '';
+                
+                if (link.dropdown) {
+                    let itemsHTML = '';
+                    link.dropdown.forEach(function(item) {
+                        if (item.divider) {
+                            itemsHTML += '<li><hr class="dropdown-divider"></li>';
+                        } else {
+                            itemsHTML += '<li><a class="dropdown-item" href="' + item.href + '">' + item.text + '</a></li>';
+                        }
+                    });
+                    linksHTML += '<li class="nav-item dropdown">' +
+                        '<a class="nav-link dropdown-toggle' + active + '" href="' + link.href + '" data-bs-toggle="dropdown">' + link.text + '</a>' +
+                        '<ul class="dropdown-menu">' + itemsHTML + '</ul></li>';
+                } else {
+                    linksHTML += '<li class="nav-item">' +
+                        '<a class="nav-link' + active + '"' + aria + ' href="' + link.href + '">' + link.text + '</a></li>';
+                }
+            });
+            
+            nav.innerHTML = '<div class="container-fluid">' +
+                '<a class="navbar-brand" href="' + c.brand.href + '">' + c.brand.text + '</a>' +
+                '<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#' + collapseId + '" aria-controls="' + collapseId + '" aria-expanded="false" aria-label="Toggle navigation">' +
+                '<span class="navbar-toggler-icon"></span></button>' +
+                '<div class="collapse navbar-collapse" id="' + collapseId + '">' +
+                '<ul class="navbar-nav me-auto mb-2 mb-lg-0">' + linksHTML + '</ul>' +
+                '<form class="d-flex me-3" role="search">' +
+                '<input class="form-control me-2" type="search" placeholder="' + c.search.placeholder + '" aria-label="Search">' +
+                '<button class="btn btn-outline-light" type="submit">Search</button></form>' +
+                '<div class="d-flex">' +
+                c.actions.map(function(a) { return '<a href="' + a.href + '" class="btn ' + a.class + ' ms-2">' + a.text + '</a>'; }).join('') +
+                '</div></div></div>';
+        })();
+        
+        /* Link validation */
+        function validateLinks() {
+            const results = document.getElementById('linkValidationResults');
+            const nav = document.getElementById('dynamicNavbar');
+            const links = nav.querySelectorAll('a');
+            let issues = [];
+            
+            links.forEach(function(link, i) {
+                const href = link.getAttribute('href');
+                const text = link.textContent.trim();
+                const ariaLabel = link.getAttribute('aria-label');
+                
+                if (!href) {
+                    issues.push({ level: 'danger', msg: 'Link #' + i + ': Missing href' });
+                } else if (href === '#' || href === '') {
+                    issues.push({ level: 'warning', msg: 'Link #' + i + ' ("' + text + '"): Placeholder href (#)' });
+                }
+                
+                if (!text && !ariaLabel) {
+                    issues.push({ level: 'danger', msg: 'Link #' + i + ': No accessible name' });
+                }
+            });
+            
+            if (issues.length === 0) {
+                results.innerHTML = '<div class="alert alert-success">All ' + links.length + ' links validated successfully.</div>';
+            } else {
+                results.innerHTML = issues.map(function(i) {
+                    return '<div class="alert alert-' + i.level + ' py-1 mb-1">' + i.msg + '</div>';
+                }).join('');
+            }
+        }
+        
+        /* CSS Audit */
+        function auditCSS() {
+            const results = document.getElementById('cssAuditResults');
+            const nav = document.getElementById('dynamicNavbar');
+            
+            let warnings = [];
+            const deprecated = {
+                'ml-auto': 'Use ms-auto in BS5',
+                'mr-auto': 'Use me-auto in BS5'
+            };
+            
+            nav.querySelectorAll('*').forEach(function(el) {
+                el.classList.forEach(function(cls) {
+                    if (deprecated[cls]) {
+                        warnings.push('Deprecated: "' + cls + '" - ' + deprecated[cls]);
+                    }
+                });
+            });
+            
+            if (warnings.length === 0) {
+                results.innerHTML = '<div class="alert alert-success">No CSS issues found. All classes are Bootstrap 5 compatible.</div>';
+            } else {
+                results.innerHTML = warnings.map(function(w) {
+                    return '<div class="alert alert-warning py-1 mb-1">' + w + '</div>';
+                }).join('');
+            }
+        }
+    </script>
+</body>
+</html>

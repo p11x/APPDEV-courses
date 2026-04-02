@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<!-- Bootstrap 5 - Positioning Accessibility Patterns
+     How positioning affects accessibility: reading order, focus, screen readers. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_03_06 - Positioning Accessibility</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- ==================== Header ==================== -->
+    <div class="container my-5">
+        <h1 class="display-4 fw-bold text-primary">Positioning &amp; Accessibility</h1>
+        <p class="lead text-muted">
+            Positioning can disconnect the visual order from the DOM order, causing issues
+            for screen readers and keyboard navigation. Here's how to do it right.
+        </p>
+    </div>
+
+    <!-- ==================== 1: Visual vs DOM Order ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">1. Visual Order vs DOM Order</h2>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card border-danger h-100">
+                    <div class="card-body">
+                        <h5 class="text-danger">Bad: Position Breaks Order</h5>
+                        <!-- Visual order: C, A, B - but DOM order is A, B, C -->
+                        <div class="position-relative bg-light rounded p-3" style="height: 180px;">
+                            <!-- These appear visually in wrong order but read in DOM order -->
+                            <div class="bg-primary text-white p-2 mb-2 position-relative" style="top: 80px;">A (DOM 1st, visually 2nd)</div>
+                            <div class="bg-success text-white p-2 mb-2 position-relative" style="top: 40px;">B (DOM 2nd, visually 3rd)</div>
+                            <div class="bg-warning text-dark p-2 position-relative" style="top: -140px;">C (DOM 3rd, visually 1st)</div>
+                        </div>
+                        <p class="small text-muted mt-2">
+                            Screen readers read A-B-C, but eyes see C-A-B. Keyboard users tab through A-B-C order, which is confusing.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card border-success h-100">
+                    <div class="card-body">
+                        <h5 class="text-good">Good: DOM Matches Visual</h5>
+                        <!-- DOM order matches visual order -->
+                        <div class="bg-light rounded p-3">
+                            <div class="bg-warning text-dark p-2 mb-2">1. First item (DOM and visual match)</div>
+                            <div class="bg-primary text-white p-2 mb-2">2. Second item</div>
+                            <div class="bg-success text-white p-2">3. Third item</div>
+                        </div>
+                        <p class="small text-muted mt-2">
+                            DOM order matches visual order. Screen readers and keyboard navigation are predictable and logical.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 2: Focus Order ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">2. Focus Order &amp; Tab Navigation</h2>
+        <p class="text-muted mb-4">
+            Tab order follows DOM order, not visual order. Positioning can make tabbing unpredictable.
+        </p>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Test: Tab Through These Elements</h5>
+                <div class="position-relative bg-light rounded p-3" style="height: 200px;">
+                    <!-- Absolute positioned elements - tab order follows DOM, not visual position -->
+                    <button class="btn btn-primary position-absolute" style="top: 10px; left: 10px;">
+                        Button 1 (DOM first)
+                    </button>
+                    <button class="btn btn-success position-absolute" style="top: 60px; left: 200px;">
+                        Button 2 (DOM second)
+                    </button>
+                    <button class="btn btn-warning position-absolute" style="top: 120px; left: 10px;">
+                        Button 3 (DOM third)
+                    </button>
+                </div>
+                <p class="small text-muted mt-2">
+                    Try tabbing: focus follows DOM order (1-2-3) not visual left-to-right reading order.
+                    If your visual layout suggests a different tab order, adjust the DOM order to match.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 3: Fixed Elements and Content Hiding ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">3. Fixed Elements &amp; Content Hiding</h2>
+
+        <div class="alert alert-warning">
+            <strong>Problem:</strong> Fixed elements (navbars, footers) can cover content for users who zoom in
+            or use screen magnifiers. Always account for fixed element sizes.
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- Fixed navbar that may hide content when zoomed --&gt;
+&lt;nav class="navbar fixed-top"&gt;...&lt;/nav&gt;
+
+&lt;!-- SOLUTION: Add padding to body equal to navbar height --&gt;
+&lt;body style="padding-top: 56px;"&gt;
+  &lt;!-- Content won't be hidden behind navbar --&gt;
+&lt;/body&gt;
+
+&lt;!-- Fixed bottom element --&gt;
+&lt;div class="fixed-bottom bg-dark py-3"&gt;...&lt;/div&gt;
+
+&lt;!-- SOLUTION: Add bottom padding --&gt;
+&lt;body style="padding-bottom: 70px;"&gt;
+  &lt;!-- Content won't be hidden behind fixed footer --&gt;
+&lt;/body&gt;</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 4: Overlays and Focus Trapping ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">4. Overlays &amp; Focus Management</h2>
+
+        <div class="card">
+            <div class="card-body">
+                <h5>Accessible Modal/Overlay Pattern</h5>
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- Modal with proper accessibility --&gt;
+&lt;div class="position-fixed top-0 start-0 w-100 h-100"
+     style="background: rgba(0,0,0,0.5); z-index: 1040;"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="modalTitle"&gt;
+
+  &lt;div class="position-absolute top-50 start-50 translate-middle"&gt;
+    &lt;div class="bg-white rounded p-4"&gt;
+      &lt;h2 id="modalTitle"&gt;Modal Title&lt;/h2&gt;
+      &lt;p&gt;Content here&lt;/p&gt;
+      &lt;button&gt;Close&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  // Trap focus within the modal
+  // Return focus to trigger element on close
+  // Announce to screen readers with aria-live
+&lt;/script&gt;</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 5: Screen Reader Considerations ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">5. Screen Reader Considerations</h2>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5>Off-Screen Positioning</h5>
+                        <p>Elements positioned off-screen but still in DOM are read by screen readers.</p>
+                        <pre class="bg-dark text-light p-2 rounded small"><code>/* Visually hidden but accessible */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* OR use Bootstrap's class */
+&lt;span class="visually-hidden"&gt;
+  Screen reader text
+&lt;/span&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5>Absolute Positioned Labels</h5>
+                        <p>Labels positioned with absolute must still be associated with inputs.</p>
+                        <pre class="bg-dark text-light p-2 rounded small"><code>&lt;!-- Correct: label associated with input --&gt;
+&lt;div class="position-relative"&gt;
+  &lt;label for="email"
+         class="position-absolute"
+         style="top: -20px;"&gt;
+    Email
+  &lt;/label&gt;
+  &lt;input id="email" type="email"&gt;
+&lt;/div&gt;
+
+&lt;!-- WRONG: visual label, no association --&gt;
+&lt;div class="position-absolute"&gt;Email&lt;/div&gt;
+&lt;input type="email"&gt; &lt;!-- Missing id/for --&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 6: Accessibility Checklist ==================== -->
+    <div class="container my-5">
+        <h2 class="h3 mb-4">6. Positioning Accessibility Checklist</h2>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr><th>Check</th><th>Requirement</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>&#9745;</td><td>DOM order matches visual reading order</td></tr>
+                    <tr><td>&#9745;</td><td>Tab/focus order is logical and predictable</td></tr>
+                    <tr><td>&#9745;</td><td>Fixed elements don't hide content when zoomed</td></tr>
+                    <tr><td>&#9745;</td><td>Body padding accounts for fixed navbar/footer height</td></tr>
+                    <tr><td>&#9745;</td><td>Overlays trap focus and return focus on close</td></tr>
+                    <tr><td>&#9745;</td><td>Positioned labels are associated with form inputs</td></tr>
+                    <tr><td>&#9745;</td><td>Absolutely positioned decorative images have empty alt</td></tr>
+                    <tr><td>&#9745;</td><td>Sticky/fixed elements have appropriate z-index stacking</td></tr>
+                    <tr><td>&#9745;</td><td>Use <code>visually-hidden</code> for screen-reader-only content</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ==================== Footer ==================== -->
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        <p class="mb-0">03_03_06 - Positioning Accessibility Patterns</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

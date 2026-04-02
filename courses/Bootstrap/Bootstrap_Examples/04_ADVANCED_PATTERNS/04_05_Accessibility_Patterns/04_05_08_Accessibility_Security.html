@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_05_08_Accessibility_Security.html
+     Topic: Accessibility and Security Intersections
+     
+     Covers security implications of accessibility features,
+     safe ARIA implementation, and preventing a11y-related vulnerabilities.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Accessibility &amp; Security - Bootstrap 5 Accessibility</title>
+
+    <style>
+        .hero-sec { background: linear-gradient(135deg, #dc3545 0%, #6610f2 100%); color: white; padding: 4rem 0; }
+        .code-dark { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.82rem; overflow-x: auto; }
+        .vuln-card { border-left: 4px solid #dc3545; }
+        .safe-card { border-left: 4px solid #198754; }
+    </style>
+</head>
+<body>
+
+    <a href="#main-content" class="visually-hidden-focusable btn btn-primary position-absolute" style="z-index:9999">
+        Skip to main content
+    </a>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand" href="#">A11y + Security</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#xss">XSS Risks</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#aria">Safe ARIA</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#focus">Focus Security</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#practices">Best Practices</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="hero-sec text-center">
+            <div class="container">
+                <h1 class="display-5 fw-bold">Accessibility &amp; Security</h1>
+                <p class="lead mt-2">Understanding how accessibility features intersect with security concerns.</p>
+            </div>
+        </section>
+
+        <!-- SECTION 1: XSS THROUGH ARIA -->
+        <section id="xss" class="py-5">
+            <div class="container">
+                <h2 class="mb-4">XSS Risks Through ARIA</h2>
+
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card vuln-card h-100">
+                            <div class="card-header bg-danger text-white"><h5 class="mb-0">Vulnerable: Unsanitized aria-label</h5></div>
+                            <div class="card-body">
+                                <p class="small">User input in ARIA attributes can be exploited for XSS:</p>
+                                <div class="code-dark">
+// DANGEROUS: user input in aria-label<br>
+const userInput = '&lt;img src=x onerror=alert(1)&gt;';<br>
+button.setAttribute('aria-label', userInput);<br><br>
+// Some screen readers may execute embedded<br>
+// scripts when parsing ARIA content
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card safe-card h-100">
+                            <div class="card-header bg-success text-white"><h5 class="mb-0">Safe: Sanitized ARIA Values</h5></div>
+                            <div class="card-body">
+                                <p class="small">Always sanitize user input before using in ARIA attributes:</p>
+                                <div class="code-dark">
+// SAFE: sanitize user input<br>
+function sanitize(str) {<br>
+&nbsp;&nbsp;const div = document.createElement('div');<br>
+&nbsp;&nbsp;div.textContent = str;<br>
+&nbsp;&nbsp;return div.textContent;<br>
+}<br><br>
+const userInput = getUserInput();<br>
+button.setAttribute(<br>
+&nbsp;&nbsp;'aria-label',<br>
+&nbsp;&nbsp;sanitize(userInput)<br>
+);<br><br>
+// Or use textContent instead of innerHTML<br>
+labelElement.textContent = userInput;
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: SAFE ARIA PATTERNS -->
+        <section id="aria" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="mb-4">Safe ARIA Implementation</h2>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Pattern</th>
+                                <th>Risk</th>
+                                <th>Mitigation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>aria-label</code> with user content</td>
+                                <td>XSS if unsanitized</td>
+                                <td>Sanitize before setting attribute</td>
+                            </tr>
+                            <tr>
+                                <td><code>aria-labelledby</code> references</td>
+                                <td>ID spoofing</td>
+                                <td>Ensure referenced elements are trusted</td>
+                            </tr>
+                            <tr>
+                                <td><code>aria-live</code> regions</td>
+                                <td>Content injection announced to SR</td>
+                                <td>Sanitize live region content</td>
+                            </tr>
+                            <tr>
+                                <td><code>role</code> attribute</td>
+                                <td>Role hijacking (button to link)</td>
+                                <td>Validate role values against allowed list</td>
+                            </tr>
+                            <tr>
+                                <td>Focus management</td>
+                                <td>Focus theft/phishing</td>
+                                <td>Only manage focus within owned components</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: FOCUS SECURITY -->
+        <section id="focus" class="py-5">
+            <div class="container">
+                <h2 class="mb-4">Focus-Related Security</h2>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Preventing Focus-Based Attacks</h5>
+                        <div class="row g-4 mt-2">
+                            <div class="col-md-6">
+                                <h6>Focus Theft Prevention</h6>
+                                <ul class="small">
+                                    <li>Never steal focus from user-initiated actions without warning</li>
+                                    <li>Trap focus only in modal dialogs (per WAI-ARIA)</li>
+                                    <li>Restore focus to trigger element on close</li>
+                                    <li>Don't auto-focus form fields on pages with sensitive data</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Tabnabbing Prevention</h6>
+                                <div class="code-dark">
+// Links opening new tabs need rel="noopener"<br>
+&lt;a href="https://external.com"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;target="_blank"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;rel="noopener noreferrer"&gt;<br>
+&nbsp;&nbsp;External Link<br>
+&lt;/a&gt;<br><br>
+// Prevents target page from accessing<br>
+// window.opener (phishing attack vector)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: BEST PRACTICES -->
+        <section id="practices" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="mb-4">Security Best Practices for A11y</h2>
+
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Content Security Policy</h6>
+                                <p class="small">CSP prevents XSS in ARIA content by restricting script sources.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Input Sanitization</h6>
+                                <p class="small">Always sanitize user input before use in ARIA attributes or live regions.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Output Encoding</h6>
+                                <p class="small">Encode special characters when rendering user content in accessible text.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>HTTPS Only</h6>
+                                <p class="small">Screen readers fetch content over network; ensure it's encrypted.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>SRI on CDN Resources</h6>
+                                <p class="small">Verify integrity of Bootstrap and assistive technology libraries.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6>Regular Audits</h6>
+                                <p class="small">Include ARIA attribute validation in security penetration testing.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Accessibility &amp; Security &mdash; Bootstrap 5 Accessibility Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+</body>
+</html>

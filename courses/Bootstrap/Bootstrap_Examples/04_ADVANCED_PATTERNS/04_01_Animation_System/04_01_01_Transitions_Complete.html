@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_01_Transitions_Complete.html                             -->
+<!-- CSS Transitions with Bootstrap 5                              -->
+<!-- Covers: transition-property, transition-duration,             -->
+<!--         transition-timing-function, transition-delay,         -->
+<!--         Bootstrap's built-in transition utilities,            -->
+<!--         custom transition classes                              -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <!-- Standard meta tags for responsive behavior -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_01_01 - CSS Transitions Complete</title>
+
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- ============================================================= -->
+    <!-- CUSTOM TRANSITION STYLES                                      -->
+    <!-- CSS transitions allow smooth interpolation between property   -->
+    <!-- values over a specified duration. They consist of four parts: -->
+    <!--   1. transition-property  — which CSS property to animate     -->
+    <!--   2. transition-duration  — how long the animation takes      -->
+    <!--   3. transition-timing-function — the acceleration curve      -->
+    <!--   4. transition-delay — when the animation starts             -->
+    <!-- ============================================================= -->
+    <style>
+        /* --------------------------------------------------------- */
+        /* BASIC TRANSITION: Single property                         */
+        /* The simplest transition targets one CSS property.         */
+        /* Here, background-color smoothly changes on hover.         */
+        /* --------------------------------------------------------- */
+        .transition-basic {
+            background-color: #0d6efd;
+            color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            /* transition: property duration timing-function delay */
+            transition: background-color 0.4s ease-in-out;
+        }
+        .transition-basic:hover {
+            background-color: #6f42c1;
+        }
+
+        /* --------------------------------------------------------- */
+        /* MULTI-PROPERTY TRANSITION                                 */
+        /* Multiple properties can be transitioned simultaneously    */
+        /* by separating them with commas. Using "all" transitions   */
+        /* every animatable property (less performant, avoid in      */
+        /* production — always specify exact properties).            */
+        /* --------------------------------------------------------- */
+        .transition-multi {
+            background-color: #198754;
+            color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            transform: scale(1) rotate(0deg);
+            box-shadow: 0 0 0 rgba(0,0,0,0);
+            /* Each property listed separately for performance */
+            transition:
+                background-color 0.3s ease,
+                transform 0.3s ease,
+                box-shadow 0.3s ease,
+                border-radius 0.3s ease;
+        }
+        .transition-multi:hover {
+            background-color: #ffc107;
+            color: #000;
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border-radius: 1rem;
+        }
+
+        /* --------------------------------------------------------- */
+        /* TIMING FUNCTION DEMONSTRATIONS                            */
+        /* Timing functions control the speed curve of a transition: */
+        /*   ease       — default, slow start/end, fast middle       */
+        /*   linear     — constant speed throughout                  */
+        /*   ease-in    — slow start                                 */
+        /*   ease-out   — slow end                                   */
+        /*   ease-in-out — slow start and end                        */
+        /*   cubic-bezier(x1,y1,x2,y2) — custom curve               */
+        /*   steps(n) — discrete jumps (great for sprite animation)  */
+        /* --------------------------------------------------------- */
+        .timing-box {
+            width: 80px;
+            height: 80px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.7rem;
+        }
+
+        /* Each timing box uses a different timing function */
+        .timing-ease {
+            background: #0d6efd;
+            transition: transform 1s ease;
+        }
+        .timing-linear {
+            background: #6610f2;
+            transition: transform 1s linear;
+        }
+        .timing-ease-in {
+            background: #6f42c1;
+            transition: transform 1s ease-in;
+        }
+        .timing-ease-out {
+            background: #d63384;
+            transition: transform 1s ease-out;
+        }
+        .timing-ease-in-out {
+            background: #dc3545;
+            transition: transform 1s ease-in-out;
+        }
+        .timing-cubic {
+            background: #fd7e14;
+            /* Custom cubic-bezier: overshoots slightly then settles */
+            transition: transform 1s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .timing-steps {
+            background: #20c997;
+            /* 5 discrete steps — no smooth interpolation */
+            transition: transform 1s steps(5);
+        }
+
+        /* On hover, all boxes translate right */
+        .timing-container:hover .timing-box {
+            transform: translateX(calc(100vw - 200px));
+        }
+
+        /* --------------------------------------------------------- */
+        /* TRANSITION DELAY DEMONSTRATION                            */
+        /* Delays create sequenced animations. Negative delays start */
+        /* the transition partway through its duration.              */
+        /* --------------------------------------------------------- */
+        .delay-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #0d6efd;
+            transition: transform 0.5s ease, background-color 0.5s ease;
+        }
+        /* Each circle has a staggered delay creating a wave effect */
+        .delay-1 { transition-delay: 0s; }
+        .delay-2 { transition-delay: 0.1s; }
+        .delay-3 { transition-delay: 0.2s; }
+        .delay-4 { transition-delay: 0.3s; }
+        .delay-5 { transition-delay: 0.4s; }
+        .delay-6 { transition-delay: 0.5s; }
+
+        .delay-container:hover .delay-item {
+            transform: scale(1.3);
+            background-color: #dc3545;
+        }
+
+        /* --------------------------------------------------------- */
+        /* BOOTSTRAP'S BUILT-IN TRANSITIONS                          */
+        /* Bootstrap uses transitions internally for:                */
+        /*   - .fade (opacity transition for modals, alerts, etc.)   */
+        /*   - .collapse (height/width transition for accordion)     */
+        /*   - .show/.active state changes                           */
+        /*   - Carousel slides                                       */
+        /* These are configured in Bootstrap's SCSS _transitions    */
+        /* --------------------------------------------------------- */
+        .bootstrap-transition-demo {
+            min-height: 60px;
+            transition: all 0.35s ease-in-out;
+        }
+
+        /* --------------------------------------------------------- */
+        /* TRANSITION UTILITIES (Bootstrap 5.3+)                     */
+        /* Bootstrap provides utility classes for transitions:       */
+        /*   .transition-none  — disables transitions                */
+        /*   .transition-opacity — transitions only opacity           */
+        /*   .transition-transform — transitions only transform       */
+        /* These are useful when you want to control which           */
+        /* properties animate without writing custom CSS.            */
+        /* --------------------------------------------------------- */
+
+        /* --------------------------------------------------------- */
+        /* TRANSITION WITH BOOTSTRAN STATES                          */
+        /* Common pattern: transition elements when Bootstrap        */
+        /* classes change (e.g., .btn-primary → .btn-success)        */
+        /* --------------------------------------------------------- */
+        .state-transition-btn {
+            transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* --------------------------------------------------------- */
+        /* STAGGERED LIST TRANSITIONS                                */
+        /* Lists can animate items one after another using           */
+        /* incremental transition-delay values per child.            */
+        /* --------------------------------------------------------- */
+        .stagger-list .list-group-item {
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .stagger-list.show .list-group-item {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .stagger-list.show .list-group-item:nth-child(1) { transition-delay: 0.05s; }
+        .stagger-list.show .list-group-item:nth-child(2) { transition-delay: 0.1s; }
+        .stagger-list.show .list-group-item:nth-child(3) { transition-delay: 0.15s; }
+        .stagger-list.show .list-group-item:nth-child(4) { transition-delay: 0.2s; }
+        .stagger-list.show .list-group-item:nth-child(5) { transition-delay: 0.25s; }
+        .stagger-list.show .list-group-item:nth-child(6) { transition-delay: 0.3s; }
+
+        /* --------------------------------------------------------- */
+        /* TRANSITION ON FOCUS (Accessibility-friendly)              */
+        /* Focus-triggered transitions ensure keyboard users see     */
+        /* the same visual feedback as mouse users.                  */
+        /* --------------------------------------------------------- */
+        .focus-transition-card {
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+        .focus-transition-card:hover,
+        .focus-transition-card:focus-within {
+            box-shadow: 0 8px 30px rgba(13,110,253,0.25);
+            transform: translateY(-4px);
+        }
+
+        /* --------------------------------------------------------- */
+        /* TRANSITION END EVENT DEMO                                 */
+        /* JavaScript can listen to 'transitionend' to chain        */
+        /* animations or remove elements after a transition.         */
+        /* --------------------------------------------------------- */
+        .event-box {
+            width: 120px;
+            height: 120px;
+            background: #0d6efd;
+            border-radius: 0.5rem;
+            transition: transform 0.5s ease, background-color 0.5s ease;
+        }
+        .event-box.active {
+            transform: rotate(45deg) scale(1.2);
+            background-color: #198754;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- ============================================================= -->
+    <!-- PAGE HEADER                                                   -->
+    <!-- ============================================================= -->
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">CSS Transitions Complete</h1>
+                <p class="lead text-muted">
+                    Master CSS transitions with Bootstrap 5 — from basics to advanced patterns.
+                    Hover over each demo to see transitions in action.
+                </p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: BASIC SINGLE-PROPERTY TRANSITION                   -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Basic Single-Property Transition</h2>
+            <p class="text-muted">
+                The simplest CSS transition targets a single property. Hover the card below to see
+                <code>background-color</code> smoothly change over 0.4 seconds.
+            </p>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="transition-basic text-center">
+                        <strong>Hover Me</strong><br>
+                        <small>transition: background-color 0.4s ease-in-out</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Syntax Breakdown</h5>
+                            <pre class="bg-dark text-light p-3 rounded"><code>transition: background-color 0.4s ease-in-out;
+/*           ^property     ^duration ^timing  */
+</code></pre>
+                            <ul class="small mb-0">
+                                <li><strong>transition-property:</strong> Which CSS property to animate</li>
+                                <li><strong>transition-duration:</strong> How long (0.4s = 400ms)</li>
+                                <li><strong>transition-timing-function:</strong> Speed curve (ease-in-out)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: MULTI-PROPERTY TRANSITION                          -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Multi-Property Transition</h2>
+            <p class="text-muted">
+                Multiple properties can be transitioned simultaneously. Always list properties
+                individually rather than using <code>transition: all</code> for better performance.
+            </p>
+            <div class="transition-multi text-center p-4">
+                <strong>Hover Me — Multiple Properties</strong><br>
+                <small>background-color, transform, box-shadow, border-radius</small>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: TIMING FUNCTIONS                                   -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Timing Functions</h2>
+            <p class="text-muted">
+                Timing functions control the acceleration curve. Hover the container below to see
+                all boxes move with different timing functions.
+            </p>
+            <div class="timing-container bg-white p-3 rounded shadow-sm overflow-hidden">
+                <div class="d-flex gap-3 mb-2">
+                    <div class="timing-box timing-ease">ease</div>
+                    <div class="timing-box timing-linear">linear</div>
+                    <div class="timing-box timing-ease-in">ease-in</div>
+                    <div class="timing-box timing-ease-out">ease-out</div>
+                </div>
+                <div class="d-flex gap-3">
+                    <div class="timing-box timing-ease-in-out">ease-in-out</div>
+                    <div class="timing-box timing-cubic">cubic</div>
+                    <div class="timing-box timing-steps">steps(5)</div>
+                </div>
+                <p class="text-muted small mt-2 mb-0">
+                    ↑ Hover this container to see each timing function in action
+                </p>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: TRANSITION DELAY                                   -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Transition Delay (Staggered Effect)</h2>
+            <p class="text-muted">
+                By applying incremental delays to child elements, you create a "wave" or cascading
+                effect. Hover the container below.
+            </p>
+            <div class="delay-container d-flex gap-3 justify-content-center bg-white p-4 rounded shadow-sm">
+                <!-- Each circle gets a progressively longer delay -->
+                <div class="delay-item delay-1 d-flex align-items-center justify-content-center text-white small">1</div>
+                <div class="delay-item delay-2 d-flex align-items-center justify-content-center text-white small">2</div>
+                <div class="delay-item delay-3 d-flex align-items-center justify-content-center text-white small">3</div>
+                <div class="delay-item delay-4 d-flex align-items-center justify-content-center text-white small">4</div>
+                <div class="delay-item delay-5 d-flex align-items-center justify-content-center text-white small">5</div>
+                <div class="delay-item delay-6 d-flex align-items-center justify-content-center text-white small">6</div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: BOOTSTRAP BUILT-IN TRANSITIONS                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Bootstrap's Built-In Transitions</h2>
+            <p class="text-muted">
+                Bootstrap uses CSS transitions internally for many components. Click the buttons
+                below to see transitions in modals, collapse, alerts, and more.
+            </p>
+            <div class="row g-3">
+                <!-- Alert with fade transition -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Alert Fade Transition</h6>
+                            <!-- .fade adds opacity transition; .show makes it visible -->
+                            <div class="alert alert-success fade show" role="alert">
+                                This alert uses Bootstrap's <code>.fade</code> and <code>.show</code> classes.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapse with height transition -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Collapse (Height Transition)</h6>
+                            <p>
+                                <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseDemo" role="button">
+                                    Toggle Collapse
+                                </a>
+                            </p>
+                            <!-- .collapse hides by default; Bootstrap transitions max-height -->
+                            <div class="collapse" id="collapseDemo">
+                                <div class="card card-body">
+                                    This content collapses with a height transition.
+                                    Bootstrap animates <code>height</code> from 0 to auto.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Offcanvas slide transition -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Offcanvas (Transform Transition)</h6>
+                            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDemo">
+                                Open Offcanvas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toast transition -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Toast (Fade + Transform)</h6>
+                            <button type="button" class="btn btn-outline-success" id="showToastBtn">
+                                Show Toast
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: TRANSITION STATE CHANGES                           -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Transitions on Bootstrap State Changes</h2>
+            <p class="text-muted">
+                Add transition styles to smoothly animate when Bootstrap classes change.
+                Click the button to toggle between primary and success states.
+            </p>
+            <button class="btn btn-primary state-transition-btn" id="stateToggleBtn">
+                Click to Change State
+            </button>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 7: STAGGERED LIST TRANSITIONS                         -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Staggered List Transitions</h2>
+            <p class="text-muted">
+                List items animate in sequence with incremental delays. Click the button
+                to trigger the staggered entrance animation.
+            </p>
+            <button class="btn btn-primary mb-3" id="showListBtn">Show List Items</button>
+            <ul class="list-group stagger-list" id="staggerList">
+                <li class="list-group-item">First item — appears at 0.05s</li>
+                <li class="list-group-item">Second item — appears at 0.10s</li>
+                <li class="list-group-item">Third item — appears at 0.15s</li>
+                <li class="list-group-item">Fourth item — appears at 0.20s</li>
+                <li class="list-group-item">Fifth item — appears at 0.25s</li>
+                <li class="list-group-item">Sixth item — appears at 0.30s</li>
+            </ul>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 8: FOCUS-TRIGGERED TRANSITIONS (Accessibility)        -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Focus-Triggered Transitions</h2>
+            <p class="text-muted">
+                Using <code>:focus-within</code> ensures keyboard users see the same visual
+                feedback as mouse hover users. Tab through the cards below.
+            </p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card focus-transition-card" tabindex="0">
+                        <div class="card-body">
+                            <h6>Card 1</h6>
+                            <p class="small mb-0">Tab to this card to see the focus transition.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card focus-transition-card" tabindex="0">
+                        <div class="card-body">
+                            <h6>Card 2</h6>
+                            <p class="small mb-0">Uses <code>:focus-within</code> pseudo-class.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card focus-transition-card" tabindex="0">
+                        <div class="card-body">
+                            <h6>Card 3</h6>
+                            <p class="small mb-0">Same effect as hover but keyboard accessible.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 9: TRANSITIONEND EVENT                                -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">9. transitionend JavaScript Event</h2>
+            <p class="text-muted">
+                The <code>transitionend</code> event fires when a CSS transition completes.
+                Click the box below to start a transition and see the event fire.
+            </p>
+            <div class="event-box text-white d-flex align-items-center justify-content-center"
+                 id="eventBox" style="cursor: pointer;">
+                Click Me
+            </div>
+            <div class="mt-2">
+                <small class="text-muted" id="eventLog">Click the box to start a transition...</small>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 10: SUMMARY TABLE                                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">10. Transition Properties Summary</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Property</th>
+                            <th>Values</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>transition-property</code></td>
+                            <td><code>none | all | property-name</code></td>
+                            <td>Which CSS property to animate</td>
+                        </tr>
+                        <tr>
+                            <td><code>transition-duration</code></td>
+                            <td><code>0s | 0.3s | 300ms</code></td>
+                            <td>How long the transition takes</td>
+                        </tr>
+                        <tr>
+                            <td><code>transition-timing-function</code></td>
+                            <td><code>ease | linear | ease-in | cubic-bezier(...)</code></td>
+                            <td>Speed curve of the transition</td>
+                        </tr>
+                        <tr>
+                            <td><code>transition-delay</code></td>
+                            <td><code>0s | 0.1s | -0.2s</code></td>
+                            <td>Wait time before transition starts</td>
+                        </tr>
+                        <tr>
+                            <td><code>transition</code></td>
+                            <td><code>property duration timing-function delay</code></td>
+                            <td>Shorthand for all four properties</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- OFFCANVAS COMPONENT (Bootstrap)                               -->
+    <!-- ============================================================= -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasDemo">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">Offcanvas Transition</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <p>
+                This offcanvas panel slides in using CSS <code>transform: translateX()</code>.
+                Bootstrap manages the transition classes automatically.
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TOAST COMPONENT (Bootstrap)                                   -->
+    <!-- ============================================================= -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="demoToast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto">Transition Demo</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                Toast uses <code>.fade</code> and <code>.show</code> for opacity + transform transitions.
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- BOOTSTRAP 5.3.3 JS BUNDLE CDN                                 -->
+    <!-- ============================================================= -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================= -->
+    <!-- JAVASCRIPT: INTERACTIVE TRANSITION DEMOS                      -->
+    <!-- ============================================================= -->
+    <script>
+        /* ----------------------------------------------------------- */
+        /* STATE TOGGLE DEMO                                           */
+        /* Toggles Bootstrap button classes with CSS transition        */
+        /* ----------------------------------------------------------- */
+        const stateToggleBtn = document.getElementById('stateToggleBtn');
+        let isPrimary = true;
+        stateToggleBtn.addEventListener('click', function () {
+            if (isPrimary) {
+                this.classList.remove('btn-primary');
+                this.classList.add('btn-success');
+                this.textContent = 'Success State — Click to Revert';
+            } else {
+                this.classList.remove('btn-success');
+                this.classList.add('btn-primary');
+                this.textContent = 'Click to Change State';
+            }
+            isPrimary = !isPrimary;
+        });
+
+        /* ----------------------------------------------------------- */
+        /* STAGGERED LIST TOGGLE                                       */
+        /* Adds/removes .show class to trigger staggered transitions   */
+        /* ----------------------------------------------------------- */
+        const showListBtn = document.getElementById('showListBtn');
+        const staggerList = document.getElementById('staggerList');
+        showListBtn.addEventListener('click', function () {
+            staggerList.classList.toggle('show');
+            this.textContent = staggerList.classList.contains('show')
+                ? 'Hide List Items'
+                : 'Show List Items';
+        });
+
+        /* ----------------------------------------------------------- */
+        /* TRANSITIONEND EVENT DEMO                                    */
+        /* Listens for the transitionend event on the demo box         */
+        /* ----------------------------------------------------------- */
+        const eventBox = document.getElementById('eventBox');
+        const eventLog = document.getElementById('eventLog');
+
+        eventBox.addEventListener('click', function () {
+            this.classList.toggle('active');
+        });
+
+        /* transitionend fires for EACH property that transitions     */
+        /* Use propertyName filter to respond to a specific property   */
+        eventBox.addEventListener('transitionend', function (e) {
+            const timestamp = new Date().toLocaleTimeString();
+            eventLog.innerHTML =
+                `<strong>transitionend fired!</strong><br>` +
+                `Property: <code>${e.propertyName}</code> | ` +
+                `Time: ${timestamp} | ` +
+                `Elapsed: ${e.elapsedTime.toFixed(2)}s`;
+        });
+
+        /* ----------------------------------------------------------- */
+        /* TOAST DEMO                                                  */
+        /* Uses Bootstrap's Toast API                                  */
+        /* ----------------------------------------------------------- */
+        const showToastBtn = document.getElementById('showToastBtn');
+        const demoToast = new bootstrap.Toast(document.getElementById('demoToast'));
+        showToastBtn.addEventListener('click', function () {
+            demoToast.show();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_09_01_Component_State.html
+     Component State Management Patterns
+     
+     Covers:
+     - Data-attribute driven state
+     - CSS class-based state toggling
+     - JavaScript state tracking objects
+     - State synchronization across components
+     - State persistence with localStorage
+     ============================================================ -->
+<html lang="en">
+<head>
+    <!-- Meta charset for proper character rendering -->
+    <meta charset="UTF-8">
+    <!-- Viewport meta for responsive behavior on all devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Page title describing the lesson content -->
+    <title>04_09_01 - Component State Management</title>
+    <!-- Bootstrap 5.3.3 CSS from CDN for styling and layout -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles for state visualization -->
+    <style>
+        /* State indicator border highlighting */
+        .state-active { border-left: 4px solid #0d6efd !important; }
+        /* Dimmed state for inactive components */
+        .state-inactive { opacity: 0.5; }
+        /* Changed state background for dirty tracking */
+        .state-changed { background-color: #fff3cd !important; }
+        /* Locked state cursor indicator */
+        .state-locked { cursor: not-allowed; }
+        /* State log console styling */
+        .state-log { max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 0.85rem; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- ============================================================
+         SECTION 1: Data-Attribute State
+         Uses HTML data-* attributes to store and read component state
+         directly in the DOM. This is Bootstrap's native pattern.
+         ============================================================ -->
+    <div class="container py-5">
+        <!-- Section header with lesson context -->
+        <h1 class="mb-2">04_09_01 - Component State Management</h1>
+        <p class="text-muted mb-4">Patterns for tracking, updating, and persisting component state in Bootstrap 5.</p>
+
+        <!-- Data-Attribute State Demo -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">1. Data-Attribute State</h5>
+            </div>
+            <div class="card-body">
+                <!-- Explanation of data-attribute approach -->
+                <p class="text-muted">Bootstrap uses <code>data-bs-*</code> attributes to store state. We can extend this pattern with custom <code>data-state-*</code> attributes.</p>
+
+                <!-- Component with data-state attributes for tracking -->
+                <div id="dataStateCard" class="card mb-3"
+                     data-state-active="false"
+                     data-state-count="0"
+                     data-state-mode="default">
+                    <div class="card-body">
+                        <h5 class="card-title">Data-Driven Card</h5>
+                        <!-- Display current state values -->
+                        <p>Active: <span id="dsActive" class="badge bg-secondary">false</span></p>
+                        <p>Count: <span id="dsCount" class="badge bg-info">0</span></p>
+                        <p>Mode: <span id="dsMode" class="badge bg-warning">default</span></p>
+                        <!-- Buttons to manipulate data-state attributes -->
+                        <button class="btn btn-sm btn-primary me-1" onclick="toggleDataActive()">Toggle Active</button>
+                        <button class="btn btn-sm btn-info me-1" onclick="incrementDataCount()">Increment</button>
+                        <button class="btn btn-sm btn-warning" onclick="cycleDataMode()">Cycle Mode</button>
+                    </div>
+                </div>
+                <!-- Log showing state changes for debugging -->
+                <div class="state-log bg-dark text-light p-2 rounded" id="dataStateLog">
+                    <div class="text-success">[State Log] Ready</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 2: CSS Class State
+             Uses CSS classes to represent component state, allowing
+             visual changes via classList.add/remove/toggle.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">2. CSS Class-Based State</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">CSS classes like <code>.active</code>, <code>.show</code>, <code>.disabled</code> represent state visually.</p>
+
+                <!-- List group with class-based state toggling -->
+                <ul class="list-group mb-3" id="classStateList">
+                    <li class="list-group-item d-flex justify-content-between align-items-center"
+                        onclick="toggleClassState(this)" style="cursor:pointer;">
+                        Click to toggle <span class="badge bg-primary rounded-pill">Item 1</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center"
+                        onclick="toggleClassState(this)" style="cursor:pointer;">
+                        Click to toggle <span class="badge bg-primary rounded-pill">Item 2</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center"
+                        onclick="toggleClassState(this)" style="cursor:pointer;">
+                        Click to toggle <span class="badge bg-primary rounded-pill">Item 3</span>
+                    </li>
+                </ul>
+                <!-- Summary showing count of active items -->
+                <p>Active items: <span id="activeCount" class="badge bg-success">0</span> / 3</p>
+                <!-- Button to reset all items to inactive -->
+                <button class="btn btn-sm btn-outline-secondary" onclick="resetClassStates()">Reset All</button>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 3: JavaScript State Object
+             Centralized state object in JS, with a render function
+             to sync DOM with the state. This is the foundation of
+             reactive patterns used in frameworks.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">3. JavaScript State Object</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">A centralized JS object holds state; a render function syncs the DOM. This is the foundation of reactive UI patterns.</p>
+
+                <!-- Form inputs bound to state object -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" id="jsUsername"
+                               oninput="updateJSState('username', this.value)" placeholder="Enter username">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" id="jsRole"
+                                onchange="updateJSState('role', this.value)">
+                            <option value="viewer">Viewer</option>
+                            <option value="editor">Editor</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="jsActive"
+                                   onchange="updateJSState('isActive', this.checked)">
+                            <label class="form-check-label" for="jsActive">Active</label>
+                        </div>
+                    </div>
+                </div>
+                <!-- Display area showing current JS state as JSON -->
+                <pre class="bg-dark text-light p-3 rounded" id="jsStateDisplay"></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 4: State Synchronization
+             Multiple components reflecting the same state. Changing
+             one updates all others — the observer pattern in action.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">4. State Synchronization</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Multiple components reflect the same state. Change one, all update.</p>
+
+                <!-- Shared counter with multiple representations -->
+                <div class="row text-center">
+                    <!-- Numeric display -->
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Numeric</h6>
+                                <h2 id="syncNumeric" class="display-4">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Progress bar display -->
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Progress</h6>
+                                <div class="progress mt-3" style="height:30px;">
+                                    <div class="progress-bar" id="syncProgress" style="width:0%">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Badge display -->
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Badge</h6>
+                                <span id="syncBadge" class="badge bg-primary fs-1 mt-2">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Controls for synchronized state -->
+                <div class="text-center">
+                    <button class="btn btn-danger me-2" onclick="syncDecrement()">-1</button>
+                    <button class="btn btn-success" onclick="syncIncrement()">+1</button>
+                    <button class="btn btn-outline-secondary ms-2" onclick="syncReset()">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 5: Persistent State with localStorage
+             State survives page reloads by saving to localStorage.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">5. Persistent State (localStorage)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">State saved to <code>localStorage</code> survives page reloads.</p>
+
+                <!-- Theme preference persisted across sessions -->
+                <div class="mb-3">
+                    <label class="form-label">Preferred Theme</label>
+                    <select class="form-select w-auto" id="persistTheme"
+                            onchange="persistState('theme', this.value)">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                        <option value="auto">Auto</option>
+                    </select>
+                </div>
+                <!-- Notification preference persisted across sessions -->
+                <div class="mb-3">
+                    <label class="form-label">Notifications</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="persistNotif"
+                               onchange="persistState('notifications', this.checked)">
+                        <label class="form-check-label">Enable notifications</label>
+                    </div>
+                </div>
+                <!-- Display persisted state -->
+                <pre class="bg-dark text-light p-3 rounded" id="persistDisplay"></pre>
+                <!-- Clear persisted state button -->
+                <button class="btn btn-sm btn-outline-danger" onclick="clearPersistedState()">Clear Persisted State</button>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 6: State Machine Pattern
+             A component that transitions through defined states:
+             idle → loading → success/error, with valid transitions.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">6. State Machine</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Components with defined state transitions: <code>idle → loading → success | error</code>.</p>
+
+                <!-- State machine demo component -->
+                <div class="card" id="stateMachineCard">
+                    <div class="card-body text-center">
+                        <!-- Visual state indicator -->
+                        <div id="smIndicator" class="mb-3">
+                            <span class="badge bg-secondary fs-5" id="smStateBadge">IDLE</span>
+                        </div>
+                        <!-- State-dependent content -->
+                        <div id="smContent">
+                            <p>Click "Load" to begin state transition.</p>
+                        </div>
+                        <!-- State transition buttons -->
+                        <button class="btn btn-primary me-1" id="smLoadBtn" onclick="smTransition('load')">Load Data</button>
+                        <button class="btn btn-success me-1" id="smRetryBtn" onclick="smTransition('retry')" style="display:none;">Retry</button>
+                        <button class="btn btn-outline-secondary" id="smResetBtn" onclick="smTransition('reset')">Reset</button>
+                    </div>
+                </div>
+                <!-- State transition history log -->
+                <div class="mt-2">
+                    <small class="text-muted">Transition History:</small>
+                    <div class="state-log bg-dark text-light p-2 rounded" id="smLog"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle for interactive components -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================
+         JAVASCRIPT: State Management Logic
+         ============================================================ -->
+    <script>
+        // ========================================================
+        // SECTION 1: Data-Attribute State Functions
+        // Read/write state directly from DOM data attributes
+        // ========================================================
+
+        /**
+         * Logs a message to the data-state log console
+         * @param {string} msg - Message to display
+         */
+        function logDataState(msg) {
+            const log = document.getElementById('dataStateLog');
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight; // Auto-scroll to latest
+        }
+
+        /**
+         * Toggles the data-state-active attribute on the card
+         * Demonstrates reading and writing data-attributes as state
+         */
+        function toggleDataActive() {
+            const card = document.getElementById('dataStateCard');
+            // Read current state from data attribute
+            const current = card.getAttribute('data-state-active');
+            // Compute new state (toggle boolean string)
+            const newVal = current === 'true' ? 'false' : 'true';
+            // Write new state to data attribute
+            card.setAttribute('data-state-active', newVal);
+            // Update visual indicator
+            document.getElementById('dsActive').textContent = newVal;
+            document.getElementById('dsActive').className =
+                newVal === 'true' ? 'badge bg-success' : 'badge bg-secondary';
+            // Toggle visual state class
+            card.classList.toggle('state-active', newVal === 'true');
+            // Log the state change
+            logDataState(`Active changed to ${newVal}`);
+        }
+
+        /**
+         * Increments the data-state-count attribute by 1
+         * Demonstrates numeric state in data attributes
+         */
+        function incrementDataCount() {
+            const card = document.getElementById('dataStateCard');
+            // Parse current count from data attribute (attributes are strings)
+            let count = parseInt(card.getAttribute('data-state-count')) || 0;
+            count++;
+            // Write incremented value back
+            card.setAttribute('data-state-count', count);
+            document.getElementById('dsCount').textContent = count;
+            logDataState(`Count incremented to ${count}`);
+        }
+
+        /**
+         * Cycles through predefined modes: default → compact → expanded
+         * Demonstrates enumerated state in data attributes
+         */
+        function cycleDataMode() {
+            const card = document.getElementById('dataStateCard');
+            const modes = ['default', 'compact', 'expanded'];
+            const current = card.getAttribute('data-state-mode');
+            // Find current index and compute next (wrapping)
+            const idx = modes.indexOf(current);
+            const next = modes[(idx + 1) % modes.length];
+            card.setAttribute('data-state-mode', next);
+            document.getElementById('dsMode').textContent = next;
+            // Update badge color based on mode
+            const colors = { default: 'bg-warning', compact: 'bg-info', expanded: 'bg-success' };
+            document.getElementById('dsMode').className = `badge ${colors[next]}`;
+            logDataState(`Mode changed to ${next}`);
+        }
+
+        // ========================================================
+        // SECTION 2: CSS Class State Functions
+        // Toggle CSS classes to represent and visualize state
+        // ========================================================
+
+        /**
+         * Toggles the 'active' class on a list item
+         * Updates the visual state and the active count
+         * @param {HTMLElement} item - The list item element
+         */
+        function toggleClassState(item) {
+            // Toggle the Bootstrap 'active' class
+            item.classList.toggle('active');
+            // Update the badge to reflect state
+            const badge = item.querySelector('.badge');
+            if (item.classList.contains('active')) {
+                badge.className = 'badge bg-success rounded-pill';
+                badge.textContent = 'Active';
+            } else {
+                badge.className = 'badge bg-primary rounded-pill';
+                badge.textContent = item.textContent.includes('1') ? 'Item 1' :
+                    item.textContent.includes('2') ? 'Item 2' : 'Item 3';
+            }
+            // Recalculate active count
+            updateActiveCount();
+        }
+
+        /**
+         * Counts and displays the number of active list items
+         */
+        function updateActiveCount() {
+            const items = document.querySelectorAll('#classStateList .list-group-item');
+            let count = 0;
+            items.forEach(item => {
+                if (item.classList.contains('active')) count++;
+            });
+            document.getElementById('activeCount').textContent = count;
+        }
+
+        /**
+         * Resets all list items to inactive state
+         */
+        function resetClassStates() {
+            const items = document.querySelectorAll('#classStateList .list-group-item');
+            items.forEach((item, i) => {
+                item.classList.remove('active');
+                const badge = item.querySelector('.badge');
+                badge.className = 'badge bg-primary rounded-pill';
+                badge.textContent = `Item ${i + 1}`;
+            });
+            updateActiveCount();
+        }
+
+        // ========================================================
+        // SECTION 3: JavaScript State Object
+        // Centralized state with render function — reactive pattern
+        // ========================================================
+
+        /**
+         * Application state object — single source of truth
+         * All UI reads from this object; mutations go through updateJSState
+         */
+        const appState = {
+            username: '',
+            role: 'viewer',
+            isActive: false
+        };
+
+        /**
+         * Updates a property in the state object and re-renders
+         * @param {string} key - State property name
+         * @param {*} value - New value
+         */
+        function updateJSState(key, value) {
+            // Mutate the state object
+            appState[key] = value;
+            // Re-render UI from state
+            renderJSState();
+        }
+
+        /**
+         * Renders the state object to the DOM
+         * This pattern ensures the UI always reflects the current state
+         */
+        function renderJSState() {
+            // Display state as formatted JSON
+            document.getElementById('jsStateDisplay').textContent =
+                JSON.stringify(appState, null, 2);
+            // Sync input values with state (in case state changed programmatically)
+            document.getElementById('jsUsername').value = appState.username;
+            document.getElementById('jsRole').value = appState.role;
+            document.getElementById('jsActive').checked = appState.isActive;
+        }
+
+        // ========================================================
+        // SECTION 4: State Synchronization
+        // Multiple views reflect a single shared state value
+        // ========================================================
+
+        /** Shared counter state */
+        let syncValue = 0;
+
+        /**
+         * Updates all synchronized views to reflect the current syncValue
+         * This is the observer/subscriber pattern in its simplest form
+         */
+        function renderSyncState() {
+            // Update numeric display
+            document.getElementById('syncNumeric').textContent = syncValue;
+            // Update progress bar (0-100 range)
+            const pct = Math.min(100, Math.max(0, syncValue));
+            const bar = document.getElementById('syncProgress');
+            bar.style.width = pct + '%';
+            bar.textContent = pct + '%';
+            // Update badge
+            document.getElementById('syncBadge').textContent = syncValue;
+            // Change badge color based on value ranges
+            const badge = document.getElementById('syncBadge');
+            if (syncValue < 30) badge.className = 'badge bg-danger fs-1 mt-2';
+            else if (syncValue < 70) badge.className = 'badge bg-warning fs-1 mt-2';
+            else badge.className = 'badge bg-success fs-1 mt-2';
+        }
+
+        /** Increments shared state and re-renders all views */
+        function syncIncrement() { syncValue++; renderSyncState(); }
+        /** Decrements shared state (min 0) and re-renders all views */
+        function syncDecrement() { syncValue = Math.max(0, syncValue - 1); renderSyncState(); }
+        /** Resets shared state to 0 and re-renders all views */
+        function syncReset() { syncValue = 0; renderSyncState(); }
+
+        // ========================================================
+        // SECTION 5: Persistent State with localStorage
+        // Save/load state to survive page reloads
+        // ========================================================
+
+        /** localStorage key for this demo's persisted state */
+        const PERSIST_KEY = 'bootstrap_state_demo';
+
+        /**
+         * Loads persisted state from localStorage and applies to form
+         */
+        function loadPersistedState() {
+            try {
+                // Parse stored JSON or use defaults
+                const stored = JSON.parse(localStorage.getItem(PERSIST_KEY)) || {};
+                // Apply to form elements
+                if (stored.theme) document.getElementById('persistTheme').value = stored.theme;
+                if (stored.notifications !== undefined)
+                    document.getElementById('persistNotif').checked = stored.notifications;
+                // Display current persisted state
+                renderPersistState(stored);
+            } catch (e) {
+                // Handle corrupt localStorage gracefully
+                console.warn('Failed to load persisted state:', e);
+            }
+        }
+
+        /**
+         * Persists a single state property to localStorage
+         * @param {string} key - Property name
+         * @param {*} value - Value to persist
+         */
+        function persistState(key, value) {
+            try {
+                // Load existing, update, and save
+                const stored = JSON.parse(localStorage.getItem(PERSIST_KEY)) || {};
+                stored[key] = value;
+                localStorage.setItem(PERSIST_KEY, JSON.stringify(stored));
+                renderPersistState(stored);
+            } catch (e) {
+                console.warn('Failed to persist state:', e);
+            }
+        }
+
+        /**
+         * Renders persisted state to the display area
+         * @param {Object} state - Persisted state object
+         */
+        function renderPersistState(state) {
+            document.getElementById('persistDisplay').textContent =
+                JSON.stringify(state, null, 2) || '{}';
+        }
+
+        /**
+         * Clears all persisted state from localStorage
+         */
+        function clearPersistedState() {
+            localStorage.removeItem(PERSIST_KEY);
+            // Reset form to defaults
+            document.getElementById('persistTheme').value = 'light';
+            document.getElementById('persistNotif').checked = false;
+            renderPersistState({});
+        }
+
+        // ========================================================
+        // SECTION 6: State Machine
+        // Finite state machine with defined transitions
+        // States: idle → loading → success | error
+        // ========================================================
+
+        /** Current state machine state */
+        let smCurrentState = 'idle';
+
+        /** Valid state transitions map */
+        const smTransitions = {
+            idle: ['load'],
+            loading: ['success', 'error'],
+            success: ['reset', 'load'],
+            error: ['retry', 'reset']
+        };
+
+        /**
+         * Attempts a state transition based on the action
+         * @param {string} action - Transition action name
+         */
+        function smTransition(action) {
+            // Validate that the transition is allowed from current state
+            const allowed = smTransitions[smCurrentState];
+            if (!allowed || !allowed.includes(action)) {
+                logSM(`Invalid: ${smCurrentState} → ${action}`);
+                return;
+            }
+
+            // Determine next state based on action
+            let nextState;
+            if (action === 'load') nextState = 'loading';
+            else if (action === 'success') nextState = 'success';
+            else if (action === 'error') nextState = 'error';
+            else if (action === 'retry') nextState = 'loading';
+            else if (action === 'reset') nextState = 'idle';
+
+            // Perform the transition
+            const prev = smCurrentState;
+            smCurrentState = nextState;
+            logSM(`${prev} → ${nextState} (via ${action})`);
+            renderStateMachine();
+
+            // Simulate async operation when entering loading state
+            if (nextState === 'loading') {
+                // Simulate network delay, then randomly succeed or fail
+                setTimeout(() => {
+                    const success = Math.random() > 0.4;
+                    smTransition(success ? 'success' : 'error');
+                }, 1500);
+            }
+        }
+
+        /**
+         * Renders the state machine UI based on current state
+         */
+        function renderStateMachine() {
+            const badge = document.getElementById('smStateBadge');
+            const content = document.getElementById('smContent');
+            const loadBtn = document.getElementById('smLoadBtn');
+            const retryBtn = document.getElementById('smRetryBtn');
+
+            // Configure UI for each state
+            switch (smCurrentState) {
+                case 'idle':
+                    badge.className = 'badge bg-secondary fs-5';
+                    badge.textContent = 'IDLE';
+                    content.innerHTML = '<p>Click "Load" to begin state transition.</p>';
+                    loadBtn.style.display = '';
+                    retryBtn.style.display = 'none';
+                    break;
+                case 'loading':
+                    badge.className = 'badge bg-primary fs-5';
+                    badge.textContent = 'LOADING';
+                    content.innerHTML = '<div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading data...</p>';
+                    loadBtn.style.display = 'none';
+                    retryBtn.style.display = 'none';
+                    break;
+                case 'success':
+                    badge.className = 'badge bg-success fs-5';
+                    badge.textContent = 'SUCCESS';
+                    content.innerHTML = '<p class="text-success">Data loaded successfully!</p>';
+                    loadBtn.style.display = '';
+                    retryBtn.style.display = 'none';
+                    break;
+                case 'error':
+                    badge.className = 'badge bg-danger fs-5';
+                    badge.textContent = 'ERROR';
+                    content.innerHTML = '<p class="text-danger">Failed to load data. Retry?</p>';
+                    loadBtn.style.display = 'none';
+                    retryBtn.style.display = '';
+                    break;
+            }
+        }
+
+        /**
+         * Logs a state machine transition event
+         * @param {string} msg - Transition message
+         */
+        function logSM(msg) {
+            const log = document.getElementById('smLog');
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // ========================================================
+        // INITIALIZATION
+        // Run on page load to set up all state demos
+        // ========================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize JS state display
+            renderJSState();
+            // Initialize synchronized state display
+            renderSyncState();
+            // Load persisted state from localStorage
+            loadPersistedState();
+            // Render initial state machine
+            renderStateMachine();
+        });
+    </script>
+</body>
+</html>

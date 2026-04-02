@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         04_03_14 - Theme Maintenance
+         ============================================
+         Maintaining custom Bootstrap themes:
+         - Version upgrade strategies
+         - Documentation practices
+         - Design token systems
+         - Deprecation management
+         - Team collaboration patterns
+         ============================================ -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Theme Maintenance</title>
+
+    <style>
+        :root {
+            --maint-primary: #4f46e5;
+            --maint-success: #059669;
+            --maint-warning: #d97706;
+            --maint-danger: #dc2626;
+        }
+
+        /* Design token display */
+        .token-card {
+            border-left: 4px solid var(--maint-primary);
+            transition: border-color 0.2s;
+        }
+
+        .token-card:hover {
+            border-color: var(--maint-success);
+        }
+
+        .token-name {
+            font-family: monospace;
+            font-size: 0.8125rem;
+            color: var(--maint-primary);
+            background: rgba(79, 70, 229, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.25rem;
+        }
+
+        .token-value {
+            font-family: monospace;
+            font-size: 0.8125rem;
+            color: #6c757d;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.8125rem;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .comment { color: #6a9955; }
+        .code-block .variable { color: #9cdcfe; }
+
+        /* Version timeline */
+        .version-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .version-timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+
+        .version-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .version-item::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 0.25rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--maint-primary);
+            border: 2px solid white;
+        }
+
+        .version-item.upgrade::before { background: var(--maint-success); }
+        .version-item.breaking::before { background: var(--maint-danger); }
+
+        /* Changelog */
+        .changelog-entry {
+            border-left: 3px solid #dee2e6;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .changelog-entry.added { border-color: var(--maint-success); }
+        .changelog-entry.changed { border-color: var(--maint-warning); }
+        .changelog-entry.removed { border-color: var(--maint-danger); }
+
+        .badge-added { background: #d1fae5; color: #065f46; }
+        .badge-changed { background: #fef3c7; color: #92400e; }
+        .badge-removed { background: #fee2e2; color: #991b1b; }
+        .badge-deprecated { background: #e5e7eb; color: #374151; }
+
+        .file-tree {
+            font-family: monospace;
+            font-size: 0.8125rem;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .file-tree .dir { color: #ffc107; font-weight: bold; }
+        .file-tree .scss { color: #c6538c; }
+        .file-tree .md { color: #0d6efd; }
+        .file-tree .json { color: #198754; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Theme Maintenance</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="py-5 text-center bg-light">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Theme Maintenance</h1>
+            <p class="lead text-muted">
+                Version upgrades, design tokens, documentation, and team collaboration.
+            </p>
+        </div>
+    </section>
+
+    <!-- File structure -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Recommended Project Structure</h2>
+            <div class="file-tree">
+                <div class="dir">&#128193; theme/</div>
+                <div class="ms-4">
+                    <div class="dir">&#128193; tokens/</div>
+                    <div class="ms-4">
+                        <div class="scss">&#128196; _colors.scss</div>
+                        <div class="scss">&#128196; _typography.scss</div>
+                        <div class="scss">&#128196; _spacing.scss</div>
+                        <div class="scss">&#128196; _shadows.scss</div>
+                        <div class="json">&#128196; tokens.json <span class="text-muted">(design tool sync)</span></div>
+                    </div>
+                    <div class="dir">&#128193; components/</div>
+                    <div class="ms-4">
+                        <div class="scss">&#128196; _buttons.scss</div>
+                        <div class="scss">&#128196; _cards.scss</div>
+                        <div class="scss">&#128196; _forms.scss</div>
+                    </div>
+                    <div class="dir">&#128193; themes/</div>
+                    <div class="ms-4">
+                        <div class="scss">&#128196; _light.scss</div>
+                        <div class="scss">&#128196; _dark.scss</div>
+                        <div class="scss">&#128196; _high-contrast.scss</div>
+                    </div>
+                    <div class="scss">&#128196; main.scss <span class="text-muted">(entry point)</span></div>
+                    <div class="scss">&#128196; _variables.scss <span class="text-muted">(Bootstrap overrides)</span></div>
+                    <div class="md">&#128196; CHANGELOG.md</div>
+                    <div class="md">&#128196; README.md</div>
+                    <div class="json">&#128196; theme.config.json</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Design tokens -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Design Token System</h2>
+            <p class="text-muted mb-4">
+                Design tokens are the atomic values that define your design system.
+                They bridge design tools and code.
+            </p>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card token-card h-100">
+                        <div class="card-body">
+                            <h5>Color Tokens</h5>
+                            <div class="mb-2">
+                                <span class="token-name">$primary</span>
+                                <span class="token-value float-end">#4f46e5</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="token-name">$success</span>
+                                <span class="token-value float-end">#059669</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="token-name">--bs-primary-rgb</span>
+                                <span class="token-value float-end">79, 70, 229</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card token-card h-100">
+                        <div class="card-body">
+                            <h5>Typography Tokens</h5>
+                            <div class="mb-2">
+                                <span class="token-name">$font-family-base</span>
+                                <span class="token-value">Inter</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="token-name">$font-size-base</span>
+                                <span class="token-value float-end">1rem</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="token-name">$headings-font-weight</span>
+                                <span class="token-value float-end">700</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card token-card h-100">
+                        <div class="card-body">
+                            <h5>Spacing Tokens</h5>
+                            <div class="mb-2">
+                                <span class="token-name">$spacer</span>
+                                <span class="token-value float-end">1rem</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="token-name">$border-radius</span>
+                                <span class="token-value float-end">0.5rem</span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="token-name">$card-border-radius</span>
+                                <span class="token-value float-end">0.75rem</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mb-3">Tokens JSON (for design tool sync)</h5>
+            <div class="code-block">
+{
+  <span class="string">"color"</span>: {
+    <span class="string">"primary"</span>: { <span class="string">"value"</span>: <span class="string">"#4f46e5"</span>, <span class="string">"type"</span>: <span class="string">"color"</span> },
+    <span class="string">"success"</span>: { <span class="string">"value"</span>: <span class="string">"#059669"</span>, <span class="string">"type"</span>: <span class="string">"color"</span> },
+    <span class="string">"danger"</span>:  { <span class="string">"value"</span>: <span class="string">"#dc2626"</span>, <span class="string">"type"</span>: <span class="string">"color"</span> }
+  },
+  <span class="string">"typography"</span>: {
+    <span class="string">"fontFamily"</span>: { <span class="string">"value"</span>: <span class="string">"Inter, sans-serif"</span> },
+    <span class="string">"fontSize"</span>: { <span class="string">"base"</span>: <span class="string">"16px"</span>, <span class="string">"lg"</span>: <span class="string">"20px"</span> }
+  },
+  <span class="string">"spacing"</span>: {
+    <span class="string">"sm"</span>: <span class="string">"0.5rem"</span>,
+    <span class="string">"md"</span>: <span class="string">"1rem"</span>,
+    <span class="string">"lg"</span>: <span class="string">"1.5rem"</span>,
+    <span class="string">"xl"</span>: <span class="string">"2rem"</span>
+  }
+}
+            </div>
+        </div>
+    </section>
+
+    <!-- Version upgrade guide -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Bootstrap Version Upgrade Strategy</h2>
+            <div class="version-timeline">
+                <div class="version-item upgrade">
+                    <h5>5.2 &#8594; 5.3 Upgrade</h5>
+                    <ul class="small text-muted">
+                        <li>Added color mode system (<code>data-bs-theme</code>)</li>
+                        <li>New CSS variables for all components</li>
+                        <li>Deprecated <code>.badge.bg-*</code> for <code>.text-bg-*</code></li>
+                    </ul>
+                </div>
+                <div class="version-item upgrade">
+                    <h5>5.1 &#8594; 5.2 Upgrade</h5>
+                    <ul class="small text-muted">
+                        <li>New CSS grid option</li>
+                        <li>Updated offcanvas backdrop</li>
+                        <li>New <code>.placeholder</code> component</li>
+                    </ul>
+                </div>
+                <div class="version-item breaking">
+                    <h5>4.x &#8594; 5.0 Migration (Major)</h5>
+                    <ul class="small text-muted">
+                        <li>Dropped jQuery dependency</li>
+                        <li>Renamed data attributes: <code>data-toggle</code> &#8594; <code>data-bs-toggle</code></li>
+                        <li>New utility API system</li>
+                        <li>Dropped IE support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Changelog -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Theme Changelog Template</h2>
+            <div class="card">
+                <div class="card-body">
+                    <h5>v2.1.0 - 2026-04-02</h5>
+                    <div class="changelog-entry added">
+                        <span class="badge badge-added">Added</span>
+                        <p class="small mt-1 mb-0">
+                            Dark theme support using <code>data-bs-theme="dark"</code>
+                        </p>
+                    </div>
+                    <div class="changelog-entry changed">
+                        <span class="badge badge-changed">Changed</span>
+                        <p class="small mt-1 mb-0">
+                            Updated primary color from #6f42c1 to #4f46e5
+                        </p>
+                    </div>
+                    <div class="changelog-entry removed">
+                        <span class="badge badge-removed">Removed</span>
+                        <p class="small mt-1 mb-0">
+                            Deprecated <code>.gradient-hero</code> class
+                        </p>
+                    </div>
+
+                    <hr>
+
+                    <h5>v2.0.0 - 2026-01-15</h5>
+                    <div class="changelog-entry changed">
+                        <span class="badge badge-changed">Changed</span>
+                        <p class="small mt-1 mb-0">
+                            Upgraded to Bootstrap 5.3.3
+                        </p>
+                    </div>
+                    <div class="changelog-entry added">
+                        <span class="badge badge-added">Added</span>
+                        <p class="small mt-1 mb-0">
+                            CSS custom properties for all theme colors
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Deprecation management -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Deprecation Management</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Mark as Deprecated (SCSS)</h5>
+                            <div class="code-block">
+<span class="comment">// _deprecated.scss</span>
+
+<span class="comment">/// @deprecated v2.1.0 Use `.btn-gradient` instead</span>
+<span class="keyword">@mixin</span> legacy-hero-gradient {
+  background: linear-gradient(
+    135deg, #6f42c1, #e83e8c
+  );
+  <span class="comment">// Console warning in dev</span>
+  @at-root body::after {
+    content: <span class="string">'[Deprecation] .gradient-hero
+      is deprecated. Use .btn-gradient.'</span>;
+    display: none;
+  }
+}
+
+.gradient-hero {
+  <span class="keyword">@include</span> legacy-hero-gradient;
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Deprecation Timeline</h5>
+                            <table class="table table-sm small">
+                                <thead>
+                                    <tr><th>Class</th><th>Deprecated</th><th>Remove</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>.gradient-hero</code></td>
+                                        <td><span class="badge badge-changed">v2.1.0</span></td>
+                                        <td>v3.0.0</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>.text-muted-alt</code></td>
+                                        <td><span class="badge badge-changed">v2.0.0</span></td>
+                                        <td>v2.5.0</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>.card-bordered</code></td>
+                                        <td><span class="badge badge-deprecated">v1.8.0</span></td>
+                                        <td>v2.0.0 (removed)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation practices -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Documentation Best Practices</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>&#128221; README.md</h5>
+                            <ul class="small">
+                                <li>Installation instructions</li>
+                                <li>Quick start guide</li>
+                                <li>Available themes list</li>
+                                <li>Browser support matrix</li>
+                                <li>Contribution guidelines</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>&#128196; CHANGELOG.md</h5>
+                            <ul class="small">
+                                <li>Keep a changelog format</li>
+                                <li>Semantic versioning</li>
+                                <li>Added/Changed/Removed/Deprecated</li>
+                                <li>Migration guides for breaking changes</li>
+                                <li>Link to related issues/PRs</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>&#128295; SCSS Comments</h5>
+                            <ul class="small">
+                                <li>Use <code>///</code> for SassDoc</li>
+                                <li>Document all mixins and functions</li>
+                                <li>Note all variable dependencies</li>
+                                <li>Mark deprecated items clearly</li>
+                                <li>Include usage examples</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team workflow -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Team Collaboration Workflow</h2>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Theme Update Process</h5>
+                            <ol>
+                                <li class="mb-2">
+                                    <strong>Design Token Update</strong>
+                                    <p class="small text-muted mb-0">
+                                        Designer updates tokens in Figma/Sketch.
+                                        Tokens are exported to <code>tokens.json</code>.
+                                    </p>
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Token Sync</strong>
+                                    <p class="small text-muted mb-0">
+                                        Automated tool (Style Dictionary) converts JSON
+                                        to SCSS variables and CSS custom properties.
+                                    </p>
+                                </li>
+                                <li class="mb-2">
+                                    <strong>SCSS Compilation</strong>
+                                    <p class="small text-muted mb-0">
+                                        Updated tokens flow into Bootstrap variable
+                                        overrides and component styles.
+                                    </p>
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Visual Testing</strong>
+                                    <p class="small text-muted mb-0">
+                                        BackstopJS runs visual regression tests
+                                        against baseline screenshots.
+                                    </p>
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Review & Deploy</strong>
+                                    <p class="small text-muted mb-0">
+                                        PR review includes before/after screenshots.
+                                        Merge triggers deployment.
+                                    </p>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Tools</h5>
+                            <ul class="list-unstyled small">
+                                <li class="mb-2">
+                                    <strong>Figma Tokens</strong><br>
+                                    Design token management
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Style Dictionary</strong><br>
+                                    Token transformation
+                                </li>
+                                <li class="mb-2">
+                                    <strong>BackstopJS</strong><br>
+                                    Visual regression testing
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Chromatic</strong><br>
+                                    Component documentation
+                                </li>
+                                <li>
+                                    <strong>Changesets</strong><br>
+                                    Changelog generation
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bootstrap upgrade checklist -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Bootstrap Upgrade Checklist</h2>
+            <div class="table-responsive">
+                <table class="table table-striped small">
+                    <thead>
+                        <tr><th>Step</th><th>Action</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>Read Bootstrap release notes for breaking changes</td><td><input type="checkbox"></td></tr>
+                        <tr><td>2</td><td>Update Bootstrap SCSS import version</td><td><input type="checkbox"></td></tr>
+                        <tr><td>3</td><td>Check for renamed/removed variables</td><td><input type="checkbox"></td></tr>
+                        <tr><td>4</td><td>Verify custom overrides still compile</td><td><input type="checkbox"></td></tr>
+                        <tr><td>5</td><td>Run visual regression tests</td><td><input type="checkbox"></td></tr>
+                        <tr><td>6</td><td>Test all theme variants</td><td><input type="checkbox"></td></tr>
+                        <tr><td>7</td><td>Check accessibility (focus rings, contrast)</td><td><input type="checkbox"></td></tr>
+                        <tr><td>8</td><td>Update CHANGELOG.md</td><td><input type="checkbox"></td></tr>
+                        <tr><td>9</td><td>Update CDN links and SRI hashes</td><td><input type="checkbox"></td></tr>
+                        <tr><td>10</td><td>Deploy to staging and verify</td><td><input type="checkbox"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Theme Maintenance Demo</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

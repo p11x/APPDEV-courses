@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d6efd">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>PWA Monitoring | Bootstrap 5</title>
+    <style>
+        .pwa-card { border-left: 4px solid #0d6efd; transition: transform 0.3s ease; }
+        .pwa-card:hover { transform: translateY(-3px); }
+        .metric-card { text-align: center; padding: 1.5rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">&#128200; PWA Monitoring</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#analytics">Analytics</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#errors">Error Tracking</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#usage">Usage Metrics</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#realtime">Real-Time</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-primary text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">PWA Monitoring</h1>
+            <p class="lead">Track analytics, errors, and usage metrics in your Progressive Web App. Data-driven insights for continuous improvement.</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- Section 1: PWA Analytics -->
+        <section id="analytics" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128202; PWA Analytics</h2>
+
+            <div class="card pwa-card">
+                <div class="card-header bg-dark text-white"><code>PWA Analytics Tracker</code></div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>// Comprehensive PWA analytics tracking
+class PWAAnalytics {
+    constructor(measurementId) {
+        this.measurementId = measurementId;
+        this.sessionStart = Date.now();
+    }
+
+    // Track PWA-specific events
+    trackInstallStatus() {
+        // Detect if running as installed PWA
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+        const isIOSStandalone = navigator.standalone === true;
+
+        this.sendEvent('pwa_mode', {
+            display_mode: isStandalone || isIOSStandalone ? 'standalone' : 'browser',
+            platform: navigator.platform,
+            is_installed: isStandalone || isIOSStandalone
+        });
+    }
+
+    // Track service worker lifecycle events
+    trackServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+                this.sendEvent('sw_ready', {
+                    scope: reg.scope,
+                    update_via_cache: reg.updateViaCache
+                });
+            });
+        }
+    }
+
+    // Track offline/online transitions
+    trackNetworkStatus() {
+        window.addEventListener('online', () => {
+            this.sendEvent('network_status', { status: 'online' });
+        });
+        window.addEventListener('offline', () => {
+            this.sendEvent('network_status', { status: 'offline' });
+        });
+    }
+
+    // Track cache performance
+    trackCacheHit(url, wasHit) {
+        this.sendEvent('cache_performance', {
+            url: url,
+            cache_hit: wasHit,
+            timestamp: Date.now()
+        });
+    }
+
+    // Track installation
+    trackInstall() {
+        window.addEventListener('appinstalled', () => {
+            this.sendEvent('pwa_installed', {
+                install_time: Date.now() - this.sessionStart
+            });
+        });
+    }
+
+    // Send event to analytics
+    sendEvent(eventName, params) {
+        // Google Analytics 4
+        if (typeof gtag === 'function') {
+            gtag('event', eventName, params);
+        }
+        console.log('[Analytics]', eventName, params);
+    }
+
+    // Initialize all tracking
+    init() {
+        this.trackInstallStatus();
+        this.trackServiceWorker();
+        this.trackNetworkStatus();
+        this.trackInstall();
+    }
+}
+
+const analytics = new PWAAnalytics('G-XXXXXXXXXX');
+analytics.init();</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Error Tracking -->
+        <section id="errors" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#9888; Error Tracking</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">SW Error Monitor</div>
+                        <div class="card-body">
+                            <pre class="mb-0"><code>// Monitor service worker errors
+class SWErrorTracker {
+    constructor(errorEndpoint) {
+        this.endpoint = errorEndpoint;
+    }
+
+    init() {
+        // Catch unhandled SW errors
+        navigator.serviceWorker?.addEventListener('error', (e) => {
+            this.reportError({
+                type: 'sw_error',
+                message: 'Service worker error',
+                timestamp: Date.now()
+            });
+        });
+
+        // Catch fetch failures
+        const originalFetch = window.fetch;
+        window.fetch = async (...args) => {
+            try {
+                return await originalFetch(...args);
+            } catch (error) {
+                this.reportError({
+                    type: 'fetch_error',
+                    url: args[0],
+                    message: error.message,
+                    online: navigator.onLine
+                });
+                throw error;
+            }
+        };
+    }
+
+    async reportError(errorData) {
+        try {
+            await fetch(this.endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(errorData)
+            });
+        } catch {
+            // Store locally if offline
+            const errors = JSON.parse(localStorage.getItem('pending_errors') || '[]');
+            errors.push(errorData);
+            localStorage.setItem('pending_errors', JSON.stringify(errors));
+        }
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">Live Error Log</div>
+                        <div class="card-body">
+                            <div class="bg-dark text-white rounded p-3 font-monospace small" id="errorLog" style="height: 300px; overflow-y: auto;">
+                                <div class="text-success">[System] Error monitoring active</div>
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-danger" onclick="addDemoError()">Simulate Error</button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('errorLog').innerHTML=''">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Usage Metrics -->
+        <section id="usage" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128200; Usage Metrics Dashboard</h2>
+
+            <div class="row g-4">
+                <div class="col-md-3 col-6">
+                    <div class="card pwa-card metric-card">
+                        <div class="display-6 text-primary" id="totalSessions">12,847</div>
+                        <small class="text-muted">Total Sessions</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card pwa-card metric-card">
+                        <div class="display-6 text-success" id="installRate">23%</div>
+                        <small class="text-muted">Install Rate</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card pwa-card metric-card">
+                        <div class="display-6 text-info" id="offlineUsage">8.4%</div>
+                        <small class="text-muted">Offline Usage</small>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card pwa-card metric-card">
+                        <div class="display-6 text-warning" id="cacheHitRate">94%</div>
+                        <small class="text-muted">Cache Hit Rate</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card pwa-card mt-4">
+                <div class="card-header">Daily Active Users (Last 7 Days)</div>
+                <div class="card-body">
+                    <div class="d-flex align-items-end justify-content-around" style="height: 150px;">
+                        <div class="bg-primary rounded" style="width: 40px; height: 60%;" title="Mon"></div>
+                        <div class="bg-primary rounded" style="width: 40px; height: 75%;" title="Tue"></div>
+                        <div class="bg-primary rounded" style="width: 40px; height: 55%;" title="Wed"></div>
+                        <div class="bg-primary rounded" style="width: 40px; height: 85%;" title="Thu"></div>
+                        <div class="bg-primary rounded" style="width: 40px; height: 90%;" title="Fri"></div>
+                        <div class="bg-primary rounded" style="width: 40px; height: 70%;" title="Sat"></div>
+                        <div class="bg-primary rounded" style="width: 40px; height: 50%;" title="Sun"></div>
+                    </div>
+                    <div class="d-flex justify-content-around mt-2">
+                        <small class="text-muted">Mon</small>
+                        <small class="text-muted">Tue</small>
+                        <small class="text-muted">Wed</small>
+                        <small class="text-muted">Thu</small>
+                        <small class="text-muted">Fri</small>
+                        <small class="text-muted">Sat</small>
+                        <small class="text-muted">Sun</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Real-Time Monitoring -->
+        <section id="realtime" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128994; Real-Time Status</h2>
+
+            <div class="card pwa-card">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="mb-2">
+                                <span class="badge rounded-pill bg-success fs-6" id="liveOnline">847</span>
+                            </div>
+                            <small class="text-muted">Users Online</small>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-2">
+                                <span class="badge rounded-pill bg-primary fs-6" id="livePWA">312</span>
+                            </div>
+                            <small class="text-muted">Running as PWA</small>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-2">
+                                <span class="badge rounded-pill bg-warning fs-6" id="liveOffline">24</span>
+                            </div>
+                            <small class="text-muted">Currently Offline</small>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-2">
+                                <span class="badge rounded-pill bg-danger fs-6" id="liveErrors">3</span>
+                            </div>
+                            <small class="text-muted">Errors (last hour)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="text-muted mb-0">PWA Monitoring Module | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function addDemoError() {
+            const log = document.getElementById('errorLog');
+            const types = ['NetworkError', 'CacheError', 'SWError', 'FetchError'];
+            const msgs = ['Failed to fetch resource', 'Cache quota exceeded', 'SW update failed', 'Network timeout'];
+            const i = Math.floor(Math.random() * 4);
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `<div class="text-danger">[${time}] ${types[i]}: ${msgs[i]}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+    </script>
+</body>
+</html>

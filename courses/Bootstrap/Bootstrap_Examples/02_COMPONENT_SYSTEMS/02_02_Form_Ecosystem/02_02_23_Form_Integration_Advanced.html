@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Integration Advanced - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>.demo-section { margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 0.5rem; }</style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Form Integration Advanced</h1>
+                <p class="lead text-muted">Forms with APIs, websockets, drag-drop, autosave, and complex state management.</p><hr>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Autosave Form -->
+        <section class="demo-section" id="autosave">
+            <h2 class="h4 mb-3">1. Autosave Form</h2>
+            <p class="text-muted">Form data is saved to localStorage automatically as you type. Refresh the page to see data restored.</p>
+
+            <form id="autosaveForm">
+                <div class="mb-3">
+                    <label for="as-title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="as-title" name="title" data-autosave>
+                    <div class="form-text" id="as-status">Ready</div>
+                </div>
+                <div class="mb-3">
+                    <label for="as-content" class="form-label">Content</label>
+                    <textarea class="form-control" id="as-content" name="content" rows="4" data-autosave></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="as-category" class="form-label">Category</label>
+                    <select class="form-select" id="as-category" name="category" data-autosave>
+                        <option value="">Choose...</option>
+                        <option>Blog</option><option>Note</option><option>Draft</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary" id="as-submit">Save</button>
+                <button type="button" class="btn btn-outline-danger ms-2" id="as-clear">Clear Saved Data</button>
+            </form>
+        </section>
+
+        <!-- SECTION 2: Drag & Drop File Upload -->
+        <section class="demo-section" id="dragdrop">
+            <h2 class="h4 mb-3">2. Drag & Drop File Upload</h2>
+
+            <div id="dropZone" class="border border-2 border-dashed rounded p-5 text-center" style="cursor:pointer;transition:all 0.2s;">
+                <div class="text-muted">
+                    <h4>Drag & Drop files here</h4>
+                    <p>or click to browse</p>
+                    <input type="file" class="d-none" id="ddFile" multiple accept="image/*,.pdf,.doc,.docx">
+                </div>
+            </div>
+            <div id="fileList" class="mt-3"></div>
+        </section>
+
+        <!-- SECTION 3: Dynamic Form Fields -->
+        <section class="demo-section" id="dynamic-fields">
+            <h2 class="h4 mb-3">3. Dynamic Add/Remove Fields</h2>
+
+            <form id="dynamicForm">
+                <div id="dynamicContainer">
+                    <div class="dynamic-row row mb-3">
+                        <div class="col-md-5">
+                            <label class="form-label">Item Name</label>
+                            <input type="text" class="form-control" name="items[0][name]" placeholder="Item name">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" class="form-control" name="items[0][qty]" placeholder="Qty" min="1" value="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Price</label>
+                            <input type="number" class="form-control" name="items[0][price]" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-danger remove-row">×</button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-primary" id="addRow">+ Add Item</button>
+                <div class="mt-3">
+                    <strong>Total: $<span id="totalAmount">0.00</span></strong>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Submit Order</button>
+            </form>
+        </section>
+
+        <!-- SECTION 4: Form State Machine -->
+        <section class="demo-section" id="state-machine">
+            <h2 class="h4 mb-3">4. Form State Management</h2>
+
+            <div class="mb-3">
+                <strong>Current State:</strong> <span class="badge bg-secondary" id="currentState">idle</span>
+                <strong class="ms-3">Dirty:</strong> <span id="isDirty">No</span>
+                <strong class="ms-3">Valid:</strong> <span id="isValid">-</span>
+            </div>
+
+            <form id="stateForm" novalidate>
+                <div class="mb-3">
+                    <label for="sm-name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="sm-name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="sm-email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="sm-email" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="sm-submit">Submit</button>
+                <button type="reset" class="btn btn-outline-secondary ms-2" id="sm-reset">Reset</button>
+            </form>
+
+            <div class="mt-3">
+                <h6>State History</h6>
+                <div class="border rounded p-2" style="max-height:100px;overflow-y:auto;font-family:monospace;font-size:0.8rem;" id="stateLog"></div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: AJAX Form Submission -->
+        <section class="demo-section" id="ajax-form">
+            <h2 class="h4 mb-3">5. AJAX Form Submission</h2>
+
+            <form id="ajaxForm" novalidate>
+                <div class="mb-3">
+                    <label for="aj-name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="aj-name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="aj-email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="aj-email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="aj-message" class="form-label">Message</label>
+                    <textarea class="form-control" id="aj-message" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Response Type</label>
+                    <select class="form-select" id="aj-response-type">
+                        <option value="success">Success (200)</option>
+                        <option value="error">Validation Error (422)</option>
+                        <option value="server">Server Error (500)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" id="aj-submit">
+                    <span class="spinner-border spinner-border-sm d-none" id="aj-spinner"></span>
+                    Submit via AJAX
+                </button>
+            </form>
+            <div id="ajaxResult" class="mt-3"></div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================
+        // 1. Autosave
+        // ============================================
+        const STORAGE_KEY = 'autosave_form';
+        function loadAutosave() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.querySelectorAll('[data-autosave]').forEach(function(el) {
+                    if (data[el.name] !== undefined) el.value = data[el.name];
+                });
+            }
+        }
+        loadAutosave();
+
+        let saveTimeout;
+        document.querySelectorAll('[data-autosave]').forEach(function(el) {
+            el.addEventListener('input', function() {
+                clearTimeout(saveTimeout);
+                document.getElementById('as-status').textContent = 'Saving...';
+                saveTimeout = setTimeout(function() {
+                    const data = {};
+                    document.querySelectorAll('[data-autosave]').forEach(function(e) { data[e.name] = e.value; });
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                    document.getElementById('as-status').textContent = 'Saved at ' + new Date().toLocaleTimeString();
+                }, 500);
+            });
+        });
+
+        document.getElementById('as-submit').addEventListener('click', function() {
+            const data = {};
+            document.querySelectorAll('[data-autosave]').forEach(function(e) { data[e.name] = e.value; });
+            alert('Submitted: ' + JSON.stringify(data, null, 2));
+        });
+
+        document.getElementById('as-clear').addEventListener('click', function() {
+            localStorage.removeItem(STORAGE_KEY);
+            document.querySelectorAll('[data-autosave]').forEach(function(e) { e.value = ''; });
+            document.getElementById('as-status').textContent = 'Data cleared';
+        });
+
+        // ============================================
+        // 2. Drag & Drop
+        // ============================================
+        const dropZone = document.getElementById('dropZone');
+        const ddFile = document.getElementById('ddFile');
+        const fileList = document.getElementById('fileList');
+
+        dropZone.addEventListener('click', function() { ddFile.click(); });
+        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = '#0d6efd'; this.style.background = '#e7f1ff'; });
+        dropZone.addEventListener('dragleave', function() { this.style.borderColor = '#dee2e6'; this.style.background = ''; });
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#dee2e6'; this.style.background = '';
+            handleFiles(e.dataTransfer.files);
+        });
+        ddFile.addEventListener('change', function() { handleFiles(this.files); });
+
+        function handleFiles(files) {
+            let html = '';
+            Array.from(files).forEach(function(file) {
+                const size = (file.size / 1024).toFixed(1);
+                html += '<div class="alert alert-info d-flex justify-content-between align-items-center"><span>' + file.name + ' (' + size + ' KB)</span><button type="button" class="btn-close" onclick="this.parentElement.remove()"></button></div>';
+            });
+            fileList.innerHTML += html;
+        }
+
+        // ============================================
+        // 3. Dynamic Fields
+        // ============================================
+        let itemCount = 1;
+        document.getElementById('addRow').addEventListener('click', function() {
+            const container = document.getElementById('dynamicContainer');
+            const row = document.createElement('div');
+            row.className = 'dynamic-row row mb-3';
+            row.innerHTML = '<div class="col-md-5"><input type="text" class="form-control" name="items[' + itemCount + '][name]" placeholder="Item name"></div><div class="col-md-3"><input type="number" class="form-control" name="items[' + itemCount + '][qty]" placeholder="Qty" min="1" value="1"></div><div class="col-md-3"><input type="number" class="form-control" name="items[' + itemCount + '][price]" placeholder="0.00" step="0.01" min="0"></div><div class="col-md-1 d-flex align-items-end"><button type="button" class="btn btn-outline-danger remove-row">×</button></div>';
+            container.appendChild(row);
+            itemCount++;
+        });
+
+        document.getElementById('dynamicContainer').addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-row')) {
+                e.target.closest('.dynamic-row').remove();
+                calcTotal();
+            }
+        });
+
+        function calcTotal() {
+            let total = 0;
+            document.querySelectorAll('.dynamic-row').forEach(function(row) {
+                const qty = parseFloat(row.querySelector('input[name$="[qty]"]').value) || 0;
+                const price = parseFloat(row.querySelector('input[name$="[price]"]').value) || 0;
+                total += qty * price;
+            });
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+        }
+        document.getElementById('dynamicContainer').addEventListener('input', calcTotal);
+        document.getElementById('dynamicForm').addEventListener('submit', function(e) { e.preventDefault(); alert('Order total: $' + document.getElementById('totalAmount').textContent); });
+
+        // ============================================
+        // 4. State Management
+        // ============================================
+        const stateForm = document.getElementById('stateForm');
+        let formState = 'idle';
+        let isDirty = false;
+        const stateLog = document.getElementById('stateLog');
+
+        function setState(newState) {
+            formState = newState;
+            document.getElementById('currentState').textContent = newState;
+            document.getElementById('currentState').className = 'badge ' + ({
+                idle: 'bg-secondary', dirty: 'bg-warning', validating: 'bg-info',
+                valid: 'bg-success', submitting: 'bg-primary', submitted: 'bg-success', error: 'bg-danger'
+            }[newState] || 'bg-secondary');
+            stateLog.innerHTML = new Date().toLocaleTimeString() + ' → ' + newState + '<br>' + stateLog.innerHTML;
+        }
+
+        stateForm.addEventListener('input', function() {
+            isDirty = true;
+            document.getElementById('isDirty').textContent = 'Yes';
+            setState('dirty');
+        });
+
+        stateForm.addEventListener('reset', function() {
+            isDirty = false;
+            document.getElementById('isDirty').textContent = 'No';
+            setState('idle');
+            this.classList.remove('was-validated');
+        });
+
+        stateForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            setState('validating');
+            const valid = this.checkValidity();
+            document.getElementById('isValid').textContent = valid ? 'Yes' : 'No';
+
+            setTimeout(function() {
+                if (valid) {
+                    setState('submitting');
+                    setTimeout(function() { setState('submitted'); }, 1000);
+                } else {
+                    setState('error');
+                    stateForm.classList.add('was-validated');
+                }
+            }, 500);
+        });
+
+        // ============================================
+        // 5. AJAX Submission
+        // ============================================
+        document.getElementById('ajaxForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!this.checkValidity()) { this.classList.add('was-validated'); return; }
+
+            const submitBtn = document.getElementById('aj-submit');
+            const spinner = document.getElementById('aj-spinner');
+            const result = document.getElementById('ajaxResult');
+
+            submitBtn.disabled = true;
+            spinner.classList.remove('d-none');
+            result.innerHTML = '<div class="alert alert-info">Submitting...</div>';
+
+            const responseType = document.getElementById('aj-response-type').value;
+
+            setTimeout(function() {
+                submitBtn.disabled = false;
+                spinner.classList.add('d-none');
+
+                switch (responseType) {
+                    case 'success':
+                        result.innerHTML = '<div class="alert alert-success"><strong>200 OK:</strong> Form submitted successfully! Response: { status: "ok", id: 1234 }</div>';
+                        break;
+                    case 'error':
+                        result.innerHTML = '<div class="alert alert-danger"><strong>422 Validation Error:</strong> { errors: { email: "Already registered" } }</div>';
+                        break;
+                    case 'server':
+                        result.innerHTML = '<div class="alert alert-danger"><strong>500 Server Error:</strong> Internal server error. Please try again.</div>';
+                        break;
+                }
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

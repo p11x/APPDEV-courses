@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================
+         01_02_02_04_Display_Performance.html
+         Topic: Bootstrap 5 Display Utilities — Performance Considerations
+         
+         This file covers performance best practices when using display
+         utilities: CSS class efficiency, avoiding layout thrashing,
+         reducing DOM size, lazy loading patterns, and comparison of
+         techniques (d-none vs visibility vs opacity vs offscreen).
+         ============================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 - Display Utilities Performance</title>
+
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <style>
+        /* ============================================================
+           Performance-related custom styles
+           ============================================================ */
+        
+        /* Offscreen pattern: element is accessible but not visible.
+           Preferred over d-none when you need screen reader access
+           or want the content to still be rendered. */
+        .visually-hidden-focusable:not(:focus):not(:focus-within) {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+        /* Comparison table styles */
+        .perf-demo {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #f8f9fa;
+        }
+
+        /* Visual load indicator */
+        .load-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .load-loaded { background-color: #198754; }
+        .load-hidden { background-color: #dc3545; }
+        .load-lazy { background-color: #ffc107; }
+
+        /* Rendered/Not-rendered indicator */
+        .render-box {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+
+        <!-- ============================================================
+             PAGE HEADER
+             ============================================================ -->
+        <h1 class="mb-3">Display Utilities — Performance Considerations</h1>
+        <p class="lead text-muted">
+            Understanding the performance implications of display utilities helps 
+            you build faster, more efficient web pages.
+        </p>
+        <hr class="mb-4">
+
+        <!-- ============================================================
+             SECTION 1: Comparison — d-none vs visibility vs opacity
+             These three approaches have different performance profiles:
+             
+             - d-none: element not rendered, not in layout, not in DOM flow
+             - visibility: hidden: element rendered but not visible, space preserved
+             - opacity: 0: element rendered, visible (just transparent), space preserved
+             - position offscreen: element rendered, not in visual viewport
+             
+             For performance, d-none is generally best when element should not
+             be visible because the browser skips rendering it entirely.
+             ============================================================ -->
+        <h3>1. Visibility Techniques Comparison</h3>
+        
+        <div class="perf-demo">
+            <h5>Method Comparison</h5>
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Technique</th>
+                        <th>Rendered?</th>
+                        <th>In Layout?</th>
+                        <th>Accessible?</th>
+                        <th>Performance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- d-none: best for pure hiding -->
+                    <tr>
+                        <td><code>d-none</code></td>
+                        <td><span class="badge bg-danger">No</span></td>
+                        <td><span class="badge bg-danger">No</span></td>
+                        <td><span class="badge bg-danger">No</span></td>
+                        <td>
+                            <span class="load-indicator load-loaded"></span>
+                            Best — browser skips rendering
+                        </td>
+                    </tr>
+                    <!-- visibility: hidden -->
+                    <tr>
+                        <td><code>visibility: hidden</code></td>
+                        <td><span class="badge bg-success">Yes</span></td>
+                        <td><span class="badge bg-warning text-dark">Yes</span></td>
+                        <td><span class="badge bg-danger">No</span></td>
+                        <td>
+                            <span class="load-indicator load-lazy"></span>
+                            Moderate — still rendered, space reserved
+                        </td>
+                    </tr>
+                    <!-- opacity: 0 -->
+                    <tr>
+                        <td><code>opacity: 0</code></td>
+                        <td><span class="badge bg-success">Yes</span></td>
+                        <td><span class="badge bg-warning text-dark">Yes</span></td>
+                        <td><span class="badge bg-success">Yes</span></td>
+                        <td>
+                            <span class="load-indicator load-hidden"></span>
+                            Same — fully rendered, can animate
+                        </td>
+                    </tr>
+                    <!-- position: absolute + offscreen -->
+                    <tr>
+                        <td><code>.visually-hidden</code></td>
+                        <td><span class="badge bg-success">Yes</span></td>
+                        <td><span class="badge bg-danger">No</span></td>
+                        <td><span class="badge bg-success">Yes</span></td>
+                        <td>
+                            <span class="load-indicator load-loaded"></span>
+                            Good — accessible, removed from layout
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================
+             SECTION 2: Visual comparison of hiding techniques
+             ============================================================ -->
+        <h3 class="mt-5">2. Visual Comparison</h3>
+        <p>Each element below has 100px height. Notice how they affect layout.</p>
+        
+        <div class="perf-demo">
+            <div class="render-box bg-primary">Element A — normal (visible)</div>
+            
+            <!-- d-none: completely removed from flow -->
+            <div class="render-box bg-success d-none">
+                Element B — d-none (completely hidden, zero space)
+            </div>
+            
+            <!-- visibility: hidden: takes up space but invisible -->
+            <div class="render-box bg-warning" style="visibility: hidden;">
+                Element C — visibility: hidden (invisible, but space reserved)
+            </div>
+            
+            <!-- opacity: 0: takes up space and is invisible but interactive -->
+            <div class="render-box bg-info" style="opacity: 0;">
+                Element D — opacity: 0 (invisible, space reserved, clickable)
+            </div>
+            
+            <div class="render-box bg-danger">Element E — normal (visible)</div>
+            
+            <p class="text-muted mt-3">
+                Between B and C there is NO gap (d-none removes from flow). 
+                Between C and E there IS a gap (visibility/opacity preserve space).
+            </p>
+        </div>
+
+        <!-- ============================================================
+             SECTION 3: Conditional rendering to reduce DOM weight
+             Don't render heavy content for views the user can't see.
+             Server-side rendering (SSR) or conditional JS rendering
+             combined with d-none can reduce initial paint time.
+             ============================================================ -->
+        <h3 class="mt-5">3. Conditional Rendering for Performance</h3>
+        <p>Use <code>d-none</code> to defer rendering of heavy content.</p>
+        
+        <div class="perf-demo">
+            <div class="section-label text-muted text-uppercase" style="font-size:0.75rem;">Lazy Content Pattern</div>
+            
+            <button class="btn btn-primary mb-3" onclick="loadHeavyContent()">
+                Load Heavy Content
+            </button>
+            
+            <!-- Heavy content container: starts hidden -->
+            <div id="heavy-content" class="d-none">
+                <div class="alert alert-info">
+                    <strong>Simulated heavy content:</strong> This section would contain charts, 
+                    tables, or images that are expensive to render. By starting with 
+                    <code>d-none</code> and only showing when needed, we save initial render time.
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-center p-4">
+                            <div class="fs-1">📊</div>
+                            <h5>Chart A</h5>
+                            <div class="progress mt-2">
+                                <div class="progress-bar" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center p-4">
+                            <div class="fs-1">📈</div>
+                            <h5>Chart B</h5>
+                            <div class="progress mt-2">
+                                <div class="progress-bar bg-success" style="width: 60%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center p-4">
+                            <div class="fs-1">📉</div>
+                            <h5>Chart C</h5>
+                            <div class="progress mt-2">
+                                <div class="progress-bar bg-warning" style="width: 45%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 4: Avoid layout thrashing
+             Toggling display frequently causes layout reflows (expensive).
+             Instead, use CSS transitions with opacity when possible.
+             ============================================================ -->
+        <h3 class="mt-5">4. Avoiding Layout Thrashing</h3>
+        <p>Toggling <code>d-none</code> causes reflows. Use <code>opacity</code> + <code>transition</code> for smooth animations.</p>
+        
+        <div class="perf-demo">
+            <!-- BAD: d-none toggle causes reflow every click -->
+            <div class="mb-3">
+                <button class="btn btn-danger mb-2" onclick="document.getElementById('thrash-box').classList.toggle('d-none')">
+                    Toggle with d-none (causes reflow)
+                </button>
+                <div id="thrash-box" class="alert alert-danger">
+                    This element causes a layout reflow when toggled with d-none.
+                </div>
+            </div>
+            
+            <!-- GOOD: opacity transition is GPU-accelerated, no reflow -->
+            <div>
+                <button class="btn btn-success mb-2" onclick="document.getElementById('smooth-box').classList.toggle('opacity-0')">
+                    Toggle with opacity (GPU-accelerated)
+                </button>
+                <div id="smooth-box" class="alert alert-success" style="transition: opacity 0.3s ease;">
+                    This element uses opacity transition — smoother and GPU-accelerated.
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 5: Bootstrap's built-in visibility utilities
+             Bootstrap includes .visually-hidden and .visually-hidden-focusable
+             which are performance-friendly ways to hide content accessibly.
+             ============================================================ -->
+        <h3 class="mt-5">5. Built-in Visibility Utilities</h3>
+        <p>Bootstrap provides <code>.visually-hidden</code> and <code>.visually-hidden-focusable</code> for accessible hiding.</p>
+        
+        <div class="perf-demo">
+            <div class="mb-3">
+                <h5>visually-hidden</h5>
+                <p>
+                    This text has a <span class="visually-hidden">secret hidden message for screen readers</span> 
+                    that is only visible to screen readers.
+                </p>
+                <code>class="visually-hidden"</code> — hidden visually, accessible to AT.
+            </div>
+            
+            <div class="mt-3">
+                <h5>visually-hidden-focusable</h5>
+                <p>
+                    <a href="#" class="btn btn-outline-primary visually-hidden-focusable">
+                        Skip to content (hidden until focused)
+                    </a>
+                </p>
+                <code>class="visually-hidden-focusable"</code> — hidden until user tabs to it.
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 6: Minimizing CSS class overhead
+             Bootstrap generates display utility classes for every breakpoint.
+             If you don't use responsive display utilities, PurgeCSS or 
+             Bootstrap's built-in Sass customization can strip unused classes.
+             ============================================================ -->
+        <h3 class="mt-5">6. CSS Class Overhead</h3>
+        
+        <div class="perf-demo">
+            <h5>Display Utility Classes Generated by Bootstrap</h5>
+            <p>Bootstrap generates the following display utility classes:</p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Base (all sizes)</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item py-1"><code>d-none</code></li>
+                        <li class="list-group-item py-1"><code>d-inline</code></li>
+                        <li class="list-group-item py-1"><code>d-block</code></li>
+                        <li class="list-group-item py-1"><code>d-inline-block</code></li>
+                        <li class="list-group-item py-1"><code>d-flex</code></li>
+                        <li class="list-group-item py-1"><code>d-inline-flex</code></li>
+                        <li class="list-group-item py-1"><code>d-table</code></li>
+                        <li class="list-group-item py-1"><code>d-table-cell</code></li>
+                        <li class="list-group-item py-1"><code>d-table-row</code></li>
+                        <li class="list-group-item py-1"><code>d-grid</code></li>
+                        <li class="list-group-item py-1"><code>d-inline-grid</code></li>
+                        <li class="list-group-item py-1"><code>d-contents</code></li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Per Breakpoint (×5 breakpoints = 60 additional classes)</h6>
+                    <p class="text-muted">Each base class is repeated for sm, md, lg, xl, xxl.</p>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item py-1"><code>d-sm-none</code> ... <code>d-sm-contents</code></li>
+                        <li class="list-group-item py-1"><code>d-md-none</code> ... <code>d-md-contents</code></li>
+                        <li class="list-group-item py-1"><code>d-lg-none</code> ... <code>d-lg-contents</code></li>
+                        <li class="list-group-item py-1"><code>d-xl-none</code> ... <code>d-xl-contents</code></li>
+                        <li class="list-group-item py-1"><code>d-xxl-none</code> ... <code>d-xxl-contents</code></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning mt-3">
+                <strong>Optimization tip:</strong> In production, use tools like PurgeCSS, 
+                or Bootstrap's Sass <code>$utilities</code> map to disable unused display utility 
+                breakpoints and reduce CSS bundle size.
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 7: Batch DOM operations
+             When toggling display on many elements, batch operations
+             to avoid multiple reflows.
+             ============================================================ -->
+        <h3 class="mt-5">7. Batch DOM Operations</h3>
+        <p>Avoid toggling display on elements one by one in a loop.</p>
+        
+        <div class="perf-demo">
+            <button class="btn btn-outline-primary mb-3" onclick="batchToggle()">
+                Toggle All Items
+            </button>
+            
+            <div id="batch-container">
+                <div class="d-inline-block bg-primary text-white p-2 m-1 rounded">Item 1</div>
+                <div class="d-inline-block bg-primary text-white p-2 m-1 rounded">Item 2</div>
+                <div class="d-inline-block bg-primary text-white p-2 m-1 rounded">Item 3</div>
+                <div class="d-inline-block bg-primary text-white p-2 m-1 rounded">Item 4</div>
+                <div class="d-inline-block bg-primary text-white p-2 m-1 rounded">Item 5</div>
+                <div class="d-inline-block bg-primary text-white p-2 m-1 rounded">Item 6</div>
+                <div class="d-inline-block bg-primary text-white p-2 m-1 rounded">Item 7</div>
+                <div class="d-inline-block bg-primary text-white p-2 m-1 rounded">Item 8</div>
+            </div>
+            <p class="text-muted mt-2">
+                Best practice: wrap in a container and toggle the container's display, 
+                or use <code>requestAnimationFrame</code> to batch changes.
+            </p>
+        </div>
+
+        <!-- ============================================================
+             SECTION 8: Performance tips summary
+             ============================================================ -->
+        <h3 class="mt-5">8. Performance Tips Summary</h3>
+        
+        <div class="perf-demo">
+            <table class="table">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Tip</th>
+                        <th>Technique</th>
+                        <th>Benefit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Hide heavy content</td>
+                        <td>Start with <code>d-none</code>, show on demand</td>
+                        <td>Faster initial paint</td>
+                    </tr>
+                    <tr>
+                        <td>Smooth transitions</td>
+                        <td>Use <code>opacity</code> + CSS transition</td>
+                        <td>No reflow, GPU-accelerated</td>
+                    </tr>
+                    <tr>
+                        <td>Batch toggles</td>
+                        <td>Toggle parent container instead of children</td>
+                        <td>Single reflow instead of N</td>
+                    </tr>
+                    <tr>
+                        <td>Reduce CSS size</td>
+                        <td>Disable unused display breakpoints in Sass</td>
+                        <td>Smaller CSS bundle</td>
+                    </tr>
+                    <tr>
+                        <td>Accessible hiding</td>
+                        <td>Use <code>.visually-hidden</code> over <code>d-none</code></td>
+                        <td>Screen readers can access</td>
+                    </tr>
+                    <tr>
+                        <td>Avoid layout shifts</td>
+                        <td>Use <code>d-invisible</code> pattern for skeleton</td>
+                        <td>No CLS penalty</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <!-- End container -->
+
+    <script>
+        /* ============================================================
+           JavaScript for performance demos
+           ============================================================ */
+        
+        // Lazy load pattern: show hidden heavy content on demand
+        function loadHeavyContent() {
+            const el = document.getElementById('heavy-content');
+            el.classList.remove('d-none');
+        }
+
+        // Batch toggle: toggle all children at once
+        // Best practice: toggle the container instead of individual items
+        let itemsVisible = true;
+        function batchToggle() {
+            const container = document.getElementById('batch-container');
+            // Single DOM operation — much faster than toggling each child
+            container.classList.toggle('d-none');
+            itemsVisible = !itemsVisible;
+        }
+    </script>
+
+    <!-- Bootstrap 5.3.3 JS Bundle via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

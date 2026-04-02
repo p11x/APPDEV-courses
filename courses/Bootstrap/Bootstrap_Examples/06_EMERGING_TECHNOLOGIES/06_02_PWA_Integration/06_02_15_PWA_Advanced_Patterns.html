@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d6efd">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>PWA Advanced Patterns | Bootstrap 5</title>
+    <style>
+        .pwa-card { border-left: 4px solid #0d6efd; transition: transform 0.3s ease; }
+        .pwa-card:hover { transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">&#128295; PWA Advanced</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#background-sync">Background Sync</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#push">Push Notifications</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#periodic">Periodic Sync</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#web-share">Web Share</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-primary text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">Advanced PWA Patterns</h1>
+            <p class="lead">Background sync, push notifications, periodic background sync, and web share API integration with Bootstrap 5.</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- Section 1: Background Sync -->
+        <section id="background-sync" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128260; Background Sync</h2>
+            <p class="text-muted">Queue failed requests and automatically retry when the network is restored.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">Service Worker Sync Handler</div>
+                        <div class="card-body">
+                            <pre class="mb-0"><code>// sw.js - Handle background sync events
+
+// Listen for sync events triggered by the client
+self.addEventListener('sync', (event) => {
+    console.log('[SW] Sync event:', event.tag);
+
+    switch (event.tag) {
+        case 'sync-posts':
+            event.waitUntil(syncPosts());
+            break;
+        case 'sync-forms':
+            event.waitUntil(syncFormData());
+            break;
+        case 'sync-images':
+            event.waitUntil(syncImages());
+            break;
+    }
+});
+
+// Retry failed post submissions
+async function syncPosts() {
+    const db = await openIndexedDB();
+    const pendingPosts = await db.getAll('pending-posts');
+
+    for (const post of pendingPosts) {
+        try {
+            const response = await fetch('/api/posts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(post.data)
+            });
+
+            if (response.ok) {
+                await db.delete('pending-posts', post.id);
+                // Notify client of successful sync
+                const clients = await self.clients.matchAll();
+                clients.forEach(client => {
+                    client.postMessage({
+                        type: 'SYNC_SUCCESS',
+                        tag: 'sync-posts',
+                        id: post.id
+                    });
+                });
+            }
+        } catch (error) {
+            // Will retry on next sync event
+            console.log('[SW] Sync failed, will retry:', error);
+        }
+    }
+}
+
+// Open IndexedDB for offline queue
+function openIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('pwa-offline-db', 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('pending-posts')) {
+                db.createObjectStore('pending-posts', { keyPath: 'id', autoIncrement: true });
+            }
+            if (!db.objectStoreNames.contains('pending-forms')) {
+                db.createObjectStore('pending-forms', { keyPath: 'id', autoIncrement: true });
+            }
+        };
+    });
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">Client-Side Sync Registration</div>
+                        <div class="card-body">
+                            <pre class="mb-0"><code>// Client-side: Register background sync
+
+class BackgroundSync {
+    // Queue a request for background sync
+    static async queue(storeName, data) {
+        // Store data in IndexedDB
+        const db = await this.openDB();
+        const tx = db.transaction(storeName, 'readwrite');
+        tx.objectStore(storeName).add({
+            data: data,
+            timestamp: Date.now()
+        });
+        await tx.complete;
+
+        // Register sync with service worker
+        const registration = await navigator.serviceWorker.ready;
+        await registration.sync.register(`sync-${storeName}`);
+    }
+
+    // Check if sync is supported
+    static isSupported() {
+        return 'SyncManager' in window;
+    }
+
+    // Listen for sync results from SW
+    static listenForResults() {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data.type === 'SYNC_SUCCESS') {
+                this.showNotification(
+                    'Sync Complete',
+                    `Your ${event.data.tag} was synced successfully`
+                );
+            }
+        });
+    }
+
+    // Show Bootstrap toast notification
+    static showNotification(title, message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast show position-fixed bottom-0 end-0 m-3';
+        toast.style.zIndex = '1060';
+        toast.innerHTML = `
+            &lt;div class="toast-header"&gt;
+                &lt;strong class="me-auto"&gt;${title}&lt;/strong&gt;
+            &lt;/div&gt;
+            &lt;div class="toast-body"&gt;${message}&lt;/div&gt;`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    }
+}
+
+// Example: Queue a form submission
+async function submitFormOffline(formData) {
+    try {
+        await fetch('/api/submit', {
+            method: 'POST',
+            body: formData
+        });
+    } catch (error) {
+        if (BackgroundSync.isSupported()) {
+            await BackgroundSync.queue('pending-forms', formData);
+            BackgroundSync.showNotification(
+                'Saved Offline',
+                'Your form will be submitted when online'
+            );
+        }
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Background Sync demo -->
+            <div class="card pwa-card mt-4">
+                <div class="card-body">
+                    <h5>Interactive Demo</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Test Message</label>
+                                <input type="text" class="form-control" id="syncMessage" placeholder="Type a message...">
+                            </div>
+                            <button class="btn btn-primary mt-2" id="queueSyncBtn">
+                                &#128260; Queue for Sync
+                            </button>
+                            <div class="mt-2" id="syncStatus"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Sync Queue</h6>
+                            <div class="bg-light rounded p-3" id="syncQueue" style="min-height: 100px;">
+                                <small class="text-muted">No items in queue</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Push Notifications -->
+        <section id="push" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128276; Push Notifications</h2>
+            <p class="text-muted">Send push notifications to users even when the app is closed.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">Service Worker Push Handler</div>
+                        <div class="card-body">
+                            <pre class="mb-0"><code>// sw.js - Handle push notifications
+
+self.addEventListener('push', (event) => {
+    // Parse push data
+    const data = event.data ? event.data.json() : {};
+
+    const options = {
+        body: data.body || 'New notification',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/badge-72.png',
+        image: data.image,
+        vibrate: [100, 50, 100],
+        data: {
+            url: data.url || '/',
+            timestamp: Date.now()
+        },
+        actions: [
+            { action: 'open', title: 'Open' },
+            { action: 'dismiss', title: 'Dismiss' }
+        ],
+        tag: data.tag || 'default',
+        requireInteraction: data.requireInteraction || false
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(data.title || 'Notification', options)
+    );
+});
+
+// Handle notification click
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    if (event.action === 'dismiss') return;
+
+    const url = event.notification.data.url || '/';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window' }).then(windowClients => {
+            // Focus existing window if open
+            for (const client of windowClients) {
+                if (client.url === url && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Open new window
+            if (clients.openWindow) {
+                return clients.openWindow(url);
+            }
+        })
+    );
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">Client-Side Push Subscription</div>
+                        <div class="card-body">
+                            <pre class="mb-0"><code>// Client-side push notification setup
+
+class PushNotifications {
+    constructor(vapidPublicKey) {
+        this.vapidPublicKey = vapidPublicKey;
+    }
+
+    // Check if push is supported
+    isSupported() {
+        return 'PushManager' in window &&
+               'Notification' in window;
+    }
+
+    // Request notification permission
+    async requestPermission() {
+        const permission = await Notification.requestPermission();
+        return permission === 'granted';
+    }
+
+    // Subscribe to push notifications
+    async subscribe() {
+        const registration = await navigator.serviceWorker.ready;
+
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true, // Required: must show notifications
+            applicationServerKey: this.urlBase64ToUint8Array(
+                this.vapidPublicKey
+            )
+        });
+
+        // Send subscription to server
+        await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(subscription)
+        });
+
+        return subscription;
+    }
+
+    // Convert VAPID key
+    urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/-/g, '+').replace(/_/g, '/');
+        const raw = atob(base64);
+        return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Push notification demo UI -->
+            <div class="card pwa-card mt-4">
+                <div class="card-body text-center">
+                    <h5>Notification Permission</h5>
+                    <p class="text-muted">Status: <span class="badge" id="notifStatus">Checking...</span></p>
+                    <button class="btn btn-primary" id="requestNotifBtn">&#128276; Request Permission</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Periodic Background Sync -->
+        <section id="periodic" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128337; Periodic Background Sync</h2>
+            <p class="text-muted">Periodically fetch fresh content in the background, so it's ready when the user opens the app.</p>
+
+            <div class="card pwa-card">
+                <div class="card-header bg-dark text-white"><code>Periodic Sync Implementation</code></div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>// Service Worker: Handle periodic sync
+self.addEventListener('periodicsync', (event) => {
+    if (event.tag === 'update-content') {
+        event.waitUntil(updateContentCache());
+    }
+});
+
+async function updateContentCache() {
+    const cache = await caches.open('dynamic-content');
+
+    // Fetch fresh content
+    const urls = ['/api/latest-news', '/api/trending', '/api/weather'];
+    for (const url of urls) {
+        try {
+            const response = await fetch(url);
+            await cache.put(url, response);
+        } catch (error) {
+            console.log('[SW] Periodic sync failed for:', url);
+        }
+    }
+}
+
+// Client-side: Register periodic sync
+async function registerPeriodicSync() {
+    const registration = await navigator.serviceWorker.ready;
+
+    if ('periodicSync' in registration) {
+        // Check permission
+        const status = await navigator.permissions.query({
+            name: 'periodic-background-sync'
+        });
+
+        if (status.state === 'granted') {
+            await registration.periodicSync.register('update-content', {
+                minInterval: 24 * 60 * 60 * 1000 // Once per day
+            });
+        }
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Web Share API -->
+        <section id="web-share" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128279; Web Share API</h2>
+            <p class="text-muted">Native share dialogs from within your PWA, integrating with the device's share sheet.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-body">
+                            <h5>Share Demo</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Title</label>
+                                <input type="text" class="form-control" id="shareTitle" value="Check out this PWA!">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Text</label>
+                                <input type="text" class="form-control" id="shareText" value="An awesome Bootstrap 5 Progressive Web App">
+                            </div>
+                            <button class="btn btn-primary" id="shareBtn">&#128279; Share</button>
+                            <div class="mt-2" id="shareResult"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">Web Share Code</div>
+                        <div class="card-body">
+                            <pre class="mb-0"><code>// Web Share API with fallback
+async function shareContent(data) {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: data.title,
+                text: data.text,
+                url: data.url || location.href
+            });
+            return { success: true };
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                return { cancelled: true };
+            }
+            throw err;
+        }
+    } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(
+            `${data.title}\n${data.text}\n${data.url}`
+        );
+        return { copied: true };
+    }
+}
+
+// Share files (if supported)
+async function shareFile(file, title) {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+            files: [file],
+            title: title
+        });
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Patterns Summary -->
+        <section class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128203; Advanced Patterns Summary</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Pattern</th>
+                            <th>Purpose</th>
+                            <th>Browser Support</th>
+                            <th>Requires</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Background Sync</td>
+                            <td>Retry failed requests offline</td>
+                            <td>Chrome, Edge, Samsung</td>
+                            <td>SW + HTTPS</td>
+                        </tr>
+                        <tr>
+                            <td>Push Notifications</td>
+                            <td>Notify users when app closed</td>
+                            <td>All major browsers</td>
+                            <td>SW + VAPID + Server</td>
+                        </tr>
+                        <tr>
+                            <td>Periodic Sync</td>
+                            <td>Background content refresh</td>
+                            <td>Chrome, Edge</td>
+                            <td>SW + Permission</td>
+                        </tr>
+                        <tr>
+                            <td>Web Share</td>
+                            <td>Native share dialog</td>
+                            <td>Chrome, Safari, Edge</td>
+                            <td>HTTPS + User gesture</td>
+                        </tr>
+                        <tr>
+                            <td>Web Share Target</td>
+                            <td>Receive shared content</td>
+                            <td>Chrome, Edge</td>
+                            <td>Manifest config</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="text-muted mb-0">PWA Advanced Patterns Module | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Notification status
+            const notifStatus = document.getElementById('notifStatus');
+            if ('Notification' in window) {
+                const perm = Notification.permission;
+                notifStatus.textContent = perm.charAt(0).toUpperCase() + perm.slice(1);
+                notifStatus.className = 'badge bg-' + (perm === 'granted' ? 'success' : perm === 'denied' ? 'danger' : 'warning');
+            } else {
+                notifStatus.textContent = 'Not Supported';
+                notifStatus.className = 'badge bg-secondary';
+            }
+
+            // Request permission button
+            document.getElementById('requestNotifBtn').addEventListener('click', async () => {
+                if ('Notification' in window) {
+                    const result = await Notification.requestPermission();
+                    notifStatus.textContent = result.charAt(0).toUpperCase() + result.slice(1);
+                    notifStatus.className = 'badge bg-' + (result === 'granted' ? 'success' : 'danger');
+                }
+            });
+
+            // Share demo
+            document.getElementById('shareBtn').addEventListener('click', async () => {
+                const title = document.getElementById('shareTitle').value;
+                const text = document.getElementById('shareText').value;
+                const resultEl = document.getElementById('shareResult');
+
+                if (navigator.share) {
+                    try {
+                        await navigator.share({ title, text, url: location.href });
+                        resultEl.innerHTML = '<span class="badge bg-success">Shared!</span>';
+                    } catch (e) {
+                        resultEl.innerHTML = '<span class="badge bg-secondary">Cancelled</span>';
+                    }
+                } else {
+                    try {
+                        await navigator.clipboard.writeText(`${title}\n${text}\n${location.href}`);
+                        resultEl.innerHTML = '<span class="badge bg-info">Copied to clipboard!</span>';
+                    } catch (e) {
+                        resultEl.innerHTML = '<span class="badge bg-danger">Not supported</span>';
+                    }
+                }
+            });
+
+            // Background sync demo
+            const syncQueue = [];
+            document.getElementById('queueSyncBtn').addEventListener('click', () => {
+                const msg = document.getElementById('syncMessage').value;
+                if (msg) {
+                    syncQueue.push({ message: msg, time: new Date().toLocaleTimeString() });
+                    document.getElementById('syncMessage').value = '';
+
+                    const queueEl = document.getElementById('syncQueue');
+                    queueEl.innerHTML = syncQueue.map(item =>
+                        `<div class="d-flex justify-content-between border-bottom py-1">
+                            <small>${item.message}</small>
+                            <small class="text-muted">${item.time}</small>
+                        </div>`
+                    ).join('');
+
+                    document.getElementById('syncStatus').innerHTML =
+                        `<span class="badge bg-warning">Queued (sync when online)</span>`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

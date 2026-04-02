@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_03_15_CSS_Modern_Complete_Guide.html                         -->
+<!-- Complete modern CSS reference                                  -->
+<!-- Bootstrap 5.3.3 + Comprehensive Modern CSS Features            -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06_03_15 - Complete Modern CSS Guide</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* CSS CUSTOM PROPERTIES (Design Tokens)                         */
+        /* ============================================================= */
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --success: #00b894;
+            --surface: #f8f9fa;
+            --text: #2d3436;
+            --text-muted: #636e72;
+            --radius: 12px;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --transition: 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --surface: #1a1a2e;
+            --text: #edf2f7;
+            --text-muted: #a0aec0;
+            --shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+
+        /* ============================================================= */
+        /* CSS NESTING                                                   */
+        /* ============================================================= */
+        .modern-component {
+            background: var(--surface);
+            color: var(--text);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: all var(--transition);
+            container-type: inline-size;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            }
+
+            & .component-title {
+                color: var(--primary);
+                font-weight: 700;
+                margin-bottom: 8px;
+            }
+
+            & .component-desc {
+                color: var(--text-muted);
+                font-size: 0.95rem;
+            }
+
+            /* Container query inside nesting */
+            @container (min-width: 400px) {
+                & {
+                    display: flex;
+                    gap: 20px;
+                    align-items: center;
+                }
+            }
+        }
+
+        /* ============================================================= */
+        /* :HAS() SELECTOR                                               */
+        /* ============================================================= */
+        .has-card {
+            border: 2px solid #e9ecef;
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: all var(--transition);
+
+            &:has(.badge-featured) {
+                border-color: var(--accent);
+                background: #fff0f6;
+            }
+
+            &:has(img) {
+                padding-top: 0;
+            }
+        }
+
+        /* ============================================================= */
+        /* @SCOPE                                                        */
+        /* ============================================================= */
+        @scope (.scope-dark) {
+            :scope {
+                background: #16213e;
+                color: #edf2f7;
+                padding: 20px;
+                border-radius: var(--radius);
+            }
+            a { color: var(--secondary); }
+        }
+
+        /* ============================================================= */
+        /* @PROPERTY (Typed Custom Properties)                           */
+        /* ============================================================= */
+        @property --anim-color {
+            syntax: '<color>';
+            inherits: false;
+            initial-value: #6c5ce7;
+        }
+
+        @property --anim-angle {
+            syntax: '<angle>';
+            inherits: false;
+            initial-value: 0deg;
+        }
+
+        .animated-bg {
+            --anim-angle: 0deg;
+            background: linear-gradient(var(--anim-angle), var(--primary), var(--accent));
+            transition: --anim-angle 0.8s ease;
+            padding: 32px;
+            border-radius: var(--radius);
+            color: white;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .animated-bg:hover { --anim-angle: 180deg; }
+
+        /* ============================================================= */
+        /* CSS GRID + SUBGRID                                            */
+        /* ============================================================= */
+        .master-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+        }
+
+        .grid-card {
+            grid-column: span 3;
+            display: grid;
+            grid-template-columns: subgrid;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+
+            & .card-header-area {
+                grid-column: 1 / -1;
+                padding: 16px;
+                background: var(--primary);
+                color: white;
+            }
+
+            & .card-body-area {
+                grid-column: 1 / 4;
+                padding: 16px;
+            }
+
+            & .card-aside-area {
+                grid-column: 4 / 7;
+                padding: 16px;
+                background: var(--surface);
+            }
+        }
+
+        /* ============================================================= */
+        /* LOGICAL PROPERTIES                                            */
+        /* ============================================================= */
+        .logical-box {
+            padding-block: 16px;
+            padding-inline: 24px;
+            margin-block-end: 16px;
+            border-inline-start: 4px solid var(--primary);
+            border-radius: var(--radius);
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        /* ============================================================= */
+        /* CLIP-PATH + MASKING                                           */
+        /* ============================================================= */
+        .clipped-hero {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            padding: 60px 40px;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+            color: white;
+            text-align: center;
+            border-radius: var(--radius);
+        }
+
+        .masked-element {
+            background: linear-gradient(135deg, var(--success), #00cec9);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 50%, transparent 80%);
+            mask-image: radial-gradient(ellipse at center, black 50%, transparent 80%);
+            height: 200px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* ============================================================= */
+        /* BLEND MODES                                                   */
+        /* ============================================================= */
+        .blend-overlay {
+            position: relative;
+            background: linear-gradient(135deg, #dfe6e9, #b2bec3);
+            border-radius: var(--radius);
+            padding: 40px;
+            overflow: hidden;
+
+            &::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, var(--primary), var(--accent));
+                mix-blend-mode: multiply;
+            }
+        }
+
+        /* ============================================================= */
+        /* SCROLL SNAP                                                   */
+        /* ============================================================= */
+        .snap-carousel {
+            scroll-snap-type: x mandatory;
+            display: flex;
+            overflow-x: auto;
+            gap: 16px;
+            padding: 16px;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+
+            &::-webkit-scrollbar { display: none; }
+
+            & .snap-slide {
+                scroll-snap-align: center;
+                flex: 0 0 80%;
+                max-width: 400px;
+                height: 200px;
+                border-radius: var(--radius);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: 600;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            }
+        }
+
+        /* ============================================================= */
+        /* SCROLL-DRIVEN ANIMATIONS                                      */
+        /* ============================================================= */
+        @keyframes scroll-reveal {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .scroll-reveal {
+            animation: scroll-reveal linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 35%;
+        }
+
+        /* ============================================================= */
+        /* CASCADE LAYERS                                                */
+        /* ============================================================= */
+        @layer base, components, utilities;
+
+        @layer components {
+            .layered-box {
+                background: var(--surface);
+                border: 2px solid #dee2e6;
+                border-radius: var(--radius);
+                padding: 16px;
+            }
+        }
+
+        @layer utilities {
+            .layered-box.highlight {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+            }
+        }
+
+        /* ============================================================= */
+        /* VISUAL STYLES                                                 */
+        /* ============================================================= */
+        .section-card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 24px;
+            scroll-reveal: scroll-reveal;
+        }
+
+        .section-card-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 16px 24px;
+            font-weight: 600;
+        }
+
+        .section-card-body {
+            padding: 24px;
+        }
+
+        .gradient-1 { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .gradient-2 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .gradient-3 { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .gradient-4 { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .feature-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-right: 4px;
+        }
+
+        .toc-link {
+            display: block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-muted);
+            transition: all 0.2s;
+
+            &:hover {
+                background: var(--surface);
+                color: var(--primary);
+                padding-inline-start: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+
+        <!-- Page header -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-3 fw-bold" style="color:var(--primary);">Complete Modern CSS Guide</h1>
+                <p class="lead text-muted">A comprehensive reference for all modern CSS features</p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- TABLE OF CONTENTS                                             -->
+        <!-- Quick navigation to all sections.                             -->
+        <!-- ============================================================= -->
+        <div class="section-card mb-5">
+            <div class="section-card-header">Table of Contents</div>
+            <div class="section-card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="#custom-props" class="toc-link">1. CSS Custom Properties</a>
+                        <a href="#nesting" class="toc-link">2. CSS Nesting</a>
+                        <a href="#has-selector" class="toc-link">3. :has() Selector</a>
+                        <a href="#scope" class="toc-link">4. @scope Rule</a>
+                        <a href="#grid" class="toc-link">5. CSS Grid + Subgrid</a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#logical" class="toc-link">6. Logical Properties</a>
+                        <a href="#container-queries" class="toc-link">7. Container Queries</a>
+                        <a href="#cascade-layers" class="toc-link">8. Cascade Layers</a>
+                        <a href="#clip-mask" class="toc-link">9. Clipping & Masking</a>
+                        <a href="#blend-modes" class="toc-link">10. Blend Modes</a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="#scroll-snap" class="toc-link">11. Scroll Snap</a>
+                        <a href="#scroll-animations" class="toc-link">12. Scroll Animations</a>
+                        <a href="#houdini" class="toc-link">13. CSS Houdini</a>
+                        <a href="#animation-worklet" class="toc-link">14. Animation Worklet</a>
+                        <a href="#reference" class="toc-link">15. Quick Reference</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 1. CSS CUSTOM PROPERTIES                                      -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="custom-props">
+            <div class="section-card-header">
+                1. CSS Custom Properties
+                <span class="feature-tag bg-success text-white float-end">Stable</span>
+            </div>
+            <div class="section-card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Design Tokens</h5>
+                        <p class="text-muted">
+                            Custom properties (variables) defined in <code>:root</code> cascade globally.
+                            Override them per-component for theming.
+                        </p>
+                        <!-- Theme toggle -->
+                        <button class="btn btn-outline-primary btn-sm me-2" onclick="document.documentElement.removeAttribute('data-theme')">Light</button>
+                        <button class="btn btn-dark btn-sm" onclick="document.documentElement.setAttribute('data-theme','dark')">Dark</button>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="animated-bg">
+                            <h4>Animated @property</h4>
+                            <p class="mb-0 opacity-75">Hover to animate --anim-angle</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 2. CSS NESTING                                                -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="nesting">
+            <div class="section-card-header">
+                2. CSS Nesting
+                <span class="feature-tag bg-success text-white float-end">Stable</span>
+            </div>
+            <div class="section-card-body">
+                <div class="modern-component">
+                    <div class="component-title">Nested Component</div>
+                    <p class="component-desc mb-0">
+                        This component's styles use native CSS nesting with the <code>&amp;</code> selector.
+                        Hover, child selectors, and media queries are all nested within one rule block.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 3. :HAS() SELECTOR                                            -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="has-selector">
+            <div class="section-card-header">
+                3. :has() Relational Selector
+                <span class="feature-tag bg-success text-white float-end">Stable</span>
+            </div>
+            <div class="section-card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="has-card">
+                            <h5>Regular Card</h5>
+                            <p class="text-muted small mb-0">No special children inside.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="has-card">
+                            <h5>Featured Card</h5>
+                            <span class="badge-featured badge bg-danger">Featured</span>
+                            <p class="text-muted small mt-2 mb-0">
+                                <code>:has(.badge-featured)</code> applies pink background.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 4. @SCOPE                                                     -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="scope">
+            <div class="section-card-header">
+                4. @scope Rule
+                <span class="feature-tag bg-info text-white float-end">New</span>
+            </div>
+            <div class="section-card-body">
+                <div class="scope-dark">
+                    <h5>Scoped Dark Section</h5>
+                    <p class="mb-0">
+                        All styles are scoped to <code>.scope-dark</code>. They don't leak outside.
+                        Links, headings, and paragraphs get scoped colors.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 5. CSS GRID + SUBGRID                                         -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="grid">
+            <div class="section-card-header">5. CSS Grid + Subgrid</div>
+            <div class="section-card-body">
+                <div class="master-grid">
+                    <div class="grid-card" style="grid-column:span 3;">
+                        <div class="card-header-area">Subgrid Card</div>
+                        <div class="card-body-area">Body (cols 1-3)</div>
+                        <div class="card-aside-area">Aside (cols 4-6)</div>
+                    </div>
+                    <div class="grid-card" style="grid-column:span 3;">
+                        <div class="card-header-area" style="background:var(--accent);">Second Card</div>
+                        <div class="card-body-area">Aligned Body</div>
+                        <div class="card-aside-area">Aligned Aside</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 6. LOGICAL PROPERTIES                                         -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="logical">
+            <div class="section-card-header">6. Logical Properties</div>
+            <div class="section-card-body">
+                <div class="logical-box">
+                    <code>padding-block: 16px; padding-inline: 24px;</code><br>
+                    <code>margin-block-end: 16px; border-inline-start: 4px solid;</code><br>
+                    Writing-mode-aware spacing that adapts to LTR/RTL automatically.
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary btn-sm me-2" onclick="document.documentElement.dir='ltr'">LTR</button>
+                    <button class="btn btn-outline-primary btn-sm" onclick="document.documentElement.dir='rtl'">RTL</button>
+                    <span class="text-muted ms-2 small">Toggle to see logical properties adapt</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 7. CONTAINER QUERIES                                          -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="container-queries">
+            <div class="section-card-header">
+                7. Container Queries
+                <span class="feature-tag bg-success text-white float-end">Stable</span>
+            </div>
+            <div class="section-card-body">
+                <p class="text-muted">
+                    <code>container-type: inline-size</code> + <code>@container (min-width: X)</code>
+                    makes components respond to their container width, not the viewport.
+                </p>
+                <div style="container-type:inline-size; padding:16px; border:2px dashed #dee2e6; border-radius:var(--radius);">
+                    <div class="modern-component" style="padding:16px;">
+                        <div class="component-title">Container-Queried Component</div>
+                        <p class="component-desc mb-0">Layout changes based on this container's width.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 8. CASCADE LAYERS                                             -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="cascade-layers">
+            <div class="section-card-header">8. Cascade Layers (@layer)</div>
+            <div class="section-card-body">
+                <div class="layered-box highlight">
+                    <code>@layer base, components, utilities;</code><br>
+                    This box uses the <strong>utilities</strong> layer which overrides <strong>components</strong>.
+                    Unlayered styles always beat layered styles.
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 9. CLIPPING & MASKING                                         -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="clip-mask">
+            <div class="section-card-header">9. Clipping & Masking</div>
+            <div class="section-card-body">
+                <div class="clipped-hero mb-3">
+                    <h3>Clipped Hero</h3>
+                    <p class="mb-0 opacity-75">clip-path: polygon() creates the diagonal edge</p>
+                </div>
+                <div class="masked-element">
+                    Radial Gradient Mask
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 10. BLEND MODES                                               -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="blend-modes">
+            <div class="section-card-header">10. Blend Modes</div>
+            <div class="section-card-body">
+                <div class="blend-overlay">
+                    <h3 class="position-relative" style="z-index:1; color:white;">mix-blend-mode: multiply</h3>
+                    <p class="position-relative" style="z-index:1; color:white; opacity:0.8;" class="mb-0">
+                        Gradient overlay blended using multiply mode via pseudo-element.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 11. SCROLL SNAP                                               -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="scroll-snap">
+            <div class="section-card-header">11. Scroll Snap</div>
+            <div class="section-card-body">
+                <div class="snap-carousel">
+                    <div class="snap-slide gradient-1">Slide 1</div>
+                    <div class="snap-slide gradient-2">Slide 2</div>
+                    <div class="snap-slide gradient-3">Slide 3</div>
+                    <div class="snap-slide gradient-4">Slide 4</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 12. SCROLL-DRIVEN ANIMATIONS                                  -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="scroll-animations">
+            <div class="section-card-header">
+                12. Scroll-Driven Animations
+                <span class="feature-tag bg-info text-white float-end">New</span>
+            </div>
+            <div class="section-card-body">
+                <p class="text-muted">
+                    <code>animation-timeline: view()</code> triggers animations based on element visibility.
+                    <code>animation-timeline: scroll()</code> links to scroll position.
+                    These cards animate as they enter the viewport.
+                </p>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 13. CSS HOUDINI                                               -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="houdini">
+            <div class="section-card-header">13. CSS Houdini</div>
+            <div class="section-card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>API</th>
+                                <th>Purpose</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Properties & Values</td><td>Typed custom properties (@property)</td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Paint API</td><td>Custom background images</td><td><span class="badge bg-warning">Chromium</span></td></tr>
+                            <tr><td>Layout API</td><td>Custom layout algorithms</td><td><span class="badge bg-danger">Experimental</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 14. ANIMATION WORKLET                                         -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="animation-worklet">
+            <div class="section-card-header">14. Animation Worklet</div>
+            <div class="section-card-body">
+                <p class="text-muted">
+                    Runs animations on a dedicated thread for jank-free performance.
+                    <code>CSS.animationWorklet.addModule('animator.js')</code> loads the worklet.
+                    Fallback: use CSS <code>animation-timeline</code> for scroll-linked effects.
+                </p>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 15. QUICK REFERENCE TABLE                                     -->
+        <!-- ============================================================= -->
+        <div class="section-card scroll-reveal" id="reference">
+            <div class="section-card-header">15. Quick Reference</div>
+            <div class="section-card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm mb-0">
+                        <thead class="table-primary">
+                            <tr><th>Feature</th><th>Property/Selector</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Custom Properties</td><td><code>:root { --x: value; }</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Typed Properties</td><td><code>@property --x { syntax: '&lt;color&gt;' }</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Nesting</td><td><code>&amp; .child { }</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>:has()</td><td><code>:has(img) { }</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>@scope</td><td><code>@scope (.x) { }</code></td><td><span class="badge bg-info">New</span></td></tr>
+                            <tr><td>@layer</td><td><code>@layer base, components;</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Subgrid</td><td><code>grid-template-columns: subgrid</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Container Queries</td><td><code>@container (min-width: X)</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Logical Props</td><td><code>margin-inline-start</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Scroll Snap</td><td><code>scroll-snap-type: x mandatory</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Scroll Animations</td><td><code>animation-timeline: view()</code></td><td><span class="badge bg-info">New</span></td></tr>
+                            <tr><td>Clip-Path</td><td><code>clip-path: polygon()</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Masking</td><td><code>mask-image: gradient()</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Blend Modes</td><td><code>mix-blend-mode: multiply</code></td><td><span class="badge bg-success">Stable</span></td></tr>
+                            <tr><td>Paint API</td><td><code>background: paint(name)</code></td><td><span class="badge bg-warning">Chromium</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.container -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

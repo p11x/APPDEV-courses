@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         04_03_11 - Theme Cross Browser
+         ============================================
+         Cross-browser theming techniques:
+         - Vendor prefix handling
+         - Fallback strategies
+         - Browser-specific bug workarounds
+         - Feature detection with @supports
+         - Progressive enhancement
+         ============================================ -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Cross-Browser Theming</title>
+
+    <style>
+        /* ============================================
+           SECTION 1: @supports FEATURE DETECTION
+           ============================================
+           Use @supports to provide enhanced styles
+           for browsers that support specific features.
+           ============================================ */
+
+        /* Glassmorphism with fallback */
+        .glass-card {
+            /* Fallback: solid background */
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+
+        /* Enhanced: backdrop-filter support */
+        @supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
+            .glass-card {
+                background: rgba(255, 255, 255, 0.15);
+                -webkit-backdrop-filter: blur(10px);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        /* CSS Grid with flexbox fallback */
+        .modern-grid {
+            /* Fallback: flexbox */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .modern-grid > * {
+            flex: 1 1 300px;
+        }
+
+        @supports (display: grid) {
+            .modern-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 1rem;
+            }
+
+            .modern-grid > * {
+                flex: unset;
+            }
+        }
+
+        /* CSS custom properties with fallback */
+        .themed-element {
+            /* Fallback value first */
+            color: #4f46e5;
+            /* Then custom property */
+            color: var(--brand-primary, #4f46e5);
+        }
+
+        /* ============================================
+           SECTION 2: VENDOR PREFIX PATTERNS
+           ============================================ */
+
+        .prefixed-element {
+            /* Standard property */
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+
+            /* User select */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Smooth scrolling with fallback */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+        }
+
+        /* ============================================
+           SECTION 3: PROGRESSIVE ENHANCEMENT
+           ============================================ */
+
+        /* Base: works everywhere */
+        .enhanced-shadow {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Enhanced: modern browsers */
+        @supports (box-shadow: 0 0 0 red) {
+            .enhanced-shadow {
+                box-shadow:
+                    0 1px 2px rgba(0,0,0,0.05),
+                    0 4px 8px rgba(0,0,0,0.05),
+                    0 12px 24px rgba(0,0,0,0.05);
+            }
+        }
+
+        /* ============================================
+           SECTION 4: BROWSER-SPECIFIC WORKAROUNDS
+           ============================================ */
+
+        /* Safari input styling */
+        input[type="search"]::-webkit-search-decoration,
+        input[type="search"]::-webkit-search-cancel-button,
+        input[type="search"]::-webkit-search-results-button,
+        input[type="search"]::-webkit-search-results-decoration {
+            display: none;
+        }
+
+        /* iOS momentum scrolling */
+        .scroll-container {
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
+        }
+
+        /* Prevent text size adjust on mobile */
+        body {
+            -webkit-text-size-adjust: 100%;
+            -moz-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        /* ============================================
+           SECTION 5: GRADIENT FALLBACKS
+           ============================================ */
+
+        .gradient-element {
+            /* Solid fallback */
+            background: #6f42c1;
+            /* Standard gradient */
+            background: linear-gradient(135deg, #6f42c1, #e83e8c);
+        }
+
+        .gradient-text {
+            color: #6f42c1;
+        }
+
+        @supports (background-clip: text) or (-webkit-background-clip: text) {
+            .gradient-text {
+                background: linear-gradient(135deg, #6f42c1, #e83e8c);
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+        }
+
+        /* ============================================
+           SECTION 6: CLIP PATH WITH FALLBACK
+           ============================================ */
+
+        .clipped-section {
+            background: #6f42c1;
+            padding: 4rem 0;
+            margin: 0 -0.75rem;
+        }
+
+        @supports (clip-path: polygon(0 0, 100% 0, 100% 80%, 0 100%)) {
+            .clipped-section {
+                clip-path: polygon(0 0, 100% 0, 100% 80%, 0 100%);
+                margin-bottom: -2rem;
+            }
+        }
+
+        /* ============================================
+           SECTION 7: CONTAINER QUERIES (modern)
+           ============================================ */
+
+        .cq-container {
+            container-type: inline-size;
+            container-name: card;
+        }
+
+        /* Fallback styles */
+        .cq-card-body {
+            padding: 1rem;
+        }
+
+        .cq-card-title {
+            font-size: 1rem;
+        }
+
+        /* Enhanced with container queries */
+        @supports (container-type: inline-size) {
+            @container card (min-width: 400px) {
+                .cq-card-body {
+                    padding: 2rem;
+                    display: flex;
+                    gap: 1.5rem;
+                    align-items: center;
+                }
+
+                .cq-card-title {
+                    font-size: 1.25rem;
+                }
+            }
+        }
+
+        /* ============================================
+           SECTION 8: SCROLLBAR STYLING
+           ============================================ */
+
+        .custom-scrollbar {
+            height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Webkit (Chrome, Safari, Edge) */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        /* Firefox */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #c1c1c1 #f1f1f1;
+        }
+
+        /* ============================================
+           GRADIENT BG FOR DEMOS
+           ============================================ */
+
+        .demo-gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem;
+            border-radius: 1rem;
+        }
+
+        .feature-support-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+        }
+
+        .support-yes { background: #d1fae5; color: #065f46; }
+        .support-partial { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Cross-Browser Themes</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="py-5 text-center bg-light">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Cross-Browser Theming</h1>
+            <p class="lead text-muted">
+                Feature detection, fallbacks, and progressive enhancement patterns.
+            </p>
+        </div>
+    </section>
+
+    <!-- @supports demo -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Feature Detection with @supports</h2>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <h5>Glassmorphism Card</h5>
+                    <div class="demo-gradient-bg">
+                        <div class="glass-card text-white">
+                            <h5>Card Title</h5>
+                            <p class="mb-0">
+                                Falls back to solid white background if
+                                <code>backdrop-filter</code> is unsupported.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>CSS Grid with Flexbox Fallback</h5>
+                    <div class="modern-grid">
+                        <div class="bg-light p-3 rounded border text-center">Auto-fit 1</div>
+                        <div class="bg-light p-3 rounded border text-center">Auto-fit 2</div>
+                        <div class="bg-light p-3 rounded border text-center">Auto-fit 3</div>
+                    </div>
+                    <p class="text-muted small mt-2">
+                        Flexbox on older browsers, CSS Grid on modern ones.
+                    </p>
+                </div>
+            </div>
+
+            <h5>Gradient Text with Fallback</h5>
+            <p class="gradient-text display-5 fw-bold mb-4">
+                Gradient text falls back to solid color
+            </p>
+        </div>
+    </section>
+
+    <!-- Vendor prefixes -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Vendor Prefix Reference</h2>
+            <div class="table-responsive">
+                <table class="table table-striped small">
+                    <thead>
+                        <tr><th>Property</th><th>-webkit-</th><th>-moz-</th><th>-ms-</th><th>Standard</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>backdrop-filter</td><td><span class="feature-support-badge support-yes">Yes</span></td><td><span class="feature-support-badge support-partial">Partial</span></td><td>-</td><td><span class="feature-support-badge support-yes">Yes</span></td></tr>
+                        <tr><td>appearance</td><td><span class="feature-support-badge support-yes">Yes</span></td><td><span class="feature-support-badge support-yes">Yes</span></td><td>-</td><td><span class="feature-support-badge support-yes">Yes</span></td></tr>
+                        <tr><td>user-select</td><td><span class="feature-support-badge support-yes">Yes</span></td><td><span class="feature-support-badge support-yes">Yes</span></td><td><span class="feature-support-badge support-yes">Yes</span></td><td><span class="feature-support-badge support-yes">Yes</span></td></tr>
+                        <tr><td>text-size-adjust</td><td><span class="feature-support-badge support-yes">Yes</span></td><td><span class="feature-support-badge support-yes">Yes</span></td><td><span class="feature-support-badge support-yes">Yes</span></td><td><span class="feature-support-badge support-partial">Partial</span></td></tr>
+                        <tr><td>clip-path</td><td><span class="feature-support-badge support-yes">Yes</span></td><td><span class="feature-support-badge support-yes">Yes</span></td><td>-</td><td><span class="feature-support-badge support-yes">Yes</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scrollbar styling -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Cross-Browser Scrollbar Styling</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h5>Custom Scrollbar</h5>
+                    <div class="custom-scrollbar border rounded p-3">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                        <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                        <p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                        <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
+                    </div>
+                    <p class="text-muted small mt-2">
+                        Uses <code>::-webkit-scrollbar</code> for Chrome/Safari/Edge
+                        and <code>scrollbar-width</code>/<code>scrollbar-color</code> for Firefox.
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Feature Support</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <strong>Chrome/Edge:</strong>
+                            <code>::-webkit-scrollbar</code>
+                            <span class="feature-support-badge support-yes ms-2">Full</span>
+                        </li>
+                        <li class="mb-2">
+                            <strong>Safari:</strong>
+                            <code>::-webkit-scrollbar</code>
+                            <span class="feature-support-badge support-yes ms-2">Full</span>
+                        </li>
+                        <li class="mb-2">
+                            <strong>Firefox:</strong>
+                            <code>scrollbar-width/color</code>
+                            <span class="feature-support-badge support-partial ms-2">Limited</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Container queries -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Container Queries (Progressive)</h2>
+            <p class="text-muted mb-4">
+                Resize the browser to see the card adapt based on its container width,
+                not viewport width.
+            </p>
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="cq-container">
+                        <div class="card">
+                            <div class="cq-card-body">
+                                <div class="bg-primary rounded" style="width:80px;height:80px;flex-shrink:0"></div>
+                                <div>
+                                    <h5 class="cq-card-title">Container Query Card</h5>
+                                    <p class="mb-0 text-muted">
+                                        When the container exceeds 400px, the layout switches
+                                        to horizontal with larger padding and title.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Progressive enhancement pattern -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Progressive Enhancement Pattern</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="enhanced-shadow p-4 rounded bg-light mb-3">
+                        <h5>Layered Shadows</h5>
+                        <p class="mb-0 text-muted">
+                            Simple shadow as fallback, layered multi-shadow on modern browsers.
+                        </p>
+                    </div>
+                    <pre class="bg-dark text-light p-3 rounded small mb-0"><code>/* Base: all browsers */
+.box { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+/* Enhanced: modern browsers */
+@supports (box-shadow: 0 0 0 red) {
+  .box {
+    box-shadow:
+      0 1px 2px rgba(0,0,0,0.05),
+      0 4px 8px rgba(0,0,0,0.05),
+      0 12px 24px rgba(0,0,0,0.05);
+  }
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Clipped section demo -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Clip-Path with Fallback</h2>
+            <div class="clipped-section text-white text-center">
+                <h3>Angled Section</h3>
+                <p>Falls back to straight edge on unsupported browsers.</p>
+            </div>
+            <div class="bg-white p-4 rounded">
+                <p class="text-muted">
+                    The section above uses <code>clip-path: polygon()</code> to create an angled bottom edge.
+                    Browsers without support show a straight edge.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Cross-Browser Theming Demo</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

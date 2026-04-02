@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 01_03_22 - Grid Future Patterns                                -->
+<!-- Explores emerging CSS grid features, upcoming Bootstrap       -->
+<!-- capabilities, and forward-looking patterns including CSS      -->
+<!-- Grid Level 2 (subgrid), container queries, :has() selector,  -->
+<!-- and new layout paradigms.                                     -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Future Patterns - Bootstrap 5</title>
+
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .grid-item {
+            padding: 1rem;
+            background-color: #e7f1ff;
+            border: 1px solid #86b7fe;
+            border-radius: 0.375rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .section-divider {
+            margin: 2rem 0;
+            padding: 1rem 0;
+            border-top: 2px solid #dee2e6;
+        }
+        .code-block {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        .code-block .comment { color: #6a9955; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .property { color: #9cdcfe; }
+        .code-block .fn { color: #dcdcaa; }
+
+        /* Browser support badges */
+        .support-yes { background-color: #198754; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; }
+        .support-partial { background-color: #ffc107; color: black; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; }
+        .support-no { background-color: #dc3545; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; }
+
+        /* ============================================================ */
+        /* FUTURE CSS FEATURES (Progressive Enhancement)                */
+        /* ============================================================ */
+
+        /* SUBGRID DEMO - CSS Grid Level 2 */
+        /* Parent grid defines tracks, children align to parent tracks */
+        /* Supported: Chrome 117+, Firefox 71+, Safari 16+, Edge 117+ */
+        .subgrid-demo {
+            display: grid;
+            /* Parent grid with 3 equal columns */
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .subgrid-card {
+            /* Subgrid inherits parent's column tracks */
+            display: grid;
+            /* Align columns to parent grid (1 track = 1 parent column) */
+            grid-column: span 3;
+            grid-template-columns: subgrid;
+            /* Also inherit row sizing from parent */
+            grid-template-rows: subgrid;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        /* Fallback for browsers without subgrid */
+        @supports not (grid-template-columns: subgrid) {
+            .subgrid-card {
+                display: flex;
+                flex-wrap: wrap;
+            }
+        }
+
+        /* CONTAINER QUERY FUTURE - style queries */
+        /* Query parent container's style, not just size */
+        .theme-container {
+            container-type: inline-size;
+            container-name: theme-box;
+        }
+
+        /* NESTED CSS - native nesting (Chrome 120+, Firefox 117+, Safari 17.2+) */
+        /* Supported: Chrome 120+, Firefox 117+, Safari 17.2+ */
+        .modern-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+
+            /* Native CSS nesting (no & needed for simple cases) */
+            > .grid-item {
+                padding: 1rem;
+                background: #e7f1ff;
+                border-radius: 0.375rem;
+
+                &:hover {
+                    background: #cfe2ff;
+                    transform: translateY(-2px);
+                    transition: transform 0.2s;
+                }
+
+                > h6 {
+                    margin-bottom: 0.5rem;
+                    color: #0d6efd;
+                }
+            }
+        }
+
+        /* SCROLL-DRIVEN ANIMATIONS (Chrome 115+) */
+        /* Grid items animate as they scroll into view */
+        @supports (animation-timeline: view()) {
+            .scroll-animate-grid > .grid-item {
+                animation: fade-in linear both;
+                animation-timeline: view();
+                animation-range: entry 0% entry 100%;
+            }
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* VIEW TRANSITIONS API (Chrome 111+) */
+        /* Smooth transitions when grid layout changes */
+        ::view-transition-old(grid-item),
+        ::view-transition-new(grid-item) {
+            animation-duration: 0.3s;
+        }
+
+        /* HAS() SELECTOR (Chrome 105+, Firefox 121+, Safari 15.4+) */
+        /* Style parent based on child state */
+        .has-demo:has(.active-item) {
+            border: 2px solid #198754;
+            background-color: #d1e7dd;
+        }
+
+        .has-demo:not(:has(.active-item)) {
+            border: 2px solid #dee2e6;
+            background-color: #f8f9fa;
+        }
+
+        /* Popover API - no JS needed for tooltips/popovers */
+        /* Already supported in Bootstrap 5.3+ */
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-3">Grid Future Patterns</h1>
+        <p class="lead text-muted">
+            Emerging CSS features, upcoming Bootstrap capabilities, and forward-looking layout patterns.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: CSS SUBGRID                                        -->
+        <!-- Align nested grid items to parent grid tracks                 -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">1. CSS Subgrid <span class="support-partial">Partial Support</span></h2>
+            <p class="text-muted mb-3">
+                Subgrid allows child grids to inherit track definitions from their parent grid,
+                enabling perfect alignment across nested components.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Subgrid Use Case: Card Alignment</h5>
+                    <!-- Cards with aligned titles, content, and footers -->
+                    <div class="subgrid-demo">
+                        <div class="subgrid-card" style="grid-column: span 1;">
+                            <div style="background: #cfe2ff; padding: 0.5rem;">
+                                <strong>Short Title</strong>
+                            </div>
+                            <div style="padding: 0.5rem;">
+                                <p class="small mb-1">Short content.</p>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 0.5rem;">
+                                <small>Footer</small>
+                            </div>
+                        </div>
+                        <div class="subgrid-card" style="grid-column: span 1;">
+                            <div style="background: #cfe2ff; padding: 0.5rem;">
+                                <strong>Much Longer Title That Wraps</strong>
+                            </div>
+                            <div style="padding: 0.5rem;">
+                                <p class="small mb-1">Longer content paragraph here.</p>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 0.5rem;">
+                                <small>Footer</small>
+                            </div>
+                        </div>
+                        <div class="subgrid-card" style="grid-column: span 1;">
+                            <div style="background: #cfe2ff; padding: 0.5rem;">
+                                <strong>Title</strong>
+                            </div>
+                            <div style="padding: 0.5rem;">
+                                <p class="small mb-1">Medium length content.</p>
+                            </div>
+                            <div style="background: #f8f9fa; padding: 0.5rem;">
+                                <small>Footer</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Subgrid Code</h5>
+                    <div class="code-block">
+<span class="comment">/* Parent grid */</span><br>
+.parent-grid {<br>
+&nbsp;&nbsp;display: grid;<br>
+&nbsp;&nbsp;grid-template-columns: repeat(3, 1fr);<br>
+&nbsp;&nbsp;gap: 1rem;<br>
+}<br><br>
+<span class="comment">/* Child card using subgrid */</span><br>
+.card-subgrid {<br>
+&nbsp;&nbsp;display: grid;<br>
+&nbsp;&nbsp;<span class="comment">/* Inherit parent's column tracks */</span><br>
+&nbsp;&nbsp;grid-column: span 1;<br>
+&nbsp;&nbsp;grid-template-columns: subgrid;<br>
+&nbsp;&nbsp;<span class="comment">/* Also subgrid rows */</span><br>
+&nbsp;&nbsp;grid-template-rows: subgrid;<br>
+}<br><br>
+<span class="comment">/* Card sections align across all cards! */</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: :HAS() SELECTOR                                    -->
+        <!-- The "parent selector" - style parents based on children      -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">2. :has() Selector <span class="support-partial">Partial Support</span></h2>
+            <p class="text-muted mb-3">
+                The :has() selector lets you style a parent element based on its children.
+                This eliminates JavaScript for many interactive grid patterns.
+            </p>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <!-- Container changes style based on child state -->
+                    <div class="has-demo card p-3">
+                        <h6>Grid Container</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="hasCheck1" onchange="this.closest('.has-demo').classList.toggle('has-active', this.checked)">
+                            <label class="form-check-label" for="hasCheck1">Toggle active</label>
+                        </div>
+                        <p class="small text-muted mt-2">
+                            Container changes border color when child has .active class.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <h5>:has() Examples</h5>
+                    <div class="code-block">
+<span class="comment">/* Style row differently when it contains an error column */</span><br>
+.row:has(.col-error) {<br>
+&nbsp;&nbsp;border: 2px solid <span class="string">#dc3545</span>;<br>
+&nbsp;&nbsp;background: <span class="string">#f8d7da</span>;<br>
+}<br><br>
+<span class="comment">/* Style grid card when hovering any child */</span><br>
+.card:has(.btn:hover) {<br>
+&nbsp;&nbsp;box-shadow: 0 4px 12px rgba(0,0,0,0.15);<br>
+}<br><br>
+<span class="comment">/* Grid layout changes when sidebar has content */</span><br>
+.dashboard:has(.sidebar > *) {<br>
+&nbsp;&nbsp;grid-template-columns: 280px 1fr;<br>
+}<br>
+.dashboard:not(:has(.sidebar > *)) {<br>
+&nbsp;&nbsp;grid-template-columns: 1fr;<br>
+}<br><br>
+<span class="comment">/* Highlight row containing checked checkbox */</span><br>
+.row:has(input:checked) {<br>
+&nbsp;&nbsp;background-color: <span class="string">#d1e7dd</span>;<br>
+}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: NATIVE CSS NESTING                                 -->
+        <!-- Write nested CSS without preprocessors                       -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">3. Native CSS Nesting <span class="support-partial">Partial Support</span></h2>
+            <p class="text-muted mb-3">
+                Native CSS nesting is now supported in modern browsers,
+                reducing the need for Sass nesting in grid styles.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Sass Nesting (Current)</h5>
+                    <div class="code-block">
+<span class="comment">// Sass syntax</span><br>
+.grid-container {<br>
+&nbsp;&nbsp;display: grid;<br>
+&nbsp;&nbsp;gap: 1rem;<br><br>
+&nbsp;&nbsp;.grid-item {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;padding: 1rem;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;background: #e7f1ff;<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&:hover {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;background: #cfe2ff;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&.active {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;border-color: #198754;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Native CSS Nesting (Future)</h5>
+                    <div class="code-block">
+<span class="comment">/* Native CSS - no preprocessor needed! */</span><br>
+<span class="comment">/* Chrome 120+, Firefox 117+, Safari 17.2+ */</span><br><br>
+.grid-container {<br>
+&nbsp;&nbsp;display: grid;<br>
+&nbsp;&nbsp;gap: 1rem;<br><br>
+&nbsp;&nbsp;<span class="comment">/* & is optional for simple nesting */</span><br>
+&nbsp;&nbsp;&gt; .grid-item {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;padding: 1rem;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;background: #e7f1ff;<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&:hover {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;background: #cfe2ff;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&.active {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;border-color: #198754;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;}<br>
+}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live demo of native nesting -->
+            <h5 class="mt-4">Native Nesting Demo</h5>
+            <div class="modern-grid">
+                <div class="grid-item">
+                    <h6>Nested Item 1</h6>
+                    <p class="small mb-0">Uses native CSS nesting</p>
+                </div>
+                <div class="grid-item">
+                    <h6>Nested Item 2</h6>
+                    <p class="small mb-0">Hover to see transition</p>
+                </div>
+                <div class="grid-item">
+                    <h6>Nested Item 3</h6>
+                    <p class="small mb-0">No preprocessor required</p>
+                </div>
+                <div class="grid-item">
+                    <h6>Nested Item 4</h6>
+                    <p class="small mb-0">Progressive enhancement</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: VIEW TRANSITIONS API                               -->
+        <!-- Smooth animations when grid layout changes                   -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">4. View Transitions API <span class="support-partial">Chrome Only</span></h2>
+            <p class="text-muted mb-3">
+                The View Transitions API enables smooth animated transitions when
+                grid layouts change, without JavaScript animation libraries.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>View Transitions Code</h5>
+                    <div class="code-block">
+<span class="comment">// Toggle grid layout with smooth transition</span><br>
+<span class="keyword">function</span> <span class="fn">toggleLayout</span>() {<br>
+&nbsp;&nbsp;<span class="comment">// Check if View Transitions API is supported</span><br>
+&nbsp;&nbsp;<span class="keyword">if</span> (!document.startViewTransition) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;updateGridLayout(); <span class="comment">// Fallback</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span>;<br>
+&nbsp;&nbsp;}<br><br>
+&nbsp;&nbsp;<span class="comment">// Animate the layout change</span><br>
+&nbsp;&nbsp;document.<span class="fn">startViewTransition</span>(() => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">updateGridLayout</span>();<br>
+&nbsp;&nbsp;});<br>
+}<br><br>
+<span class="comment">// CSS for transition animation</span><br>
+<span class="comment">// ::view-transition-old(grid-item) {</span><br>
+<span class="comment">//   animation: fade-out 0.3s;</span><br>
+<span class="comment">// }</span><br>
+<span class="comment">// ::view-transition-new(grid-item) {</span><br>
+<span class="comment">//   animation: fade-in 0.3s;</span><br>
+<span class="comment">// }</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Demo: Toggle Grid Layout</h5>
+                    <div class="mb-3">
+                        <button class="btn btn-primary btn-sm" onclick="toggleDemoLayout()">
+                            Toggle 2-col / 3-col
+                        </button>
+                    </div>
+                    <div id="vt-grid" class="row g-2">
+                        <div class="col-6"><div class="grid-item"><strong>1</strong></div></div>
+                        <div class="col-6"><div class="grid-item"><strong>2</strong></div></div>
+                        <div class="col-6"><div class="grid-item"><strong>3</strong></div></div>
+                        <div class="col-6"><div class="grid-item"><strong>4</strong></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: SCROLL-DRIVEN ANIMATIONS                           -->
+        <!-- Animate grid items as they scroll into view                  -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">5. Scroll-Driven Animations <span class="support-partial">Chrome 115+</span></h2>
+            <p class="text-muted mb-3">
+                CSS scroll-driven animations let you animate grid items as they
+                enter the viewport, without JavaScript Intersection Observer.
+            </p>
+
+            <div class="code-block">
+<span class="comment">/* Grid items fade in as they scroll into view */</span><br>
+.scroll-grid > .grid-item {<br>
+&nbsp;&nbsp;<span class="comment">/* Animation linked to scroll position */</span><br>
+&nbsp;&nbsp;animation: fade-slide-in linear both;<br>
+&nbsp;&nbsp;animation-timeline: view();<br>
+&nbsp;&nbsp;<span class="comment">/* Start when element enters viewport */</span><br>
+&nbsp;&nbsp;animation-range: entry 0% entry 100%;<br>
+}<br><br>
+<span class="keyword">@keyframes</span> fade-slide-in {<br>
+&nbsp;&nbsp;from {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;opacity: 0;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;transform: translateY(30px);<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;to {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;opacity: 1;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;transform: translateY(0);<br>
+&nbsp;&nbsp;}<br>
+}
+            </div>
+
+            <!-- Scroll demo grid -->
+            <div class="scroll-animate-grid">
+                <div class="row g-2">
+                    <div class="col-md-4 grid-item"><strong>Scroll Item 1</strong><br><small>Animates on scroll</small></div>
+                    <div class="col-md-4 grid-item"><strong>Scroll Item 2</strong><br><small>Animates on scroll</small></div>
+                    <div class="col-md-4 grid-item"><strong>Scroll Item 3</strong><br><small>Animates on scroll</small></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: FUTURE BOOTSTRAP ROADMAP                           -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">6. Bootstrap Future Roadmap</h2>
+            <p class="text-muted mb-3">
+                Expected features and improvements in upcoming Bootstrap versions.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <strong>Bootstrap 5.x Near-Term</strong>
+                        </div>
+                        <div class="card-body">
+                            <ul class="small">
+                                <li><strong>Container queries</strong> in utilities</li>
+                                <li><strong>:has() selector</strong> utilities</li>
+                                <li><strong>CSS nesting</strong> in source</li>
+                                <li><strong>Improved RTL</strong> with logical properties</li>
+                                <li><strong>Better dark mode</strong> grid theming</li>
+                                <li><strong>CSS custom property</strong> expansion</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 border-info">
+                        <div class="card-header bg-info text-white">
+                            <strong>Bootstrap 6 (Speculative)</strong>
+                        </div>
+                        <div class="card-body">
+                            <ul class="small">
+                                <li><strong>CSS Grid option</strong> alongside Flexbox</li>
+                                <li><strong>Subgrid support</strong> for nested layouts</li>
+                                <li><strong>View Transitions</strong> integration</li>
+                                <li><strong>Scroll-driven</strong> animation utilities</li>
+                                <li><strong>Smaller core</strong> with modular imports</li>
+                                <li><strong>No jQuery</strong> (already done in BS5)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7: CSS FEATURE SUPPORT MATRIX                         -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">7. CSS Feature Support Matrix (2024-2026)</h2>
+
+            <table class="table table-bordered table-striped table-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Feature</th>
+                        <th>Chrome</th>
+                        <th>Firefox</th>
+                        <th>Safari</th>
+                        <th>Edge</th>
+                        <th>Grid Use</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>CSS Subgrid</td>
+                        <td><span class="support-yes">117+</span></td>
+                        <td><span class="support-yes">71+</span></td>
+                        <td><span class="support-yes">16+</span></td>
+                        <td><span class="support-yes">117+</span></td>
+                        <td>Aligned nested grids</td>
+                    </tr>
+                    <tr>
+                        <td>Container Queries</td>
+                        <td><span class="support-yes">105+</span></td>
+                        <td><span class="support-yes">110+</span></td>
+                        <td><span class="support-yes">16+</span></td>
+                        <td><span class="support-yes">105+</span></td>
+                        <td>Responsive components</td>
+                    </tr>
+                    <tr>
+                        <td>:has() Selector</td>
+                        <td><span class="support-yes">105+</span></td>
+                        <td><span class="support-yes">121+</span></td>
+                        <td><span class="support-yes">15.4+</span></td>
+                        <td><span class="support-yes">105+</span></td>
+                        <td>Conditional styling</td>
+                    </tr>
+                    <tr>
+                        <td>Native Nesting</td>
+                        <td><span class="support-yes">120+</span></td>
+                        <td><span class="support-yes">117+</span></td>
+                        <td><span class="support-yes">17.2+</span></td>
+                        <td><span class="support-yes">120+</span></td>
+                        <td>Cleaner styles</td>
+                    </tr>
+                    <tr>
+                        <td>View Transitions</td>
+                        <td><span class="support-yes">111+</span></td>
+                        <td><span class="support-no">No</span></td>
+                        <td><span class="support-no">No</span></td>
+                        <td><span class="support-yes">111+</span></td>
+                        <td>Layout animations</td>
+                    </tr>
+                    <tr>
+                        <td>Scroll Animations</td>
+                        <td><span class="support-yes">115+</span></td>
+                        <td><span class="support-no">No</span></td>
+                        <td><span class="support-no">No</span></td>
+                        <td><span class="support-yes">115+</span></td>
+                        <td>Scroll-triggered effects</td>
+                    </tr>
+                    <tr>
+                        <td>@scope</td>
+                        <td><span class="support-yes">118+</span></td>
+                        <td><span class="support-no">No</span></td>
+                        <td><span class="support-partial">TP</span></td>
+                        <td><span class="support-yes">118+</span></td>
+                        <td>Scoped grid styles</td>
+                    </tr>
+                    <tr>
+                        <td>CSS Anchor Position</td>
+                        <td><span class="support-yes">125+</span></td>
+                        <td><span class="support-no">No</span></td>
+                        <td><span class="support-no">No</span></td>
+                        <td><span class="support-yes">125+</span></td>
+                        <td>Positioned grid overlays</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 8: PROGRESSIVE ENHANCEMENT STRATEGY                  -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">8. Progressive Enhancement Strategy</h2>
+            <p class="text-muted mb-3">
+                Use @supports to layer future features on top of Bootstrap's solid foundation.
+            </p>
+
+            <div class="code-block">
+<span class="comment">/* Base: Bootstrap flexbox grid (works everywhere) */</span><br>
+.card-grid {<br>
+&nbsp;&nbsp;<span class="keyword">@extend</span> .row;<br>
+&nbsp;&nbsp;<span class="keyword">@extend</span> .g-4;<br>
+}<br><br>
+<span class="comment">/* Enhancement 1: CSS Grid auto-layout */</span><br>
+<span class="keyword">@supports</span> (display: grid) {<br>
+&nbsp;&nbsp;.card-grid {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;display: grid;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;gap: 1.5rem;<br>
+&nbsp;&nbsp;}<br>
+}<br><br>
+<span class="comment">/* Enhancement 2: Container queries */</span><br>
+<span class="keyword">@supports</span> (container-type: inline-size) {<br>
+&nbsp;&nbsp;.card-grid {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;container-type: inline-size;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;@container (min-width: 600px) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.card-grid > * { display: flex; }<br>
+&nbsp;&nbsp;}<br>
+}<br><br>
+<span class="comment">/* Enhancement 3: Subgrid alignment */</span><br>
+<span class="keyword">@supports</span> (grid-template-columns: subgrid) {<br>
+&nbsp;&nbsp;.card-grid > * {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;display: grid;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;grid-template-columns: subgrid;<br>
+&nbsp;&nbsp;}<br>
+}
+            </div>
+
+            <div class="alert alert-success">
+                <strong>Key Principle:</strong> Start with Bootstrap's proven grid as the baseline.
+                Add future CSS features as progressive enhancements using @supports.
+                The layout works everywhere; enhanced browsers get a better experience.
+            </div>
+        </section>
+
+        <footer class="mt-4 mb-5 pt-3 border-top">
+            <p class="text-muted text-center">
+                <small>
+                    Grid Future Patterns - Bootstrap 5.3.3<br>
+                    Test future features with real browsers. Feature support data current as of 2024.
+                </small>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // View Transitions demo: toggle grid between 2-col and 3-col
+        let isThreeCol = false;
+
+        function toggleDemoLayout() {
+            const grid = document.getElementById('vt-grid');
+            const cols = grid.querySelectorAll('[class*="col-"]');
+
+            // Use View Transitions API if available
+            if (document.startViewTransition) {
+                document.startViewTransition(() => {
+                    applyLayout(cols);
+                });
+            } else {
+                applyLayout(cols);
+            }
+        }
+
+        function applyLayout(cols) {
+            isThreeCol = !isThreeCol;
+            cols.forEach(col => {
+                // Remove existing col classes
+                col.className = col.className.replace(/col-\d+/g, '');
+                col.className = col.className.replace(/col-md-\d+/g, '');
+                // Apply new layout
+                col.classList.add(isThreeCol ? 'col-md-4' : 'col-6');
+            });
+        }
+
+        // :has() demo enhancement
+        document.querySelectorAll('.has-demo .form-check-input').forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                const container = this.closest('.has-demo');
+                if (this.checked) {
+                    const activeItem = document.createElement('div');
+                    activeItem.className = 'active-item d-none';
+                    activeItem.dataset.active = 'true';
+                    container.appendChild(activeItem);
+                    container.style.borderColor = '#198754';
+                    container.style.backgroundColor = '#d1e7dd';
+                } else {
+                    const activeItem = container.querySelector('.active-item');
+                    if (activeItem) activeItem.remove();
+                    container.style.borderColor = '#dee2e6';
+                    container.style.backgroundColor = '#f8f9fa';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

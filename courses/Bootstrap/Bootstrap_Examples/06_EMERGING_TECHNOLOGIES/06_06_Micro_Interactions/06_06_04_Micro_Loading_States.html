@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<!-- ====================================================================
+     06_06_04_Micro_Loading_States.html
+     
+     PURPOSE: Loading state micro interactions
+     TOPICS:  Skeleton screens, spinners, shimmer effects,
+              lazy loading indicators, progressive loading
+     
+     Loading states improve perceived performance by showing
+     users that content is coming. Skeleton screens are preferred
+     over spinners because they set expectations about layout.
+     ==================================================================== -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro Loading States - Bootstrap Mastery</title>
+    
+    <link 
+        rel="stylesheet" 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aVf636N"
+        crossorigin="anonymous">
+    
+    <style>
+        /* ==============================================================
+           SKELETON SCREEN PATTERNS
+           
+           Skeleton screens show placeholder shapes that match the
+           expected content layout. Users perceive faster loading
+           because they see content structure immediately.
+           
+           The shimmer animation draws attention without being jarring.
+           ============================================================== */
+        
+        /* Base skeleton styling */
+        .skeleton {
+            background: linear-gradient(
+                90deg,
+                #e9ecef 25%,    /* Light gray base */
+                #f8f9fa 37%,    /* White shimmer highlight */
+                #e9ecef 63%     /* Back to gray */
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 0.375rem;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Skeleton variants for different content types */
+        .skeleton-text {
+            height: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .skeleton-text-sm {
+            height: 0.75rem;
+            width: 60%;
+        }
+        
+        .skeleton-title {
+            height: 1.5rem;
+            width: 40%;
+            margin-bottom: 0.75rem;
+        }
+        
+        .skeleton-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .skeleton-image {
+            width: 100%;
+            height: 200px;
+            border-radius: 0.375rem;
+        }
+        
+        .skeleton-button {
+            height: 38px;
+            width: 100px;
+            border-radius: 0.375rem;
+        }
+        
+        /* ==============================================================
+           SKELETON CARD - Matches Bootstrap card layout
+           ============================================================== */
+        .skeleton-card {
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .skeleton-card .skeleton-image {
+            border-radius: 0;
+        }
+        
+        /* ==============================================================
+           SPINNER VARIATIONS
+           
+           Bootstrap's spinner component enhanced with variations.
+           ============================================================== */
+        
+        /* Dots spinner - three bouncing dots */
+        .spinner-dots {
+            display: flex;
+            gap: 0.375rem;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .spinner-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #0d6efd;
+            animation: dot-bounce 1.4s infinite ease-in-out both;
+        }
+        
+        .spinner-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .spinner-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .spinner-dots span:nth-child(3) { animation-delay: 0s; }
+        
+        @keyframes dot-bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
+        /* Pulse spinner - expanding ring */
+        .spinner-pulse {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #0d6efd;
+            animation: pulse-expand 1s ease-out infinite;
+        }
+        
+        @keyframes pulse-expand {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        /* Progress line at top of page */
+        .progress-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0d6efd, #6610f2, #0d6efd);
+            background-size: 200% 100%;
+            animation: progress-line-move 1.5s linear infinite;
+            z-index: 1100;
+            transition: width 300ms ease;
+        }
+        
+        @keyframes progress-line-move {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* ==============================================================
+           BUTTON LOADING STATES
+           
+           Buttons that show spinner while processing.
+           Text is replaced with spinner, then restored on completion.
+           ============================================================== */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+        
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 600ms linear infinite;
+        }
+        
+        .btn-loading.btn-outline-primary::after,
+        .btn-loading.btn-outline-secondary::after {
+            border-color: currentColor;
+            border-top-color: transparent;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ==============================================================
+           LAZY IMAGE PLACEHOLDER
+           
+           Shows a blurred placeholder while the real image loads.
+           ============================================================== */
+        .lazy-image-wrapper {
+            position: relative;
+            overflow: hidden;
+            background: #e9ecef;
+        }
+        
+        .lazy-image-wrapper img {
+            transition: opacity 500ms ease, filter 500ms ease;
+        }
+        
+        .lazy-image-wrapper img.loading {
+            opacity: 0.3;
+            filter: blur(10px);
+        }
+        
+        .lazy-image-wrapper img.loaded {
+            opacity: 1;
+            filter: blur(0);
+        }
+        
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .skeleton { animation: none; background: #e9ecef; }
+            .spinner-dots span { animation: none; transform: scale(1); }
+            .spinner-pulse { animation: none; }
+            .progress-line { animation: none; }
+            .btn-loading::after { animation: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress line (hidden by default, shown during page load) -->
+    <div class="progress-line" id="progressLine" style="width: 0%"></div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">⏳ Loading States</a>
+        </div>
+    </nav>
+
+    <header class="bg-dark text-white py-5">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Micro Loading States</h1>
+            <p class="lead">Skeleton screens, spinners, and progressive loading</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- ==============================================================
+             SECTION 1: SKELETON SCREENS
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Skeleton Screens</h2>
+            <p class="text-muted">Show content structure while data loads. Click "Load Content" to see the transition.</p>
+            
+            <button class="btn btn-primary mb-3" onclick="loadSkeletonDemo()">Load Content</button>
+            
+            <div class="row g-4" id="skeletonDemo">
+                <!-- Card 1: Skeleton state -->
+                <div class="col-md-4">
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="p-3">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 2: Skeleton state -->
+                <div class="col-md-4">
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="p-3">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 3: Skeleton state -->
+                <div class="col-md-4">
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="p-3">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 2: SPINNER VARIATIONS
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Spinner Variations</h2>
+            
+            <div class="row g-4">
+                <!-- Bootstrap Spinner -->
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="small text-muted mb-0">Border Spinner</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Grow Spinner -->
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="spinner-grow text-primary mb-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="small text-muted mb-0">Grow Spinner</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dots Spinner -->
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body" style="min-height: 80px; display:flex; align-items:center; justify-content:center;">
+                            <div class="spinner-dots mb-3">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                        <p class="small text-muted mb-0">Dots Spinner</p>
+                    </div>
+                </div>
+                
+                <!-- Pulse Spinner -->
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body" style="min-height: 80px; display:flex; align-items:center; justify-content:center;">
+                            <div class="spinner-pulse mb-3"></div>
+                        </div>
+                        <p class="small text-muted mb-0">Pulse Spinner</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 3: BUTTON LOADING STATES
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Button Loading States</h2>
+            
+            <div class="d-flex gap-3 flex-wrap">
+                <button class="btn btn-primary" id="loadBtn1" onclick="loadButton('loadBtn1', 2000)">
+                    Save Changes
+                </button>
+                <button class="btn btn-success" id="loadBtn2" onclick="loadButton('loadBtn2', 3000)">
+                    Submit Order
+                </button>
+                <button class="btn btn-outline-primary" id="loadBtn3" onclick="loadButton('loadBtn3', 1500)">
+                    Send Email
+                </button>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 4: LIST SKELETON
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. List Skeleton Pattern</h2>
+            
+            <button class="btn btn-outline-primary mb-3" onclick="loadListDemo()">Load Users</button>
+            
+            <div class="list-group" id="listSkeleton">
+                <!-- Skeleton list items -->
+                <div class="list-group-item d-flex align-items-center gap-3 skeleton-list-item">
+                    <div class="skeleton skeleton-avatar"></div>
+                    <div class="flex-grow-1">
+                        <div class="skeleton skeleton-text" style="width: 40%"></div>
+                        <div class="skeleton skeleton-text-sm"></div>
+                    </div>
+                </div>
+                <div class="list-group-item d-flex align-items-center gap-3 skeleton-list-item">
+                    <div class="skeleton skeleton-avatar"></div>
+                    <div class="flex-grow-1">
+                        <div class="skeleton skeleton-text" style="width: 55%"></div>
+                        <div class="skeleton skeleton-text-sm"></div>
+                    </div>
+                </div>
+                <div class="list-group-item d-flex align-items-center gap-3 skeleton-list-item">
+                    <div class="skeleton skeleton-avatar"></div>
+                    <div class="flex-grow-1">
+                        <div class="skeleton skeleton-text" style="width: 35%"></div>
+                        <div class="skeleton skeleton-text-sm"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 5: INLINE LOADING (TABLE ROWS)
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Table Skeleton</h2>
+            
+            <button class="btn btn-outline-primary mb-3" onclick="loadTableDemo()">Load Data</button>
+            
+            <div class="table-responsive">
+                <table class="table" id="tableSkeleton">
+                    <thead>
+                        <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><div class="skeleton skeleton-text" style="width:80%"></div></td><td><div class="skeleton skeleton-text" style="width:90%"></div></td><td><div class="skeleton skeleton-text-sm"></div></td><td><div class="skeleton" style="width:60px;height:24px;border-radius:12px"></div></td></tr>
+                        <tr><td><div class="skeleton skeleton-text" style="width:70%"></div></td><td><div class="skeleton skeleton-text" style="width:85%"></div></td><td><div class="skeleton skeleton-text-sm"></div></td><td><div class="skeleton" style="width:60px;height:24px;border-radius:12px"></div></td></tr>
+                        <tr><td><div class="skeleton skeleton-text" style="width:65%"></div></td><td><div class="skeleton skeleton-text" style="width:80%"></div></td><td><div class="skeleton skeleton-text-sm"></div></td><td><div class="skeleton" style="width:60px;height:24px;border-radius:12px"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">Micro Loading States - Bootstrap Mastery</p>
+            <small class="text-muted">06_06_04_Micro_Loading_States.html</small>
+        </div>
+    </footer>
+
+    <script 
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLSfVQmvFPwCq8mFpDrNvbTNpsMxMXJLZl1FTERFBzNEk9"
+        crossorigin="anonymous">
+    </script>
+
+    <script>
+        // ==============================================================
+        // SKELETON TO CONTENT TRANSITION
+        // Replaces skeleton placeholders with real content
+        // ==============================================================
+        function loadSkeletonDemo() {
+            const container = document.getElementById('skeletonDemo');
+            
+            // Show progress line
+            animateProgressLine();
+            
+            // Simulate 1.5s load time, then replace skeletons
+            setTimeout(() => {
+                const cards = [
+                    { title: 'Product Alpha', desc: 'High-performance widget with advanced features.', color: '#667eea' },
+                    { title: 'Product Beta', desc: 'Streamlined solution for modern workflows.', color: '#f093fb' },
+                    { title: 'Product Gamma', desc: 'Enterprise-grade platform for teams.', color: '#4facfe' }
+                ];
+                
+                container.innerHTML = cards.map(c => `
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div style="height:200px;background:${c.color};display:flex;align-items:center;justify-content:center;color:white;font-size:2rem">
+                                📦
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">${c.title}</h5>
+                                <p class="card-text">${c.desc}</p>
+                                <button class="btn btn-primary btn-sm">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                completeProgressLine();
+            }, 1500);
+        }
+        
+        // ==============================================================
+        // BUTTON LOADING STATE
+        // Temporarily adds loading class, then shows success
+        // ==============================================================
+        function loadButton(id, duration) {
+            const btn = document.getElementById(id);
+            const originalText = btn.textContent;
+            
+            btn.classList.add('btn-loading');
+            
+            setTimeout(() => {
+                btn.classList.remove('btn-loading');
+                btn.textContent = '✓ Done!';
+                btn.classList.replace(btn.classList.contains('btn-outline') ? 'btn-outline-primary' : 'btn-primary', 'btn-success');
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.replace('btn-success', btn.classList.contains('btn-outline') ? 'btn-outline-primary' : 'btn-primary');
+                }, 1500);
+            }, duration);
+        }
+        
+        // ==============================================================
+        // LIST SKELETON TRANSITION
+        // ==============================================================
+        function loadListDemo() {
+            const container = document.getElementById('listSkeleton');
+            
+            setTimeout(() => {
+                const users = [
+                    { name: 'Alice Johnson', email: 'alice@example.com', role: 'Admin', color: '#0d6efd' },
+                    { name: 'Bob Smith', email: 'bob@example.com', role: 'Editor', color: '#198754' },
+                    { name: 'Carol White', email: 'carol@example.com', role: 'Viewer', color: '#6c757d' }
+                ];
+                
+                container.innerHTML = users.map(u => `
+                    <div class="list-group-item d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                             style="width:48px;height:48px;background:${u.color};flex-shrink:0">
+                            ${u.name[0]}
+                        </div>
+                        <div class="flex-grow-1">
+                            <strong>${u.name}</strong>
+                            <div class="small text-muted">${u.email}</div>
+                        </div>
+                        <span class="badge bg-secondary">${u.role}</span>
+                    </div>
+                `).join('');
+            }, 1500);
+        }
+        
+        // ==============================================================
+        // TABLE SKELETON TRANSITION
+        // ==============================================================
+        function loadTableDemo() {
+            const tbody = document.querySelector('#tableSkeleton tbody');
+            
+            setTimeout(() => {
+                const rows = [
+                    { name: 'John Doe', email: 'john@company.com', role: 'Developer', status: 'Active' },
+                    { name: 'Jane Wilson', email: 'jane@company.com', role: 'Designer', status: 'Active' },
+                    { name: 'Mike Brown', email: 'mike@company.com', role: 'Manager', status: 'Away' }
+                ];
+                
+                tbody.innerHTML = rows.map(r => `
+                    <tr>
+                        <td><strong>${r.name}</strong></td>
+                        <td>${r.email}</td>
+                        <td>${r.role}</td>
+                        <td><span class="badge ${r.status === 'Active' ? 'bg-success' : 'bg-warning'}">${r.status}</span></td>
+                    </tr>
+                `).join('');
+            }, 1500);
+        }
+        
+        // ==============================================================
+        // PROGRESS LINE ANIMATION
+        // ==============================================================
+        function animateProgressLine() {
+            const line = document.getElementById('progressLine');
+            line.style.width = '0%';
+            line.style.opacity = '1';
+            
+            let width = 0;
+            const interval = setInterval(() => {
+                width += Math.random() * 20;
+                if (width >= 90) { clearInterval(interval); width = 90; }
+                line.style.width = width + '%';
+            }, 200);
+            
+            line._interval = interval;
+        }
+        
+        function completeProgressLine() {
+            const line = document.getElementById('progressLine');
+            clearInterval(line._interval);
+            line.style.width = '100%';
+            setTimeout(() => { line.style.opacity = '0'; line.style.width = '0%'; }, 300);
+        }
+    </script>
+</body>
+</html>

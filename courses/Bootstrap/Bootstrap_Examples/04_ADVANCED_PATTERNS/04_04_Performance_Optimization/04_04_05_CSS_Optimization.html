@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_05_CSS_Optimization.html
+     Topic: CSS Optimization Strategies for Bootstrap Projects
+     
+     Covers critical CSS extraction, unused CSS removal, efficient
+     selectors, and leveraging Bootstrap utilities to minimize custom CSS.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>CSS Optimization - Bootstrap 5</title>
+
+    <!--
+        CRITICAL CSS STRATEGY:
+        Inline only the CSS needed for above-the-fold content.
+        The full Bootstrap CSS is loaded via CDN with long cache.
+        Custom CSS below is minimal and scoped to above-the-fold elements.
+    -->
+    <style>
+        /* Critical: Hero section renders immediately */
+        .hero-optimized {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            padding: 4rem 0;
+        }
+        /* Critical: Layout skeleton to prevent CLS */
+        .card-skeleton {
+            min-height: 200px;
+            background: #f8f9fa;
+            border-radius: 0.375rem;
+        }
+        /* Utility: Code blocks */
+        .code-sm {
+            background: #212529;
+            color: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            overflow-x: auto;
+        }
+        /* Metric display */
+        .metric-box {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .metric-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">CSS Optimization</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#metrics">Metrics</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#critical">Critical CSS</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#utilities">Utilities</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#tools">Tools</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-optimized text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">CSS Optimization</h1>
+            <p class="lead mt-2">Reduce CSS payload and eliminate render-blocking stylesheets.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: KEY METRICS
+         CSS directly impacts FCP, LCP, and CLS metrics.
+         ============================================================ -->
+    <section id="metrics" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-4">CSS Impact on Core Web Vitals</h2>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="metric-box bg-light">
+                        <div class="metric-value text-danger">FCP</div>
+                        <div class="metric-label">First Contentful Paint</div>
+                        <p class="small mt-2 mb-0">Render-blocking CSS delays FCP. Inline critical CSS to paint content faster.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-box bg-light">
+                        <div class="metric-value text-warning">LCP</div>
+                        <div class="metric-label">Largest Contentful Paint</div>
+                        <p class="small mt-2 mb-0">Heavy CSS files delay the largest element. Minify and compress CSS.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-box bg-light">
+                        <div class="metric-value text-info">CLS</div>
+                        <div class="metric-label">Cumulative Layout Shift</div>
+                        <p class="small mt-2 mb-0">Late-loading CSS causes layout shifts. Avoid FOIT/FOUT with proper loading.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: CRITICAL CSS EXTRACTION
+         Explains how to extract and inline critical CSS.
+         ============================================================ -->
+    <section id="critical" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Critical CSS Extraction</h2>
+
+            <div class="row g-4">
+                <!-- What is critical CSS -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">What is Critical CSS?</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Critical CSS is the minimum set of styles needed to render the above-the-fold content. By inlining these styles, you eliminate a render-blocking HTTP request.</p>
+
+                            <h6>Steps:</h6>
+                            <ol>
+                                <li>Identify above-the-fold content for each page/route</li>
+                                <li>Extract CSS rules that style that content</li>
+                                <li>Inline extracted CSS in a <code>&lt;style&gt;</code> tag</li>
+                                <li>Load full CSS asynchronously</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How to load async CSS -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Async CSS Loading</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Load the full stylesheet without blocking render using this pattern:</p>
+                            <div class="code-sm">
+&lt;!-- Inline critical CSS --&gt;<br>
+&lt;style&gt;<br>
+&nbsp;&nbsp;/* Above-the-fold styles */<br>
+&nbsp;&nbsp;.hero { min-height: 50vh; }<br>
+&nbsp;&nbsp;.nav { display: flex; }<br>
+&lt;/style&gt;<br><br>
+&lt;!-- Load full CSS async --&gt;<br>
+&lt;link rel="stylesheet"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;href="bootstrap.min.css"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;media="print"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;onload="this.media='all'"&gt;
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PurgeCSS example -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">PurgeCSS Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>PurgeCSS scans your HTML/JS files and removes unused CSS selectors.</p>
+                            <div class="code-sm">
+// postcss.config.js<br>
+module.exports = {<br>
+&nbsp;&nbsp;plugins: [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;require('@fullhuman/postcss-purgecss')({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content: [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'./src/**/*.html',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'./src/**/*.js'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;safelist: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;standard: [/^modal/,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/^tooltip/, /^show/]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;})<br>
+&nbsp;&nbsp;]<br>
+};
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sass selective import -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Sass Selective Imports</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Import only the Bootstrap modules you need in your Sass build:</p>
+                            <div class="code-sm">
+// custom-bootstrap.scss<br>
+<br>
+// Required: functions and variables<br>
+@import "bootstrap/scss/functions";<br>
+@import "bootstrap/scss/variables";<br>
+@import "bootstrap/scss/mixins";<br>
+<br>
+// Pick only what you need<br>
+@import "bootstrap/scss/root";<br>
+@import "bootstrap/scss/reboot";<br>
+@import "bootstrap/scss/type";<br>
+@import "bootstrap/scss/grid";<br>
+@import "bootstrap/scss/buttons";<br>
+@import "bootstrap/scss/utilities/api";<br>
+<br>
+// Skip: carousel, accordion, etc.<br>
+// Savings: ~40% smaller CSS file
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: BOOTSTRAP UTILITIES OVER CUSTOM CSS
+         Demonstrate using Bootstrap utilities to avoid writing custom CSS.
+         ============================================================ -->
+    <section id="utilities" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Prefer Utilities Over Custom CSS</h2>
+            <p class="text-muted mb-4">
+                Bootstrap 5 utilities are already in the CSS bundle. Using them avoids adding custom CSS rules.
+            </p>
+
+            <div class="row g-4">
+                <!-- Bad: Custom CSS -->
+                <div class="col-md-6">
+                    <div class="card border-danger h-100">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">Custom CSS (Avoid)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-sm mb-3">
+/* Custom CSS adds to bundle */<br>
+.card-custom {<br>
+&nbsp;&nbsp;padding: 1.5rem;<br>
+&nbsp;&nbsp;margin-bottom: 1rem;<br>
+&nbsp;&nbsp;background: white;<br>
+&nbsp;&nbsp;border-radius: 0.5rem;<br>
+&nbsp;&nbsp;box-shadow: 0 2px 8px<br>
+&nbsp;&nbsp;&nbsp;&nbsp;rgba(0,0,0,0.1);<br>
+}
+                            </div>
+                            <!-- Visual result using custom class -->
+                            <div style="padding:1.5rem;margin-bottom:1rem;background:white;border-radius:0.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+                                Custom CSS card
+                            </div>
+                            <span class="badge bg-danger">+Custom CSS bytes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Good: Bootstrap utilities -->
+                <div class="col-md-6">
+                    <div class="card border-success h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Bootstrap Utilities (Preferred)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-sm mb-3">
+&lt;!-- Zero custom CSS needed --&gt;<br>
+&lt;div class="<br>
+&nbsp;&nbsp;p-4 mb-3 bg-white<br>
+&nbsp;&nbsp;rounded-2 shadow-sm<br>
+"&gt;...&lt;/div&gt;
+                            </div>
+                            <!-- Visual result using Bootstrap utilities -->
+                            <div class="p-4 mb-3 bg-white rounded-2 shadow-sm">
+                                Bootstrap utility card
+                            </div>
+                            <span class="badge bg-success">0 bytes custom CSS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: CSS OPTIMIZATION TOOLS
+         List of tools for CSS optimization workflow.
+         ============================================================ -->
+    <section id="tools" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Optimization Tools</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>PurgeCSS</h5>
+                            <p class="small">Removes unused CSS by analyzing your content files.</p>
+                            <code>npm i @fullhuman/postcss-purgecss</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>cssnano</h5>
+                            <p class="small">Modular CSS minifier that compresses whitespace, colors, and selectors.</p>
+                            <code>npm i cssnano</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Critical</h5>
+                            <p class small>Extracts & inlines above-the-fold CSS for faster first paint.</p>
+                            <code>npm i critical</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>UnCSS</h5>
+                            <p class="small">Removes unused CSS from stylesheets by running pages through PhantomJS/Puppeteer.</p>
+                            <code>npm i uncss</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Lightning CSS</h5>
+                            <p class="small">Rust-based CSS parser, minifier, and bundler. Extremely fast.</p>
+                            <code>npm i lightningcss</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Bundlephobia</h5>
+                            <p class="small">Check npm package sizes before adding to your project.</p>
+                            <code>bundlephobia.com</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">CSS Optimization &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+</body>
+</html>

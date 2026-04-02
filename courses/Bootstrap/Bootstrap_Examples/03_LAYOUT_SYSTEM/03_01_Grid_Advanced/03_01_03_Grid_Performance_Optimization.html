@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         03_01_03 - Grid Performance Optimization
+         ============================================
+         Techniques for optimizing grid rendering performance
+         including containment, will-change, content-visibility,
+         and efficient reflow strategies.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_03 - Grid Performance Optimization</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ============================================
+           CONTAINMENT OPTIMIZATION
+           The `contain` property tells the browser that
+           an element's contents are independent from the
+           rest of the page, enabling layout/paint isolation.
+        ================================================ */
+        .contained-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .contained-item {
+            /* contain: layout paint - the element's internal layout
+               changes don't affect external elements, and painting
+               is contained within its bounds. This allows the browser
+               to skip recalculation for sibling items. */
+            contain: layout paint;
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+        }
+
+        /* ============================================
+           CONTENT-VISIBILITY OPTIMIZATION
+           content-visibility: auto tells the browser to skip
+           rendering work for off-screen content until it's
+           scrolled into view. Critical for large grids.
+        ================================================ */
+        .virtual-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .virtual-item {
+            /* content-visibility: auto - browser skips rendering
+               for items outside the viewport. Combined with
+               contain-intrinsic-size, the browser reserves space
+               so the scrollbar remains accurate. */
+            content-visibility: auto;
+            /* Estimated size for off-screen items so layout doesn't jump */
+            contain-intrinsic-size: 0 200px;
+            background: #d1e7dd;
+            border-radius: 8px;
+            padding: 20px;
+            border: 2px solid #badbcc;
+        }
+
+        /* ============================================
+           WILL-CHANGE FOR ANIMATED GRID ITEMS
+           will-change hints to the browser to prepare
+           GPU layers for elements that will animate,
+           avoiding layout thrashing during animation.
+        ================================================ */
+        .animated-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .animated-item {
+            background: #cfe2ff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            /* will-change: transform - pre-promotes to a GPU layer
+               so transform animations don't trigger layout/paint */
+            will-change: transform;
+            transition: transform 0.3s ease;
+        }
+
+        /* GPU-accelerated hover: only transform changes, no layout reflow */
+        .animated-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        /* ============================================
+           FLIP ANIMATION APPROACH
+           FLIP = First, Last, Invert, Play
+           Animates grid items efficiently by only
+           using transform, avoiding layout thrash.
+        ================================================ */
+        .flip-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .flip-item {
+            background: #fff3cd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #ffecb5;
+            /* transition only on transform for GPU acceleration */
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ============================================
+           BATCHED READING/WRITING PATTERN
+           Avoids forced synchronous layout by batching
+           all DOM reads before any writes.
+        ================================================ */
+        .batched-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .batched-item {
+            background: #f8d7da;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #f5c2c7;
+            /* transition on height for smooth resizing */
+            transition: height 0.3s ease;
+            overflow: hidden;
+        }
+
+        /* ============================================
+           LAZY LOADING GRID IMAGES
+           Using loading="lazy" on images within a grid
+           for deferred image loading
+        ================================================ */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .image-grid img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        /* ============================================
+           EFFICIENT GRID GAP TRANSITION
+           Transitioning gap property directly instead
+           of animating individual item margins.
+        ================================================ */
+        .gap-transition-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            /* Transition the gap property for smooth resizing */
+            gap: 15px;
+            transition: gap 0.3s ease;
+        }
+
+        .gap-transition-grid.compact {
+            gap: 5px;
+        }
+
+        .gap-item {
+            background: #e2d9f3;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            min-height: 80px;
+        }
+
+        /* ============================================
+           CSS GRID vs FLEXBOX PERFORMANCE COMPARISON
+           Side-by-side identical layouts to test
+           rendering performance difference
+        ================================================ */
+        .perf-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .perf-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .perf-flex > * {
+            flex: 0 0 calc(25% - 8px);
+        }
+
+        .perf-item {
+            background: #cfe2ff;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* ============================================
+           MINIMAL REPAINT GRID
+           Using opacity and transform only to avoid
+           triggering layout recalculation
+        ================================================ */
+        .minimal-repaint-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .repaint-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            /* These properties don't trigger layout: transform, opacity, filter */
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .repaint-item:hover {
+            opacity: 0.9;
+            transform: scale(1.03);
+        }
+
+        .repaint-item.dimmed {
+            opacity: 0.3;
+        }
+
+        /* ============================================
+           GRID TEMPLATE DEFINITION REUSE
+           Define grid templates once and reuse with
+           CSS custom properties for consistency
+        ================================================ */
+        :root {
+            --grid-cols-4: repeat(4, 1fr);
+            --grid-gap-standard: 15px;
+            --grid-gap-compact: 8px;
+        }
+
+        .reusable-grid {
+            display: grid;
+            grid-template-columns: var(--grid-cols-4);
+            gap: var(--grid-gap-standard);
+        }
+
+        .reusable-item {
+            background: #d1ecf1;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #bee5eb;
+        }
+
+        /* ============================================
+           PERFORMANCE MONITOR DISPLAY
+        ================================================ */
+        .perf-monitor {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            z-index: 9999;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .contained-grid,
+            .animated-grid,
+            .image-grid,
+            .gap-transition-grid,
+            .reusable-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .virtual-grid,
+            .flip-grid,
+            .minimal-repaint-grid,
+            .batched-grid {
+                grid-template-columns: 1fr;
+            }
+            .perf-flex > * {
+                flex: 0 0 calc(50% - 5px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">03_01_03 - Grid Performance Optimization</h1>
+        <p class="text-muted mb-4">
+            Techniques to optimize CSS Grid rendering performance for large, complex, or
+            frequently-updated grid layouts. Each section demonstrates a specific optimization strategy.
+        </p>
+
+        <!-- ============================================
+             SECTION 1: CSS Containment
+             Using the `contain` property to isolate
+             grid item rendering from siblings
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. CSS Containment (<code>contain</code> property)</h2>
+            <div class="alert alert-info">
+                <strong>Why:</strong> Without containment, changing one grid item's height forces the browser
+                to recalculate layout for all siblings. <code>contain: layout paint</code> isolates each item.
+            </div>
+
+            <div class="contained-grid">
+                <!-- Each item is rendering-isolated from its siblings -->
+                <div class="contained-item">
+                    <h5>Contained 1</h5>
+                    <p class="small mb-0">contain: layout paint</p>
+                </div>
+                <div class="contained-item">
+                    <h5>Contained 2</h5>
+                    <p class="small mb-0">Isolated rendering scope</p>
+                </div>
+                <div class="contained-item">
+                    <h5>Contained 3</h5>
+                    <p class="small mb-0">No sibling reflow</p>
+                </div>
+                <div class="contained-item">
+                    <h5>Contained 4</h5>
+                    <p class="small mb-0">GPU-friendly</p>
+                </div>
+                <div class="contained-item">
+                    <h5>Contained 5</h5>
+                    <p class="small mb-0">Layout boundary</p>
+                </div>
+                <div class="contained-item">
+                    <h5>Contained 6</h5>
+                    <p class="small mb-0">Paint boundary</p>
+                </div>
+                <div class="contained-item">
+                    <h5>Contained 7</h5>
+                    <p class="small mb-0">Size containment</p>
+                </div>
+                <div class="contained-item">
+                    <h5>Contained 8</h5>
+                    <p class="small mb-0">Style containment</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 2: content-visibility: auto
+             Skip rendering for off-screen grid items
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Content Visibility (<code>content-visibility: auto</code>)</h2>
+            <div class="alert alert-success">
+                <strong>Best for:</strong> Large grids with many items. The browser skips rendering work for
+                items that are outside the viewport until the user scrolls to them. Combined with
+                <code>contain-intrinsic-size</code> to maintain correct scrollbar height.
+            </div>
+
+            <div class="virtual-grid" style="max-height: 400px; overflow-y: auto; border: 2px solid #dee2e6; border-radius: 10px; padding: 15px;">
+                <!-- 30 items: most are off-screen and won't render until scrolled into view -->
+                <div class="virtual-item"><strong>Item 1</strong><p class="small mb-0">content-visibility: auto</p></div>
+                <div class="virtual-item"><strong>Item 2</strong><p class="small mb-0">Skipped when off-screen</p></div>
+                <div class="virtual-item"><strong>Item 3</strong><p class="small mb-0">Fast initial render</p></div>
+                <div class="virtual-item"><strong>Item 4</strong><p class="small mb-0">Low memory usage</p></div>
+                <div class="virtual-item"><strong>Item 5</strong><p class="small mb-0">Lazy rendering</p></div>
+                <div class="virtual-item"><strong>Item 6</strong><p class="small mb-0">Browser manages visibility</p></div>
+                <div class="virtual-item"><strong>Item 7</strong><p class="small mb-0">Scroll to reveal</p></div>
+                <div class="virtual-item"><strong>Item 8</strong><p class="small mb-0">No JS needed</p></div>
+                <div class="virtual-item"><strong>Item 9</strong><p class="small mb-0">Native browser feature</p></div>
+                <div class="virtual-item"><strong>Item 10</strong><p class="small mb-0">Progressive enhancement</p></div>
+                <div class="virtual-item"><strong>Item 11</strong><p class="small mb-0">Efficient scrolling</p></div>
+                <div class="virtual-item"><strong>Item 12</strong><p class="small mb-0">Smooth scroll performance</p></div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 3: will-change for Animated Items
+             Pre-promote animated grid items to GPU layers
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. GPU Layer Promotion (<code>will-change</code>)</h2>
+            <div class="alert alert-warning">
+                <strong>Caution:</strong> <code>will-change</code> should only be applied to elements that
+                actually animate. Overuse creates too many GPU layers and increases memory consumption.
+            </div>
+
+            <div class="animated-grid">
+                <!-- Hover to see GPU-accelerated transform animation -->
+                <div class="animated-item">
+                    <strong>Hover Me</strong>
+                    <p class="small mb-0 mt-2">will-change: transform</p>
+                </div>
+                <div class="animated-item">
+                    <strong>Hover Me</strong>
+                    <p class="small mb-0 mt-2">GPU layer pre-promoted</p>
+                </div>
+                <div class="animated-item">
+                    <strong>Hover Me</strong>
+                    <p class="small mb-0 mt-2">No layout reflow</p>
+                </div>
+                <div class="animated-item">
+                    <strong>Hover Me</strong>
+                    <p class="small mb-0 mt-2">Smooth 60fps</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 4: Gap Transitions
+             Animating the gap property for grid resizing
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Gap Property Transitions</h2>
+            <div class="alert alert-info">
+                Modern browsers support transitioning the <code>gap</code> property, allowing smooth
+                grid resizing without manipulating individual item margins.
+            </div>
+
+            <button class="btn btn-primary mb-3" onclick="this.nextElementSibling.classList.toggle('compact')">
+                Toggle Compact Gap
+            </button>
+            <div class="gap-transition-grid">
+                <div class="gap-item">A</div>
+                <div class="gap-item">B</div>
+                <div class="gap-item">C</div>
+                <div class="gap-item">D</div>
+                <div class="gap-item">E</div>
+                <div class="gap-item">F</div>
+                <div class="gap-item">G</div>
+                <div class="gap-item">H</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 5: Minimal Repaint Pattern
+             Only use transform/opacity for animations
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Minimal Repaint Pattern</h2>
+            <div class="alert alert-info">
+                Only <code>transform</code>, <code>opacity</code>, and <code>filter</code> can be
+                composited without triggering layout or paint. All other CSS properties are more expensive.
+            </div>
+
+            <div class="minimal-repaint-grid">
+                <div class="repaint-item" onclick="this.classList.toggle('dimmed')">
+                    <h5>Click to Dim</h5>
+                    <p class="small mb-0">opacity change only</p>
+                </div>
+                <div class="repaint-item" onclick="this.classList.toggle('dimmed')">
+                    <h5>Click to Dim</h5>
+                    <p class="small mb-0">No layout reflow</p>
+                </div>
+                <div class="repaint-item" onclick="this.classList.toggle('dimmed')">
+                    <h5>Click to Dim</h5>
+                    <p class="small mb-0">Compositor-only change</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 6: CSS Custom Properties for Grid Templates
+             Define once, reuse everywhere
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. CSS Custom Properties for Grid Templates</h2>
+            <div class="alert alert-info">
+                Define grid templates as CSS custom properties to ensure consistency and reduce
+                stylesheet size. Changes to the variable propagate to all grids using it.
+            </div>
+
+            <div class="reusable-grid">
+                <div class="reusable-item">Template Var 1</div>
+                <div class="reusable-item">Template Var 2</div>
+                <div class="reusable-item">Template Var 3</div>
+                <div class="reusable-item">Template Var 4</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 7: Performance Comparison
+             CSS Grid vs Flexbox for identical layouts
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. CSS Grid vs Flexbox Performance</h2>
+            <div class="alert alert-info">
+                In most modern browsers, CSS Grid and Flexbox have near-identical performance.
+                Grid may be slightly slower for very large layouts but offers more control.
+            </div>
+
+            <h6 class="mt-3">CSS Grid version:</h6>
+            <div class="perf-grid">
+                <div class="perf-item">G1</div>
+                <div class="perf-item">G2</div>
+                <div class="perf-item">G3</div>
+                <div class="perf-item">G4</div>
+                <div class="perf-item">G5</div>
+                <div class="perf-item">G6</div>
+                <div class="perf-item">G7</div>
+                <div class="perf-item">G8</div>
+            </div>
+
+            <h6 class="mt-3">Flexbox equivalent:</h6>
+            <div class="perf-flex">
+                <div class="perf-item">F1</div>
+                <div class="perf-item">F2</div>
+                <div class="perf-item">F3</div>
+                <div class="perf-item">F4</div>
+                <div class="perf-item">F5</div>
+                <div class="perf-item">F6</div>
+                <div class="perf-item">F7</div>
+                <div class="perf-item">F8</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 8: Performance Tips Summary
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Performance Optimization Checklist</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Technique</th>
+                            <th>When to Use</th>
+                            <th>Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>contain: layout paint</code></td>
+                            <td>Grid items with dynamic content</td>
+                            <td>Prevents sibling reflow</td>
+                        </tr>
+                        <tr>
+                            <td><code>content-visibility: auto</code></td>
+                            <td>Large grids (100+ items)</td>
+                            <td>Skip off-screen rendering</td>
+                        </tr>
+                        <tr>
+                            <td><code>will-change: transform</code></td>
+                            <td>Items that animate</td>
+                            <td>GPU layer promotion</td>
+                        </tr>
+                        <tr>
+                            <td><code>transform</code> over <code>top/left</code></td>
+                            <td>Position animations</td>
+                            <td>No layout reflow</td>
+                        </tr>
+                        <tr>
+                            <td><code>gap</code> transition</td>
+                            <td>Grid spacing animations</td>
+                            <td>Single property animation</td>
+                        </tr>
+                        <tr>
+                            <td>CSS custom properties</td>
+                            <td>Shared grid templates</td>
+                            <td>DRY, efficient updates</td>
+                        </tr>
+                        <tr>
+                            <td><code>loading="lazy"</code></td>
+                            <td>Images in grid cells</td>
+                            <td>Deferred image loading</td>
+                        </tr>
+                        <tr>
+                            <td>Minimize <code>grid-template</code> changes</td>
+                            <td>Dynamic layouts</td>
+                            <td>Expensive property to change</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

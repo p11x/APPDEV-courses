@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         03_01_14 - Grid Integration Advanced
+         ============================================
+         Advanced integration patterns: CSS Grid with
+         JavaScript frameworks, dynamic grid manipulation,
+         server-side rendering, and CMS integration.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_14 - Grid Integration Advanced</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ============================================
+           DYNAMIC GRID WITH CSS CUSTOM PROPERTIES
+           JavaScript can update CSS custom properties
+           to dynamically change grid layout without
+           manipulating individual elements.
+        ================================================ */
+        .dynamic-grid {
+            display: grid;
+            /* Columns controlled by CSS variable */
+            grid-template-columns: repeat(var(--grid-cols, 3), 1fr);
+            gap: var(--grid-gap, 15px);
+            transition: gap 0.3s ease;
+        }
+
+        .dynamic-item {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        /* ============================================
+           DRAG-AND-DROP GRID
+           Grid items that can be reordered via drag
+           and drop using CSS Grid and HTML5 DnD API
+        ================================================ */
+        .dnd-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .dnd-item {
+            background: #cfe2ff;
+            border: 2px dashed #9ec5fe;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: grab;
+            transition: transform 0.2s, box-shadow 0.2s;
+            user-select: none;
+        }
+
+        .dnd-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .dnd-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .dnd-item.drag-over {
+            border-color: #0d6efd;
+            background: #e7f1ff;
+        }
+
+        /* ============================================
+           SERVER-SIDE RENDERED GRID
+           Grid that renders correctly without JavaScript,
+           then enhances with JS for interactions.
+           Critical for SSR frameworks (Next.js, Nuxt, etc.)
+        ================================================ */
+        .ssr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .ssr-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .ssr-card-img {
+            height: 150px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ssr-card-body {
+            padding: 15px;
+        }
+
+        /* ============================================
+           CMS-DRIVEN GRID
+           Grid styles that work with CMS content blocks
+           where the number of items is dynamic.
+        ================================================ */
+        .cms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .cms-block {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        .cms-block-image {
+            height: 140px;
+            background-size: cover;
+            background-position: center;
+            background-color: #e9ecef;
+        }
+
+        .cms-block-content {
+            padding: 15px;
+        }
+
+        /* ============================================
+           API-DRIVEN GRID WITH LOADING STATES
+           Grid that shows skeleton loading while
+           fetching data from an API
+        ================================================ */
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .skeleton-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .skeleton-img {
+            height: 120px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        .skeleton-text {
+            height: 14px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+            margin: 10px 15px;
+        }
+
+        .skeleton-text.short {
+            width: 60%;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ============================================
+           VIRTUAL SCROLL GRID
+           For very large datasets, render only visible
+           items. This is the CSS container; JS handles
+           virtualization.
+        ================================================ */
+        .virtual-scroll-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+        }
+
+        .virtual-scroll-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .virtual-item {
+            background: #d1e7dd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            min-height: 80px;
+        }
+
+        /* ============================================
+           FILTER/SORT GRID
+           Grid with CSS classes that control visibility
+           and ordering, driven by JavaScript filters
+        ================================================ */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .filter-item {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .filter-item.hidden {
+            display: none;
+        }
+
+        .filter-item.dimmed {
+            opacity: 0.2;
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .dynamic-grid,
+            .dnd-grid,
+            .virtual-scroll-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">03_01_14 - Grid Integration Advanced</h1>
+
+        <!-- ============================================
+             SECTION 1: Dynamic Grid via CSS Variables
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Dynamic Grid via CSS Custom Properties + JS</h2>
+            <div class="alert alert-info">
+                JavaScript updates CSS custom properties (<code>--grid-cols</code>, <code>--grid-gap</code>)
+                on the container, and the grid reflows automatically. No DOM manipulation needed.
+            </div>
+
+            <div class="btn-group mb-3" role="group">
+                <button class="btn btn-outline-primary" onclick="setGridVar('--grid-cols', 2)">2 Cols</button>
+                <button class="btn btn-outline-primary" onclick="setGridVar('--grid-cols', 3)">3 Cols</button>
+                <button class="btn btn-outline-primary" onclick="setGridVar('--grid-cols', 4)">4 Cols</button>
+                <button class="btn btn-outline-secondary" onclick="setGridVar('--grid-gap', '5px')">Tight</button>
+                <button class="btn btn-outline-secondary" onclick="setGridVar('--grid-gap', '15px')">Normal</button>
+                <button class="btn btn-outline-secondary" onclick="setGridVar('--grid-gap', '30px')">Loose</button>
+            </div>
+
+            <div class="dynamic-grid" id="dynamicGrid">
+                <div class="dynamic-item">Item 1</div>
+                <div class="dynamic-item">Item 2</div>
+                <div class="dynamic-item">Item 3</div>
+                <div class="dynamic-item">Item 4</div>
+                <div class="dynamic-item">Item 5</div>
+                <div class="dynamic-item">Item 6</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 2: Drag-and-Drop Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Drag-and-Drop Reorderable Grid</h2>
+            <div class="alert alert-info">
+                HTML5 Drag and Drop API allows users to reorder grid items by dragging.
+                The grid automatically reflows when items are moved.
+            </div>
+
+            <div class="dnd-grid" id="dndGrid">
+                <div class="dnd-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragend="dragEnd(event)">
+                    <strong>Drag Me</strong><br><small>A</small>
+                </div>
+                <div class="dnd-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragend="dragEnd(event)">
+                    <strong>Drag Me</strong><br><small>B</small>
+                </div>
+                <div class="dnd-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragend="dragEnd(event)">
+                    <strong>Drag Me</strong><br><small>C</small>
+                </div>
+                <div class="dnd-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragend="dragEnd(event)">
+                    <strong>Drag Me</strong><br><small>D</small>
+                </div>
+                <div class="dnd-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragend="dragEnd(event)">
+                    <strong>Drag Me</strong><br><small>E</small>
+                </div>
+                <div class="dnd-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragend="dragEnd(event)">
+                    <strong>Drag Me</strong><br><small>F</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 3: Skeleton Loading Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. API-Driven Grid with Skeleton Loading</h2>
+            <div class="alert alert-info">
+                Show skeleton placeholders while data loads from an API. The grid structure
+                is defined in CSS; only content changes when data arrives.
+            </div>
+
+            <button class="btn btn-primary mb-3" onclick="toggleSkeleton()">Toggle Loading State</button>
+
+            <div class="api-grid" id="apiGrid">
+                <!-- Skeleton state (shown by default) -->
+                <div class="skeleton-card skeleton-item">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text short"></div>
+                </div>
+                <div class="skeleton-card skeleton-item">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text short"></div>
+                </div>
+                <div class="skeleton-card skeleton-item">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text short"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 4: Filter/Sort Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Filterable Grid (CSS + JS)</h2>
+            <div class="alert alert-info">
+                JavaScript adds/removes a <code>.hidden</code> or <code>.dimmed</code> class
+                on grid items. CSS Grid automatically reflows the remaining visible items.
+            </div>
+
+            <div class="btn-group mb-3" role="group">
+                <button class="btn btn-outline-primary active" onclick="filterItems('all')">All</button>
+                <button class="btn btn-outline-primary" onclick="filterItems('red')">Red</button>
+                <button class="btn btn-outline-primary" onclick="filterItems('blue')">Blue</button>
+                <button class="btn btn-outline-primary" onclick="filterItems('green')">Green</button>
+            </div>
+
+            <div class="filter-grid" id="filterGrid">
+                <div class="filter-item" data-category="red" style="background: #f8d7da;">Red Item</div>
+                <div class="filter-item" data-category="blue" style="background: #cfe2ff;">Blue Item</div>
+                <div class="filter-item" data-category="green" style="background: #d1e7dd;">Green Item</div>
+                <div class="filter-item" data-category="red" style="background: #f8d7da;">Red Item</div>
+                <div class="filter-item" data-category="blue" style="background: #cfe2ff;">Blue Item</div>
+                <div class="filter-item" data-category="green" style="background: #d1e7dd;">Green Item</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 5: Virtual Scroll Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Virtual Scroll Grid Container</h2>
+            <div class="alert alert-info">
+                For grids with thousands of items, virtual scrolling renders only visible items.
+                This is the CSS container; JavaScript libraries like <code>react-window</code>
+                or <code>vue-virtual-scroller</code> handle the virtualization logic.
+            </div>
+
+            <div class="virtual-scroll-container">
+                <div class="virtual-scroll-grid" id="virtualGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            <small class="text-muted">Showing 60 items (virtualized: only visible items rendered)</small>
+        </section>
+
+        <!-- ============================================
+             SECTION 6: SSR-Safe Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Server-Side Rendered (SSR) Grid</h2>
+            <div class="alert alert-info">
+                Grids render correctly without JavaScript (SSR/SSG). JavaScript adds progressive
+                enhancement: hover effects, click handlers, dynamic content loading.
+            </div>
+
+            <div class="ssr-grid">
+                <div class="ssr-card">
+                    <div class="ssr-card-img" style="background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white;">
+                        SSR Card 1
+                    </div>
+                    <div class="ssr-card-body">
+                        <h6>Server-Rendered</h6>
+                        <p class="small text-muted mb-0">HTML generated on the server. CSS Grid handles layout.</p>
+                    </div>
+                </div>
+                <div class="ssr-card">
+                    <div class="ssr-card-img" style="background: linear-gradient(135deg, #198754, #146c43); color: white;">
+                        SSR Card 2
+                    </div>
+                    <div class="ssr-card-body">
+                        <h6>No JS Required</h6>
+                        <p class="small text-muted mb-0">Layout works before JavaScript loads.</p>
+                    </div>
+                </div>
+                <div class="ssr-card">
+                    <div class="ssr-card-img" style="background: linear-gradient(135deg, #6f42c1, #5a32a3); color: white;">
+                        SSR Card 3
+                    </div>
+                    <div class="ssr-card-body">
+                        <h6>Progressive Enhancement</h6>
+                        <p class="small text-muted mb-0">JS adds interactivity on top of the working layout.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+
+    <script>
+        /* ============================================
+           Dynamic Grid via CSS Variables
+           Updates CSS custom properties on the container
+        ================================================ */
+        function setGridVar(name, value) {
+            document.getElementById('dynamicGrid').style.setProperty(name, value);
+        }
+
+        /* ============================================
+           Drag and Drop Functions
+        ================================================ */
+        let draggedItem = null;
+
+        function dragStart(e) {
+            draggedItem = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (e.target.classList.contains('dnd-item') && e.target !== draggedItem) {
+                e.target.classList.add('drag-over');
+            }
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            if (e.target.classList.contains('dnd-item') && e.target !== draggedItem) {
+                const grid = document.getElementById('dndGrid');
+                const items = [...grid.children];
+                const draggedIdx = items.indexOf(draggedItem);
+                const targetIdx = items.indexOf(e.target);
+                if (draggedIdx < targetIdx) {
+                    grid.insertBefore(draggedItem, e.target.nextSibling);
+                } else {
+                    grid.insertBefore(draggedItem, e.target);
+                }
+            }
+            e.target.classList.remove('drag-over');
+        }
+
+        function dragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.dnd-item').forEach(item => item.classList.remove('drag-over'));
+        }
+
+        /* ============================================
+           Skeleton Toggle
+        ================================================ */
+        function toggleSkeleton() {
+            const grid = document.getElementById('apiGrid');
+            const skeletons = grid.querySelectorAll('.skeleton-item');
+            if (skeletons.length > 0) {
+                grid.innerHTML = `
+                    <div class="skeleton-card" style="overflow:hidden"><div class="ssr-card-img" style="background:linear-gradient(135deg,#0d6efd,#0a58ca);color:white;height:120px;display:flex;align-items:center;justify-content:center">Loaded 1</div><div class="p-3"><h6>Data Item 1</h6><p class="small text-muted mb-0">Fetched from API</p></div></div>
+                    <div class="skeleton-card" style="overflow:hidden"><div class="ssr-card-img" style="background:linear-gradient(135deg,#198754,#146c43);color:white;height:120px;display:flex;align-items:center;justify-content:center">Loaded 2</div><div class="p-3"><h6>Data Item 2</h6><p class="small text-muted mb-0">Fetched from API</p></div></div>
+                    <div class="skeleton-card" style="overflow:hidden"><div class="ssr-card-img" style="background:linear-gradient(135deg,#dc3545,#b02a37);color:white;height:120px;display:flex;align-items:center;justify-content:center">Loaded 3</div><div class="p-3"><h6>Data Item 3</h6><p class="small text-muted mb-0">Fetched from API</p></div></div>
+                `;
+            } else {
+                grid.innerHTML = `
+                    <div class="skeleton-card skeleton-item"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+                    <div class="skeleton-card skeleton-item"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+                    <div class="skeleton-card skeleton-item"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>
+                `;
+            }
+        }
+
+        /* ============================================
+           Filter Grid
+        ================================================ */
+        function filterItems(category) {
+            const items = document.querySelectorAll('#filterGrid .filter-item');
+            items.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.classList.remove('hidden', 'dimmed');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+            // Update active button
+            document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        /* ============================================
+           Populate Virtual Scroll Grid
+        ================================================ */
+        (function() {
+            const grid = document.getElementById('virtualGrid');
+            for (let i = 1; i <= 60; i++) {
+                const item = document.createElement('div');
+                item.className = 'virtual-item';
+                item.textContent = 'Item ' + i;
+                grid.appendChild(item);
+            }
+        })();
+    </script>
+</body>
+</html>

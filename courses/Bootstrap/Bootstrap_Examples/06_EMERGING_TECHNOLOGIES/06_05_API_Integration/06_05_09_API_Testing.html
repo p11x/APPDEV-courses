@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<!--
+  ===========================================================================
+  API TESTING DASHBOARD — Bootstrap 5.3.3
+  ===========================================================================
+  This file demonstrates a comprehensive API testing interface built with
+  Bootstrap 5. It covers the full lifecycle of API testing:
+
+    1. Mock Server Simulation  — Simulate API endpoints locally
+    2. Request Builder         — Construct HTTP requests visually
+    3. Test Case Runner        — Define and execute test cases in a table
+    4. Response Validator      — Validate status codes, headers, body
+    5. Assertion Engine        — Deep-assert on JSON paths and types
+    6. Test Results Dashboard  — Pass / fail badges, timing, history
+    7. Coverage Visualization  — Track which endpoints / methods are tested
+    8. Export Results          — Download results as JSON or CSV
+
+  Every section is heavily commented so learners can follow the logic.
+  ===========================================================================
+-->
+<html lang="en">
+<head>
+  <!-- ================================================================
+       META & CHARSET
+       charset="UTF-8" ensures proper rendering of special characters.
+       viewport meta tag makes the page responsive on all devices.
+       ================================================================ -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Testing Dashboard — Bootstrap 5</title>
+
+  <!-- ================================================================
+       BOOTSTRAP 5.3.3 CSS (CDN)
+       Provides the grid system, utility classes, components, and
+       responsive design out of the box.
+       ================================================================ -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1TTyZR7ciJCBdOl1hS1rO3W5J8Y2vO"
+    crossorigin="anonymous"
+  />
+
+  <!-- ================================================================
+       BOOTSTRAN ICONS (CDN)
+       Used for status icons (check / x-mark) in the results dashboard.
+       ================================================================ -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  />
+
+  <!-- ================================================================
+       CUSTOM STYLES
+       Minimal overrides — most styling is done via Bootstrap utilities.
+       ================================================================ -->
+  <style>
+    /* ----- Monospace font for code / JSON blocks ----- */
+    .mono { font-family: "Courier New", Courier, monospace; font-size: 0.85rem; }
+
+    /* ----- Coverage progress bar colors ----- */
+    .coverage-bar { transition: width 0.6s ease; }
+
+    /* ----- Smooth card hover ----- */
+    .card { transition: box-shadow 0.3s ease; }
+    .card:hover { box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15); }
+
+    /* ----- Assertion result row highlighting ----- */
+    .assert-pass { background-color: rgba(25, 135, 84, 0.08); }
+    .assert-fail { background-color: rgba(220, 53, 69, 0.08); }
+  </style>
+</head>
+
+<body class="bg-light">
+
+  <!-- ====================================================================
+       NAVBAR — Top navigation with brand and quick links
+       ==================================================================== -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+      <!-- Brand -->
+      <a class="navbar-brand fw-bold" href="#">
+        <i class="bi bi-check2-square me-1"></i>API Testing Dashboard
+      </a>
+      <!-- Toggler for mobile -->
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navContent"
+        aria-controls="navContent"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- Collapsible nav links -->
+      <div class="collapse navbar-collapse" id="navContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="#mock-server">Mock Server</a></li>
+          <li class="nav-item"><a class="nav-link" href="#request-builder">Request Builder</a></li>
+          <li class="nav-item"><a class="nav-link" href="#test-cases">Test Cases</a></li>
+          <li class="nav-item"><a class="nav-link" href="#results">Results</a></li>
+          <li class="nav-item"><a class="nav-link" href="#coverage">Coverage</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ====================================================================
+       MAIN CONTAINER
+       Bootstrap container centers content and adds horizontal padding.
+       ==================================================================== -->
+  <main class="container my-4">
+
+    <!-- ==================================================================
+         SECTION 1 — MOCK SERVER SIMULATION
+         A mock server simulates real API endpoints so you can test
+         without depending on external services. It returns predefined
+         responses for given routes and methods.
+         ================================================================== -->
+    <section id="mock-server" class="mb-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h2 class="h5 mb-0"><i class="bi bi-server me-2"></i>Mock Server Simulation</h2>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">
+            Define mock routes below. Each route has a <strong>method</strong>,
+            <strong>path</strong>, <strong>status code</strong>, and
+            <strong>response body</strong>. When the request builder sends a
+            request, the mock server matches it and returns the stored response.
+          </p>
+
+          <!-- Form to add a new mock route -->
+          <form id="mockRouteForm" class="row g-2 align-items-end mb-3">
+            <!-- HTTP Method dropdown -->
+            <div class="col-md-2">
+              <label class="form-label" for="mockMethod">Method</label>
+              <select id="mockMethod" class="form-select form-select-sm">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+              </select>
+            </div>
+            <!-- Endpoint path -->
+            <div class="col-md-3">
+              <label class="form-label" for="mockPath">Path</label>
+              <input
+                type="text"
+                id="mockPath"
+                class="form-control form-control-sm"
+                placeholder="/api/users"
+              />
+            </div>
+            <!-- Expected status code -->
+            <div class="col-md-2">
+              <label class="form-label" for="mockStatus">Status</label>
+              <input
+                type="number"
+                id="mockStatus"
+                class="form-control form-control-sm"
+                value="200"
+              />
+            </div>
+            <!-- Response body (JSON) -->
+            <div class="col-md-3">
+              <label class="form-label" for="mockBody">Response Body (JSON)</label>
+              <input
+                type="text"
+                id="mockBody"
+                class="form-control form-control-sm mono"
+                placeholder='{"ok":true}'
+              />
+            </div>
+            <!-- Add route button -->
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-sm btn-primary w-100">
+                <i class="bi bi-plus-circle me-1"></i>Add Route
+              </button>
+            </div>
+          </form>
+
+          <!-- Table listing all registered mock routes -->
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle" id="mockTable">
+              <thead class="table-dark">
+                <tr>
+                  <th>#</th>
+                  <th>Method</th>
+                  <th>Path</th>
+                  <th>Status</th>
+                  <th>Response</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="mockTableBody">
+                <!-- Rows are injected dynamically by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         SECTION 2 — REQUEST BUILDER
+         Allows users to build an HTTP request visually. When submitted,
+         it looks up the mock server for a matching route and displays
+         the simulated response.
+         ================================================================== -->
+    <section id="request-builder" class="mb-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+          <h2 class="h5 mb-0"><i class="bi bi-send me-2"></i>Request Builder</h2>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">
+            Construct a request below. The builder will attempt to match it
+            against the <strong>Mock Server</strong> routes defined above.
+          </p>
+
+          <form id="requestForm" class="row g-2 align-items-end">
+            <!-- Method -->
+            <div class="col-md-2">
+              <label class="form-label" for="reqMethod">Method</label>
+              <select id="reqMethod" class="form-select form-select-sm">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+              </select>
+            </div>
+            <!-- URL -->
+            <div class="col-md-4">
+              <label class="form-label" for="reqUrl">URL</label>
+              <input
+                type="text"
+                id="reqUrl"
+                class="form-control form-control-sm"
+                placeholder="/api/users"
+              />
+            </div>
+            <!-- Headers (key:value per line) -->
+            <div class="col-md-3">
+              <label class="form-label" for="reqHeaders">Headers</label>
+              <input
+                type="text"
+                id="reqHeaders"
+                class="form-control form-control-sm mono"
+                placeholder="Content-Type:application/json"
+              />
+            </div>
+            <!-- Body -->
+            <div class="col-md-3">
+              <label class="form-label" for="reqBody">Body (JSON)</label>
+              <input
+                type="text"
+                id="reqBody"
+                class="form-control form-control-sm mono"
+                placeholder='{"name":"John"}'
+              />
+            </div>
+            <!-- Send button -->
+            <div class="col-12 mt-2">
+              <button type="submit" class="btn btn-sm btn-info text-white">
+                <i class="bi bi-lightning-charge me-1"></i>Send Request
+              </button>
+            </div>
+          </form>
+
+          <!-- Response area -->
+          <div class="mt-3">
+            <h6>Response</h6>
+            <!-- Status badge — color changes dynamically -->
+            <span id="respStatusBadge" class="badge bg-secondary mb-2">No Response</span>
+            <!-- Response body in a <pre> block for formatting -->
+            <pre id="respBody" class="bg-dark text-success p-3 rounded mono" style="min-height:60px;">// Response will appear here</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         SECTION 3 — TEST CASE RUNNER
+         A table of test cases. Each row defines a request and expected
+         outcome. Clicking "Run All" executes every test and shows
+         pass / fail badges.
+         ================================================================== -->
+    <section id="test-cases" class="mb-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark">
+          <h2 class="h5 mb-0"><i class="bi bi-play-circle me-2"></i>Test Case Runner</h2>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">
+            Define test cases in the table below. Each test case specifies a
+            request and the <strong>expected status code</strong>. Click
+            <strong>Run All</strong> to execute every test against the mock
+            server and see results instantly.
+          </p>
+
+          <!-- Form to add a test case -->
+          <form id="testCaseForm" class="row g-2 align-items-end mb-3">
+            <div class="col-md-2">
+              <label class="form-label" for="tcName">Name</label>
+              <input type="text" id="tcName" class="form-control form-control-sm" placeholder="Get Users" />
+            </div>
+            <div class="col-md-1">
+              <label class="form-label" for="tcMethod">Method</label>
+              <select id="tcMethod" class="form-select form-select-sm">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="tcUrl">URL</label>
+              <input type="text" id="tcUrl" class="form-control form-control-sm" placeholder="/api/users" />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="tcExpectedStatus">Expected Status</label>
+              <input type="number" id="tcExpectedStatus" class="form-control form-control-sm" value="200" />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="tcExpectedBody">Expected Body Contains</label>
+              <input type="text" id="tcExpectedBody" class="form-control form-control-sm mono" placeholder='"ok":true' />
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-sm btn-warning w-100">
+                <i class="bi bi-plus-circle me-1"></i>Add Test
+              </button>
+            </div>
+          </form>
+
+          <!-- Run All / Clear buttons -->
+          <div class="mb-3">
+            <button id="runAllBtn" class="btn btn-success btn-sm">
+              <i class="bi bi-play-fill me-1"></i>Run All Tests
+            </button>
+            <button id="clearTestsBtn" class="btn btn-outline-danger btn-sm ms-2">
+              <i class="bi bi-trash me-1"></i>Clear All
+            </button>
+          </div>
+
+          <!-- Test cases table -->
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle" id="testCaseTable">
+              <thead class="table-dark">
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Method</th>
+                  <th>URL</th>
+                  <th>Expected</th>
+                  <th>Actual</th>
+                  <th>Status</th>
+                  <th>Time (ms)</th>
+                  <th>Result</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="testCaseBody">
+                <!-- Rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         SECTION 4 — RESPONSE VALIDATOR & ASSERTIONS
+         After a request, the response is validated against assertions.
+         Each assertion checks a specific property (status, header, body
+         field, type, etc.) and reports pass / fail.
+         ================================================================== -->
+    <section id="validator" class="mb-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h2 class="h5 mb-0"><i class="bi bi-shield-check me-2"></i>Response Validator &amp; Assertions</h2>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">
+            Add assertions below. After sending a request via the Request
+            Builder, click <strong>Validate</strong> to run all assertions
+            against the last response.
+          </p>
+
+          <!-- Assertion builder form -->
+          <form id="assertionForm" class="row g-2 align-items-end mb-3">
+            <!-- Assertion type -->
+            <div class="col-md-2">
+              <label class="form-label" for="assertType">Type</label>
+              <select id="assertType" class="form-select form-select-sm">
+                <option value="status">Status Code</option>
+                <option value="bodyContains">Body Contains</option>
+                <option value="bodyField">Body Field (JSON path)</option>
+                <option value="headerExists">Header Exists</option>
+                <option value="bodyType">Body Field Type</option>
+                <option value="bodyNotContains">Body NOT Contains</option>
+              </select>
+            </div>
+            <!-- Path / key -->
+            <div class="col-md-3">
+              <label class="form-label" for="assertPath">Path / Key</label>
+              <input
+                type="text"
+                id="assertPath"
+                class="form-control form-control-sm mono"
+                placeholder="data.users[0].name"
+              />
+            </div>
+            <!-- Expected value -->
+            <div class="col-md-3">
+              <label class="form-label" for="assertExpected">Expected Value</label>
+              <input
+                type="text"
+                id="assertExpected"
+                class="form-control form-control-sm mono"
+                placeholder="200 or 'John'"
+              />
+            </div>
+            <!-- Operator (for numeric comparisons) -->
+            <div class="col-md-2">
+              <label class="form-label" for="assertOp">Operator</label>
+              <select id="assertOp" class="form-select form-select-sm">
+                <option value="===">=== (equal)</option>
+                <option value="!==">!== (not equal)</option>
+                <option value=">"> &gt; </option>
+                <option value="<"> &lt; </option>
+                <option value=">="> &gt;= </option>
+                <option value="<="> &lt;= </option>
+                <option value="contains">contains</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-sm btn-success w-100">
+                <i class="bi bi-plus-circle me-1"></i>Add Assertion
+              </button>
+            </div>
+          </form>
+
+          <!-- Validate button -->
+          <button id="validateBtn" class="btn btn-outline-success btn-sm mb-3">
+            <i class="bi bi-check2-all me-1"></i>Run All Assertions
+          </button>
+
+          <!-- Assertions results table -->
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle" id="assertionTable">
+              <thead class="table-dark">
+                <tr>
+                  <th>#</th>
+                  <th>Type</th>
+                  <th>Path / Key</th>
+                  <th>Expected</th>
+                  <th>Actual</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody id="assertionBody">
+                <!-- Rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         SECTION 5 — TEST RESULTS DASHBOARD
+         Aggregates results from all test runs. Shows total, passed,
+         failed, pass rate, and a summary of the last run.
+         ================================================================== -->
+    <section id="results" class="mb-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white">
+          <h2 class="h5 mb-0"><i class="bi bi-bar-chart-line me-2"></i>Test Results Dashboard</h2>
+        </div>
+        <div class="card-body">
+          <!-- Stat cards row -->
+          <div class="row g-3 mb-4">
+            <!-- Total tests -->
+            <div class="col-md-3">
+              <div class="card text-center border-primary">
+                <div class="card-body py-3">
+                  <h6 class="card-subtitle text-muted">Total Tests</h6>
+                  <span id="statTotal" class="display-6 fw-bold text-primary">0</span>
+                </div>
+              </div>
+            </div>
+            <!-- Passed -->
+            <div class="col-md-3">
+              <div class="card text-center border-success">
+                <div class="card-body py-3">
+                  <h6 class="card-subtitle text-muted">Passed</h6>
+                  <span id="statPassed" class="display-6 fw-bold text-success">0</span>
+                </div>
+              </div>
+            </div>
+            <!-- Failed -->
+            <div class="col-md-3">
+              <div class="card text-center border-danger">
+                <div class="card-body py-3">
+                  <h6 class="card-subtitle text-muted">Failed</h6>
+                  <span id="statFailed" class="display-6 fw-bold text-danger">0</span>
+                </div>
+              </div>
+            </div>
+            <!-- Pass rate -->
+            <div class="col-md-3">
+              <div class="card text-center border-info">
+                <div class="card-body py-3">
+                  <h6 class="card-subtitle text-muted">Pass Rate</h6>
+                  <span id="statRate" class="display-6 fw-bold text-info">0%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Run history table -->
+          <h6>Run History</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle" id="historyTable">
+              <thead class="table-dark">
+                <tr>
+                  <th>#</th>
+                  <th>Timestamp</th>
+                  <th>Total</th>
+                  <th>Passed</th>
+                  <th>Failed</th>
+                  <th>Pass Rate</th>
+                  <th>Duration (ms)</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody">
+                <!-- Rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         SECTION 6 — TEST COVERAGE VISUALIZATION
+         Shows which API endpoints and HTTP methods have been covered
+         by test cases. Progress bars indicate coverage percentage.
+         ================================================================== -->
+    <section id="coverage" class="mb-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+          <h2 class="h5 mb-0"><i class="bi bi-diagram-3 me-2"></i>Test Coverage</h2>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">
+            Coverage is calculated by comparing <strong>mock routes</strong>
+            (the endpoints available) against <strong>test cases</strong>
+            (the endpoints actually tested). A route is considered
+            "covered" if at least one test case targets it.
+          </p>
+
+          <!-- Coverage table -->
+          <div class="table-responsive mb-3">
+            <table class="table table-sm align-middle" id="coverageTable">
+              <thead class="table-dark">
+                <tr>
+                  <th>Method</th>
+                  <th>Path</th>
+                  <th>Covered?</th>
+                  <th>Coverage Bar</th>
+                </tr>
+              </thead>
+              <tbody id="coverageBody">
+                <!-- Rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Overall coverage -->
+          <div class="d-flex align-items-center">
+            <strong class="me-2">Overall Coverage:</strong>
+            <div class="progress flex-grow-1" style="height: 24px;">
+              <div
+                id="overallCoverageBar"
+                class="progress-bar bg-success coverage-bar"
+                role="progressbar"
+                style="width: 0%;"
+                aria-valuenow="0"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                0%
+              </div>
+            </div>
+          </div>
+
+          <!-- Refresh coverage button -->
+          <button id="refreshCoverageBtn" class="btn btn-outline-secondary btn-sm mt-3">
+            <i class="bi bi-arrow-clockwise me-1"></i>Refresh Coverage
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================================
+         SECTION 7 — EXPORT TEST RESULTS
+         Allows users to download test results as JSON or CSV for
+         archival, CI/CD integration, or reporting.
+         ================================================================== -->
+    <section id="export" class="mb-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+          <h2 class="h5 mb-0"><i class="bi bi-download me-2"></i>Export Test Results</h2>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">
+            Download the latest test run results in your preferred format.
+            JSON is ideal for programmatic consumption; CSV works well in
+            spreadsheet applications.
+          </p>
+          <div class="btn-group">
+            <button id="exportJsonBtn" class="btn btn-outline-dark btn-sm">
+              <i class="bi bi-filetype-json me-1"></i>Export JSON
+            </button>
+            <button id="exportCsvBtn" class="btn btn-outline-dark btn-sm">
+              <i class="bi bi-filetype-csv me-1"></i>Export CSV
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main><!-- /.container -->
+
+  <!-- ====================================================================
+       FOOTER
+       ==================================================================== -->
+  <footer class="bg-dark text-white text-center py-3">
+    <small>&copy; 2026 API Testing Dashboard &mdash; Built with Bootstrap 5.3.3</small>
+  </footer>
+
+  <!-- ====================================================================
+       BOOTSTRAP 5.3.3 JS BUNDLE (CDN)
+       Includes Popper.js for tooltips, popovers, dropdowns, etc.
+       ==================================================================== -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"
+  ></script>
+
+  <!-- ====================================================================
+       APPLICATION JAVASCRIPT
+       All logic lives in a single <script> block for simplicity.
+       In production you would split this into modules.
+       ==================================================================== -->
+  <script>
+    /*
+     ======================================================================
+     GLOBAL STATE
+     ======================================================================
+     These arrays hold the application state:
+       - mockRoutes   : registered mock API routes
+       - testCases    : user-defined test cases
+       - assertions   : validation rules for responses
+       - lastResponse : the most recent response from the mock server
+       - runHistory   : timestamps and results of each "Run All" execution
+     ====================================================================== */
+    const state = {
+      mockRoutes: [],
+      testCases: [],
+      assertions: [],
+      lastResponse: null,     // { status, body, headers, time }
+      runHistory: [],
+      routeIdCounter: 0,
+      testIdCounter: 0,
+      assertIdCounter: 0,
+    };
+
+    /*
+     ======================================================================
+     UTILITY — generateId
+     Returns a unique incremental ID for table rows.
+     ====================================================================== */
+    const generateId = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+    /*
+     ======================================================================
+     UTILITY — tryParseJSON
+     Safely parses a JSON string; returns the fallback if parsing fails.
+     ====================================================================== */
+    const tryParseJSON = (str, fallback = {}) => {
+      try { return JSON.parse(str); }
+      catch { return fallback; }
+    };
+
+    /*
+     ======================================================================
+     UTILITY — getNestedValue
+     Traverses a JavaScript object using a dot/bracket path string.
+     Example: getNestedValue({a:{b:[1,2]}}, "a.b[1]") => 2
+     ====================================================================== */
+    const getNestedValue = (obj, path) => {
+      /* Convert bracket notation to dot notation: users[0] => users.0 */
+      const normalized = path.replace(/\[(\d+)\]/g, ".$1");
+      return normalized.split(".").reduce((acc, key) => {
+        if (acc === null || acc === undefined) return undefined;
+        return acc[key];
+      }, obj);
+    };
+
+    /*
+     ======================================================================
+     MOCK SERVER — addRoute
+     Registers a new mock route in the global state and re-renders the
+     mock routes table.
+     ====================================================================== */
+    const addMockRoute = (method, path, status, body) => {
+      const route = {
+        id: generateId("route"),
+        method: method.toUpperCase(),
+        path: path.trim(),
+        status: parseInt(status, 10),
+        body: tryParseJSON(body, body), // parse JSON or keep as string
+      };
+      state.mockRoutes.push(route);
+      renderMockTable();
+      refreshCoverage(); /* Update coverage whenever routes change */
+    };
+
+    /*
+     ======================================================================
+     MOCK SERVER — removeRoute
+     Removes a mock route by ID and re-renders.
+     ====================================================================== */
+    const removeMockRoute = (id) => {
+      state.mockRoutes = state.mockRoutes.filter((r) => r.id !== id);
+      renderMockTable();
+      refreshCoverage();
+    };
+
+    /*
+     ======================================================================
+     MOCK SERVER — matchRoute
+     Given a method and URL, find the first matching mock route.
+     Matching is exact on both method and path.
+     ====================================================================== */
+    const matchRoute = (method, url) => {
+      return state.mockRoutes.find(
+        (r) => r.method === method.toUpperCase() && r.path === url.trim()
+      );
+    };
+
+    /*
+     ======================================================================
+     RENDER — Mock Routes Table
+     Dynamically builds table rows from state.mockRoutes.
+     ====================================================================== */
+    const renderMockTable = () => {
+      const tbody = document.getElementById("mockTableBody");
+      tbody.innerHTML = "";
+      state.mockRoutes.forEach((route, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td><span class="badge bg-${methodColor(route.method)}">${route.method}</span></td>
+          <td class="mono">${route.path}</td>
+          <td><span class="badge bg-${statusColor(route.status)}">${route.status}</span></td>
+          <td class="mono text-truncate" style="max-width:200px;">${JSON.stringify(route.body)}</td>
+          <td>
+            <button class="btn btn-outline-danger btn-sm" onclick="removeMockRoute('${route.id}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    };
+
+    /*
+     ======================================================================
+     UTILITY — methodColor / statusColor
+     Returns a Bootstrap color class based on HTTP method or status code.
+     ====================================================================== */
+    const methodColor = (m) => {
+      const map = { GET: "primary", POST: "success", PUT: "warning", DELETE: "danger", PATCH: "info" };
+      return map[m] || "secondary";
+    };
+    const statusColor = (s) => {
+      if (s >= 200 && s < 300) return "success";
+      if (s >= 300 && s < 400) return "info";
+      if (s >= 400 && s < 500) return "warning";
+      return "danger";
+    };
+
+    /*
+     ======================================================================
+     REQUEST BUILDER — sendRequest
+     Simulates sending an HTTP request to the mock server.
+     If a matching route is found, it returns the stored response.
+     Otherwise, it returns a 404 with an error message.
+     ====================================================================== */
+    const sendRequest = (method, url) => {
+      const route = matchRoute(method, url);
+      const startTime = performance.now();
+
+      /*
+       We simulate network latency with a small random delay (50-200 ms)
+       to make timing metrics more realistic.
+      */
+      const latency = Math.floor(Math.random() * 150) + 50;
+
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const elapsed = Math.round(performance.now() - startTime + latency);
+          if (route) {
+            resolve({
+              status: route.status,
+              body: route.body,
+              headers: { "Content-Type": "application/json", "X-Mock-Server": "true" },
+              time: elapsed,
+            });
+          } else {
+            resolve({
+              status: 404,
+              body: { error: "Not Found", message: `No mock route for ${method} ${url}` },
+              headers: { "Content-Type": "application/json", "X-Mock-Server": "true" },
+              time: elapsed,
+            });
+          }
+        }, latency);
+      });
+    };
+
+    /*
+     ======================================================================
+     REQUEST BUILDER — Form submission handler
+     Reads form values, sends the request, and displays the response.
+     ====================================================================== */
+    document.getElementById("requestForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const method = document.getElementById("reqMethod").value;
+      const url = document.getElementById("reqUrl").value.trim();
+
+      if (!url) return alert("Please enter a URL.");
+
+      const resp = await sendRequest(method, url);
+      state.lastResponse = resp;
+
+      /* Update the status badge */
+      const badge = document.getElementById("respStatusBadge");
+      badge.textContent = `Status: ${resp.status}`;
+      badge.className = `badge bg-${statusColor(resp.status)} mb-2`;
+
+      /* Update the response body <pre> */
+      document.getElementById("respBody").textContent =
+        typeof resp.body === "string" ? resp.body : JSON.stringify(resp.body, null, 2);
+    });
+
+    /*
+     ======================================================================
+     MOCK SERVER — Form submission handler
+     Adds a new mock route from the form inputs.
+     ====================================================================== */
+    document.getElementById("mockRouteForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const method = document.getElementById("mockMethod").value;
+      const path = document.getElementById("mockPath").value.trim();
+      const status = document.getElementById("mockStatus").value;
+      const body = document.getElementById("mockBody").value.trim();
+
+      if (!path) return alert("Please enter a path.");
+      addMockRoute(method, path, status, body || "{}");
+
+      /* Reset form fields */
+      document.getElementById("mockPath").value = "";
+      document.getElementById("mockBody").value = "";
+    });
+
+    /*
+     ======================================================================
+     TEST CASES — addTestCase
+     Adds a test case to the global state and re-renders the table.
+     ====================================================================== */
+    const addTestCase = (name, method, url, expectedStatus, expectedBodyContains) => {
+      state.testCases.push({
+        id: generateId("tc"),
+        name,
+        method: method.toUpperCase(),
+        url: url.trim(),
+        expectedStatus: parseInt(expectedStatus, 10),
+        expectedBodyContains: expectedBodyContains.trim(),
+        actualStatus: null,
+        actualBody: null,
+        time: null,
+        result: null, // "pass" | "fail" | null
+      });
+      renderTestCaseTable();
+      refreshCoverage();
+    };
+
+    /*
+     ======================================================================
+     TEST CASES — removeTestCase
+     ====================================================================== */
+    const removeTestCase = (id) => {
+      state.testCases = state.testCases.filter((tc) => tc.id !== id);
+      renderTestCaseTable();
+      refreshCoverage();
+    };
+
+    /*
+     ======================================================================
+     TEST CASES — runTestCase
+     Executes a single test case against the mock server and evaluates
+     the result based on expected status and body content.
+     ====================================================================== */
+    const runTestCase = async (tc) => {
+      const resp = await sendRequest(tc.method, tc.url);
+      tc.actualStatus = resp.status;
+      tc.actualBody = resp.body;
+      tc.time = resp.time;
+
+      /*
+       Pass criteria:
+         1. Status code matches expectedStatus
+         2. If expectedBodyContains is provided, the stringified response
+            body must contain that substring (case-sensitive).
+      */
+      const statusMatch = resp.status === tc.expectedStatus;
+      const bodyMatch =
+        !tc.expectedBodyContains ||
+        JSON.stringify(resp.body).includes(tc.expectedBodyContains);
+
+      tc.result = statusMatch && bodyMatch ? "pass" : "fail";
+    };
+
+    /*
+     ======================================================================
+     TEST CASES — Run All
+     Iterates over every test case, runs it sequentially (to avoid
+     flooding the mock server), then updates the dashboard and history.
+     ====================================================================== */
+    const runAllTests = async () => {
+      const startTime = performance.now();
+
+      /* Run each test case sequentially */
+      for (const tc of state.testCases) {
+        await runTestCase(tc);
+      }
+
+      const totalTime = Math.round(performance.now() - startTime);
+
+      /* Re-render the test case table to show results */
+      renderTestCaseTable();
+
+      /* Update dashboard stats */
+      updateDashboard(totalTime);
+
+      /* Record run in history */
+      recordHistory(totalTime);
+
+      /* Refresh coverage display */
+      refreshCoverage();
+    };
+
+    /*
+     ======================================================================
+     RENDER — Test Case Table
+     ====================================================================== */
+    const renderTestCaseTable = () => {
+      const tbody = document.getElementById("testCaseBody");
+      tbody.innerHTML = "";
+      state.testCases.forEach((tc, i) => {
+        const tr = document.createElement("tr");
+        /* Highlight row based on result */
+        const rowClass = tc.result === "pass" ? "table-success" : tc.result === "fail" ? "table-danger" : "";
+        tr.className = rowClass;
+
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${tc.name}</td>
+          <td><span class="badge bg-${methodColor(tc.method)}">${tc.method}</span></td>
+          <td class="mono">${tc.url}</td>
+          <td><span class="badge bg-${statusColor(tc.expectedStatus)}">${tc.expectedStatus}</span></td>
+          <td>${tc.actualStatus !== null ? `<span class="badge bg-${statusColor(tc.actualStatus)}">${tc.actualStatus}</span>` : "—"}</td>
+          <td>${tc.actualStatus !== null ? tc.actualStatus : "—"}</td>
+          <td>${tc.time !== null ? tc.time : "—"}</td>
+          <td>${
+            tc.result === "pass"
+              ? '<span class="badge bg-success"><i class="bi bi-check-lg"></i> PASS</span>'
+              : tc.result === "fail"
+              ? '<span class="badge bg-danger"><i class="bi bi-x-lg"></i> FAIL</span>'
+              : '<span class="badge bg-secondary">—</span>'
+          }</td>
+          <td>
+            <button class="btn btn-outline-danger btn-sm" onclick="removeTestCase('${tc.id}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    };
+
+    /*
+     ======================================================================
+     TEST CASES — Form submission handler
+     ====================================================================== */
+    document.getElementById("testCaseForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("tcName").value.trim();
+      const method = document.getElementById("tcMethod").value;
+      const url = document.getElementById("tcUrl").value.trim();
+      const expectedStatus = document.getElementById("tcExpectedStatus").value;
+      const expectedBodyContains = document.getElementById("tcExpectedBody").value;
+
+      if (!name || !url) return alert("Please fill in Name and URL.");
+      addTestCase(name, method, url, expectedStatus, expectedBodyContains);
+
+      /* Reset form */
+      document.getElementById("tcName").value = "";
+      document.getElementById("tcUrl").value = "";
+      document.getElementById("tcExpectedBody").value = "";
+    });
+
+    /* Run All button */
+    document.getElementById("runAllBtn").addEventListener("click", runAllTests);
+
+    /* Clear All button */
+    document.getElementById("clearTestsBtn").addEventListener("click", () => {
+      state.testCases = [];
+      renderTestCaseTable();
+      updateDashboard(0);
+      refreshCoverage();
+    });
+
+    /*
+     ======================================================================
+     ASSERTIONS — addAssertion
+     ====================================================================== */
+    const addAssertion = (type, path, expected, operator) => {
+      state.assertions.push({
+        id: generateId("assert"),
+        type,
+        path: path.trim(),
+        expected: expected.trim(),
+        operator,
+        actual: null,
+        result: null,
+      });
+      renderAssertionTable();
+    };
+
+    /*
+     ======================================================================
+     ASSERTIONS — runAssertions
+     Evaluates every assertion against the lastResponse.
+     ====================================================================== */
+    const runAssertions = () => {
+      const resp = state.lastResponse;
+      if (!resp) {
+        alert("No response available. Send a request first.");
+        return;
+      }
+
+      state.assertions.forEach((a) => {
+        let actual, pass;
+
+        switch (a.type) {
+          /*
+           STATUS assertion — checks the HTTP status code.
+           Example: assert status === 200
+          */
+          case "status":
+            actual = resp.status;
+            pass = compare(actual, parseInt(a.expected, 10), a.operator);
+            break;
+
+          /*
+           BODY CONTAINS assertion — checks if the stringified body
+           contains the expected substring.
+          */
+          case "bodyContains":
+            actual = JSON.stringify(resp.body);
+            pass = actual.includes(a.expected);
+            break;
+
+          /*
+           BODY FIELD assertion — extracts a value using a JSON path
+           and compares it to the expected value.
+           Example: path="data.users[0].name", expected="John"
+          */
+          case "bodyField":
+            actual = getNestedValue(resp.body, a.path);
+            pass = compare(actual, tryParseJSON(a.expected, a.expected), a.operator);
+            break;
+
+          /*
+           HEADER EXISTS assertion — checks if a response header is present.
+          */
+          case "headerExists":
+            actual = resp.headers && resp.headers[a.path] !== undefined ? "exists" : "missing";
+            pass = actual === "exists";
+            break;
+
+          /*
+           BODY TYPE assertion — checks the typeof a nested field.
+           Example: path="data.count", expected="number"
+          */
+          case "bodyType":
+            actual = typeof getNestedValue(resp.body, a.path);
+            pass = actual === a.expected;
+            break;
+
+          /*
+           BODY NOT CONTAINS assertion — inverse of bodyContains.
+          */
+          case "bodyNotContains":
+            actual = JSON.stringify(resp.body);
+            pass = !actual.includes(a.expected);
+            break;
+
+          default:
+            actual = "unknown assertion type";
+            pass = false;
+        }
+
+        a.actual = String(actual);
+        a.result = pass ? "pass" : "fail";
+      });
+
+      renderAssertionTable();
+    };
+
+    /*
+     ======================================================================
+     ASSERTIONS — compare
+     Generic comparison helper used by multiple assertion types.
+     Supports: ===, !==, >, <, >=, <=, contains
+     ====================================================================== */
+    const compare = (actual, expected, op) => {
+      switch (op) {
+        case "===":  return actual === expected;
+        case "!==":  return actual !== expected;
+        case ">":    return actual > expected;
+        case "<":    return actual < expected;
+        case ">=":   return actual >= expected;
+        case "<=":   return actual <= expected;
+        case "contains":
+          return String(actual).includes(String(expected));
+        default:     return false;
+      }
+    };
+
+    /*
+     ======================================================================
+     RENDER — Assertion Table
+     ====================================================================== */
+    const renderAssertionTable = () => {
+      const tbody = document.getElementById("assertionBody");
+      tbody.innerHTML = "";
+      state.assertions.forEach((a, i) => {
+        const tr = document.createElement("tr");
+        tr.className = a.result === "pass" ? "assert-pass" : a.result === "fail" ? "assert-fail" : "";
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${a.type}</td>
+          <td class="mono">${a.path || "—"}</td>
+          <td class="mono">${a.expected}</td>
+          <td class="mono">${a.actual !== null ? a.actual : "—"}</td>
+          <td>${
+            a.result === "pass"
+              ? '<span class="badge bg-success"><i class="bi bi-check-lg"></i> PASS</span>'
+              : a.result === "fail"
+              ? '<span class="badge bg-danger"><i class="bi bi-x-lg"></i> FAIL</span>'
+              : '<span class="badge bg-secondary">—</span>'
+          }</td>`;
+        tbody.appendChild(tr);
+      });
+    };
+
+    /* Assertion form handler */
+    document.getElementById("assertionForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const type = document.getElementById("assertType").value;
+      const path = document.getElementById("assertPath").value;
+      const expected = document.getElementById("assertExpected").value;
+      const operator = document.getElementById("assertOp").value;
+
+      if (!expected && type !== "headerExists") return alert("Please enter an expected value.");
+      addAssertion(type, path, expected, operator);
+
+      /* Reset */
+      document.getElementById("assertPath").value = "";
+      document.getElementById("assertExpected").value = "";
+    });
+
+    /* Validate button */
+    document.getElementById("validateBtn").addEventListener("click", runAssertions);
+
+    /*
+     ======================================================================
+     DASHBOARD — updateDashboard
+     Calculates pass/fail stats from test cases and updates the stat cards.
+     ====================================================================== */
+    const updateDashboard = () => {
+      const total = state.testCases.length;
+      const passed = state.testCases.filter((tc) => tc.result === "pass").length;
+      const failed = state.testCases.filter((tc) => tc.result === "fail").length;
+      const rate = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+      document.getElementById("statTotal").textContent = total;
+      document.getElementById("statPassed").textContent = passed;
+      document.getElementById("statFailed").textContent = failed;
+      document.getElementById("statRate").textContent = `${rate}%`;
+    };
+
+    /*
+     ======================================================================
+     DASHBOARD — recordHistory
+     Appends a snapshot of the current run to the history table.
+     ====================================================================== */
+    const recordHistory = (duration) => {
+      const total = state.testCases.length;
+      const passed = state.testCases.filter((tc) => tc.result === "pass").length;
+      const failed = total - passed;
+      const rate = total > 0 ? Math.round((passed / total) * 100) : 0;
+
+      state.runHistory.push({
+        id: state.runHistory.length + 1,
+        timestamp: new Date().toLocaleString(),
+        total,
+        passed,
+        failed,
+        rate,
+        duration,
+      });
+
+      renderHistoryTable();
+    };
+
+    /*
+     ======================================================================
+     RENDER — History Table
+     ====================================================================== */
+    const renderHistoryTable = () => {
+      const tbody = document.getElementById("historyBody");
+      tbody.innerHTML = "";
+      state.runHistory.forEach((run) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${run.id}</td>
+          <td>${run.timestamp}</td>
+          <td>${run.total}</td>
+          <td class="text-success fw-bold">${run.passed}</td>
+          <td class="text-danger fw-bold">${run.failed}</td>
+          <td>${run.rate}%</td>
+          <td>${run.duration}</td>`;
+        tbody.appendChild(tr);
+      });
+    };
+
+    /*
+     ======================================================================
+     COVERAGE — refreshCoverage
+     Compares mock routes against test cases to determine which routes
+     are covered by at least one test.
+     ====================================================================== */
+    const refreshCoverage = () => {
+      const tbody = document.getElementById("coverageBody");
+      tbody.innerHTML = "";
+
+      if (state.mockRoutes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No mock routes defined.</td></tr>';
+        document.getElementById("overallCoverageBar").style.width = "0%";
+        document.getElementById("overallCoverageBar").textContent = "0%";
+        return;
+      }
+
+      let coveredCount = 0;
+
+      state.mockRoutes.forEach((route) => {
+        /*
+         A route is "covered" if any test case matches its method AND path.
+        */
+        const isCovered = state.testCases.some(
+          (tc) => tc.method === route.method && tc.url === route.path
+        );
+        if (isCovered) coveredCount++;
+
+        const tr = document.createElement("tr");
+        tr.className = isCovered ? "table-success" : "table-warning";
+        tr.innerHTML = `
+          <td><span class="badge bg-${methodColor(route.method)}">${route.method}</span></td>
+          <td class="mono">${route.path}</td>
+          <td>${isCovered
+            ? '<span class="badge bg-success"><i class="bi bi-check-lg"></i> Yes</span>'
+            : '<span class="badge bg-warning text-dark"><i class="bi bi-x-lg"></i> No</span>'
+          }</td>
+          <td>
+            <div class="progress" style="height:12px;">
+              <div class="progress-bar ${isCovered ? "bg-success" : "bg-warning"}"
+                   style="width:${isCovered ? 100 : 0}%;"></div>
+            </div>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      /* Overall coverage percentage */
+      const overall = Math.round((coveredCount / state.mockRoutes.length) * 100);
+      const bar = document.getElementById("overallCoverageBar");
+      bar.style.width = `${overall}%`;
+      bar.textContent = `${overall}%`;
+      bar.setAttribute("aria-valuenow", overall);
+
+      /* Change bar color based on coverage level */
+      bar.className = `progress-bar coverage-bar ${
+        overall >= 80 ? "bg-success" : overall >= 50 ? "bg-warning" : "bg-danger"
+      }`;
+    };
+
+    /* Refresh coverage button */
+    document.getElementById("refreshCoverageBtn").addEventListener("click", refreshCoverage);
+
+    /*
+     ======================================================================
+     EXPORT — exportJson
+     Downloads the test results as a JSON file.
+     Uses a Blob and a temporary anchor element to trigger the download.
+     ====================================================================== */
+    const exportJson = () => {
+      const data = {
+        exportedAt: new Date().toISOString(),
+        mockRoutes: state.mockRoutes,
+        testCases: state.testCases,
+        assertions: state.assertions,
+        runHistory: state.runHistory,
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      downloadBlob(blob, `api-test-results-${Date.now()}.json`);
+    };
+
+    /*
+     ======================================================================
+     EXPORT — exportCsv
+     Converts test cases to CSV format and downloads.
+     ====================================================================== */
+    const exportCsv = () => {
+      const headers = ["Name", "Method", "URL", "Expected Status", "Actual Status", "Time (ms)", "Result"];
+      const rows = state.testCases.map((tc) => [
+        tc.name,
+        tc.method,
+        tc.url,
+        tc.expectedStatus,
+        tc.actualStatus ?? "",
+        tc.time ?? "",
+        tc.result ?? "",
+      ]);
+
+      /* Build CSV string — escape fields that contain commas */
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) =>
+          row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+        ),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      downloadBlob(blob, `api-test-results-${Date.now()}.csv`);
+    };
+
+    /*
+     ======================================================================
+     EXPORT — downloadBlob (helper)
+     Creates a temporary object URL and triggers a download via a hidden
+     anchor element, then cleans up.
+     ====================================================================== */
+    const downloadBlob = (blob, filename) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      /* Cleanup: revoke the object URL and remove the anchor */
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        a.remove();
+      }, 100);
+    };
+
+    /* Export button event listeners */
+    document.getElementById("exportJsonBtn").addEventListener("click", exportJson);
+    document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
+
+    /*
+     ======================================================================
+     SEED DATA — Pre-populate the UI with sample mock routes and test
+     cases so learners can immediately click "Run All" and see results.
+     ====================================================================== */
+    (function seedData() {
+      /* Sample mock routes */
+      addMockRoute("GET", "/api/users", 200, '{"users":[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]}');
+      addMockRoute("POST", "/api/users", 201, '{"id":3,"name":"Charlie","created":true}');
+      addMockRoute("GET", "/api/users/999", 404, '{"error":"User not found"}');
+      addMockRoute("DELETE", "/api/users/1", 200, '{"deleted":true}');
+      addMockRoute("PUT", "/api/users/1", 200, '{"id":1,"name":"Alice Updated","updated":true}');
+
+      /* Sample test cases */
+      addTestCase("Get all users", "GET", "/api/users", "200", '"users"');
+      addTestCase("Create user", "POST", "/api/users", "201", '"created"');
+      addTestCase("Get non-existent user", "GET", "/api/users/999", "404", '"error"');
+      addTestCase("Delete user", "DELETE", "/api/users/1", "200", '"deleted"');
+      addTestCase("Update user", "PUT", "/api/users/1", "200", '"updated"');
+      addTestCase("Get invalid endpoint", "GET", "/api/unknown", "404", '"error"');
+
+      /* Sample assertions */
+      addAssertion("status", "", "200", "===");
+      addAssertion("bodyContains", "", "users", "contains");
+      addAssertion("bodyField", "users[0].name", "Alice", "===");
+      addAssertion("bodyType", "users", "object", "===");
+      addAssertion("headerExists", "Content-Type", "exists", "===");
+    })();
+
+    /*
+     ======================================================================
+     INIT — Run coverage on load to reflect seeded data.
+     ====================================================================== */
+    refreshCoverage();
+
+    /*
+     ======================================================================
+     END OF APPLICATION SCRIPT
+     
+     Key concepts demonstrated:
+       1. Mock Server: In-memory route registry that simulates HTTP
+          responses without a real backend.
+       2. Request Builder: Visual form that constructs requests and
+          sends them to the mock server.
+       3. Test Case Runner: Table-driven test execution with pass/fail
+          evaluation based on status code and body content.
+       4. Response Validator: Assertion engine that checks status codes,
+          JSON body fields, header presence, and data types.
+       5. Dashboard: Aggregated stats (total, passed, failed, rate)
+          plus a run history log with timestamps.
+       6. Coverage: Compares registered routes against test cases to
+          calculate endpoint coverage percentage.
+       7. Export: Downloads results as JSON (for CI/CD) or CSV (for
+          reporting) using Blob-based file generation.
+     ======================================================================
+    */
+  </script>
+</body>
+</html>

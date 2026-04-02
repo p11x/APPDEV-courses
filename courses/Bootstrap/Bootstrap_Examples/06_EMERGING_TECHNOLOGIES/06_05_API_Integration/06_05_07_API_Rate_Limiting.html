@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================
+         API Rate Limiting - Bootstrap 5 Demonstration
+         
+         Rate limiting is a technique used to control the number of
+         requests a client can make to an API within a given time window.
+         It protects servers from abuse, ensures fair usage, and
+         maintains service stability for all users.
+         
+         Common rate limiting algorithms:
+         - Token Bucket: Tokens refill at a fixed rate; each request consumes one token
+         - Leaky Bucket: Requests queue and drain at a fixed rate
+         - Fixed Window: Count requests in fixed time intervals
+         - Sliding Window: Rolling window that smooths out burst edges
+         ============================================================ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Rate Limiting - Bootstrap 5</title>
+
+<!-- Bootstrap 5 CSS CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    /* ============================================================
+       Custom styles for rate limiting visualizations
+       ============================================================ */
+    
+    /* Monospace font for data displays */
+    .mono { font-family: 'Courier New', monospace; }
+    
+    /* Smooth transitions on status badges */
+    .badge { transition: all 0.3s ease; }
+    
+    /* Request queue item animation */
+    .queue-item {
+        animation: slideIn 0.3s ease-out;
+        transition: all 0.3s ease;
+    }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+    
+    /* Countdown timer pulse effect */
+    .countdown-pulse {
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50%      { opacity: 0.5; }
+    }
+    
+    /* Graph bar grow animation */
+    .graph-bar {
+        transition: height 0.5s ease, background-color 0.3s ease;
+        min-width: 18px;
+        border-radius: 3px 3px 0 0;
+    }
+    
+    /* Config panel highlight on change */
+    .config-changed {
+        border-left: 4px solid #0d6efd !important;
+    }
+    
+    /* Throttle/debounce indicator glow */
+    .active-indicator {
+        box-shadow: 0 0 8px rgba(13, 110, 253, 0.6);
+    }
+</style>
+</head>
+
+<body class="bg-light">
+
+<!-- ============================================================
+     NAVBAR - Page navigation and title
+     ============================================================ -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <!-- Icon representing API / network -->
+            <span class="fw-bold">&#9889;</span> API Rate Limiting
+        </a>
+        <!-- Collapsible nav links for smaller screens -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navContent">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="#rate-counter">Counter</a></li>
+                <li class="nav-item"><a class="nav-link" href="#throttle-debounce">Throttle/Debounce</a></li>
+                <li class="nav-item"><a class="nav-link" href="#headers">Headers</a></li>
+                <li class="nav-item"><a class="nav-link" href="#queue">Queue</a></li>
+                <li class="nav-item"><a class="nav-link" href="#retry">Retry</a></li>
+                <li class="nav-item"><a class="nav-link" href="#graph">Graph</a></li>
+                <li class="nav-item"><a class="nav-link" href="#config">Config</a></li>
+            </ul>
+            <!-- Live rate limit status badge in the navbar -->
+            <span id="globalStatusBadge" class="badge bg-success">API: OK</span>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 fw-bold">API Rate Limiting Dashboard</h1>
+            <p class="lead text-muted">
+                Interactive demonstrations of rate limiting patterns used to protect APIs
+                from abuse and ensure fair resource allocation.
+            </p>
+            <hr>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         ROW 1: Rate Limit Counter + Throttle/Debounce
+         ============================================================ -->
+    <div class="row g-4 mb-4">
+
+        <!-- ========================================================
+             SECTION 1: Rate Limit Counter with Progress Bar
+             
+             Concept: Track how many API requests have been made in
+             the current time window. The progress bar fills as
+             requests approach the limit. When the limit is reached,
+             further requests are blocked until the window resets.
+             ======================================================== -->
+        <div class="col-lg-6" id="rate-counter">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Rate Limit Counter</h5>
+                    <!-- Status badge changes color based on usage -->
+                    <span id="counterBadge" class="badge bg-light text-primary">0 / 10</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Each request consumes one allowance. The bar shows consumption within the
+                        current 60-second window. Requests beyond the limit are rejected.
+                    </p>
+
+                    <!-- Progress bar visualizing request consumption -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Request Usage</label>
+                        <div class="progress" style="height: 30px;">
+                            <div id="rateProgressBar"
+                                 class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                                 role="progressbar"
+                                 style="width: 0%;"
+                                 aria-valuenow="0"
+                                 aria-valuemin="0"
+                                 aria-valuemax="10">
+                                0%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Numeric display of remaining requests -->
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <small class="text-muted d-block">Used</small>
+                                <strong id="usedCount" class="fs-4 text-primary">0</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <small class="text-muted d-block">Remaining</small>
+                                <strong id="remainingCount" class="fs-4 text-success">10</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <small class="text-muted d-block">Reset In</small>
+                                <strong id="resetTimer" class="fs-4 text-warning">60s</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons to simulate API calls -->
+                    <div class="d-flex gap-2">
+                        <button id="sendRequestBtn" class="btn btn-primary" onclick="sendSimulatedRequest()">
+                            Send Request
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="resetCounter()">
+                            Reset Counter
+                        </button>
+                    </div>
+
+                    <!-- Request log showing success/rejection -->
+                    <div class="mt-3" style="max-height: 120px; overflow-y: auto;">
+                        <small class="text-muted fw-bold">Request Log:</small>
+                        <div id="requestLog" class="small mono"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 2: Throttle / Debounce Controls
+             
+             Throttle: Ensures a function fires at most once every N ms,
+             regardless of how many times it is invoked. Useful for
+             scroll events or rapid button clicks.
+             
+             Debounce: Delays execution until N ms of inactivity have
+             passed. Useful for search-as-you-type or resize events.
+             ======================================================== -->
+        <div class="col-lg-6" id="throttle-debounce">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Throttle &amp; Debounce</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Throttle limits execution to once per interval. Debounce waits for
+                        a pause before executing. Both reduce API call frequency.
+                    </p>
+
+                    <!-- Throttle demo -->
+                    <div class="border rounded p-3 mb-3" id="throttleSection">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Throttle (500ms)</h6>
+                            <span id="throttleBadge" class="badge bg-secondary">Idle</span>
+                        </div>
+                        <p class="small text-muted mb-2">
+                            Rapid clicks will only trigger one request every 500ms.
+                        </p>
+                        <button class="btn btn-sm btn-outline-info me-2" onclick="throttledRequest()">
+                            Click Rapidly
+                        </button>
+                        <span class="small mono">Fires: <strong id="throttleCount">0</strong></span>
+                    </div>
+
+                    <!-- Debounce demo -->
+                    <div class="border rounded p-3 mb-3" id="debounceSection">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Debounce (600ms)</h6>
+                            <span id="debounceBadge" class="badge bg-secondary">Idle</span>
+                        </div>
+                        <p class="text-muted small mb-2">
+                            Type below. The "API call" fires 600ms after you stop typing.
+                        </p>
+                        <input type="text" id="debounceInput" class="form-control form-control-sm mb-2"
+                               placeholder="Type to trigger debounced search..."
+                               oninput="debouncedSearch()">
+                        <span class="small mono">Searches: <strong id="debounceCount">0</strong> |
+                            Last query: <span id="lastQuery" class="text-info">-</span></span>
+                    </div>
+
+                    <!-- Timing comparison -->
+                    <div class="border rounded p-3">
+                        <h6 class="mb-2">Timing Visualization</h6>
+                        <div class="d-flex align-items-end gap-1" id="timingBars" style="height: 60px;">
+                            <!-- Bars injected by JS to show throttle vs debounce timing -->
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-muted">Throttle (even intervals)</small>
+                            <small class="text-muted">Debounce (after pause)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         ROW 2: Rate Limit Headers + Request Queue
+         ============================================================ -->
+    <div class="row g-4 mb-4">
+
+        <!-- ========================================================
+             SECTION 3: Rate Limit Headers Display
+             
+             Real APIs return standard headers so clients can track
+             their remaining quota:
+               X-RateLimit-Limit     – max requests per window
+               X-RateLimit-Remaining – requests left
+               X-RateLimit-Reset     – Unix timestamp when window resets
+               Retry-After           – seconds to wait when rate limited
+             ======================================================== -->
+        <div class="col-lg-6" id="headers">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Rate Limit Headers</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        HTTP headers returned by APIs inform clients of their current
+                        rate limit status. Below simulates reading those headers.
+                    </p>
+
+                    <!-- Simulated response headers table -->
+                    <table class="table table-sm table-bordered mb-3">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Header</th>
+                                <th>Value</th>
+                                <th>Meaning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="mono small">X-RateLimit-Limit</td>
+                                <td><code id="headerLimit">100</code></td>
+                                <td class="small text-muted">Max requests per window</td>
+                            </tr>
+                            <tr>
+                                <td class="mono small">X-RateLimit-Remaining</td>
+                                <td><code id="headerRemaining">100</code></td>
+                                <td class="small text-muted">Requests left</td>
+                            </tr>
+                            <tr>
+                                <td class="mono small">X-RateLimit-Reset</td>
+                                <td><code id="headerReset">-</code></td>
+                                <td class="small text-muted">Window reset (timestamp)</td>
+                            </tr>
+                            <tr>
+                                <td class="mono small">Retry-After</td>
+                                <td><code id="headerRetry">-</code></td>
+                                <td class="small text-muted">Seconds to wait if limited</td>
+                            </tr>
+                            <tr>
+                                <td class="mono small">X-RateLimit-Policy</td>
+                                <td><code id="headerPolicy">100;w=60</code></td>
+                                <td class="small text-muted">Policy: limit;window_seconds</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Raw header preview -->
+                    <div class="bg-dark text-success p-3 rounded small mono" id="rawHeaders">
+GET /api/data HTTP/1.1
+Host: api.example.com
+
+HTTP/1.1 200 OK
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 100
+X-RateLimit-Reset: (pending)
+Content-Type: application/json
+                    </div>
+
+                    <button class="btn btn-sm btn-warning mt-3" onclick="simulateHeaderResponse()">
+                        Simulate API Response
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 4: Request Queue Visualization
+             
+             When rate limited, requests can be queued and sent
+             gradually as the rate limit allows. This visualizes
+             the queue, showing pending, processing, and completed
+             requests in real time.
+             ======================================================== -->
+        <div class="col-lg-6" id="queue">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-danger text-white d-flex justify-content-between">
+                    <h5 class="mb-0">Request Queue</h5>
+                    <span class="badge bg-light text-danger" id="queueCountBadge">0 queued</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        When the rate limit is hit, subsequent requests enter a queue.
+                        They are processed as quota becomes available.
+                    </p>
+
+                    <!-- Queue pipeline stages -->
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="border rounded p-2 bg-warning bg-opacity-10">
+                                <small class="d-block text-muted">Pending</small>
+                                <strong id="pendingCount" class="fs-5">0</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2 bg-primary bg-opacity-10">
+                                <small class="d-block text-muted">Processing</small>
+                                <strong id="processingCount" class="fs-5">0</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2 bg-success bg-opacity-10">
+                                <small class="d-block text-muted">Completed</small>
+                                <strong id="completedCount" class="fs-5">0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Queue items list -->
+                    <div id="queueList" class="border rounded p-2 mb-3" style="max-height: 180px; overflow-y: auto; min-height: 60px;">
+                        <div class="text-center text-muted small py-3">Queue is empty</div>
+                    </div>
+
+                    <!-- Queue control buttons -->
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-danger" onclick="addBulkToQueue(5)">
+                            + 5 Requests
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="startQueueProcessing()">
+                            Process Queue
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="clearQueue()">
+                            Clear Queue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         ROW 3: Retry-After Countdown + Status Badges
+         ============================================================ -->
+    <div class="row g-4 mb-4">
+
+        <!-- ========================================================
+             SECTION 5: Retry-After Countdown Timer
+             
+             When a server returns HTTP 429 (Too Many Requests), it
+             includes a Retry-After header. This countdown shows
+             the client how long to wait before retrying.
+             ======================================================== -->
+        <div class="col-lg-6" id="retry">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Retry-After Countdown</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        When rate limited (HTTP 429), the server sends <code>Retry-After</code>
+                        indicating how many seconds the client must wait.
+                    </p>
+
+                    <!-- Countdown display -->
+                    <div class="text-center my-4">
+                        <div id="countdownCircle" class="d-inline-flex align-items-center justify-content-center rounded-circle border border-3 border-danger"
+                             style="width: 120px; height: 120px;">
+                            <span id="countdownValue" class="display-4 fw-bold text-danger">--</span>
+                        </div>
+                        <div class="mt-2">
+                            <span id="countdownLabel" class="text-muted">Waiting for rate limit...</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar for countdown -->
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div id="countdownBar" class="progress-bar bg-danger" style="width: 0%;"></div>
+                    </div>
+
+                    <!-- Retry controls -->
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button id="triggerRetryBtn" class="btn btn-danger btn-sm" onclick="triggerRateLimit(10)">
+                            Trigger 429 (10s)
+                        </button>
+                        <button id="retryNowBtn" class="btn btn-success btn-sm" onclick="retryNow()" disabled>
+                            Retry Now
+                        </button>
+                    </div>
+
+                    <!-- Retry log -->
+                    <div class="mt-3 small mono" id="retryLog"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 6: Rate Limit Status Badges
+             
+             Visual indicators that reflect the current state:
+             - Green  = plenty of quota remaining
+             - Yellow = approaching limit
+             - Red    = limit reached / throttled
+             ======================================================== -->
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Status Badges</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Badges update in real time to reflect rate limit health across
+                        different API endpoints.
+                    </p>
+
+                    <!-- Endpoint status table with live badges -->
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Status</th>
+                                <th>Usage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statusTableBody">
+                            <!-- Rows generated by JS on load -->
+                        </tbody>
+                    </table>
+
+                    <!-- Legend -->
+                    <div class="d-flex gap-3 mt-3 flex-wrap">
+                        <span><span class="badge bg-success">OK</span> &lt; 50%</span>
+                        <span><span class="badge bg-warning text-dark">Warning</span> 50-80%</span>
+                        <span><span class="badge bg-danger">Critical</span> 80-99%</span>
+                        <span><span class="badge bg-dark">Limited</span> 100%</span>
+                    </div>
+
+                    <button class="btn btn-sm btn-outline-success mt-3" onclick="randomizeStatuses()">
+                        Simulate Traffic
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         ROW 4: Request Frequency Graph + Configuration Panel
+         ============================================================ -->
+    <div class="row g-4 mb-4">
+
+        <!-- ========================================================
+             SECTION 7: Request Frequency Graph / Chart UI
+             
+             A bar chart built with pure CSS/Bootstrap that shows
+             requests per second over time. The red dashed line
+             represents the rate limit threshold.
+             ======================================================== -->
+        <div class="col-lg-7" id="graph">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between">
+                    <h5 class="mb-0">Request Frequency</h5>
+                    <div>
+                        <button class="btn btn-sm btn-light me-1" onclick="generateGraphData()">Refresh</button>
+                        <button class="btn btn-sm btn-outline-light" onclick="toggleAutoGraph()" id="autoGraphBtn">Auto: OFF</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Each bar represents requests in a 1-second interval. The dashed line
+                        marks the per-second rate limit. Bars exceeding it turn red.
+                    </p>
+
+                    <!-- Chart container -->
+                    <div class="position-relative border rounded p-3" style="height: 220px;">
+                        <!-- Y-axis labels -->
+                        <div class="position-absolute top-0 start-0 h-100 d-flex flex-column justify-content-between text-end pe-2"
+                             style="width: 30px;">
+                            <small class="text-muted mono" id="yMax">50</small>
+                            <small class="text-muted mono">25</small>
+                            <small class="text-muted mono">0</small>
+                        </div>
+
+                        <!-- Chart area with bars -->
+                        <div class="d-flex align-items-end gap-1 h-100 ms-3" id="chartBars"
+                             style="border-left: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6;">
+                            <!-- Bars injected by JS -->
+                        </div>
+
+                        <!-- Rate limit threshold line -->
+                        <div id="thresholdLine" class="position-absolute border-top border-danger border-2 dashed"
+                             style="left: 40px; right: 10px; top: 40%; border-style: dashed !important;">
+                            <span class="position-absolute top-0 start-0 translate-middle-y badge bg-danger small">
+                                Limit: <span id="thresholdLabel">30</span>/s
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- X-axis labels -->
+                    <div class="d-flex ms-3 ps-3 gap-1 mt-1" id="chartLabels">
+                        <!-- Labels injected by JS -->
+                    </div>
+
+                    <!-- Graph stats -->
+                    <div class="row text-center mt-3">
+                        <div class="col-3">
+                            <small class="text-muted d-block">Peak</small>
+                            <strong id="peakValue">0</strong>
+                        </div>
+                        <div class="col-3">
+                            <small class="text-muted d-block">Average</small>
+                            <strong id="avgValue">0</strong>
+                        </div>
+                        <div class="col-3">
+                            <small class="text-muted d-block">Over Limit</small>
+                            <strong id="overLimitCount" class="text-danger">0</strong>
+                        </div>
+                        <div class="col-3">
+                            <small class="text-muted d-block">Total</small>
+                            <strong id="totalRequests">0</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 8: Rate Limit Configuration Panel
+             
+             A form that lets users configure rate limiting parameters
+             such as request limit, time window, algorithm, and
+             retry behavior. Changes are reflected across all demos.
+             ======================================================== -->
+        <div class="col-lg-5" id="config">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Configuration Panel</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Adjust rate limiting parameters. Changes propagate to all
+                        dashboard components in real time.
+                    </p>
+
+                    <form id="configForm" onsubmit="return false;">
+                        <!-- Max requests per window -->
+                        <div class="mb-3">
+                            <label for="cfgLimit" class="form-label small fw-bold">
+                                Max Requests per Window
+                            </label>
+                            <input type="range" class="form-range" id="cfgLimit" min="5" max="200" value="10"
+                                   oninput="updateConfigDisplay()">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">5</small>
+                                <strong id="cfgLimitValue" class="text-primary">10</strong>
+                                <small class="text-muted">200</small>
+                            </div>
+                        </div>
+
+                        <!-- Time window in seconds -->
+                        <div class="mb-3">
+                            <label for="cfgWindow" class="form-label small fw-bold">
+                                Time Window (seconds)
+                            </label>
+                            <input type="range" class="form-range" id="cfgWindow" min="5" max="120" value="60"
+                                   oninput="updateConfigDisplay()">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">5s</small>
+                                <strong id="cfgWindowValue" class="text-primary">60s</strong>
+                                <small class="text-muted">120s</small>
+                            </div>
+                        </div>
+
+                        <!-- Rate limiting algorithm selection -->
+                        <div class="mb-3">
+                            <label for="cfgAlgorithm" class="form-label small fw-bold">
+                                Algorithm
+                            </label>
+                            <select class="form-select form-select-sm" id="cfgAlgorithm" onchange="updateConfigDisplay()">
+                                <option value="token-bucket">Token Bucket</option>
+                                <option value="leaky-bucket">Leaky Bucket</option>
+                                <option value="fixed-window" selected>Fixed Window</option>
+                                <option value="sliding-window">Sliding Window Log</option>
+                            </select>
+                            <small id="algoDescription" class="text-muted">
+                                Counts requests in fixed time intervals.
+                            </small>
+                        </div>
+
+                        <!-- Retry strategy -->
+                        <div class="mb-3">
+                            <label for="cfgRetry" class="form-label small fw-bold">
+                                Retry Strategy
+                            </label>
+                            <select class="form-select form-select-sm" id="cfgRetry" onchange="updateConfigDisplay()">
+                                <option value="none">No Retry</option>
+                                <option value="fixed" selected>Fixed Delay</option>
+                                <option value="linear">Linear Backoff</option>
+                                <option value="exponential">Exponential Backoff</option>
+                            </select>
+                            <small id="retryDescription" class="text-muted">
+                                Retries after a constant delay.
+                            </small>
+                        </div>
+
+                        <!-- Max retries -->
+                        <div class="mb-3">
+                            <label for="cfgMaxRetries" class="form-label small fw-bold">
+                                Max Retries
+                            </label>
+                            <input type="number" class="form-control form-control-sm" id="cfgMaxRetries"
+                                   value="3" min="0" max="10" onchange="updateConfigDisplay()">
+                        </div>
+
+                        <!-- Burst allowance toggle -->
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="cfgBurst" checked
+                                   onchange="updateConfigDisplay()">
+                            <label class="form-check-label small" for="cfgBurst">
+                                Allow burst (temporary exceed limit)
+                            </label>
+                        </div>
+
+                        <!-- Apply button -->
+                        <button class="btn btn-primary w-100" onclick="applyConfig()">
+                            Apply Configuration
+                        </button>
+                    </form>
+
+                    <!-- Current config summary -->
+                    <div class="mt-3 p-2 bg-light rounded small mono" id="configSummary">
+Limit: 10 req / 60s
+Algorithm: Fixed Window
+Retry: Fixed Delay (max 3)
+Burst: Enabled
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="text-center text-muted py-4 border-top">
+        <small>API Rate Limiting &mdash; Bootstrap 5 Demonstration &copy; 2026</small>
+    </footer>
+
+</div><!-- /.container -->
+
+<!-- Bootstrap 5 JS Bundle CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ============================================================
+   JAVASCRIPT - API Rate Limiting Interactive Logic
+   
+   This script powers all interactive demos on the page.
+   Each section is clearly separated with comments.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   GLOBAL STATE
+   Shared state object that tracks rate limiting across demos.
+   ------------------------------------------------------------ */
+const state = {
+    /* Rate counter section */
+    used: 0,                  // requests consumed in current window
+    limit: 10,                // max requests allowed per window
+    windowSeconds: 60,        // duration of the rate limit window
+    windowTimer: null,        // reference to the countdown interval
+    windowRemaining: 60,      // seconds left in current window
+    requestLog: [],           // log of recent request outcomes
+
+    /* Throttle / debounce section */
+    throttleCount: 0,         // number of throttled calls executed
+    debounceCount: 0,         // number of debounced calls executed
+    lastThrottleTime: 0,      // timestamp of last throttle execution
+    throttleTimeout: null,    // throttle timer reference
+    debounceTimeout: null,    // debounce timer reference
+
+    /* Queue section */
+    queue: [],                // array of queued request objects
+    queueProcessing: false,   // whether the queue is actively processing
+    completedCount: 0,        // total completed requests
+
+    /* Retry section */
+    retryCountdown: null,     // interval reference for retry countdown
+    retryRemaining: 0,        // seconds remaining in retry countdown
+
+    /* Graph section */
+    graphData: [],            // array of request counts per second
+    autoGraph: false,         // whether auto-refresh is on
+    autoGraphInterval: null,  // interval reference for auto graph
+    rateThreshold: 30,        // per-second threshold for the graph
+
+    /* Configuration */
+    algorithm: 'fixed-window',
+    retryStrategy: 'fixed',
+    maxRetries: 3,
+    burstAllowed: true,
+
+    /* Status badges */
+    endpoints: [
+        { name: '/api/users',      used: 0, limit: 100 },
+        { name: '/api/products',   used: 0, limit: 100 },
+        { name: '/api/orders',     used: 0, limit: 50  },
+        { name: '/api/analytics',  used: 0, limit: 30  },
+        { name: '/api/auth',       used: 0, limit: 20  }
+    ]
+};
+
+
+/* ============================================================
+   SECTION 1: RATE LIMIT COUNTER
+   
+   Simulates a token-bucket / fixed-window counter.
+   Each "Send Request" click increments usage. When the limit
+   is reached, requests are rejected. The window resets after
+   the configured duration.
+   ============================================================ */
+
+/**
+ * Sends a simulated API request.
+ * If under the limit, the request succeeds and the counter increments.
+ * If at or over the limit, the request is rejected with a 429.
+ */
+function sendSimulatedRequest() {
+    const timestamp = new Date().toLocaleTimeString();
+    if (state.used < state.limit) {
+        state.used++;
+        logRequest(timestamp, 'SUCCESS', 200);
+    } else {
+        logRequest(timestamp, 'REJECTED', 429);
+    }
+    updateCounterUI();
+
+    /* Start the window timer on first request */
+    if (state.used === 1 && !state.windowTimer) {
+        startWindowTimer();
+    }
+}
+
+/**
+ * Appends an entry to the visible request log.
+ * @param {string} time - formatted timestamp
+ * @param {string} status - SUCCESS or REJECTED
+ * @param {number} code - HTTP status code
+ */
+function logRequest(time, status, code) {
+    const color = code === 200 ? 'text-success' : 'text-danger';
+    const log = document.getElementById('requestLog');
+    const entry = document.createElement('div');
+    entry.className = color;
+    entry.textContent = `[${time}] ${status} (${code})`;
+    log.prepend(entry);
+
+    /* Keep the log from growing too large */
+    if (log.children.length > 30) log.removeChild(log.lastChild);
+}
+
+/**
+ * Updates the progress bar, counters, and badge to reflect
+ * the current state of rate limit consumption.
+ */
+function updateCounterUI() {
+    const pct = Math.min((state.used / state.limit) * 100, 100);
+    const bar = document.getElementById('rateProgressBar');
+    bar.style.width = pct + '%';
+    bar.textContent = Math.round(pct) + '%';
+    bar.setAttribute('aria-valuenow', state.used);
+
+    /* Change bar color as usage approaches the limit */
+    bar.className = 'progress-bar progress-bar-striped progress-bar-animated ';
+    if (pct >= 90) {
+        bar.classList.add('bg-danger');
+    } else if (pct >= 60) {
+        bar.classList.add('bg-warning');
+    } else {
+        bar.classList.add('bg-primary');
+    }
+
+    /* Update numeric displays */
+    document.getElementById('usedCount').textContent = state.used;
+    document.getElementById('remainingCount').textContent = Math.max(state.limit - state.used, 0);
+    document.getElementById('counterBadge').textContent = `${state.used} / ${state.limit}`;
+
+    /* Disable the send button when at the limit */
+    document.getElementById('sendRequestBtn').disabled = (state.used >= state.limit);
+}
+
+/**
+ * Starts the countdown timer that resets the window.
+ * When it reaches zero, the used count resets to 0.
+ */
+function startWindowTimer() {
+    state.windowRemaining = state.windowSeconds;
+    state.windowTimer = setInterval(() => {
+        state.windowRemaining--;
+        document.getElementById('resetTimer').textContent = state.windowRemaining + 's';
+
+        if (state.windowRemaining <= 0) {
+            resetCounter();
+        }
+    }, 1000);
+}
+
+/**
+ * Resets the rate counter and restarts the window.
+ */
+function resetCounter() {
+    state.used = 0;
+    state.windowRemaining = state.windowSeconds;
+    if (state.windowTimer) {
+        clearInterval(state.windowTimer);
+        state.windowTimer = null;
+    }
+    updateCounterUI();
+    document.getElementById('resetTimer').textContent = state.windowSeconds + 's';
+}
+
+
+/* ============================================================
+   SECTION 2: THROTTLE & DEBOUNCE
+   
+   Throttle: Executes immediately, then ignores calls for N ms.
+   Debounce: Resets a timer on each call; executes only after N ms
+   of silence.
+   ============================================================ */
+
+/**
+ * Throttled request handler.
+ * Fires immediately on first call, then blocks subsequent calls
+ * for 500ms.
+ */
+function throttledRequest() {
+    const now = Date.now();
+    const elapsed = now - state.lastThrottleTime;
+
+    /* Show active indicator */
+    const badge = document.getElementById('throttleBadge');
+    badge.className = 'badge bg-warning text-dark';
+    badge.textContent = 'Active';
+
+    if (elapsed >= 500 || state.lastThrottleTime === 0) {
+        /* Enough time has passed — execute */
+        state.lastThrottleTime = now;
+        state.throttleCount++;
+        document.getElementById('throttleCount').textContent = state.throttleCount;
+        document.getElementById('throttleSection').classList.add('active-indicator');
+        setTimeout(() => document.getElementById('throttleSection').classList.remove('active-indicator'), 200);
+
+        badge.className = 'badge bg-success';
+        badge.textContent = 'Fired!';
+        setTimeout(() => { badge.className = 'badge bg-secondary'; badge.textContent = 'Idle'; }, 500);
+    } else {
+        /* Too soon — throttled */
+        badge.className = 'badge bg-danger';
+        badge.textContent = 'Throttled';
+        setTimeout(() => { badge.className = 'badge bg-secondary'; badge.textContent = 'Idle'; }, 300);
+    }
+}
+
+/**
+ * Debounced search handler.
+ * Each call resets a 600ms timer. Only fires after the user
+ * stops typing for 600ms.
+ */
+function debouncedSearch() {
+    const badge = document.getElementById('debounceBadge');
+    badge.className = 'badge bg-warning text-dark';
+    badge.textContent = 'Waiting...';
+
+    clearTimeout(state.debounceTimeout);
+    state.debounceTimeout = setTimeout(() => {
+        const query = document.getElementById('debounceInput').value;
+        state.debounceCount++;
+        document.getElementById('debounceCount').textContent = state.debounceCount;
+        document.getElementById('lastQuery').textContent = query || '(empty)';
+        badge.className = 'badge bg-success';
+        badge.textContent = 'Searched!';
+        setTimeout(() => { badge.className = 'badge bg-secondary'; badge.textContent = 'Idle'; }, 800);
+    }, 600);
+}
+
+
+/* ============================================================
+   SECTION 3: RATE LIMIT HEADERS
+   
+   Simulates inspecting HTTP response headers from an API.
+   Updates header values and the raw header preview.
+   ============================================================ */
+
+/**
+ * Generates a simulated set of rate limit headers and displays them.
+ * As the remaining count decreases, the visual representation changes.
+ */
+let simulatedRemaining = 100;
+
+function simulateHeaderResponse() {
+    simulatedRemaining = Math.max(0, simulatedRemaining - Math.floor(Math.random() * 15 + 1));
+    const resetTime = Math.floor(Date.now() / 1000) + 60;
+    const retryAfter = simulatedRemaining === 0 ? Math.floor(Math.random() * 30 + 5) : '-';
+
+    /* Update table cells */
+    document.getElementById('headerRemaining').textContent = simulatedRemaining;
+    document.getElementById('headerReset').textContent = resetTime;
+    document.getElementById('headerRetry').textContent = retryAfter;
+
+    /* Update raw header preview */
+    document.getElementById('rawHeaders').textContent =
+`GET /api/data HTTP/1.1
+Host: api.example.com
+
+HTTP/1.1 ${simulatedRemaining === 0 ? '429 Too Many Requests' : '200 OK'}
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: ${simulatedRemaining}
+X-RateLimit-Reset: ${resetTime}
+${retryAfter !== '-' ? 'Retry-After: ' + retryAfter : 'Content-Type: application/json'}`;
+
+    /* Auto-reset for demo purposes */
+    if (simulatedRemaining === 0) {
+        setTimeout(() => { simulatedRemaining = 100; }, 3000);
+    }
+}
+
+
+/* ============================================================
+   SECTION 4: REQUEST QUEUE
+   
+   Manages a queue of pending requests. Items move through
+   stages: Pending → Processing → Completed.
+   ============================================================ */
+
+/**
+ * Adds a batch of simulated requests to the queue.
+ * @param {number} count - how many requests to add
+ */
+function addBulkToQueue(count) {
+    for (let i = 0; i < count; i++) {
+        state.queue.push({
+            id: Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+            status: 'pending',
+            timestamp: new Date().toLocaleTimeString()
+        });
+    }
+    renderQueue();
+}
+
+/**
+ * Renders the queue list and updates stage counters.
+ */
+function renderQueue() {
+    const list = document.getElementById('queueList');
+    const pending = state.queue.filter(q => q.status === 'pending').length;
+    const processing = state.queue.filter(q => q.status === 'processing').length;
+
+    document.getElementById('pendingCount').textContent = pending;
+    document.getElementById('processingCount').textContent = processing;
+    document.getElementById('completedCount').textContent = state.completedCount;
+    document.getElementById('queueCountBadge').textContent = `${pending} queued`;
+
+    if (state.queue.length === 0) {
+        list.innerHTML = '<div class="text-center text-muted small py-3">Queue is empty</div>';
+        return;
+    }
+
+    list.innerHTML = state.queue.map(item => {
+        let bgClass = 'bg-warning bg-opacity-25';
+        let icon = '&#9203;'; // hourglass
+        if (item.status === 'processing') { bgClass = 'bg-primary bg-opacity-25'; icon = '&#9881;'; }
+        if (item.status === 'completed')   { bgClass = 'bg-success bg-opacity-25'; icon = '&#10003;'; }
+
+        return `<div class="queue-item d-flex justify-content-between align-items-center p-1 px-2 mb-1 rounded ${bgClass}">
+            <span>${icon} <code class="small">${item.id}</code></span>
+            <span class="badge ${item.status === 'completed' ? 'bg-success' : item.status === 'processing' ? 'bg-primary' : 'bg-warning text-dark'}">${item.status}</span>
+        </div>`;
+    }).join('');
+}
+
+/**
+ * Begins processing the queue one item at a time with a delay,
+ * simulating rate-limited consumption.
+ */
+function startQueueProcessing() {
+    if (state.queueProcessing) return;
+    state.queueProcessing = true;
+
+    const processNext = () => {
+        const next = state.queue.find(q => q.status === 'pending');
+        if (!next) {
+            state.queueProcessing = false;
+            return;
+        }
+        next.status = 'processing';
+        renderQueue();
+
+        setTimeout(() => {
+            next.status = 'completed';
+            state.completedCount++;
+            /* Remove completed items after a brief display */
+            setTimeout(() => {
+                state.queue = state.queue.filter(q => q.status !== 'completed');
+                renderQueue();
+            }, 800);
+            renderQueue();
+            processNext();
+        }, 1000);
+    };
+    processNext();
+}
+
+/**
+ * Clears all items from the queue.
+ */
+function clearQueue() {
+    state.queue = [];
+    state.queueProcessing = false;
+    renderQueue();
+}
+
+
+/* ============================================================
+   SECTION 5: RETRY-AFTER COUNTDOWN
+   
+   Simulates receiving a 429 response. A countdown timer
+   shows how many seconds remain before the client may retry.
+   ============================================================ */
+
+/**
+ * Triggers a simulated rate limit (HTTP 429) and starts
+ * a countdown for the specified number of seconds.
+ * @param {number} seconds - the Retry-After value
+ */
+function triggerRateLimit(seconds) {
+    state.retryRemaining = seconds;
+    const total = seconds;
+
+    /* Disable the trigger button during countdown */
+    document.getElementById('triggerRetryBtn').disabled = true;
+    document.getElementById('retryNowBtn').disabled = true;
+
+    document.getElementById('countdownLabel').textContent = 'Rate limited! Waiting...';
+    appendRetryLog(`429 Received — Retry-After: ${seconds}s`);
+
+    if (state.retryCountdown) clearInterval(state.retryCountdown);
+
+    state.retryCountdown = setInterval(() => {
+        state.retryRemaining--;
+
+        /* Update the countdown display */
+        document.getElementById('countdownValue').textContent = state.retryRemaining;
+
+        /* Update progress bar */
+        const pct = ((total - state.retryRemaining) / total) * 100;
+        document.getElementById('countdownBar').style.width = pct + '%';
+
+        /* Visual feedback */
+        const circle = document.getElementById('countdownCircle');
+        circle.classList.toggle('countdown-pulse', state.retryRemaining > 0);
+
+        if (state.retryRemaining <= 0) {
+            clearInterval(state.retryCountdown);
+            document.getElementById('countdownValue').textContent = '0';
+            document.getElementById('countdownLabel').textContent = 'Ready to retry!';
+            document.getElementById('triggerRetryBtn').disabled = false;
+            document.getElementById('retryNowBtn').disabled = false;
+            circle.classList.remove('countdown-pulse');
+            appendRetryLog('Countdown complete. Retry is now allowed.');
+        }
+    }, 1000);
+}
+
+/**
+ * Simulates an immediate retry after the countdown finishes.
+ */
+function retryNow() {
+    document.getElementById('countdownLabel').textContent = 'Retry successful!';
+    document.getElementById('countdownBar').style.width = '100%';
+    document.getElementById('countdownBar').className = 'progress-bar bg-success';
+    appendRetryLog('Retry sent — 200 OK');
+
+    setTimeout(() => {
+        document.getElementById('countdownBar').className = 'progress-bar bg-danger';
+        document.getElementById('countdownBar').style.width = '0%';
+        document.getElementById('countdownValue').textContent = '--';
+        document.getElementById('countdownLabel').textContent = 'Waiting for rate limit...';
+        document.getElementById('retryNowBtn').disabled = true;
+    }, 2000);
+}
+
+/**
+ * Appends a timestamped message to the retry log.
+ * @param {string} msg - the message to log
+ */
+function appendRetryLog(msg) {
+    const log = document.getElementById('retryLog');
+    const time = new Date().toLocaleTimeString();
+    log.innerHTML += `<div>[${time}] ${msg}</div>`;
+    log.scrollTop = log.scrollHeight;
+}
+
+
+/* ============================================================
+   SECTION 6: STATUS BADGES
+   
+   Renders endpoint-specific status badges that change color
+   based on the percentage of rate limit consumed.
+   ============================================================ */
+
+/**
+ * Renders the status table rows from the state endpoints array.
+ */
+function renderStatusBadges() {
+    const tbody = document.getElementById('statusTableBody');
+    tbody.innerHTML = state.endpoints.map(ep => {
+        const pct = (ep.used / ep.limit) * 100;
+        let badgeClass = 'bg-success';
+        let label = 'OK';
+        if (pct >= 100) { badgeClass = 'bg-dark'; label = 'Limited'; }
+        else if (pct >= 80) { badgeClass = 'bg-danger'; label = 'Critical'; }
+        else if (pct >= 50) { badgeClass = 'bg-warning text-dark'; label = 'Warning'; }
+
+        const barColor = pct >= 80 ? 'bg-danger' : pct >= 50 ? 'bg-warning' : 'bg-success';
+
+        return `<tr>
+            <td class="mono small">${ep.name}</td>
+            <td><span class="badge ${badgeClass}">${label}</span></td>
+            <td>
+                <div class="progress" style="height: 12px; width: 100px;">
+                    <div class="progress-bar ${barColor}" style="width: ${Math.min(pct, 100)}%"></div>
+                </div>
+                <small class="text-muted">${ep.used}/${ep.limit}</small>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+/**
+ * Randomizes endpoint usage to simulate live traffic,
+ * then re-renders the badges.
+ */
+function randomizeStatuses() {
+    state.endpoints.forEach(ep => {
+        ep.used = Math.floor(Math.random() * (ep.limit + 10));
+        if (ep.used > ep.limit) ep.used = ep.limit;
+    });
+    renderStatusBadges();
+}
+
+/* Initial render */
+renderStatusBadges();
+
+
+/* ============================================================
+   SECTION 7: REQUEST FREQUENCY GRAPH
+   
+   A CSS-based bar chart that visualizes request counts per
+   second. Bars that exceed the rate limit threshold turn red.
+   ============================================================ */
+
+/**
+ * Generates random data points for the graph and renders bars.
+ */
+function generateGraphData() {
+    const barCount = 24;
+    state.graphData = [];
+    for (let i = 0; i < barCount; i++) {
+        state.graphData.push(Math.floor(Math.random() * 50));
+    }
+    renderGraph();
+}
+
+/**
+ * Renders the bar chart from state.graphData.
+ * Bars above the threshold are colored red.
+ */
+function renderGraph() {
+    const container = document.getElementById('chartBars');
+    const labelsContainer = document.getElementById('chartLabels');
+    const maxVal = Math.max(...state.graphData, state.rateThreshold, 1);
+
+    document.getElementById('yMax').textContent = maxVal;
+
+    container.innerHTML = state.graphData.map((val, i) => {
+        const heightPct = (val / maxVal) * 100;
+        const overLimit = val > state.rateThreshold;
+        const color = overLimit ? 'bg-danger' : 'bg-primary';
+        return `<div class="graph-bar ${color}" style="height: ${heightPct}%; flex: 1;"
+                     title="t-${state.graphData.length - 1 - i}s: ${val} reqs"></div>`;
+    }).join('');
+
+    /* X-axis labels (show every 4th) */
+    labelsContainer.innerHTML = state.graphData.map((_, i) => {
+        return i % 4 === 0
+            ? `<small class="text-muted mono" style="flex:4; text-align:center;">-${state.graphData.length - 1 - i}s</small>`
+            : '';
+    }).join('');
+
+    /* Update stats */
+    const peak = Math.max(...state.graphData);
+    const avg = (state.graphData.reduce((a, b) => a + b, 0) / state.graphData.length).toFixed(1);
+    const overLimit = state.graphData.filter(v => v > state.rateThreshold).length;
+    const total = state.graphData.reduce((a, b) => a + b, 0);
+
+    document.getElementById('peakValue').textContent = peak;
+    document.getElementById('avgValue').textContent = avg;
+    document.getElementById('overLimitCount').textContent = overLimit;
+    document.getElementById('totalRequests').textContent = total;
+
+    /* Position threshold line proportionally */
+    const thresholdPct = 100 - (state.rateThreshold / maxVal * 100);
+    document.getElementById('thresholdLine').style.top = Math.max(thresholdPct, 5) + '%';
+    document.getElementById('thresholdLabel').textContent = state.rateThreshold;
+}
+
+/**
+ * Toggles auto-refresh of the graph every 2 seconds.
+ */
+function toggleAutoGraph() {
+    state.autoGraph = !state.autoGraph;
+    const btn = document.getElementById('autoGraphBtn');
+    if (state.autoGraph) {
+        btn.textContent = 'Auto: ON';
+        btn.className = 'btn btn-sm btn-danger';
+        state.autoGraphInterval = setInterval(() => {
+            /* Shift data left and add a new random point */
+            state.graphData.shift();
+            state.graphData.push(Math.floor(Math.random() * 50));
+            renderGraph();
+        }, 2000);
+    } else {
+        btn.textContent = 'Auto: OFF';
+        btn.className = 'btn btn-sm btn-outline-light';
+        clearInterval(state.autoGraphInterval);
+    }
+}
+
+/* Initial graph render */
+generateGraphData();
+
+
+/* ============================================================
+   SECTION 8: CONFIGURATION PANEL
+   
+   Reads form values and updates the global state, then
+   propagates changes to all dashboard components.
+   ============================================================ */
+
+const algoDescriptions = {
+    'token-bucket': 'Tokens refill at a steady rate; each request consumes one token.',
+    'leaky-bucket': 'Requests queue and drain at a fixed rate, smoothing bursts.',
+    'fixed-window': 'Counts requests in fixed time intervals.',
+    'sliding-window': 'A rolling window that smooths out burst edges at boundaries.'
+};
+
+const retryDescriptions = {
+    'none': 'Failed requests are not retried.',
+    'fixed': 'Retries after a constant delay.',
+    'linear': 'Delay increases linearly with each retry.',
+    'exponential': 'Delay doubles with each retry (1s, 2s, 4s, 8s...).'
+};
+
+/**
+ * Reads the current form values and updates display labels.
+ */
+function updateConfigDisplay() {
+    document.getElementById('cfgLimitValue').textContent = document.getElementById('cfgLimit').value;
+    document.getElementById('cfgWindowValue').textContent = document.getElementById('cfgWindow').value + 's';
+
+    const algo = document.getElementById('cfgAlgorithm').value;
+    document.getElementById('algoDescription').textContent = algoDescriptions[algo] || '';
+
+    const retry = document.getElementById('cfgRetry').value;
+    document.getElementById('retryDescription').textContent = retryDescriptions[retry] || '';
+}
+
+/**
+ * Applies the configuration from the form to the global state
+ * and updates all relevant UI components.
+ */
+function applyConfig() {
+    state.limit = parseInt(document.getElementById('cfgLimit').value);
+    state.windowSeconds = parseInt(document.getElementById('cfgWindow').value);
+    state.algorithm = document.getElementById('cfgAlgorithm').value;
+    state.retryStrategy = document.getElementById('cfgRetry').value;
+    state.maxRetries = parseInt(document.getElementById('cfgMaxRetries').value);
+    state.burstAllowed = document.getElementById('cfgBurst').checked;
+
+    /* Reset counter with new limits */
+    resetCounter();
+
+    /* Update config summary */
+    document.getElementById('configSummary').textContent =
+`Limit: ${state.limit} req / ${state.windowSeconds}s
+Algorithm: ${state.algorithm.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+Retry: ${state.retryStrategy.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase())} (max ${state.maxRetries})
+Burst: ${state.burstAllowed ? 'Enabled' : 'Disabled'}`;
+
+    /* Flash confirmation */
+    const summary = document.getElementById('configSummary');
+    summary.classList.add('config-changed');
+    setTimeout(() => summary.classList.remove('config-changed'), 1500);
+}
+
+/* Initialize config display on load */
+updateConfigDisplay();
+
+</script>
+
+</body>
+</html>

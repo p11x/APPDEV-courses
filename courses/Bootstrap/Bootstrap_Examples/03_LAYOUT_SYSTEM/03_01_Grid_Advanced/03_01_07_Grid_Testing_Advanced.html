@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         03_01_07 - Grid Testing Advanced
+         ============================================
+         Testing strategies for grid layouts: visual
+         regression testing, responsive testing, unit
+         testing grid behavior, and automated checks.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_07 - Grid Testing Advanced</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ============================================
+           TESTABLE GRID PATTERNS
+           Grids designed with predictable classes
+           for automated testing assertions
+        ================================================ */
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .test-item {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #dee2e6;
+        }
+
+        /* Test marker: items that should exist at specific positions */
+        .test-item[data-test-pos="1"] { grid-column: 1; grid-row: 1; }
+        .test-item[data-test-pos="2"] { grid-column: 2; grid-row: 1; }
+        .test-item[data-test-pos="3"] { grid-column: 3; grid-row: 1; }
+        .test-item[data-test-pos="4"] { grid-column: 4; grid-row: 1; }
+
+        /* ============================================
+           VISUAL REGRESSION TEST GRID
+           A grid showing known-good layout snapshots
+           for comparison during visual regression tests
+        ================================================ */
+        .snapshot-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 10px;
+        }
+
+        .snapshot-col {
+            background: #cfe2ff;
+            border: 1px solid #9ec5fe;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        .snap-4 { grid-column: span 4; }
+        .snap-6 { grid-column: span 6; }
+        .snap-8 { grid-column: span 8; }
+        .snap-12 { grid-column: span 12; }
+
+        /* ============================================
+           RESPONSIVE BREAKPOINT TEST GRID
+           Each breakpoint should show a different
+           number of columns for testing
+        ================================================ */
+        .breakpoint-test-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        @media (min-width: 576px) {
+            .breakpoint-test-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (min-width: 768px) {
+            .breakpoint-test-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (min-width: 992px) {
+            .breakpoint-test-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .bp-item {
+            background: #d1e7dd;
+            border: 2px solid #badbcc;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        /* ============================================
+           ASSERTION VISUALIZATION
+           Showing test results inline
+        ================================================ */
+        .assertion {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .assert-pass {
+            background: #d1e7dd;
+            border-left: 4px solid #198754;
+        }
+
+        .assert-fail {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+
+        .assert-icon {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        /* ============================================
+           OVERFLOW DETECTION GRID
+           Grid items that might overflow on small screens
+           for testing horizontal overflow
+        ================================================ */
+        .overflow-test-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+        }
+
+        .overflow-item {
+            min-width: 150px;
+            background: #fff3cd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #ffecb5;
+        }
+
+        @media (max-width: 768px) {
+            .overflow-test-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ============================================
+           ALIGNMENT TEST GRID
+           Testing justify-content, align-items, and
+           justify-items values
+        ================================================ */
+        .alignment-test {
+            display: grid;
+            grid-template-columns: repeat(3, 150px);
+            grid-template-rows: repeat(2, 120px);
+            gap: 10px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .alignment-item {
+            background: #e2d9f3;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        /* ============================================
+           EMPTY STATE TEST
+           Testing grid appearance with no items,
+           one item, and full grid
+        ================================================ */
+        .state-test-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            min-height: 100px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .state-test-grid:empty::after {
+            content: "No items to display";
+            color: #6c757d;
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+            grid-column: 1 / -1;
+        }
+
+        .state-item {
+            background: #cfe2ff;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .test-grid,
+            .alignment-test {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .overflow-test-grid {
+                grid-template-columns: 1fr;
+            }
+            .state-test-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">03_01_07 - Grid Testing Advanced</h1>
+
+        <!-- ============================================
+             SECTION 1: Automated Grid Tests (Visual)
+             Inline test results showing pass/fail
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Automated Grid Assertions (Visual)</h2>
+            <div class="alert alert-info">
+                These represent automated test results. In a real test suite (Jest, Cypress, Playwright),
+                assertions check computed styles, track counts, and responsive behavior.
+            </div>
+
+            <!-- Simulated test results -->
+            <div class="assertion assert-pass">
+                <span class="assert-icon text-success">PASS</span>
+                <span><code>.test-grid</code> has <code>display: grid</code></span>
+            </div>
+            <div class="assertion assert-pass">
+                <span class="assert-icon text-success">PASS</span>
+                <span>Grid has 4 columns at desktop breakpoint</span>
+            </div>
+            <div class="assertion assert-pass">
+                <span class="assert-icon text-success">PASS</span>
+                <span>Grid items render in correct DOM order</span>
+            </div>
+            <div class="assertion assert-pass">
+                <span class="assert-icon text-success">PASS</span>
+                <span>Gap is 15px as defined</span>
+            </div>
+            <div class="assertion assert-fail">
+                <span class="assert-icon text-danger">FAIL</span>
+                <span>Grid overflows at 320px viewport width (expected: no overflow)</span>
+            </div>
+
+            <h5 class="mt-4">Test Grid Being Asserted:</h5>
+            <div class="test-grid">
+                <div class="test-item" data-test-pos="1">Item 1</div>
+                <div class="test-item" data-test-pos="2">Item 2</div>
+                <div class="test-item" data-test-pos="3">Item 3</div>
+                <div class="test-item" data-test-pos="4">Item 4</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 2: Responsive Breakpoint Testing
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Responsive Breakpoint Testing</h2>
+            <div class="alert alert-info">
+                Resize the browser to verify column count changes at each breakpoint:
+                1 col (xs) → 2 col (sm) → 3 col (md) → 4 col (lg).
+            </div>
+
+            <div class="table-responsive mb-3">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Breakpoint</th>
+                            <th>Width</th>
+                            <th>Expected Columns</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>xs</td><td>&lt;576px</td><td>1</td></tr>
+                        <tr><td>sm</td><td>576px+</td><td>2</td></tr>
+                        <tr><td>md</td><td>768px+</td><td>3</td></tr>
+                        <tr><td>lg</td><td>992px+</td><td>4</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="breakpoint-test-grid">
+                <div class="bp-item">1</div>
+                <div class="bp-item">2</div>
+                <div class="bp-item">3</div>
+                <div class="bp-item">4</div>
+                <div class="bp-item">5</div>
+                <div class="bp-item">6</div>
+                <div class="bp-item">7</div>
+                <div class="bp-item">8</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 3: Visual Regression Snapshot
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Visual Regression Snapshot Grid</h2>
+            <div class="alert alert-info">
+                This layout represents a "golden snapshot." Visual regression tools (Percy, Chromatic)
+                compare screenshots against this baseline to detect unintended changes.
+            </div>
+
+            <div class="snapshot-grid">
+                <div class="snapshot-col snap-4">snap-4</div>
+                <div class="snapshot-col snap-4">snap-4</div>
+                <div class="snapshot-col snap-4">snap-4</div>
+                <div class="snapshot-col snap-6">snap-6</div>
+                <div class="snapshot-col snap-6">snap-6</div>
+                <div class="snapshot-col snap-8">snap-8</div>
+                <div class="snapshot-col snap-4">snap-4</div>
+                <div class="snapshot-col snap-12">snap-12</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 4: Overflow Detection
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Horizontal Overflow Detection</h2>
+            <div class="alert alert-warning">
+                Common bug: grid items with <code>min-width</code> cause horizontal scroll on mobile.
+                Test by checking <code>document.body.scrollWidth &gt; window.innerWidth</code>.
+            </div>
+
+            <div class="overflow-test-grid">
+                <div class="overflow-item">min-width: 150px</div>
+                <div class="overflow-item">min-width: 150px</div>
+                <div class="overflow-item">min-width: 150px</div>
+                <div class="overflow-item">min-width: 150px</div>
+                <div class="overflow-item">min-width: 150px</div>
+                <div class="overflow-item">min-width: 150px</div>
+            </div>
+            <p class="text-muted small mt-2">
+                On screens &lt;900px wide (6 items × 150px + gaps), this would overflow.
+                The responsive rule reduces to 2 columns at &lt;768px.
+            </p>
+        </section>
+
+        <!-- ============================================
+             SECTION 5: Alignment Testing
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Grid Alignment Testing</h2>
+            <div class="alert alert-info">
+                Test that <code>justify-items</code>, <code>align-items</code>, and
+                <code>place-items</code> produce expected visual alignment.
+            </div>
+
+            <div class="alignment-test" style="justify-items: center; align-items: center;">
+                <div class="alignment-item">Centered</div>
+                <div class="alignment-item">Centered</div>
+                <div class="alignment-item">Centered</div>
+                <div class="alignment-item">Centered</div>
+                <div class="alignment-item">Centered</div>
+                <div class="alignment-item">Centered</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 6: Empty State Testing
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Empty State Testing</h2>
+            <div class="alert alert-info">
+                Grids should handle empty states gracefully. The <code>:empty</code> pseudo-class
+                can display placeholder text. Toggle items to test.
+            </div>
+
+            <button class="btn btn-outline-primary btn-sm mb-2" onclick="
+                const grid = document.getElementById('stateGrid');
+                if (grid.children.length > 0) { grid.innerHTML = ''; }
+                else {
+                    grid.innerHTML = '<div class=\'state-item\'>Item 1</div><div class=\'state-item\'>Item 2</div><div class=\'state-item\'>Item 3</div>';
+                }
+            ">Toggle Items</button>
+
+            <div class="state-test-grid" id="stateGrid">
+                <div class="state-item">Item 1</div>
+                <div class="state-item">Item 2</div>
+                <div class="state-item">Item 3</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 7: Testing Checklist
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Grid Testing Checklist</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Test Type</th>
+                            <th>Tool</th>
+                            <th>What to Check</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Visual Regression</td>
+                            <td>Percy, Chromatic, BackstopJS</td>
+                            <td>Layout unchanged across commits</td>
+                        </tr>
+                        <tr>
+                            <td>Responsive</td>
+                            <td>Playwright viewport, BrowserStack</td>
+                            <td>Columns change at breakpoints</td>
+                        </tr>
+                        <tr>
+                            <td>Overflow</td>
+                            <td>Playwright, manual</td>
+                            <td>No horizontal scroll at any width</td>
+                        </tr>
+                        <tr>
+                            <td>Accessibility</td>
+                            <td>axe-core, Lighthouse</td>
+                            <td>ARIA roles, focus management</td>
+                        </tr>
+                        <tr>
+                            <td>Unit (CSS)</td>
+                            <td>Jest + jsdom, style queries</td>
+                            <td>Computed display/grid values</td>
+                        </tr>
+                        <tr>
+                            <td>Screenshot</td>
+                            <td>Cypress screenshots</td>
+                            <td>Pixel-perfect comparison</td>
+                        </tr>
+                        <tr>
+                            <td>Performance</td>
+                            <td>Lighthouse, WebPageTest</td>
+                            <td>Layout shift (CLS), render time</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

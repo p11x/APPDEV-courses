@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<!-- Bootstrap 5 Typography Performance - Optimization for web fonts and text rendering -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>01_02_04_09 - Typography Performance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">Typography Performance Best Practices</h1>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: Use Bootstrap's System Font Stack -->
+        <!-- Bootstrap uses a system font stack by default - zero downloads -->
+        <!-- This is the fastest possible font loading strategy -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>1. System Font Stack (Bootstrap Default)</h2>
+            <p>Bootstrap's default font stack requires no font downloads, making it the fastest option.</p>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Bootstrap's Default Font Stack</h5>
+                    <pre class="bg-body-secondary p-3 rounded mb-0"><code>font-family: system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial,
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";</code></pre>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">System Font (Fast)</div>
+                        <div class="card-body">
+                            <p>This text uses Bootstrap's system font stack. No font files are downloaded. The browser uses the native OS font, resulting in zero network overhead and instant rendering.</p>
+                            <ul class="small">
+                                <li>No HTTP requests</li>
+                                <li>No FOUT/FOIT</li>
+                                <li>Instant text rendering</li>
+                                <li>Native OS look and feel</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">Custom Web Font (Slower)</div>
+                        <div class="card-body">
+                            <p style="font-family: Georgia, serif;">This text simulates a custom web font. Custom fonts require downloading font files (WOFF2), adding network overhead and potential rendering delays.</p>
+                            <ul class="small">
+                                <li>Additional HTTP request(s)</li>
+                                <li>Potential FOUT/FOIT</li>
+                                <li>100-500KB+ per font family</li>
+                                <li>Delayed text rendering</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: Font Loading Strategies -->
+        <!-- How to load custom fonts efficiently when needed -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>2. Efficient Font Loading</h2>
+            <p>If you must use custom fonts, load them efficiently.</p>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Font Display Strategies</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Strategy</th>
+                                    <th>Behavior</th>
+                                    <th>Best For</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>font-display: swap</code></td>
+                                    <td>Show fallback immediately, swap when font loads</td>
+                                    <td>Body text (most common)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>font-display: optional</code></td>
+                                    <td>Show fallback, only use font if cached</td>
+                                    <td>Performance-critical pages</td>
+                                </tr>
+                                <tr>
+                                    <td><code>font-display: fallback</code></td>
+                                    <td>Short block period, then swap if loaded within 3s</td>
+                                    <td>Balanced approach</td>
+                                </tr>
+                                <tr>
+                                    <td><code>font-display: block</code></td>
+                                    <td>Invisible text until font loads (FOIT)</td>
+                                    <td>Icon fonts only</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preloading example -->
+            <div class="card">
+                <div class="card-body">
+                    <h5>Preloading Critical Fonts</h5>
+                    <pre class="bg-body-secondary p-3 rounded mb-0"><code>&lt;!-- Preload critical font file --&gt;
+&lt;link rel="preload" href="/fonts/my-font.woff2"
+      as="font" type="font/woff2" crossorigin&gt;
+
+&lt;!-- Define font with swap display --&gt;
+&lt;style&gt;
+@font-face {
+    font-family: 'MyFont';
+    src: url('/fonts/my-font.woff2') format('woff2');
+    font-display: swap; /* Show fallback while loading */
+}
+&lt;/style&gt;</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: Minimize Font Variations -->
+        <!-- Each font weight/style variation is a separate download -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>3. Minimize Font Variations</h2>
+            <p>Each font weight and style is a separate font file. Fewer variations = faster loading.</p>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">Efficient: 2-3 Weights</div>
+                        <div class="card-body">
+                            <p class="fw-normal">Normal (400)</p>
+                            <p class="fw-semibold">Semi-bold (600)</p>
+                            <p class="fw-bold">Bold (700)</p>
+                            <p class="small text-muted">Only load the weights you actually use. Map all needs to 2-3 weights.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">Excessive: 9 Weights</div>
+                        <div class="card-body">
+                            <p class="fw-100">Thin 100</p>
+                            <p class="fw-200">Extra-light 200</p>
+                            <p class="fw-300">Light 300</p>
+                            <p class="fw-400">Normal 400</p>
+                            <p class="fw-500">Medium 500</p>
+                            <p class="fw-600">Semi-bold 600</p>
+                            <p class="fw-700">Bold 700</p>
+                            <p class="fw-800">Extra-bold 800</p>
+                            <p class="fw-900">Black 900</p>
+                            <p class="small text-muted">9 weights = 9 font files. Huge download overhead.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: Use Bootstrap Utilities Instead of Custom CSS -->
+        <!-- Bootstrap's typography utilities are already in the CSS bundle -->
+        <!-- Custom CSS adds to file size -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>4. Prefer Bootstrap Utilities Over Custom CSS</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">Optimal: Bootstrap Utilities</div>
+                        <div class="card-body">
+                            <pre class="bg-body-secondary p-2 rounded small"><code>&lt;!-- Zero additional CSS --&gt;
+&lt;h2 class="fw-bold text-primary
+    text-uppercase"&gt;
+  Title
+&lt;/h2&gt;</code></pre>
+                            <p class="small">Classes already exist in Bootstrap's cached CSS bundle. No additional bytes.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">Avoid: Custom CSS</div>
+                        <div class="card-body">
+                            <pre class="bg-body-secondary p-2 rounded small"><code>/* Custom CSS adds bytes */
+.custom-title {
+    font-weight: 700;
+    color: #0d6efd;
+    text-transform: uppercase;
+}</code></pre>
+                            <p class="small">Custom CSS adds ~100+ bytes per rule to stylesheet. Multiply by many elements.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: Text Rendering Performance -->
+        <!-- CSS properties that affect text rendering speed -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>5. Text Rendering Performance</h2>
+            <p>Some CSS properties impact how quickly text renders on screen.</p>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>font-display and text-rendering</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Property</th>
+                                    <th>Value</th>
+                                    <th>Effect</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>text-rendering</code></td>
+                                    <td><code>optimizeSpeed</code></td>
+                                    <td>Faster rendering, less precise kerning</td>
+                                </tr>
+                                <tr>
+                                    <td><code>text-rendering</code></td>
+                                    <td><code>geometricPrecision</code></td>
+                                    <td>Precise rendering, slower</td>
+                                </tr>
+                                <tr>
+                                    <td><code>text-rendering</code></td>
+                                    <td><code>auto</code></td>
+                                    <td>Browser decides (recommended)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>font-smooth</code></td>
+                                    <td><code>always</code></td>
+                                    <td>Smooth font rendering</td>
+                                </tr>
+                                <tr>
+                                    <td><code>-webkit-font-smoothing</code></td>
+                                    <td><code>antialiased</code></td>
+                                    <td>Smoother on macOS</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avoid excessive text transforms -->
+            <div class="alert alert-warning">
+                <strong>Tip:</strong> <code>text-transform: uppercase</code> (Bootstrap's <code>.text-uppercase</code>) triggers a repaint. Use sparingly on large blocks of text.
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: Layout Thrashing from Text -->
+        <!-- Avoid frequent text changes that cause reflow -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>6. Avoiding Layout Thrashing</h2>
+            <p>Frequent text content changes can cause expensive reflows.</p>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">Bad: Layout Thrashing</div>
+                        <div class="card-body">
+                            <p class="small">Reading and writing DOM text in a loop causes repeated reflows.</p>
+                            <pre class="bg-body-secondary p-2 rounded small"><code>// BAD: causes layout thrashing
+items.forEach(item => {
+    const width = item.offsetWidth;
+    item.textContent = `${width}px`;
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">Good: Batch Operations</div>
+                        <div class="card-body">
+                            <p class="small">Batch reads and writes separately to minimize reflows.</p>
+                            <pre class="bg-body-secondary p-2 rounded small"><code>// GOOD: batch reads, then writes
+const widths = items.map(
+    i => i.offsetWidth
+);
+items.forEach((item, i) => {
+    item.textContent = `${widths[i]}px`;
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7: Performance Comparison -->
+        <!-- Measuring the impact of typography choices -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>7. Performance Impact Summary</h2>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Approach</th>
+                            <th>Extra KB</th>
+                            <th>HTTP Requests</th>
+                            <th>Render Blocking</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-success">
+                            <td>Bootstrap system fonts + utilities</td>
+                            <td>0 KB</td>
+                            <td>0</td>
+                            <td>None</td>
+                            <td>Best</td>
+                        </tr>
+                        <tr class="table-success">
+                            <td>System fonts + minimal custom CSS</td>
+                            <td>&lt;1 KB</td>
+                            <td>0</td>
+                            <td>Minimal</td>
+                            <td>Excellent</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td>1 custom font (woff2, swap)</td>
+                            <td>20-50 KB</td>
+                            <td>1</td>
+                            <td>Minimal</td>
+                            <td>Good</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td>1 custom font (all weights)</td>
+                            <td>100-300 KB</td>
+                            <td>1-9</td>
+                            <td>Low</td>
+                            <td>Fair</td>
+                        </tr>
+                        <tr class="table-danger">
+                            <td>Multiple custom fonts (all weights)</td>
+                            <td>500+ KB</td>
+                            <td>10+</td>
+                            <td>High</td>
+                            <td>Poor</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 8: Quick Performance Checklist -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>Typography Performance Checklist</h2>
+
+            <div class="card">
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge text-bg-success me-3">&#10003;</span>
+                            Use Bootstrap's system font stack when possible
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge text-bg-success me-3">&#10003;</span>
+                            Limit custom font families to 1-2 maximum
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge text-bg-success me-3">&#10003;</span>
+                            Load only needed font weights (2-3 maximum)
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge text-bg-success me-3">&#10003;</span>
+                            Use WOFF2 format (best compression)
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge text-bg-success me-3">&#10003;</span>
+                            Set font-display: swap for body fonts
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge text-bg-success me-3">&#10003;</span>
+                            Preload critical fonts with &lt;link rel="preload"&gt;
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge text-bg-success me-3">&#10003;</span>
+                            Prefer Bootstrap utility classes over custom CSS
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge text-bg-success me-3">&#10003;</span>
+                            Avoid text-transform on large text blocks
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

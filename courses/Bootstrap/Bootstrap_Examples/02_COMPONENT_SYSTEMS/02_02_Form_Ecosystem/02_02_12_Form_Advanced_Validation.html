@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<!-- Advanced validation patterns: conditional, cross-field, async -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Advanced Validation - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>.demo-section { margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 0.5rem; }</style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Form Advanced Validation</h1>
+                <p class="lead text-muted">Conditional, cross-field, async, and complex validation patterns.</p><hr>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Conditional Validation -->
+        <section class="demo-section" id="conditional">
+            <h2 class="h4 mb-3">1. Conditional Validation</h2>
+            <p class="text-muted">Fields required only when certain conditions are met.</p>
+
+            <form id="conditionalForm" novalidate>
+                <div class="mb-3">
+                    <label class="form-label">Do you have a company?</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="hasCompany" id="comp-yes" value="yes">
+                        <label class="form-check-label" for="comp-yes">Yes</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="hasCompany" id="comp-no" value="no" checked>
+                        <label class="form-check-label" for="comp-no">No</label>
+                    </div>
+                </div>
+                <!-- Conditionally required field -->
+                <div class="mb-3 d-none" id="companyFieldGroup">
+                    <label for="companyName" class="form-label">Company Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="companyName">
+                    <div class="invalid-feedback">Company name is required when you have a company.</div>
+                    <div class="form-text">This field is only required if you selected "Yes" above.</div>
+                </div>
+                <div class="mb-3 d-none" id="companyRoleGroup">
+                    <label for="companyRole" class="form-label">Your Role</label>
+                    <select class="form-select" id="companyRole">
+                        <option value="">Select role...</option>
+                        <option>CEO</option>
+                        <option>Manager</option>
+                        <option>Developer</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Payment Method</label>
+                    <select class="form-select" id="paymentMethod">
+                        <option value="card">Credit Card</option>
+                        <option value="bank">Bank Transfer</option>
+                        <option value="crypto">Cryptocurrency</option>
+                    </select>
+                </div>
+                <!-- Conditional fields based on payment method -->
+                <div id="cardFields">
+                    <div class="mb-3">
+                        <label for="cond-card" class="form-label">Card Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cond-card" inputmode="numeric">
+                        <div class="invalid-feedback">Card number required for credit card payment.</div>
+                    </div>
+                </div>
+                <div id="bankFields" class="d-none">
+                    <div class="mb-3">
+                        <label for="cond-iban" class="form-label">IBAN <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cond-iban">
+                        <div class="invalid-feedback">IBAN required for bank transfer.</div>
+                    </div>
+                </div>
+                <div id="cryptoFields" class="d-none">
+                    <div class="mb-3">
+                        <label for="cond-wallet" class="form-label">Wallet Address <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cond-wallet">
+                        <div class="invalid-feedback">Wallet address required for crypto payment.</div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </section>
+
+        <!-- SECTION 2: Cross-Field Validation -->
+        <section class="demo-section" id="cross-field">
+            <h2 class="h4 mb-3">2. Cross-Field Validation</h2>
+            <p class="text-muted">Validate relationships between multiple fields.</p>
+
+            <form id="crossFieldForm" novalidate>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="cf-password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="cf-password" minlength="8" required>
+                        <div class="invalid-feedback">Min 8 characters.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="cf-confirm" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="cf-confirm" required>
+                        <div class="invalid-feedback">Passwords must match.</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="cf-start" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="cf-start" required>
+                        <div class="invalid-feedback">Start date required.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="cf-end" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="cf-end" required>
+                        <div class="invalid-feedback">End date must be after start date.</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="cf-min" class="form-label">Min Value</label>
+                        <input type="number" class="form-control" id="cf-min" value="10">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="cf-max" class="form-label">Max Value (must be > min)</label>
+                        <input type="number" class="form-control" id="cf-max" value="20">
+                        <div class="invalid-feedback">Max must be greater than min.</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="cf-email" class="form-label">Email Domain (must be @company.com)</label>
+                    <input type="email" class="form-control" id="cf-email" placeholder="name@company.com">
+                    <div class="invalid-feedback">Must use @company.com domain.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Validate</button>
+            </form>
+        </section>
+
+        <!-- SECTION 3: Async Validation -->
+        <section class="demo-section" id="async-validation">
+            <h2 class="h4 mb-3">3. Async Validation (Server-Side)</h2>
+            <p class="text-muted">Validate against server (simulated) for uniqueness checks.</p>
+
+            <form id="asyncForm">
+                <div class="mb-3">
+                    <label for="async-username" class="form-label">Username (checks availability)</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="async-username">
+                        <span class="input-group-text d-none" id="async-username-status"></span>
+                    </div>
+                    <div class="form-text" id="async-username-msg">Type a username to check availability.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="async-email" class="form-label">Email (checks if registered)</label>
+                    <div class="input-group">
+                        <input type="email" class="form-control" id="async-email">
+                        <span class="input-group-text d-none" id="async-email-status"></span>
+                    </div>
+                    <div class="form-text" id="async-email-msg">Type an email to check availability.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="async-domain" class="form-label">Domain (checks DNS - simulated)</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="async-domain" placeholder="example.com">
+                        <span class="input-group-text d-none" id="async-domain-status"></span>
+                    </div>
+                    <div class="form-text" id="async-domain-msg">Enter a domain to check.</div>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 4: Array/Group Validation -->
+        <section class="demo-section" id="group-validation">
+            <h2 class="h4 mb-3">4. Group Validation</h2>
+            <p class="text-muted">Validate groups of inputs (e.g., "at least 3 selected", "exactly 1 required").</p>
+
+            <form id="groupForm" novalidate>
+                <div class="mb-3" data-validation="min-selected" data-min="2">
+                    <label class="form-label">Select at least 2 interests:</label>
+                    <div class="form-check">
+                        <input class="form-check-input interest-check" type="checkbox" id="int-coding" value="coding">
+                        <label class="form-check-label" for="int-coding">Coding</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input interest-check" type="checkbox" id="int-design" value="design">
+                        <label class="form-check-label" for="int-design">Design</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input interest-check" type="checkbox" id="int-music" value="music">
+                        <label class="form-check-label" for="int-music">Music</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input interest-check" type="checkbox" id="int-sports" value="sports">
+                        <label class="form-check-label" for="int-sports">Sports</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input interest-check" type="checkbox" id="int-travel" value="travel">
+                        <label class="form-check-label" for="int-travel">Travel</label>
+                    </div>
+                    <div class="invalid-feedback d-block" id="interestError" style="display:none !important;">Please select at least 2 interests.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Total budget allocation must equal 100%:</label>
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <label for="budget-mkt" class="form-label small">Marketing (%)</label>
+                            <input type="number" class="form-control budget-input" id="budget-mkt" value="40" min="0" max="100">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label for="budget-dev" class="form-label small">Development (%)</label>
+                            <input type="number" class="form-control budget-input" id="budget-dev" value="35" min="0" max="100">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label for="budget-ops" class="form-label small">Operations (%)</label>
+                            <input type="number" class="form-control budget-input" id="budget-ops" value="25" min="0" max="100">
+                        </div>
+                    </div>
+                    <div class="mt-1" id="budgetStatus"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Validate Groups</button>
+            </form>
+        </section>
+
+        <!-- SECTION 5: Complex Business Rules -->
+        <section class="demo-section" id="business-rules">
+            <h2 class="h4 mb-3">5. Complex Business Rules</h2>
+
+            <form id="businessForm" novalidate>
+                <div class="mb-3">
+                    <label for="br-age" class="form-label">Age</label>
+                    <input type="number" class="form-control" id="br-age" min="0" max="120">
+                </div>
+                <div class="mb-3 d-none" id="parentConsentGroup">
+                    <label for="br-parent" class="form-label">Parent/Guardian Email (required if under 18)</label>
+                    <input type="email" class="form-control" id="br-parent">
+                    <div class="invalid-feedback">Parent email required for users under 18.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="br-state" class="form-label">State</label>
+                    <select class="form-select" id="br-state">
+                        <option value="">Choose...</option>
+                        <option value="CA">California</option>
+                        <option value="NY">New York</option>
+                        <option value="TX">Texas</option>
+                        <option value="FL">Florida</option>
+                    </select>
+                </div>
+                <div class="mb-3 d-none" id="caNoticeGroup">
+                    <div class="alert alert-info">California residents: Additional privacy disclosures required under CCPA.</div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="br-ccpa">
+                        <label class="form-check-label" for="br-ccpa">I acknowledge the CCPA privacy notice</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="br-country" class="form-label">Country</label>
+                    <select class="form-select" id="br-country">
+                        <option value="">Choose...</option>
+                        <option value="US">United States</option>
+                        <option value="EU">European Union</option>
+                        <option value="UK">United Kingdom</option>
+                    </select>
+                </div>
+                <div class="mb-3 d-none" id="gdprGroup">
+                    <div class="alert alert-warning">EU residents: GDPR consent required.</div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="br-gdpr">
+                        <label class="form-check-label" for="br-gdpr">I consent to data processing under GDPR</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================
+        // 1. Conditional Validation
+        // ============================================
+        document.querySelectorAll('input[name="hasCompany"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                const show = document.getElementById('comp-yes').checked;
+                document.getElementById('companyFieldGroup').classList.toggle('d-none', !show);
+                document.getElementById('companyRoleGroup').classList.toggle('d-none', !show);
+                document.getElementById('companyName').required = show;
+            });
+        });
+
+        document.getElementById('paymentMethod').addEventListener('change', function() {
+            const val = this.value;
+            document.getElementById('cardFields').classList.toggle('d-none', val !== 'card');
+            document.getElementById('bankFields').classList.toggle('d-none', val !== 'bank');
+            document.getElementById('cryptoFields').classList.toggle('d-none', val !== 'crypto');
+            document.getElementById('cond-card').required = val === 'card';
+            document.getElementById('cond-iban').required = val === 'bank';
+            document.getElementById('cond-wallet').required = val === 'crypto';
+        });
+
+        document.getElementById('conditionalForm').addEventListener('submit', function(e) {
+            if (!this.checkValidity()) { e.preventDefault(); e.stopPropagation(); }
+            this.classList.add('was-validated');
+        });
+
+        // ============================================
+        // 2. Cross-Field Validation
+        // ============================================
+        const cfPassword = document.getElementById('cf-password');
+        const cfConfirm = document.getElementById('cf-confirm');
+        const cfStart = document.getElementById('cf-start');
+        const cfEnd = document.getElementById('cf-end');
+        const cfMin = document.getElementById('cf-min');
+        const cfMax = document.getElementById('cf-max');
+        const cfEmail = document.getElementById('cf-email');
+
+        cfConfirm.addEventListener('input', function() {
+            this.setCustomValidity(this.value !== cfPassword.value ? 'Passwords do not match.' : '');
+        });
+
+        cfEnd.addEventListener('change', function() {
+            if (cfStart.value && this.value && this.value <= cfStart.value) {
+                this.setCustomValidity('End date must be after start date.');
+            } else { this.setCustomValidity(''); }
+        });
+
+        cfMax.addEventListener('input', function() {
+            this.setCustomValidity(parseFloat(this.value) <= parseFloat(cfMin.value) ? 'Max must be greater than min.' : '');
+        });
+
+        cfEmail.addEventListener('input', function() {
+            this.setCustomValidity(!this.value.endsWith('@company.com') ? 'Must use @company.com domain.' : '');
+        });
+
+        document.getElementById('crossFieldForm').addEventListener('submit', function(e) {
+            if (!this.checkValidity()) { e.preventDefault(); e.stopPropagation(); }
+            this.classList.add('was-validated');
+        });
+
+        // ============================================
+        // 3. Async Validation
+        // ============================================
+        function debounce(fn, ms) { let t; return function(...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), ms); }; }
+
+        const takenUsernames = ['admin','root','user','test','guest','john','jane'];
+        const takenEmails = ['admin@test.com','user@example.com','test@test.com'];
+
+        const checkUsername = debounce(function() {
+            const val = document.getElementById('async-username').value;
+            const status = document.getElementById('async-username-status');
+            const msg = document.getElementById('async-username-msg');
+            if (val.length < 3) { status.classList.add('d-none'); msg.textContent = 'Min 3 characters.'; return; }
+
+            status.classList.remove('d-none');
+            status.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            msg.textContent = 'Checking...';
+
+            setTimeout(function() {
+                if (takenUsernames.includes(val.toLowerCase())) {
+                    status.innerHTML = '❌'; status.className = 'input-group-text text-danger';
+                    msg.textContent = 'Username taken.'; msg.className = 'form-text text-danger';
+                } else {
+                    status.innerHTML = '✅'; status.className = 'input-group-text text-success';
+                    msg.textContent = 'Username available!'; msg.className = 'form-text text-success';
+                }
+            }, 600);
+        }, 400);
+
+        const checkEmail = debounce(function() {
+            const val = document.getElementById('async-email').value;
+            const status = document.getElementById('async-email-status');
+            const msg = document.getElementById('async-email-msg');
+            if (!val.includes('@')) { status.classList.add('d-none'); return; }
+
+            status.classList.remove('d-none');
+            status.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            msg.textContent = 'Checking...';
+
+            setTimeout(function() {
+                if (takenEmails.includes(val.toLowerCase())) {
+                    status.innerHTML = '❌'; status.className = 'input-group-text text-danger';
+                    msg.textContent = 'Email already registered.'; msg.className = 'form-text text-danger';
+                } else {
+                    status.innerHTML = '✅'; status.className = 'input-group-text text-success';
+                    msg.textContent = 'Email available!'; msg.className = 'form-text text-success';
+                }
+            }, 600);
+        }, 400);
+
+        document.getElementById('async-username').addEventListener('input', checkUsername);
+        document.getElementById('async-email').addEventListener('input', checkEmail);
+
+        // ============================================
+        // 4. Group Validation
+        // ============================================
+        const interestChecks = document.querySelectorAll('.interest-check');
+        const interestError = document.getElementById('interestError');
+        interestChecks.forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                const checked = document.querySelectorAll('.interest-check:checked').length;
+                if (checked >= 2) { interestError.style.display = 'none !important'; interestError.classList.remove('d-block'); }
+            });
+        });
+
+        const budgetInputs = document.querySelectorAll('.budget-input');
+        const budgetStatus = document.getElementById('budgetStatus');
+        function checkBudget() {
+            let total = 0;
+            budgetInputs.forEach(function(input) { total += parseInt(input.value) || 0; });
+            if (total === 100) {
+                budgetStatus.innerHTML = '<span class="text-success">✅ Budget allocation equals 100%</span>';
+            } else {
+                budgetStatus.innerHTML = '<span class="text-danger">❌ Total is ' + total + '% (must be 100%)</span>';
+            }
+        }
+        budgetInputs.forEach(function(input) { input.addEventListener('input', checkBudget); });
+        checkBudget();
+
+        document.getElementById('groupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const checked = document.querySelectorAll('.interest-check:checked').length;
+            if (checked < 2) {
+                interestError.style.display = 'block';
+                interestError.classList.add('d-block');
+            } else {
+                alert('Group validation passed!');
+            }
+        });
+
+        // ============================================
+        // 5. Business Rules
+        // ============================================
+        document.getElementById('br-age').addEventListener('input', function() {
+            const show = parseInt(this.value) < 18 && this.value !== '';
+            document.getElementById('parentConsentGroup').classList.toggle('d-none', !show);
+            document.getElementById('br-parent').required = show;
+        });
+
+        document.getElementById('br-state').addEventListener('change', function() {
+            document.getElementById('caNoticeGroup').classList.toggle('d-none', this.value !== 'CA');
+        });
+
+        document.getElementById('br-country').addEventListener('change', function() {
+            document.getElementById('gdprGroup').classList.toggle('d-none', this.value !== 'EU');
+        });
+
+        document.getElementById('businessForm').addEventListener('submit', function(e) {
+            if (!this.checkValidity()) { e.preventDefault(); e.stopPropagation(); }
+            this.classList.add('was-validated');
+        });
+    </script>
+</body>
+</html>

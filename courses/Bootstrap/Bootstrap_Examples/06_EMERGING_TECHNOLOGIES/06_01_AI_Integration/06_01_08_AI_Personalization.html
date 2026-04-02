@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================ -->
+    <!-- META & CHARSET DEFINITIONS                                    -->
+    <!-- Responsive viewport and character encoding for universal      -->
+    <!-- device and character support.                                  -->
+    <!-- ============================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ============================================================ -->
+    <!-- PAGE TITLE                                                    -->
+    <!-- ============================================================ -->
+    <title>AI Personalization Engine - Bootstrap 5 Demo</title>
+
+    <!-- ============================================================ -->
+    <!-- BOOTSTRAP 5.3.3 CSS CDN                                       -->
+    <!-- ============================================================ -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- ============================================================ -->
+    <!-- CUSTOM STYLES FOR PERSONALIZATION UI                          -->
+    <!-- User profile cards, recommendation grids, A/B test panels,   -->
+    <!-- and preference management styles.                             -->
+    <!-- ============================================================ -->
+    <style>
+        /* User profile avatar styling */
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            font-weight: bold;
+        }
+        /* Recommendation card hover effect */
+        .rec-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .rec-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+        }
+        /* A/B test variant panels */
+        .variant-panel {
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .variant-panel.winner {
+            border-color: #198754;
+            background: rgba(25, 135, 84, 0.05);
+        }
+        .variant-panel .winner-badge {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+        }
+        /* Preference tag */
+        .pref-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin: 0.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid #dee2e6;
+        }
+        .pref-tag:hover { border-color: #6366f1; }
+        .pref-tag.selected { background: #6366f1; color: white; border-color: #6366f1; }
+        /* Engagement heatmap placeholder */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+        }
+        .heatmap-cell {
+            width: 100%;
+            padding-top: 100%;
+            border-radius: 3px;
+            position: relative;
+        }
+        .heatmap-cell.l0 { background: #ebedf0; }
+        .heatmap-cell.l1 { background: #9be9a8; }
+        .heatmap-cell.l2 { background: #40c463; }
+        .heatmap-cell.l3 { background: #30a14e; }
+        .heatmap-cell.l4 { background: #216e39; }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <!-- ============================================================ -->
+    <!-- NAVIGATION BAR                                                -->
+    <!-- Personalization engine navbar with user context dropdown.     -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">&#127912; Personalize AI</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#persNav" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="persNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Segments</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">A/B Tests</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Analytics</a></li>
+                </ul>
+                <!-- User context dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                        &#128100; User Segment: Power Users
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#">All Users</a></li>
+                        <li><a class="dropdown-item" href="#">New Users</a></li>
+                        <li><a class="dropdown-item active" href="#">Power Users</a></li>
+                        <li><a class="dropdown-item" href="#">Churned Users</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- MAIN CONTAINER                                                -->
+    <!-- ============================================================ -->
+    <main class="container my-4">
+
+        <!-- ============================================================ -->
+        <!-- USER PROFILE & PREFERENCES ROW                                -->
+        <!-- Left column shows user profile summary, right column shows   -->
+        <!-- preference management form. Uses Bootstrap grid layout.      -->
+        <!-- ============================================================ -->
+        <div class="row mb-4">
+            <!-- User profile summary -->
+            <div class="col-lg-4 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="user-avatar mx-auto mb-3">JD</div>
+                        <h5 class="mb-1">Jane Doe</h5>
+                        <p class="text-muted small mb-2">Power User | Member since 2024</p>
+                        <!-- Engagement stats -->
+                        <div class="row text-center mt-3">
+                            <div class="col-4">
+                                <div class="fw-bold fs-5">847</div>
+                                <small class="text-muted">Sessions</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="fw-bold fs-5">23m</div>
+                                <small class="text-muted">Avg Duration</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="fw-bold fs-5">94%</div>
+                                <small class="text-muted">Retention</small>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <span class="badge bg-primary">Dark Mode</span>
+                            <span class="badge bg-info">Advanced UI</span>
+                            <span class="badge bg-success">Notifications On</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User preferences form -->
+            <div class="col-lg-8 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Preferences</h5>
+                        <span class="badge bg-success">AI-Maintained</span>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="row g-3">
+                                <!-- Theme preference -->
+                                <div class="col-md-6">
+                                    <label for="theme" class="form-label">Theme</label>
+                                    <select class="form-select" id="theme">
+                                        <option selected>Dark (AI Recommended)</option>
+                                        <option>Light</option>
+                                        <option>System Default</option>
+                                    </select>
+                                </div>
+                                <!-- Language preference -->
+                                <div class="col-md-6">
+                                    <label for="lang" class="form-label">Language</label>
+                                    <select class="form-select" id="lang">
+                                        <option selected>English (US)</option>
+                                        <option>Spanish</option>
+                                        <option>French</option>
+                                        <option>German</option>
+                                    </select>
+                                </div>
+                                <!-- Content density -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Content Density</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="density" id="density-compact">
+                                        <label class="form-check-label" for="density-compact">Compact</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="density" id="density-comfortable" checked>
+                                        <label class="form-check-label" for="density-comfortable">Comfortable <span class="badge bg-info">Recommended</span></label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="density" id="density-spacious">
+                                        <label class="form-check-label" for="density-spacious">Spacious</label>
+                                    </div>
+                                </div>
+                                <!-- Notification settings -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Notifications</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notif-email" checked>
+                                        <label class="form-check-label" for="notif-email">Email digest</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notif-push" checked>
+                                        <label class="form-check-label" for="notif-push">Push notifications</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notif-sms">
+                                        <label class="form-check-label" for="notif-sms">SMS alerts</label>
+                                    </div>
+                                </div>
+                                <!-- Interest tags -->
+                                <div class="col-12">
+                                    <label class="form-label">Interests</label>
+                                    <div>
+                                        <span class="pref-tag selected">&#10003; Machine Learning</span>
+                                        <span class="pref-tag selected">&#10003; Web Development</span>
+                                        <span class="pref-tag">Data Science</span>
+                                        <span class="pref-tag selected">&#10003; DevOps</span>
+                                        <span class="pref-tag">Mobile Dev</span>
+                                        <span class="pref-tag">Cybersecurity</span>
+                                        <span class="pref-tag">UI/UX Design</span>
+                                        <span class="pref-tag selected">&#10003; Cloud Computing</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-primary">Save Preferences</button>
+                                <button type="button" class="btn btn-outline-secondary ms-2">Reset to AI Defaults</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- AI RECOMMENDATIONS SECTION                                    -->
+        <!-- Grid of personalized recommendation cards generated by the   -->
+        <!-- AI engine based on user behavior and preferences.             -->
+        <!-- Uses Bootstrap card grid with custom rec-card styling.        -->
+        <!-- ============================================================ -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="mb-3">Personalized Recommendations</h4>
+                <p class="text-muted mb-4">Based on your browsing history, preferences, and similar user patterns.</p>
+            </div>
+            <!-- Recommendation 1 -->
+            <div class="col-md-4 col-lg-3 mb-3">
+                <div class="card rec-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-primary">Course</span>
+                            <span class="text-muted small">97% match</span>
+                        </div>
+                        <h6 class="card-title mt-2">Advanced TensorFlow</h6>
+                        <p class="card-text small">Deep dive into TensorFlow 2.x with practical projects.</p>
+                        <div class="progress mb-2" style="height: 4px;">
+                            <div class="progress-bar bg-primary" style="width: 97%"></div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <button class="btn btn-primary btn-sm w-100">View</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Recommendation 2 -->
+            <div class="col-md-4 col-lg-3 mb-3">
+                <div class="card rec-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-success">Article</span>
+                            <span class="text-muted small">91% match</span>
+                        </div>
+                        <h6 class="card-title mt-2">Kubernetes Best Practices</h6>
+                        <p class="card-text small">Production-grade K8s deployment patterns.</p>
+                        <div class="progress mb-2" style="height: 4px;">
+                            <div class="progress-bar bg-success" style="width: 91%"></div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <button class="btn btn-success btn-sm w-100">Read</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Recommendation 3 -->
+            <div class="col-md-4 col-lg-3 mb-3">
+                <div class="card rec-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-info">Tool</span>
+                            <span class="text-muted small">88% match</span>
+                        </div>
+                        <h6 class="card-title mt-2">VS Code AI Extension</h6>
+                        <p class="card-text small">AI-powered code completion and refactoring.</p>
+                        <div class="progress mb-2" style="height: 4px;">
+                            <div class="progress-bar bg-info" style="width: 88%"></div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <button class="btn btn-info btn-sm w-100 text-white">Install</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Recommendation 4 -->
+            <div class="col-md-4 col-lg-3 mb-3">
+                <div class="card rec-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-warning text-dark">Event</span>
+                            <span class="text-muted small">82% match</span>
+                        </div>
+                        <h6 class="card-title mt-2">AI Dev Summit 2026</h6>
+                        <p class="card-text small">3-day conference on AI in software development.</p>
+                        <div class="progress mb-2" style="height: 4px;">
+                            <div class="progress-bar bg-warning" style="width: 82%"></div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <button class="btn btn-warning btn-sm w-100 text-dark">Register</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- A/B TESTING PANEL                                             -->
+        <!-- Side-by-side comparison of A/B test variants with their     -->
+        <!-- performance metrics and statistical significance.            -->
+        <!-- ============================================================ -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="mb-3">A/B Test: Homepage Layout</h4>
+                <p class="text-muted mb-4">Testing two homepage variants to optimize user engagement.</p>
+            </div>
+            <!-- Variant A -->
+            <div class="col-md-6 mb-3">
+                <div class="variant-panel">
+                    <h5>Variant A: Grid Layout</h5>
+                    <p class="text-muted small">Standard grid of featured content cards</p>
+                    <div class="row text-center mt-3">
+                        <div class="col-4">
+                            <div class="fw-bold fs-5">4.2%</div>
+                            <small class="text-muted">CTR</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold fs-5">2m 18s</div>
+                            <small class="text-muted">Avg Time</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold fs-5">12,400</div>
+                            <small class="text-muted">Impressions</small>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 8px;">
+                        <div class="progress-bar" style="width: 42%"></div>
+                    </div>
+                    <small class="text-muted">Conversion: 2.1%</small>
+                </div>
+            </div>
+            <!-- Variant B (Winner) -->
+            <div class="col-md-6 mb-3">
+                <div class="variant-panel winner">
+                    <span class="winner-badge badge bg-success">&#127942; Winner</span>
+                    <h5>Variant B: Personalized Feed</h5>
+                    <p class="text-muted small">AI-curated content based on user preferences</p>
+                    <div class="row text-center mt-3">
+                        <div class="col-4">
+                            <div class="fw-bold fs-5 text-success">6.8%</div>
+                            <small class="text-muted">CTR</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold fs-5 text-success">3m 45s</div>
+                            <small class="text-muted">Avg Time</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold fs-5">12,380</div>
+                            <small class="text-muted">Impressions</small>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: 68%"></div>
+                    </div>
+                    <small class="text-success">Conversion: 3.4% (+62% vs A)</small>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="alert alert-success" role="alert">
+                    <strong>&#129302; AI Recommendation:</strong> Variant B shows statistically significant improvement (p=0.023). Recommend deploying to 100% of users.
+                </div>
+                <button class="btn btn-success me-2">Deploy Variant B</button>
+                <button class="btn btn-outline-primary me-2">Continue Testing</button>
+                <button class="btn btn-outline-secondary">View Full Report</button>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ENGAGEMENT HEATMAP SECTION                                    -->
+        <!-- Visual representation of user engagement across days.        -->
+        <!-- ============================================================ -->
+        <div class="row">
+            <div class="col-lg-8 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Engagement Heatmap (Last 12 Weeks)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="heatmap-grid mb-3">
+                            <!-- Generate heatmap cells with varying activity levels -->
+                            <div class="heatmap-cell l2"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l4"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l0"></div><div class="heatmap-cell l1"></div>
+                            <div class="heatmap-cell l1"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l4"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l0"></div>
+                            <div class="heatmap-cell l3"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l4"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l2"></div>
+                            <div class="heatmap-cell l2"></div><div class="heatmap-cell l4"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l0"></div>
+                            <div class="heatmap-cell l1"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l4"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l1"></div>
+                            <div class="heatmap-cell l4"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l0"></div><div class="heatmap-cell l2"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Less</small>
+                            <div class="d-flex gap-1">
+                                <div class="heatmap-cell l0" style="width:12px;height:12px;padding:0"></div>
+                                <div class="heatmap-cell l1" style="width:12px;height:12px;padding:0"></div>
+                                <div class="heatmap-cell l2" style="width:12px;height:12px;padding:0"></div>
+                                <div class="heatmap-cell l3" style="width:12px;height:12px;padding:0"></div>
+                                <div class="heatmap-cell l4" style="width:12px;height:12px;padding:0"></div>
+                            </div>
+                            <small class="text-muted">More</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Personalization stats -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">Personalization Impact</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Click-through Rate</span>
+                                <span class="text-success fw-bold">+34%</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: 34%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Session Duration</span>
+                                <span class="text-success fw-bold">+28%</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: 28%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>User Retention</span>
+                                <span class="text-success fw-bold">+19%</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: 19%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between">
+                                <span>Revenue per User</span>
+                                <span class="text-success fw-bold">+45%</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: 45%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">Active Experiments</h6>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            Homepage Layout <span class="badge bg-success">Concluded</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            CTA Button Color <span class="badge bg-primary">Running</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            Recommendation Algo <span class="badge bg-primary">Running</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            Email Subject Lines <span class="badge bg-secondary">Queued</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                        -->
+    <!-- ============================================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-1">AI Personalization Engine &copy; 2026</p>
+            <p class="text-muted small mb-0">Powered by Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <!-- ============================================================ -->
+    <!-- BOOTSTRAP 5.3.3 JS BUNDLE CDN                                 -->
+    <!-- ============================================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 01_03_17 - Grid Advanced Techniques                            -->
+<!-- Demonstrates advanced Bootstrap grid patterns including       -->
+<!-- CSS Grid integration, container queries, subgrid, dynamic     -->
+<!-- column ordering, and complex nested layouts.                  -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Advanced Techniques - Bootstrap 5</title>
+
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================ */
+        /* ADVANCED GRID STYLES                                          */
+        /* ============================================================ */
+
+        .grid-item {
+            padding: 1rem;
+            background-color: #e7f1ff;
+            border: 1px solid #86b7fe;
+            border-radius: 0.375rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .section-divider {
+            margin: 2rem 0;
+            padding: 1rem 0;
+            border-top: 2px solid #dee2e6;
+        }
+
+        /* ============================================================ */
+        /* CSS GRID HYBRID (Bootstrap + CSS Grid)                       */
+        /* Mix Bootstrap flexbox grid with CSS Grid for complex layouts */
+        /* ============================================================ */
+
+        /* CSS Grid container that works alongside Bootstrap */
+        .css-grid-hybrid {
+            display: grid;
+            /* Repeat with auto-fit creates responsive columns */
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Named grid areas for complex layouts */
+        .grid-template-areas {
+            display: grid;
+            /* Define the grid template with named areas */
+            grid-template-areas:
+                "header header header"
+                "sidebar main main"
+                "footer footer footer";
+            grid-template-columns: 1fr 2fr 2fr;
+            grid-template-rows: auto 1fr auto;
+            gap: 1rem;
+            min-height: 400px;
+        }
+
+        /* Responsive grid-template-areas */
+        @media (max-width: 767px) {
+            .grid-template-areas {
+                grid-template-areas:
+                    "header"
+                    "main"
+                    "sidebar"
+                    "footer";
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+        }
+
+        .area-header { grid-area: header; }
+        .area-sidebar { grid-area: sidebar; }
+        .area-main { grid-area: main; }
+        .area-footer { grid-area: footer; }
+
+        /* ============================================================ */
+        /* DYNAMIC COLUMN SPANNING                                        */
+        /* Columns that span varying numbers of grid tracks             */
+        /* ============================================================ */
+        .span-2 { grid-column: span 2; }
+        .span-3 { grid-column: span 3; }
+        .row-span-2 { grid-row: span 2; }
+
+        /* ============================================================ */
+        /* CONTAINER QUERIES                                             */
+        /* Responsive based on parent container, not viewport           */
+        /* Supported: Chrome 105+, Firefox 110+, Safari 16+, Edge 105+ */
+        /* ============================================================ */
+        .container-query-wrapper {
+            /* Establish a containment context */
+            container-type: inline-size;
+            container-name: card-container;
+        }
+
+        /* Styles applied based on container width, not viewport */
+        @container card-container (min-width: 400px) {
+            .cq-card {
+                display: flex;
+                flex-direction: row;
+            }
+            .cq-card-image {
+                width: 40%;
+                flex-shrink: 0;
+            }
+            .cq-card-body {
+                width: 60%;
+            }
+        }
+
+        @container card-container (max-width: 399px) {
+            .cq-card {
+                display: flex;
+                flex-direction: column;
+            }
+            .cq-card-image {
+                width: 100%;
+            }
+        }
+
+        /* ============================================================ */
+        /* MASONRY-LIKE LAYOUT WITH CSS GRID                             */
+        /* Creates a Pinterest-style layout                             */
+        /* ============================================================ */
+        .masonry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-auto-rows: 10px;
+        }
+
+        .masonry-item {
+            background: #e7f1ff;
+            border: 1px solid #86b7fe;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 0;
+        }
+
+        /* Vary heights for masonry effect */
+        .masonry-short { grid-row: span 8; }
+        .masonry-medium { grid-row: span 12; }
+        .masonry-tall { grid-row: span 16; }
+        .masonry-extra-tall { grid-row: span 20; }
+
+        /* ============================================================ */
+        /* STICKY GRID HEADER                                            */
+        /* ============================================================ */
+        .sticky-grid-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: white;
+            padding: 0.5rem 0;
+            border-bottom: 2px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-3">Grid Advanced Techniques</h1>
+        <p class="lead text-muted">
+            Advanced Bootstrap grid patterns: CSS Grid hybrid, container queries, complex nesting, and dynamic layouts.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: CSS GRID + BOOTSTRAP HYBRID                       -->
+        <!-- Use CSS Grid for complex 2D layouts, Bootstrap for utilities -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">1. CSS Grid + Bootstrap Hybrid</h2>
+            <p class="text-muted mb-3">
+                Combine CSS Grid's 2D layout capabilities with Bootstrap's utility classes.
+                CSS Grid handles complex layouts; Bootstrap handles spacing and styling.
+            </p>
+
+            <!-- Named grid areas layout -->
+            <div class="grid-template-areas border rounded p-2">
+                <!-- Header area -->
+                <div class="area-header grid-item bg-primary text-white">
+                    <strong>Header</strong>
+                    <br><small>grid-area: header</small>
+                </div>
+
+                <!-- Sidebar area -->
+                <div class="area-sidebar grid-item bg-warning bg-opacity-25 border-warning">
+                    <strong>Sidebar</strong>
+                    <br><small>grid-area: sidebar</small>
+                    <br><small>Hides below md</small>
+                </div>
+
+                <!-- Main content area -->
+                <div class="area-main grid-item bg-success bg-opacity-10 border-success">
+                    <strong>Main Content</strong>
+                    <br><small>grid-area: main</small>
+                    <br>
+                    <p class="mt-2 mb-0 small">
+                        CSS Grid template areas let you define layout
+                        with semantic names. The responsive media query
+                        restacks areas vertically on mobile.
+                    </p>
+                </div>
+
+                <!-- Footer area -->
+                <div class="area-footer grid-item bg-secondary bg-opacity-10 border-secondary">
+                    <strong>Footer</strong>
+                    <br><small>grid-area: footer</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: AUTO-FIT / AUTO-FILL RESPONSIVE GRID              -->
+        <!-- CSS Grid auto-responsive without media queries              -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">2. Auto-Responsive Grid (No Media Queries)</h2>
+            <p class="text-muted mb-3">
+                <code>repeat(auto-fit, minmax(250px, 1fr))</code> creates columns that
+                automatically wrap based on available space. No breakpoints needed.
+            </p>
+
+            <!-- Auto-fit: columns fill available space -->
+            <h5>auto-fit with minmax()</h5>
+            <div class="css-grid-hybrid">
+                <div class="grid-item">
+                    <strong>Auto 1</strong>
+                    <br><small>min 200px, max 1fr</small>
+                </div>
+                <div class="grid-item">
+                    <strong>Auto 2</strong>
+                    <br><small>min 200px, max 1fr</small>
+                </div>
+                <div class="grid-item">
+                    <strong>Auto 3</strong>
+                    <br><small>min 200px, max 1fr</small>
+                </div>
+                <div class="grid-item">
+                    <strong>Auto 4</strong>
+                    <br><small>min 200px, max 1fr</small>
+                </div>
+                <div class="grid-item">
+                    <strong>Auto 5</strong>
+                    <br><small>min 200px, max 1fr</small>
+                </div>
+                <div class="grid-item">
+                    <strong>Auto 6</strong>
+                    <br><small>min 200px, max 1fr</small>
+                </div>
+            </div>
+
+            <div class="bg-dark text-light p-3 rounded mt-3">
+                <code>
+                    .container {<br>
+                    &nbsp;&nbsp;display: grid;<br>
+                    &nbsp;&nbsp;grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));<br>
+                    &nbsp;&nbsp;gap: 1rem;<br>
+                    }
+                </code>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: CONTAINER QUERIES                                  -->
+        <!-- Responsive based on parent container width                   -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">3. Container Queries</h2>
+            <p class="text-muted mb-3">
+                Container queries respond to parent container size, not viewport.
+                Perfect for reusable components that adapt to their context.
+            </p>
+
+            <div class="row">
+                <!-- Narrow container: card stacks vertically -->
+                <div class="col-md-4 mb-3">
+                    <div class="container-query-wrapper border rounded p-2">
+                        <small class="text-muted d-block mb-2">Narrow container</small>
+                        <div class="cq-card">
+                            <div class="cq-card-image bg-primary text-white p-3 text-center">
+                                <strong>Image</strong>
+                            </div>
+                            <div class="cq-card-body p-2">
+                                <strong>Card Title</strong>
+                                <p class="small mb-0">Container is narrow, so card layout stacks vertically.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medium container: card goes horizontal -->
+                <div class="col-md-8 mb-3">
+                    <div class="container-query-wrapper border rounded p-2">
+                        <small class="text-muted d-block mb-2">Wide container (card goes horizontal)</small>
+                        <div class="cq-card">
+                            <div class="cq-card-image bg-success text-white p-3 text-center">
+                                <strong>Image</strong>
+                            </div>
+                            <div class="cq-card-body p-2">
+                                <strong>Card Title</strong>
+                                <p class="small mb-0">
+                                    Container is wide enough (>400px), so card layout switches to horizontal
+                                    (image on left, content on right). This happens regardless of viewport width.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: COMPLEX NESTED GRID LAYOUTS                        -->
+        <!-- Grid within grid with varying depths                         -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">4. Complex Nested Grids</h2>
+            <p class="text-muted mb-3">
+                Deeply nested Bootstrap grids with different column configurations at each level.
+            </p>
+
+            <!-- Level 1: 2-column layout -->
+            <div class="row">
+                <!-- Level 1, Column 1: Contains nested grid -->
+                <div class="col-md-7">
+                    <div class="border rounded p-2">
+                        <small class="text-muted">Level 1: col-md-7</small>
+
+                        <!-- Level 2: 2-column nested grid -->
+                        <div class="row mt-2">
+                            <div class="col-6">
+                                <div class="grid-item border-warning bg-warning bg-opacity-10">
+                                    <small>Level 2: col-6</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="grid-item border-warning bg-warning bg-opacity-10">
+                                    <small>Level 2: col-6</small>
+
+                                    <!-- Level 3: 3-column deeply nested -->
+                                    <div class="row mt-2">
+                                        <div class="col-4">
+                                            <div class="p-1 bg-danger bg-opacity-25 border border-danger rounded text-center">
+                                                <small>L3</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="p-1 bg-danger bg-opacity-25 border border-danger rounded text-center">
+                                                <small>L3</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="p-1 bg-danger bg-opacity-25 border border-danger rounded text-center">
+                                                <small>L3</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Level 1, Column 2: Sidebar -->
+                <div class="col-md-5">
+                    <div class="border rounded p-2 h-100">
+                        <small class="text-muted">Level 1: col-md-5</small>
+
+                        <!-- Level 2: Vertical stacking -->
+                        <div class="mt-2">
+                            <div class="grid-item border-info bg-info bg-opacity-10">
+                                <small>Level 2: Full width</small>
+                            </div>
+                            <div class="grid-item border-info bg-info bg-opacity-10">
+                                <small>Level 2: Full width</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: COLUMN ORDERING TRICKS                            -->
+        <!-- Use .order-* classes for visual rearrangement                -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">5. Advanced Column Ordering</h2>
+            <p class="text-muted mb-3">
+                Use responsive order classes to rearrange columns at different breakpoints.
+            </p>
+
+            <!-- Content-first on mobile, sidebar-first on desktop -->
+            <div class="row">
+                <!-- Visual order on desktop: 2nd (sidebar first) -->
+                <!-- Visual order on mobile: 2nd (content first due to HTML order) -->
+                <div class="col-md-4 order-md-1">
+                    <div class="grid-item bg-warning bg-opacity-25 border-warning">
+                        <strong>Sidebar</strong>
+                        <br><small>order-md-1 (appears first on desktop)</small>
+                        <br><small>HTML position: 1st</small>
+                    </div>
+                </div>
+                <div class="col-md-8 order-md-2">
+                    <div class="grid-item bg-success bg-opacity-10 border-success">
+                        <strong>Main Content</strong>
+                        <br><small>order-md-2 (appears second on desktop)</small>
+                        <br><small>HTML position: 2nd</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order value reference -->
+            <table class="table table-bordered table-sm mt-3">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Class</th>
+                        <th>Effect</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>.order-first</code></td><td>Order: -1 (always first)</td></tr>
+                    <tr><td><code>.order-0</code></td><td>Order: 0</td></tr>
+                    <tr><td><code>.order-1</code> through <code>.order-5</code></td><td>Order: 1-5</td></tr>
+                    <tr><td><code>.order-last</code></td><td>Order: 6 (always last)</td></tr>
+                    <tr><td><code>.order-md-*</code></td><td>Responsive ordering at md breakpoint</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: MASONRY-LIKE LAYOUT                               -->
+        <!-- Pinterest-style layout using CSS Grid                        -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">6. Masonry-Like Layout</h2>
+            <p class="text-muted mb-3">
+                CSS Grid auto-rows with varying spans creates a masonry/Pinterest-style layout.
+            </p>
+
+            <div class="masonry-grid">
+                <div class="masonry-item masonry-short">
+                    <strong>Short Card</strong>
+                    <p class="small">grid-row: span 8</p>
+                </div>
+                <div class="masonry-item masonry-tall">
+                    <strong>Tall Card</strong>
+                    <p class="small">grid-row: span 16</p>
+                    <p class="small">Extra content makes this card taller.</p>
+                </div>
+                <div class="masonry-item masonry-medium">
+                    <strong>Medium Card</strong>
+                    <p class="small">grid-row: span 12</p>
+                </div>
+                <div class="masonry-item masonry-extra-tall">
+                    <strong>Extra Tall</strong>
+                    <p class="small">grid-row: span 20</p>
+                    <p class="small">This card has even more content, creating a taller height.</p>
+                </div>
+                <div class="masonry-item masonry-short">
+                    <strong>Short Card</strong>
+                    <p class="small">grid-row: span 8</p>
+                </div>
+                <div class="masonry-item masonry-medium">
+                    <strong>Medium Card</strong>
+                    <p class="small">grid-row: span 12</p>
+                </div>
+                <div class="masonry-item masonry-tall">
+                    <strong>Tall Card</strong>
+                    <p class="small">grid-row: span 16</p>
+                    <p class="small">Different content lengths.</p>
+                </div>
+                <div class="masonry-item masonry-short">
+                    <strong>Short Card</strong>
+                    <p class="small">grid-row: span 8</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7: STICKY GRID ELEMENTS                               -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">7. Sticky Grid Headers</h2>
+            <p class="text-muted mb-3">
+                Make grid headers sticky while scrolling through content.
+            </p>
+
+            <div class="border rounded" style="max-height: 300px; overflow-y: auto;">
+                <!-- Sticky header -->
+                <div class="sticky-grid-header">
+                    <div class="row g-0">
+                        <div class="col-3 fw-bold">Name</div>
+                        <div class="col-3 fw-bold">Status</div>
+                        <div class="col-3 fw-bold">Amount</div>
+                        <div class="col-3 fw-bold">Date</div>
+                    </div>
+                </div>
+
+                <!-- Scrollable rows -->
+                <div class="row g-0 border-bottom p-2"><div class="col-3">Item 1</div><div class="col-3"><span class="badge bg-success">Active</span></div><div class="col-3">$120</div><div class="col-3">2024-01-15</div></div>
+                <div class="row g-0 border-bottom p-2"><div class="col-3">Item 2</div><div class="col-3"><span class="badge bg-warning">Pending</span></div><div class="col-3">$85</div><div class="col-3">2024-01-14</div></div>
+                <div class="row g-0 border-bottom p-2"><div class="col-3">Item 3</div><div class="col-3"><span class="badge bg-success">Active</span></div><div class="col-3">$200</div><div class="col-3">2024-01-13</div></div>
+                <div class="row g-0 border-bottom p-2"><div class="col-3">Item 4</div><div class="col-3"><span class="badge bg-danger">Inactive</span></div><div class="col-3">$45</div><div class="col-3">2024-01-12</div></div>
+                <div class="row g-0 border-bottom p-2"><div class="col-3">Item 5</div><div class="col-3"><span class="badge bg-success">Active</span></div><div class="col-3">$310</div><div class="col-3">2024-01-11</div></div>
+                <div class="row g-0 border-bottom p-2"><div class="col-3">Item 6</div><div class="col-3"><span class="badge bg-success">Active</span></div><div class="col-3">$95</div><div class="col-3">2024-01-10</div></div>
+                <div class="row g-0 border-bottom p-2"><div class="col-3">Item 7</div><div class="col-3"><span class="badge bg-warning">Pending</span></div><div class="col-3">$175</div><div class="col-3">2024-01-09</div></div>
+                <div class="row g-0 border-bottom p-2"><div class="col-3">Item 8</div><div class="col-3"><span class="badge bg-success">Active</span></div><div class="col-3">$420</div><div class="col-3">2024-01-08</div></div>
+                <div class="row g-0 border-bottom p-2"><div class="col-3">Item 9</div><div class="col-3"><span class="badge bg-success">Active</span></div><div class="col-3">$65</div><div class="col-3">2024-01-07</div></div>
+                <div class="row g-0 border-bottom p-2"><div class="col-3">Item 10</div><div class="col-3"><span class="badge bg-danger">Inactive</span></div><div class="col-3">$280</div><div class="col-3">2024-01-06</div></div>
+            </div>
+        </section>
+
+        <footer class="mt-4 mb-5 pt-3 border-top">
+            <p class="text-muted text-center">
+                <small>Grid Advanced Techniques - Bootstrap 5.3.3</small>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

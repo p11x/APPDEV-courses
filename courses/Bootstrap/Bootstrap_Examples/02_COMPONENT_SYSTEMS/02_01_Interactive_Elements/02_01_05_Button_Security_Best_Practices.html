@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ========================================== -->
+    <!-- 02_01_05: Button Security Best Practices    -->
+    <!-- XSS prevention, CSP compliance, safe event  -->
+    <!-- handling, content sanitization             -->
+    <!-- ========================================== -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02_01_05 - Button Security Best Practices</title>
+
+    <!-- ========================================== -->
+    <!-- CONTENT SECURITY POLICY (CSP)              -->
+    <!-- In production, set this as HTTP header.    -->
+    <!-- Shown here as meta tag for demonstration.  -->
+    <!-- This prevents inline scripts and limits    -->
+    <!-- resource loading to approved sources.      -->
+    <!-- ========================================== -->
+    <!--
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self' https://cdn.jsdelivr.net;
+                   script-src 'self' https://cdn.jsdelivr.net;
+                   style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';
+                   img-src 'self' data:;
+                   connect-src 'self';">
+    -->
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold text-primary mb-4">Button Security Best Practices</h1>
+        <p class="lead text-muted mb-5">
+            XSS prevention, CSP compliance, safe event handling, and content sanitization.
+        </p>
+
+        <!-- ========================================== -->
+        <!-- SECTION 1: XSS PREVENTION                  -->
+        <!-- NEVER use innerHTML with user input.       -->
+        <!-- Always use textContent for dynamic text.   -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. XSS Prevention in Button Content</h2>
+            <div class="card p-4">
+                <h6 class="text-danger">VULNERABLE (DO NOT USE):</h6>
+                <!-- NEVER DO THIS: innerHTML with user input creates XSS vulnerability -->
+                <!-- <button onclick="this.innerHTML = userInput">Vulnerable</button> -->
+                <pre class="bg-dark text-light p-3 rounded small"><code>// DANGEROUS - XSS vulnerable
+btn.innerHTML = userInput; // If userInput = '&lt;img src=x onerror=alert(1)&gt;'
+// The malicious script executes!</code></pre>
+
+                <h6 class="text-success mt-3">SAFE: Using textContent</h6>
+                <!-- SAFE: textContent automatically escapes HTML entities -->
+                <button type="button" class="btn btn-primary me-2" id="safeTextBtn"
+                        onclick="safeUpdateText()">
+                    Click for Safe Update
+                </button>
+                <span id="safeTextResult" class="text-muted small"></span>
+                <pre class="bg-dark text-light p-3 rounded small mt-2"><code>// SAFE - textContent escapes HTML
+btn.textContent = userInput; // Renders as literal text, not HTML</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 2: SAFE DYNAMIC BUTTON CREATION   -->
+        <!-- Using DOM APIs instead of string-based    -->
+        <!-- innerHTML to create buttons safely.       -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Safe Dynamic Button Creation</h2>
+            <div class="card p-4">
+                <h6 class="text-danger">VULNERABLE (DO NOT USE):</h6>
+                <pre class="bg-dark text-light p-3 rounded small"><code>// DANGEROUS - HTML string injection
+container.innerHTML = '&lt;button class="btn"&gt;' + userName + '&lt;/button&gt;';
+// If userName = '&lt;script&gt;evil()&lt;/script&gt;', code executes</code></pre>
+
+                <h6 class="text-success mt-3">SAFE: Using createElement + textContent</h6>
+                <div class="mb-3">
+                    <label for="userNameInput" class="form-label">Try entering XSS payload:</label>
+                    <input type="text" class="form-control" id="userNameInput"
+                           value="<script>alert('XSS')</script>" style="max-width:400px;">
+                </div>
+                <button type="button" class="btn btn-primary me-2" onclick="safeCreateButton()">
+                    Create Button Safely
+                </button>
+                <div id="safeButtonContainer" class="mt-2"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 3: CSP COMPLIANT BUTTONS           -->
+        <!-- Avoid inline event handlers (onclick).     -->
+        <!-- Use addEventListener instead.              -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. CSP-Compliant Event Handling</h2>
+            <div class="card p-4">
+                <!-- CSP VIOLATION: inline onclick (blocked by strict CSP) -->
+                <!-- <button onclick="alert('blocked by CSP')">Inline handler</button> -->
+
+                <!-- CSP COMPLIANT: data attribute + addEventListener -->
+                <p class="text-muted small">
+                    These buttons use <code>data-action</code> attributes and
+                    <code>addEventListener</code> instead of inline <code>onclick</code>.
+                    This works with strict CSP that blocks <code>'unsafe-inline'</code>.
+                </p>
+                <button type="button" class="btn btn-primary me-2" data-action="greet" data-param="World">
+                    Greet World
+                </button>
+                <button type="button" class="btn btn-success me-2" data-action="greet" data-param="Developer">
+                    Greet Developer
+                </button>
+                <button type="button" class="btn btn-info" data-action="greet" data-param="Bootstrap">
+                    Greet Bootstrap
+                </button>
+                <div id="greetResult" class="mt-2 text-muted small"></div>
+
+                <pre class="bg-dark text-light p-3 rounded small mt-3"><code>&lt;!-- CSP-safe pattern --&gt;
+&lt;button data-action="greet" data-param="World"&gt;Greet&lt;/button&gt;
+
+&lt;script&gt;
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-action="greet"]');
+    if (btn) greet(btn.dataset.param);
+  });
+&lt;/script&gt;</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 4: SAFE URL HANDLING               -->
+        <!-- Prevent javascript: protocol injection in -->
+        <!-- button-triggered navigation.              -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Safe URL Handling</h2>
+            <div class="card p-4">
+                <h6 class="text-danger">VULNERABLE URL construction:</h6>
+                <pre class="bg-dark text-light p-3 rounded small"><code>// DANGEROUS - URL injection
+link.href = userInput; // If userInput = 'javascript:evil()'
+link.href = '/go?url=' + userInput; // Open redirect vulnerability</code></pre>
+
+                <h6 class="text-success mt-3">SAFE URL validation:</h6>
+                <div class="mb-3">
+                    <label for="urlInput" class="form-label">Enter a URL to navigate to:</label>
+                    <input type="text" class="form-control" id="urlInput"
+                           value="javascript:alert('XSS')" style="max-width:400px;">
+                </div>
+                <button type="button" class="btn btn-primary me-2" onclick="safeNavigate()">
+                    Safe Navigate
+                </button>
+                <div id="urlResult" class="mt-2 small"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 5: INPUT VALIDATION ON BUTTON     -->
+        <!-- Validate form data before processing.     -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Server-Side Style Validation</h2>
+            <div class="card p-4">
+                <form id="secureForm" novalidate>
+                    <div class="mb-3">
+                        <label for="emailInput" class="form-label">Email (validated on button click)</label>
+                        <input type="text" class="form-control" id="emailInput"
+                               style="max-width:400px;" placeholder="user@example.com">
+                        <div class="invalid-feedback" id="emailError"></div>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="validateAndSubmit()">
+                        Validate & Submit
+                    </button>
+                </form>
+                <div id="validationResult" class="mt-2 small"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 6: CSRF TOKEN PATTERNS            -->
+        <!-- Buttons submitting forms should include   -->
+        <!-- CSRF tokens for server-side validation.   -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. CSRF Token Pattern</h2>
+            <div class="card p-4">
+                <p class="text-muted small">
+                    Forms with action buttons should include CSRF tokens to prevent
+                    cross-site request forgery. The token is validated server-side.
+                </p>
+                <!-- Form with CSRF token (generated server-side in real apps) -->
+                <form action="/api/save" method="POST" id="csrfForm">
+                    <!-- CSRF token: generated per-session on the server -->
+                    <input type="hidden" name="_csrf" value="abc123token456">
+                    <!-- Double-submit cookie pattern: also send token in header -->
+                    <button type="button" class="btn btn-primary" onclick="submitWithCsrf()">
+                        Save with CSRF Protection
+                    </button>
+                </form>
+                <div id="csrfResult" class="mt-2 text-muted small"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 7: DISABLE BUTTON DURING SUBMIT   -->
+        <!-- Prevent double-submission by disabling    -->
+        <!-- button during async operations.           -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Double-Submit Prevention</h2>
+            <div class="card p-4">
+                <p class="text-muted small">
+                    Disable the submit button immediately on click to prevent accidental
+                    or malicious double-submission. Re-enable after server response.
+                </p>
+                <button type="button" class="btn btn-primary" id="preventDoubleBtn"
+                        onclick="safeSubmit(this)">
+                    Submit (Protected Against Double-Click)
+                </button>
+                <span id="doubleSubmitResult" class="ms-2 text-muted small"></span>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 8: SANITIZING USER CONTENT        -->
+        <!-- Using a sanitizer for any HTML that must  -->
+        <!-- be rendered from user input.              -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. HTML Sanitization</h2>
+            <div class="card p-4">
+                <p class="text-muted small">
+                    When HTML rendering is unavoidable, use a sanitizer to strip dangerous
+                    elements and attributes. Shown below is a basic sanitizer function.
+                </p>
+                <div class="mb-3">
+                    <label for="htmlInput" class="form-label">Enter HTML content:</label>
+                    <textarea class="form-control" id="htmlInput" rows="3" style="max-width:500px;">&lt;strong&gt;Safe&lt;/strong&gt; &lt;img src=x onerror=alert('xss')&gt; &lt;em&gt;Content&lt;/em&gt;</textarea>
+                </div>
+                <button type="button" class="btn btn-primary me-2" onclick="renderSanitized()">
+                    Render Safely
+                </button>
+                <div id="sanitizedResult" class="mt-3 p-3 border rounded" style="max-width:500px;"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        /* ========================================== */
+        /* SECURITY-CONSCIOUS JAVASCRIPT              */
+        /* ========================================== */
+
+        /* Safe text update: uses textContent, not innerHTML */
+        function safeUpdateText() {
+            const maliciousInput = '<img src=x onerror=alert("XSS")>';
+            const btn = document.getElementById('safeTextBtn');
+            /* textContent automatically escapes - renders as literal string */
+            btn.textContent = maliciousInput;
+            document.getElementById('safeTextResult').textContent =
+                'The XSS payload was safely rendered as text, not executed.';
+        }
+
+        /* Safe button creation: DOM API, not innerHTML */
+        function safeCreateButton() {
+            const container = document.getElementById('safeButtonContainer');
+            const userInput = document.getElementById('userNameInput').value;
+            container.innerHTML = '';
+
+            /* SAFE: createElement + textContent */
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-success';
+            /* textContent escapes HTML - no XSS possible */
+            btn.textContent = userInput;
+            container.appendChild(btn);
+
+            const info = document.createElement('div');
+            info.className = 'text-success small mt-1';
+            info.textContent = 'Button created safely. Input rendered as literal text.';
+            container.appendChild(info);
+        }
+
+        /* CSP-compliant event delegation */
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-action="greet"]');
+            if (!btn) return;
+            const param = btn.getAttribute('data-param');
+            document.getElementById('greetResult').textContent = 'Hello, ' + param + '!';
+        });
+
+        /* Safe URL validation */
+        function safeNavigate() {
+            const input = document.getElementById('urlInput').value;
+            const result = document.getElementById('urlResult');
+
+            try {
+                const url = new URL(input, window.location.origin);
+
+                /* Whitelist allowed protocols */
+                const allowedProtocols = ['http:', 'https:'];
+                if (!allowedProtocols.includes(url.protocol)) {
+                    result.className = 'mt-2 small text-danger';
+                    result.textContent = 'BLOCKED: Protocol "' + url.protocol + '" is not allowed. Only http/https permitted.';
+                    return;
+                }
+
+                /* Additional checks: block known dangerous patterns */
+                if (url.href.includes('javascript:') || url.href.includes('data:')) {
+                    result.className = 'mt-2 small text-danger';
+                    result.textContent = 'BLOCKED: Dangerous URL pattern detected.';
+                    return;
+                }
+
+                result.className = 'mt-2 small text-success';
+                result.textContent = 'SAFE: URL validated - ' + url.href;
+            } catch (e) {
+                result.className = 'mt-2 small text-warning';
+                result.textContent = 'Invalid URL format: ' + e.message;
+            }
+        }
+
+        /* Email validation with security patterns */
+        function validateAndSubmit() {
+            const input = document.getElementById('emailInput').value;
+            const result = document.getElementById('validationResult');
+
+            /* Server-side style validation: reject patterns that could be attacks */
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+            /* Check for injection patterns */
+            const dangerousPatterns = [/<script/i, /javascript:/i, /on\w+=/i, /data:/i];
+            for (const pattern of dangerousPatterns) {
+                if (pattern.test(input)) {
+                    result.className = 'mt-2 small text-danger';
+                    result.textContent = 'REJECTED: Input contains potentially dangerous content.';
+                    return;
+                }
+            }
+
+            if (!emailRegex.test(input)) {
+                result.className = 'mt-2 small text-danger';
+                result.textContent = 'Invalid email format.';
+                return;
+            }
+
+            /* Sanitize for display */
+            const sanitized = input.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            result.className = 'mt-2 small text-success';
+            result.textContent = 'Validated and safe: ' + sanitized;
+        }
+
+        /* CSRF-protected submission */
+        function submitWithCsrf() {
+            const csrfToken = document.querySelector('#csrfForm input[name="_csrf"]').value;
+            const result = document.getElementById('csrfResult');
+
+            /* In production, send token in header and verify server-side */
+            result.textContent = 'Submitted with CSRF token: ' + csrfToken.substring(0, 6) + '... (verified server-side)';
+        }
+
+        /* Double-submit prevention */
+        function safeSubmit(btn) {
+            /* Immediately disable to prevent double-click */
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Processing...';
+
+            const result = document.getElementById('doubleSubmitResult');
+            result.textContent = 'Submitting... (button disabled)';
+
+            /* Simulate server request */
+            setTimeout(() => {
+                result.textContent = 'Complete. Button re-enabled.';
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        /* Basic HTML sanitizer: allow only safe tags */
+        function sanitizeHTML(html) {
+            /* Create a temporary element to parse HTML */
+            const template = document.createElement('template');
+            template.innerHTML = html;
+
+            /* Whitelist of allowed tags */
+            const allowedTags = ['B', 'STRONG', 'I', 'EM', 'U', 'BR', 'P', 'SPAN', 'A'];
+            const allowedAttributes = ['href', 'title', 'class'];
+
+            /* Walk the DOM tree and remove disallowed elements */
+            const walker = document.createTreeWalker(
+                template.content,
+                NodeFilter.SHOW_ELEMENT,
+                null,
+                false
+            );
+
+            const toRemove = [];
+            while (walker.nextNode()) {
+                const node = walker.currentNode;
+                if (!allowedTags.includes(node.tagName)) {
+                    toRemove.push(node);
+                } else {
+                    /* Remove disallowed attributes */
+                    Array.from(node.attributes).forEach(attr => {
+                        if (!allowedAttributes.includes(attr.name.toLowerCase())) {
+                            node.removeAttribute(attr.name);
+                        }
+                        /* Block javascript: in href */
+                        if (attr.name === 'href' && /^javascript:/i.test(attr.value)) {
+                            node.removeAttribute('href');
+                        }
+                    });
+                }
+            }
+
+            /* Remove disallowed nodes */
+            toRemove.forEach(node => node.remove());
+
+            return template.innerHTML;
+        }
+
+        /* Render sanitized HTML */
+        function renderSanitized() {
+            const input = document.getElementById('htmlInput').value;
+            const container = document.getElementById('sanitizedResult');
+            container.innerHTML = sanitizeHTML(input);
+        }
+    </script>
+</body>
+</html>

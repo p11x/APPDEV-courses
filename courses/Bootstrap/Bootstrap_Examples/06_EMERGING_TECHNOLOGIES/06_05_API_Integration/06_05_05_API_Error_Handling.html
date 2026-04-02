@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<!--
+    ============================================================================
+    API Error Handling with Bootstrap 5
+    ============================================================================
+    This file demonstrates comprehensive API error handling patterns in
+    client-side JavaScript, styled with Bootstrap 5 components.
+
+    Topics Covered:
+    1. HTTP Status Code Handling (400, 401, 403, 404, 500)
+    2. Retry Logic with Exponential Backoff
+    3. Error Boundary Pattern with Bootstrap Alerts
+    4. Network Error Detection
+    5. Error Log Display with Bootstrap Table
+    6. Custom Error Messages UI
+    7. Toast Notifications for Errors
+    8. Error Recovery Actions
+    ============================================================================
+-->
+<html lang="en">
+<head>
+    <!-- Character encoding for proper text rendering -->
+    <meta charset="UTF-8">
+
+    <!-- Viewport meta tag for responsive design on all devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Page title displayed in browser tab -->
+    <title>API Error Handling - Bootstrap 5</title>
+
+    <!-- Bootstrap 5.3.3 CSS from CDN for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!--
+        Internal styles for error-handling-specific UI elements.
+        Bootstrap handles most layout; these add error state visuals.
+    -->
+    <style>
+        /* Style for the error log container with fixed height and scroll */
+        .error-log-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Animated pulse for the retry indicator to show active retry state */
+        .retry-pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* Keyframe animation that scales and fades for pulse effect */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+        }
+
+        /* Toast container positioned at bottom-right for non-intrusive notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 1090;
+        }
+
+        /* Status code badge styling with monospace font */
+        .status-code {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        /* Error details accordion preformatted text styling */
+        .error-details pre {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.85rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <!--
+        =========================================================================
+        NAVIGATION BAR
+        =========================================================================
+        Standard Bootstrap navbar providing page context and branding.
+    -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <!-- Brand/logo text for the page -->
+            <a class="navbar-brand" href="#">API Error Handling</a>
+            <!-- Tagline visible on larger screens -->
+            <span class="navbar-text text-light d-none d-md-inline">
+                Bootstrap 5 Error Management Patterns
+            </span>
+        </div>
+    </nav>
+
+    <!--
+        =========================================================================
+        MAIN CONTENT CONTAINER
+        =========================================================================
+        All demonstration sections are wrapped here for consistent padding
+        and responsive width.
+    -->
+    <div class="container my-4">
+
+        <!-- =================================================================
+             SECTION 1: PAGE HEADER & INTRODUCTION
+             ================================================================== -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-5 fw-bold">API Error Handling</h1>
+                <p class="lead text-muted">
+                    Demonstrating robust error handling patterns for API
+                    integrations using Bootstrap 5 components.
+                </p>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             SECTION 2: ERROR BOUNDARY PATTERN
+             ==================================================================
+             The error boundary pattern wraps UI sections so that if an error
+             occurs in one area, it does not crash the entire page. Each
+             section is independently managed and can show its own error
+             state via a Bootstrap alert.
+        -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Error Boundary Pattern</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">
+                            Each card below is wrapped in an error boundary.
+                            Errors in one section do not affect others.
+                        </p>
+
+                        <!-- Error boundary row: three independent cards -->
+                        <div class="row g-3">
+
+                            <!--
+                                BOUNDARY CARD 1
+                                This card simulates an API call that may fail.
+                                The alert inside is hidden by default and shown
+                                only when an error occurs.
+                            -->
+                            <div class="col-md-4">
+                                <div class="card h-100" id="boundary-card-1">
+                                    <div class="card-body">
+                                        <h6 class="card-title">User Profile</h6>
+                                        <p class="card-text small text-muted" id="boundary-content-1">
+                                            Loading user data...
+                                        </p>
+                                        <!--
+                                            Error alert: hidden by default (d-none).
+                                            When an error occurs, JS removes d-none
+                                            and populates the message.
+                                        -->
+                                        <div class="alert alert-danger d-none mb-0 py-2 small"
+                                             id="boundary-error-1" role="alert">
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <button class="btn btn-sm btn-outline-primary w-100"
+                                                onclick="simulateBoundaryCall(1)">
+                                            Fetch Profile
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- BOUNDARY CARD 2: Dashboard metrics -->
+                            <div class="col-md-4">
+                                <div class="card h-100" id="boundary-card-2">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Dashboard</h6>
+                                        <p class="card-text small text-muted" id="boundary-content-2">
+                                            Loading metrics...
+                                        </p>
+                                        <div class="alert alert-danger d-none mb-0 py-2 small"
+                                             id="boundary-error-2" role="alert">
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <button class="btn btn-sm btn-outline-primary w-100"
+                                                onclick="simulateBoundaryCall(2)">
+                                            Fetch Metrics
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- BOUNDARY CARD 3: Notifications -->
+                            <div class="col-md-4">
+                                <div class="card h-100" id="boundary-card-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Notifications</h6>
+                                        <p class="card-text small text-muted" id="boundary-content-3">
+                                            Loading notifications...
+                                        </p>
+                                        <div class="alert alert-danger d-none mb-0 py-2 small"
+                                             id="boundary-error-3" role="alert">
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <button class="btn btn-sm btn-outline-primary w-100"
+                                                onclick="simulateBoundaryCall(3)">
+                                            Fetch Notifications
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             SECTION 3: HTTP STATUS CODE HANDLING
+             ==================================================================
+             Demonstrates how to handle specific HTTP status codes returned
+             by an API. Each button triggers a simulated API call that
+             returns a specific status, and the response is rendered in
+             the result area below with appropriate Bootstrap alerts.
+        -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">HTTP Status Code Handling</h5>
+                    </div>
+                    <div class="card-body">
+                        <!--
+                            Button group: each button simulates an API call
+                            that responds with a specific HTTP status code.
+                        -->
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <!-- 400 Bad Request: client sent invalid data -->
+                            <button class="btn btn-outline-warning"
+                                    onclick="simulateHttpError(400)">
+                                <span class="status-code">400</span> Bad Request
+                            </button>
+                            <!-- 401 Unauthorized: missing or invalid auth token -->
+                            <button class="btn btn-outline-warning"
+                                    onclick="simulateHttpError(401)">
+                                <span class="status-code">401</span> Unauthorized
+                            </button>
+                            <!-- 403 Forbidden: authenticated but not permitted -->
+                            <button class="btn btn-outline-warning"
+                                    onclick="simulateHttpError(403)">
+                                <span class="status-code">403</span> Forbidden
+                            </button>
+                            <!-- 404 Not Found: resource does not exist -->
+                            <button class="btn btn-outline-warning"
+                                    onclick="simulateHttpError(404)">
+                                <span class="status-code">404</span> Not Found
+                            </button>
+                            <!-- 500 Internal Server Error: server-side failure -->
+                            <button class="btn btn-outline-danger"
+                                    onclick="simulateHttpError(500)">
+                                <span class="status-code">500</span> Server Error
+                            </button>
+                            <!-- 200 OK: successful response for comparison -->
+                            <button class="btn btn-outline-success"
+                                    onclick="simulateHttpError(200)">
+                                <span class="status-code">200</span> Success
+                            </button>
+                        </div>
+
+                        <!--
+                            Result area: the simulated API response is rendered
+                            here as a Bootstrap alert. The alert type changes
+                            based on the status code.
+                        -->
+                        <div id="http-result" class="d-none">
+                            <div class="alert mb-0" id="http-alert" role="alert">
+                                <div class="d-flex align-items-start">
+                                    <!-- Icon area populated by JS -->
+                                    <div id="http-icon" class="me-3 fs-4"></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="alert-heading mb-1" id="http-title"></h6>
+                                        <p class="mb-1 small" id="http-message"></p>
+                                        <!-- Collapsible details for the raw response -->
+                                        <details class="error-details">
+                                            <summary class="small text-muted" style="cursor:pointer;">
+                                                Response Details
+                                            </summary>
+                                            <pre id="http-details" class="mt-2 mb-0"></pre>
+                                        </details>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             SECTION 4: RETRY LOGIC WITH EXPONENTIAL BACKOFF
+             ==================================================================
+             Exponential backoff retries failed requests with increasing
+             delays (1s, 2s, 4s, etc.). This avoids hammering a struggling
+             server. The UI shows each retry attempt and its delay.
+        -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">Retry Logic with Exponential Backoff</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small">
+                            Simulates retrying a failing API call. Each retry
+                            waits exponentially longer (1s, 2s, 4s). Max 3
+                            retries by default.
+                        </p>
+
+                        <!-- Controls for configuring retry simulation -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-auto">
+                                <label class="col-form-label small">Max Retries:</label>
+                            </div>
+                            <div class="col-auto">
+                                <!-- Numeric input for max retry count, 1-5 -->
+                                <input type="number" class="form-control form-control-sm"
+                                       id="max-retries" value="3" min="1" max="5" style="width:70px;">
+                            </div>
+                            <div class="col-auto">
+                                <label class="col-form-label small">Fail Rate (%):</label>
+                            </div>
+                            <div class="col-auto">
+                                <!-- Percentage of simulated failures per attempt -->
+                                <input type="number" class="form-control form-control-sm"
+                                       id="fail-rate" value="70" min="0" max="100" style="width:80px;">
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-warning btn-sm" id="retry-btn"
+                                        onclick="startRetrySimulation()">
+                                    Start Retry Simulation
+                                </button>
+                            </div>
+                        </div>
+
+                        <!--
+                            Retry progress display: each attempt is appended
+                            here as a list-group-item with a status icon.
+                        -->
+                        <div class="list-group" id="retry-progress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             SECTION 5: NETWORK ERROR DETECTION
+             ==================================================================
+             Demonstrates detecting when the user goes offline and handling
+             reconnection gracefully. Uses the browser's navigator.onLine
+             property and online/offline events.
+        -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Network Error Detection</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Network status indicator badge -->
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="me-2">Current Status:</span>
+                            <!--
+                                The badge color and text are updated by JS
+                                when the network status changes.
+                            -->
+                            <span class="badge" id="network-badge">
+                                Checking...
+                            </span>
+                        </div>
+
+                        <!--
+                            Simulate offline button: does not actually disconnect
+                            the network, but simulates the error state in the UI
+                            as if a fetch() failed due to no connectivity.
+                        -->
+                        <div class="d-flex gap-2 mb-3">
+                            <button class="btn btn-outline-info btn-sm"
+                                    onclick="simulateNetworkError()">
+                                Simulate Offline Request
+                            </button>
+                            <button class="btn btn-outline-success btn-sm"
+                                    onclick="simulateNetworkRecovery()">
+                                Simulate Recovery
+                            </button>
+                        </div>
+
+                        <!-- Network event log -->
+                        <div class="alert alert-secondary mb-0 py-2" id="network-log">
+                            <small class="text-muted">Network events will appear here...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             SECTION 6: CUSTOM ERROR MESSAGES UI
+             ==================================================================
+             Shows user-friendly error messages with actionable options.
+             Different error types get different Bootstrap alert styles
+             and recovery buttons.
+        -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Custom Error Messages</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Buttons to trigger different custom error types -->
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="showCustomError('validation')">
+                                Validation Error
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning"
+                                    onclick="showCustomError('auth')">
+                                Auth Error
+                            </button>
+                            <button class="btn btn-sm btn-outline-info"
+                                    onclick="showCustomError('rate-limit')">
+                                Rate Limit
+                            </button>
+                            <button class="btn btn-sm btn-outline-dark"
+                                    onclick="showCustomError('server')">
+                                Server Error
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    onclick="showCustomError('timeout')">
+                                Timeout
+                            </button>
+                            <button class="btn btn-sm btn-outline-success"
+                                    onclick="clearCustomErrors()">
+                                Clear All
+                            </button>
+                        </div>
+
+                        <!--
+                            Custom error display area: errors are appended
+                            here as dismissible Bootstrap alerts with
+                            context-appropriate recovery actions.
+                        -->
+                        <div id="custom-errors"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             SECTION 7: ERROR LOG TABLE
+             ==================================================================
+             A Bootstrap table that records every error that occurs across
+            all demos in the page. Useful for debugging and auditing.
+        -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Error Log</h5>
+                        <button class="btn btn-sm btn-outline-light"
+                                onclick="clearErrorLog()">
+                            Clear Log
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="error-log-container">
+                            <!--
+                                Error log table: each row represents one error
+                                event with timestamp, type, status, message,
+                                and an expandable details column.
+                            -->
+                            <table class="table table-striped table-hover mb-0 small">
+                                <thead class="table-dark sticky-top">
+                                    <tr>
+                                        <th style="width:160px;">Timestamp</th>
+                                        <th style="width:100px;">Type</th>
+                                        <th style="width:80px;">Status</th>
+                                        <th>Message</th>
+                                        <th style="width:120px;">Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="error-log-body">
+                                    <!--
+                                        Rows are dynamically inserted by the
+                                        logError() function.
+                                    -->
+                                    <tr id="no-errors-row">
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            No errors logged yet. Trigger errors using
+                                            the demos above.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             SECTION 8: TOAST NOTIFICATIONS FOR ERRORS
+             ==================================================================
+             Bootstrap toast components used to show non-blocking error
+             notifications. Toasts auto-dismiss after a few seconds and
+             stack vertically in the bottom-right corner.
+        -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header" style="background-color: #6f42c1; color: white;">
+                        <h5 class="mb-0">Toast Error Notifications</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small">
+                            Toasts appear in the bottom-right corner and
+                            auto-dismiss after 5 seconds.
+                        </p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="showErrorToast('API returned 500: Internal Server Error', 'danger')">
+                                Error Toast
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning"
+                                    onclick="showErrorToast('Request timed out after 30s. Retrying...', 'warning')">
+                                Warning Toast
+                            </button>
+                            <button class="btn btn-sm btn-outline-info"
+                                    onclick="showErrorToast('Rate limited. Please wait 60 seconds.', 'info')">
+                                Info Toast
+                            </button>
+                            <button class="btn btn-sm btn-outline-success"
+                                    onclick="showErrorToast('Reconnected successfully after 3 retries.', 'success')">
+                                Recovery Toast
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             SECTION 9: ERROR RECOVERY ACTIONS
+             ==================================================================
+             Demonstrates common recovery strategies after an error occurs:
+             - Retry the failed request
+             - Go back to previous page
+             - Reload cached data
+             - Report the error to support
+             Each action is presented as a clear, user-friendly button.
+        -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header" style="background-color: #fd7e14; color: white;">
+                        <h5 class="mb-0">Error Recovery Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Simulated error state that shows recovery options -->
+                        <div class="alert alert-danger d-flex align-items-start" role="alert">
+                            <!-- Error icon using Bootstrap Icons Unicode -->
+                            <div class="fs-4 me-3">&#9888;</div>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading">Something went wrong</h6>
+                                <p class="mb-2 small">
+                                    We couldn't load your data. This might be a
+                                    temporary issue. Choose an option below to
+                                    continue.
+                                </p>
+
+                                <!--
+                                    Recovery action buttons: each button triggers
+                                    a different recovery strategy. In a real app,
+                                    these would perform actual API calls or
+                                    navigation actions.
+                                -->
+                                <div class="d-flex flex-wrap gap-2">
+                                    <!--
+                                        Retry: re-attempt the same request.
+                                        Useful for transient failures (network
+                                        blips, 503 Service Unavailable, etc.).
+                                    -->
+                                    <button class="btn btn-sm btn-danger"
+                                            onclick="recoveryAction('retry')">
+                                        Retry Request
+                                    </button>
+
+                                    <!--
+                                        Load from cache: serve stale data if
+                                        available, so the user is not blocked.
+                                    -->
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                            onclick="recoveryAction('cache')">
+                                        Load Cached Data
+                                    </button>
+
+                                    <!--
+                                        Go back: navigate to the previous page
+                                        using browser history.
+                                    -->
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                            onclick="recoveryAction('back')">
+                                        Go Back
+                                    </button>
+
+                                    <!--
+                                        Report: send error details to support
+                                        or a monitoring service (Sentry, etc.).
+                                    -->
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                            onclick="recoveryAction('report')">
+                                        Report Issue
+                                    </button>
+                                </div>
+
+                                <!--
+                                    Recovery result display: feedback from the
+                                    chosen recovery action is shown here.
+                                -->
+                                <div class="mt-2 d-none" id="recovery-result">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- End main container -->
+
+    <!--
+        =========================================================================
+        TOAST CONTAINER
+        =========================================================================
+        Fixed-position container at the bottom-right of the viewport.
+        All toast notifications are injected into this container by JS.
+        Bootstrap's toast JS handles show/hide/auto-dismiss.
+    -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!--
+        =========================================================================
+        BOOTSTRAP 5 JS BUNDLE (includes Popper.js)
+        =========================================================================
+        Required for interactive components: toasts, alerts dismiss, etc.
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!--
+        =========================================================================
+        APPLICATION JAVASCRIPT: API ERROR HANDLING LOGIC
+        =========================================================================
+        All error handling logic is defined below. Each section is clearly
+        commented to explain the pattern it implements.
+    -->
+
+    <script>
+        // =====================================================================
+        // GLOBAL ERROR LOG ARRAY
+        // =====================================================================
+        // Stores all error events for the error log table. Each entry is an
+        // object with timestamp, type, status, message, and details.
+        const errorLog = [];
+
+        // =====================================================================
+        // UTILITY: getErrorMessage(statusCode)
+        // =====================================================================
+        // Maps HTTP status codes to human-readable error messages. This is
+        // essential for showing users a clear explanation rather than a raw
+        // status code.
+        function getErrorMessage(statusCode) {
+            /*
+                The messages object maps each status code to an object
+                containing:
+                - title: short heading for the alert
+                - message: user-friendly explanation
+                - icon: Unicode character for visual indicator
+            */
+            const messages = {
+                400: {
+                    title: 'Bad Request',
+                    message: 'The server could not understand your request. Please check the data you submitted and try again.',
+                    icon: '&#9888;'  // Warning triangle
+                },
+                401: {
+                    title: 'Unauthorized',
+                    message: 'Your session has expired or you are not logged in. Please sign in to continue.',
+                    icon: '&#128274;'  // Lock icon
+                },
+                403: {
+                    title: 'Access Denied',
+                    message: 'You do not have permission to access this resource. Contact your administrator if you believe this is an error.',
+                    icon: '&#128683;'  // Stop sign
+                },
+                404: {
+                    title: 'Not Found',
+                    message: 'The requested resource could not be found. It may have been moved or deleted.',
+                    icon: '&#128269;'  // Magnifying glass
+                },
+                500: {
+                    title: 'Server Error',
+                    message: 'An unexpected error occurred on the server. Our team has been notified. Please try again later.',
+                    icon: '&#9888;'  // Warning triangle
+                },
+                200: {
+                    title: 'Success',
+                    message: 'The request completed successfully.',
+                    icon: '&#10004;'  // Checkmark
+                }
+            };
+
+            // Return the matching message or a generic fallback
+            return messages[statusCode] || {
+                title: `Error ${statusCode}`,
+                message: 'An unexpected error occurred. Please try again.',
+                icon: '&#10060;'  // Cross mark
+            };
+        }
+
+        // =====================================================================
+        // UTILITY: logError(type, status, message, details)
+        // =====================================================================
+        // Appends an entry to the global errorLog array and updates the
+        // error log table in the DOM. This centralizes error recording so
+        // every error across all demos is captured in one place.
+        function logError(type, status, message, details) {
+            // Create a timestamp in HH:MM:SS.mmm format
+            const now = new Date();
+            const timestamp = now.toTimeString().split(' ')[0] + '.' +
+                String(now.getMilliseconds()).padStart(3, '0');
+
+            // Push the error record into the global log
+            errorLog.push({ timestamp, type, status, message, details });
+
+            // Get a reference to the table body
+            const tbody = document.getElementById('error-log-body');
+
+            // Remove the "No errors" placeholder if it exists
+            const noErrorsRow = document.getElementById('no-errors-row');
+            if (noErrorsRow) noErrorsRow.remove();
+
+            // Create a new table row with error details
+            const row = document.createElement('tr');
+
+            // Determine the badge color based on status code
+            // 4xx = warning (orange), 5xx = danger (red), other = secondary
+            let badgeClass = 'bg-secondary';
+            if (status >= 400 && status < 500) badgeClass = 'bg-warning text-dark';
+            if (status >= 500) badgeClass = 'bg-danger';
+
+            // Generate a unique ID for the details collapse element
+            const detailId = `detail-${errorLog.length}`;
+
+            // Build the row HTML with Bootstrap classes
+            row.innerHTML = `
+                <td class="text-muted">${timestamp}</td>
+                <td><span class="badge bg-secondary">${type}</span></td>
+                <td><span class="badge ${badgeClass}">${status}</span></td>
+                <td>${message}</td>
+                <td>
+                    <!--
+                        Collapsible details: clicking the button reveals
+                        the full error details (stack trace, response body, etc.)
+                    -->
+                    <button class="btn btn-sm btn-outline-dark py-0 px-1"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#${detailId}">
+                        View
+                    </button>
+                    <div class="collapse mt-1" id="${detailId}">
+                        <pre class="mb-0 p-1 small bg-light border rounded">${details}</pre>
+                    </div>
+                </td>
+            `;
+
+            // Append the row to the table
+            tbody.appendChild(row);
+        }
+
+        // =====================================================================
+        // clearErrorLog()
+        // =====================================================================
+        // Resets the error log table and array to its initial empty state.
+        function clearErrorLog() {
+            errorLog.length = 0;
+            const tbody = document.getElementById('error-log-body');
+            tbody.innerHTML = `
+                <tr id="no-errors-row">
+                    <td colspan="5" class="text-center text-muted py-4">
+                        No errors logged yet. Trigger errors using the demos above.
+                    </td>
+                </tr>
+            `;
+        }
+
+        // =====================================================================
+        // SECTION 3: simulateHttpError(statusCode)
+        // =====================================================================
+        // Simulates an API response with the given HTTP status code. Updates
+        // the result area with a Bootstrap alert that matches the severity
+        // of the status code.
+        function simulateHttpError(statusCode) {
+            // Get the human-readable message for this status
+            const info = getErrorMessage(statusCode);
+
+            // Determine the Bootstrap alert class:
+            // - 200: success (green)
+            // - 400-499: warning (yellow)
+            // - 500+: danger (red)
+            let alertClass = 'alert-success';
+            if (statusCode >= 400 && statusCode < 500) alertClass = 'alert-warning';
+            if (statusCode >= 500) alertClass = 'alert-danger';
+
+            // Show the result container (remove d-none)
+            const resultDiv = document.getElementById('http-result');
+            resultDiv.classList.remove('d-none');
+
+            // Update the alert element with the appropriate class
+            const alert = document.getElementById('http-alert');
+            alert.className = `alert ${alertClass} mb-0`;
+
+            // Set the icon, title, message, and details
+            document.getElementById('http-icon').innerHTML = info.icon;
+            document.getElementById('http-title').textContent = info.title;
+            document.getElementById('http-message').textContent = info.message;
+
+            // Build a mock JSON response for the details section
+            const mockResponse = {
+                status: statusCode,
+                statusText: statusCode === 200 ? 'OK' : 'Error',
+                timestamp: new Date().toISOString(),
+                path: '/api/v1/resource',
+                method: 'GET',
+                requestId: 'req_' + Math.random().toString(36).substr(2, 9),
+                body: statusCode === 200
+                    ? { success: true, data: { id: 1, name: 'Example' } }
+                    : { success: false, error: info.message }
+            };
+
+            // Render the mock response as formatted JSON
+            document.getElementById('http-details').textContent =
+                JSON.stringify(mockResponse, null, 2);
+
+            // Log the error (skip 200 since it is not an error)
+            if (statusCode !== 200) {
+                logError(
+                    'HTTP',
+                    statusCode,
+                    info.title,
+                    JSON.stringify(mockResponse, null, 2)
+                );
+            }
+        }
+
+        // =====================================================================
+        // SECTION 4: startRetrySimulation()
+        // =====================================================================
+        // Simulates an API call that is retried on failure with exponential
+        // backoff. Each retry doubles the wait time (1s, 2s, 4s...).
+        // The progress list shows each attempt in real time.
+        async function startRetrySimulation() {
+            // Read configuration values from inputs
+            const maxRetries = parseInt(document.getElementById('max-retries').value);
+            const failRate = parseInt(document.getElementById('fail-rate').value);
+
+            // Get the progress container and clear previous results
+            const progressDiv = document.getElementById('retry-progress');
+            progressDiv.innerHTML = '';
+
+            // Disable the button during the simulation to prevent double-clicks
+            const btn = document.getElementById('retry-btn');
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+
+            // Track the current attempt number
+            let attempt = 0;
+            let success = false;
+
+            /*
+                Retry loop: attempt the "request" up to maxRetries times.
+                Each iteration:
+                1. Makes the attempt
+                2. If it fails and retries remain, waits with exponential
+                   backoff (2^attempt seconds, capped at 8s)
+                3. Repeats until success or max retries exhausted
+            */
+            while (attempt < maxRetries && !success) {
+                attempt++;
+
+                // Add a list item showing the current attempt in progress
+                const item = document.createElement('div');
+                item.className = 'list-group-item d-flex align-items-center retry-pulse';
+                item.id = `retry-item-${attempt}`;
+                item.innerHTML = `
+                    <div class="spinner-border spinner-border-sm text-warning me-2"
+                         role="status">
+                    </div>
+                    <span>Attempt ${attempt}/${maxRetries} — Sending request...</span>
+                `;
+                progressDiv.appendChild(item);
+
+                // Simulate network delay (500ms-1500ms random)
+                await sleep(500 + Math.random() * 1000);
+
+                // Determine if this attempt fails based on the fail rate
+                const isFailure = Math.random() * 100 < failRate;
+
+                if (isFailure && attempt < maxRetries) {
+                    /*
+                        FAILURE WITH RETRIES REMAINING:
+                        Calculate exponential backoff delay: 2^(attempt-1) seconds.
+                        e.g., attempt 1 => 1s, attempt 2 => 2s, attempt 3 => 4s
+                    */
+                    const backoffDelay = Math.pow(2, attempt - 1);
+
+                    // Update the item to show failure and countdown
+                    item.className = 'list-group-item d-flex align-items-center list-group-item-warning';
+                    item.innerHTML = `
+                        <span class="badge bg-warning text-dark me-2">FAIL</span>
+                        <span>Attempt ${attempt}/${maxRetries} — Failed. Retrying in
+                        <strong>${backoffDelay}s</strong>...</span>
+                    `;
+
+                    // Log the retry error
+                    logError(
+                        'Retry',
+                        503,
+                        `Attempt ${attempt} failed, retrying in ${backoffDelay}s`,
+                        `Attempt: ${attempt}\nMax Retries: ${maxRetries}\nBackoff: ${backoffDelay}s\nFail Rate: ${failRate}%`
+                    );
+
+                    // Wait for the backoff delay before the next attempt
+                    await sleep(backoffDelay * 1000);
+
+                } else if (isFailure) {
+                    /*
+                        FINAL FAILURE (no retries left):
+                        Show the exhausted state with no further retries.
+                    */
+                    item.className = 'list-group-item d-flex align-items-center list-group-item-danger';
+                    item.innerHTML = `
+                        <span class="badge bg-danger me-2">FAIL</span>
+                        <span>Attempt ${attempt}/${maxRetries} — All retries exhausted.</span>
+                    `;
+
+                    // Log the final failure
+                    logError(
+                        'Retry',
+                        503,
+                        `All ${maxRetries} retries exhausted`,
+                        `Total Attempts: ${attempt}\nFinal Status: Failed\nFail Rate: ${failRate}%`
+                    );
+
+                    // Show a failure toast notification
+                    showErrorToast(
+                        `Request failed after ${maxRetries} attempts.`,
+                        'danger'
+                    );
+
+                } else {
+                    /*
+                        SUCCESS:
+                        Mark the attempt as successful.
+                    */
+                    success = true;
+                    item.className = 'list-group-item d-flex align-items-center list-group-item-success';
+                    item.innerHTML = `
+                        <span class="badge bg-success me-2">OK</span>
+                        <span>Attempt ${attempt}/${maxRetries} — Succeeded
+                        ${attempt > 1 ? 'after ' + (attempt - 1) + ' retries' : 'on first try'}.</span>
+                    `;
+
+                    // Show a success toast if there were previous failures
+                    if (attempt > 1) {
+                        showErrorToast(
+                            `Request succeeded on attempt ${attempt}.`,
+                            'success'
+                        );
+                    }
+                }
+            }
+
+            // Re-enable the button after simulation completes
+            btn.disabled = false;
+            btn.textContent = 'Start Retry Simulation';
+        }
+
+        // =====================================================================
+        // UTILITY: sleep(ms)
+        // =====================================================================
+        // Returns a promise that resolves after the specified milliseconds.
+        // Used to create delays in async functions without blocking the UI.
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // =====================================================================
+        // SECTION 2: simulateBoundaryCall(id)
+        // =====================================================================
+        // Simulates an API call for a specific error boundary card. Randomly
+        // succeeds or fails. On failure, the error is contained to that card
+        // and shown via a Bootstrap alert within the card.
+        function simulateBoundaryCall(id) {
+            // References to the card's content and error elements
+            const contentEl = document.getElementById(`boundary-content-${id}`);
+            const errorEl = document.getElementById(`boundary-error-${id}`);
+
+            // Reset: hide any previous error
+            errorEl.classList.add('d-none');
+
+            // Show loading state
+            contentEl.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm text-primary me-2"
+                         role="status">
+                    </div>
+                    <span>Loading...</span>
+                </div>
+            `;
+
+            /*
+                Simulate an async API call with setTimeout. After a random
+                delay (500-2000ms), the result is either success or failure.
+            */
+            setTimeout(() => {
+                // 50% chance of failure for demonstration
+                const failed = Math.random() > 0.5;
+
+                if (failed) {
+                    // Generate a random error type
+                    const errors = [
+                        { status: 404, msg: 'Resource not found.' },
+                        { status: 500, msg: 'Internal server error.' },
+                        { status: 403, msg: 'Access forbidden.' },
+                        { status: 503, msg: 'Service temporarily unavailable.' }
+                    ];
+                    const error = errors[Math.floor(Math.random() * errors.length)];
+
+                    // Show error state in the card content
+                    contentEl.innerHTML = '<span class="text-muted">Failed to load.</span>';
+
+                    // Show the error alert with details
+                    errorEl.classList.remove('d-none');
+                    errorEl.innerHTML = `
+                        <strong>${error.status}:</strong> ${error.msg}
+                        <button class="btn btn-sm btn-outline-danger float-end py-0 px-1"
+                                onclick="simulateBoundaryCall(${id})">
+                            Retry
+                        </button>
+                    `;
+
+                    // Log the boundary error
+                    logError(
+                        'Boundary',
+                        error.status,
+                        `Card ${id}: ${error.msg}`,
+                        `Card ID: ${id}\nStatus: ${error.status}\nPattern: Error Boundary`
+                    );
+
+                } else {
+                    // Show success state with mock data
+                    const data = ['John Doe', '42 active users', '12 new notifications'];
+                    contentEl.innerHTML = `<span class="text-success">${data[id - 1]}</span>`;
+                }
+            }, 500 + Math.random() * 1500);
+        }
+
+        // =====================================================================
+        // SECTION 5: simulateNetworkError()
+        // =====================================================================
+        // Simulates a network error as if the user went offline. In a real
+        // application, you would listen to the browser's online/offline
+        // events and navigator.onLine property.
+        function simulateNetworkError() {
+            const log = document.getElementById('network-log');
+            const badge = document.getElementById('network-badge');
+
+            // Update the badge to show offline state
+            badge.className = 'badge bg-danger';
+            badge.textContent = 'OFFLINE';
+
+            // Append an error entry to the network log
+            log.innerHTML = `
+                <div class="text-danger small mb-1">
+                    <strong>[${new Date().toLocaleTimeString()}]</strong>
+                    Network request failed: ERR_INTERNET_DISCONNECTED
+                </div>
+                <div class="text-muted small mb-1">
+                    &rarr; Fetch to /api/v1/data failed after 30000ms timeout
+                </div>
+                <div class="text-warning small">
+                    &rarr; Requests will be queued until connection is restored.
+                </div>
+            ` + log.innerHTML;
+
+            // Log the network error
+            logError(
+                'Network',
+                0,
+                'Internet disconnected',
+                'Error: ERR_INTERNET_DISCONNECTED\nEndpoint: /api/v1/data\nTimeout: 30000ms\nAction: Queuing requests'
+            );
+
+            // Show a toast notification
+            showErrorToast('You are offline. Requests will be queued.', 'danger');
+        }
+
+        // =====================================================================
+        // simulateNetworkRecovery()
+        // =====================================================================
+        // Simulates the user coming back online. In production, you would
+        // use the 'online' window event to trigger this.
+        function simulateNetworkRecovery() {
+            const log = document.getElementById('network-log');
+            const badge = document.getElementById('network-badge');
+
+            // Update the badge to show online state
+            badge.className = 'badge bg-success';
+            badge.textContent = 'ONLINE';
+
+            // Append a recovery entry to the network log
+            log.innerHTML = `
+                <div class="text-success small mb-1">
+                    <strong>[${new Date().toLocaleTimeString()}]</strong>
+                    Network connection restored.
+                </div>
+                <div class="text-muted small">
+                    &rarr; Flushing 3 queued requests...
+                </div>
+            ` + log.innerHTML;
+
+            // Show a recovery toast
+            showErrorToast('Back online! Flushing queued requests.', 'success');
+        }
+
+        /*
+            In a real application, you would set up event listeners like:
+
+                window.addEventListener('online', () => {
+                    // Connection restored — retry queued requests
+                    flushRequestQueue();
+                });
+
+                window.addEventListener('offline', () => {
+                    // Connection lost — start queuing requests
+                    enableQueueMode();
+                });
+
+            And check the current status with:
+
+                if (!navigator.onLine) {
+                    // Already offline on page load
+                    showOfflineBanner();
+                }
+        */
+
+        // =====================================================================
+        // SECTION 6: showCustomError(type)
+        // =====================================================================
+        // Displays a user-friendly, custom error alert for different error
+        // types. Each type has its own message, icon, color, and recovery
+        // action button.
+        function showCustomError(type) {
+            const container = document.getElementById('custom-errors');
+
+            /*
+                Define error configurations. Each type maps to:
+                - alertClass: Bootstrap alert color class
+                - title: heading shown in the alert
+                - message: detailed user-friendly explanation
+                - action: label for the recovery button
+                - actionFn: JS to run when the recovery button is clicked
+            */
+            const errorTypes = {
+                'validation': {
+                    alertClass: 'alert-danger',
+                    title: 'Validation Error',
+                    message: 'The email address you entered is not valid. Please enter a valid email (e.g., user@example.com).',
+                    action: 'Fix Input',
+                    actionFn: "alert('Redirecting to form...')"
+                },
+                'auth': {
+                    alertClass: 'alert-warning',
+                    title: 'Session Expired',
+                    message: 'Your login session has expired. For your security, please sign in again to continue.',
+                    action: 'Sign In',
+                    actionFn: "alert('Redirecting to login...')"
+                },
+                'rate-limit': {
+                    alertClass: 'alert-info',
+                    title: 'Rate Limit Reached',
+                    message: 'You have made too many requests. Please wait 60 seconds before trying again.',
+                    action: 'Wait & Retry',
+                    actionFn: "showErrorToast('Waiting 5s then retrying...', 'info'); setTimeout(() => showErrorToast('Ready to retry!', 'success'), 5000);"
+                },
+                'server': {
+                    alertClass: 'alert-dark',
+                    title: 'Server Unavailable',
+                    message: 'Our servers are temporarily down for maintenance. Expected to be back in 30 minutes.',
+                    action: 'Check Status Page',
+                    actionFn: "alert('Opening status page...')"
+                },
+                'timeout': {
+                    alertClass: 'alert-secondary',
+                    title: 'Request Timed Out',
+                    message: 'The request took too long to respond. This may be due to high server load or a slow connection.',
+                    action: 'Retry with Longer Timeout',
+                    actionFn: "showErrorToast('Retrying with 60s timeout...', 'warning');"
+                }
+            };
+
+            // Get the config for the requested type
+            const config = errorTypes[type];
+            if (!config) return;
+
+            // Create a unique ID for this alert so it can be dismissed
+            const alertId = `custom-error-${Date.now()}`;
+
+            // Build the alert HTML with a recovery action button
+            const alertHtml = `
+                <div class="alert ${config.alertClass} alert-dismissible fade show"
+                     role="alert" id="${alertId}">
+                    <h6 class="alert-heading">${config.title}</h6>
+                    <p class="mb-1 small">${config.message}</p>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <!-- Recovery action button -->
+                        <button class="btn btn-sm btn-outline-dark"
+                                onclick="${config.actionFn}">
+                            ${config.action}
+                        </button>
+                        <!-- Dismiss button (Bootstrap built-in) -->
+                        <button type="button" class="btn-close"
+                                data-bs-dismiss="alert" aria-label="Close">
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Insert the alert at the top of the container
+            container.insertAdjacentHTML('afterbegin', alertHtml);
+
+            // Also show a toast for visibility
+            showErrorToast(`${config.title}: ${config.message.substring(0, 60)}...`,
+                config.alertClass.replace('alert-', ''));
+
+            // Log the custom error
+            logError(
+                'Custom',
+                type === 'auth' ? 401 : type === 'rate-limit' ? 429 : type === 'validation' ? 400 : 500,
+                config.title,
+                `Type: ${type}\nMessage: ${config.message}\nRecovery: ${config.action}`
+            );
+        }
+
+        // =====================================================================
+        // clearCustomErrors()
+        // =====================================================================
+        // Removes all custom error alerts from the container.
+        function clearCustomErrors() {
+            document.getElementById('custom-errors').innerHTML = '';
+        }
+
+        // =====================================================================
+        // SECTION 7: showErrorToast(message, type)
+        // =====================================================================
+        // Creates and displays a Bootstrap toast notification for error
+        // messages. Toasts are appended to the fixed container and
+        // auto-dismiss after 5 seconds.
+        function showErrorToast(message, type) {
+            const container = document.getElementById('toast-container');
+
+            // Map type string to Bootstrap background class
+            const bgClass = {
+                'danger': 'bg-danger',
+                'warning': 'bg-warning text-dark',
+                'info': 'bg-info text-dark',
+                'success': 'bg-success'
+            };
+
+            // Generate a unique ID for this toast
+            const toastId = `toast-${Date.now()}`;
+
+            // Build the toast HTML structure
+            const toastHtml = `
+                <div id="${toastId}" class="toast align-items-center text-white
+                     ${bgClass[type] || 'bg-secondary'} border-0" role="alert"
+                     aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <!-- Error message content -->
+                            ${message}
+                        </div>
+                        <!--
+                            Close button: dismisses the toast immediately.
+                            Bootstrap handles the hide animation.
+                        -->
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                                data-bs-dismiss="toast" aria-label="Close">
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Insert the toast into the container
+            container.insertAdjacentHTML('beforeend', toastHtml);
+
+            // Initialize the Bootstrap toast with auto-dismiss after 5 seconds
+            const toastEl = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastEl, {
+                autohide: true,
+                delay: 5000  // 5 seconds before auto-dismiss
+            });
+
+            // Show the toast
+            toast.show();
+
+            // Remove the toast element from the DOM after it is hidden
+            // This prevents the DOM from accumulating toast elements
+            toastEl.addEventListener('hidden.bs.toast', () => {
+                toastEl.remove();
+            });
+        }
+
+        // =====================================================================
+        // SECTION 9: recoveryAction(action)
+        // =====================================================================
+        // Handles error recovery actions. In a real application, these would
+        // trigger actual API calls or navigation. Here they demonstrate the
+        // pattern with simulated responses.
+        function recoveryAction(action) {
+            const resultDiv = document.getElementById('recovery-result');
+            resultDiv.classList.remove('d-none');
+
+            /*
+                Each recovery action maps to a different strategy:
+                - retry: re-attempt the failed request
+                - cache: serve stale data from local storage or memory
+                - back: navigate to the previous page
+                - report: send error telemetry to monitoring service
+            */
+            const actions = {
+                'retry': {
+                    text: 'Retrying request...',
+                    class: 'text-primary',
+                    toastMsg: 'Retrying the failed request...',
+                    toastType: 'info'
+                },
+                'cache': {
+                    text: 'Loading data from local cache...',
+                    class: 'text-secondary',
+                    toastMsg: 'Displaying cached data from 5 minutes ago.',
+                    toastType: 'warning'
+                },
+                'back': {
+                    text: 'Navigating back...',
+                    class: 'text-secondary',
+                    toastMsg: 'Returning to previous page.',
+                    toastType: 'info'
+                },
+                'report': {
+                    text: 'Error report sent to support team. Ticket #ERR-'
+                        + Math.floor(Math.random() * 90000 + 10000),
+                    class: 'text-success',
+                    toastMsg: 'Error report submitted successfully.',
+                    toastType: 'success'
+                }
+            };
+
+            // Get the config for the requested action
+            const config = actions[action];
+            if (!config) return;
+
+            // Show feedback in the result area
+            resultDiv.innerHTML = `
+                <div class="small ${config.class}">
+                    <div class="spinner-border spinner-border-sm me-1" role="status"></div>
+                    ${config.text}
+                </div>
+            `;
+
+            // Show a toast for the recovery action
+            showErrorToast(config.toastMsg, config.toastType);
+
+            // Log the recovery action
+            logError(
+                'Recovery',
+                200,
+                `Recovery action: ${action}`,
+                `Action: ${action}\nResult: ${config.text}\nTimestamp: ${new Date().toISOString()}`
+            );
+
+            // After 2 seconds, show completion for retry/cache actions
+            if (action === 'retry' || action === 'cache') {
+                setTimeout(() => {
+                    const success = Math.random() > 0.3;
+                    resultDiv.innerHTML = success
+                        ? `<div class="small text-success">&#10004; Data loaded successfully.</div>`
+                        : `<div class="small text-danger">&#10060; Recovery failed. Try another option.</div>`;
+                }, 2000);
+            }
+        }
+
+        // =====================================================================
+        // INITIALIZATION: Check network status on page load
+        // =====================================================================
+        // Set the initial network status badge based on the browser's
+        // navigator.onLine property.
+        document.addEventListener('DOMContentLoaded', () => {
+            const badge = document.getElementById('network-badge');
+            if (navigator.onLine) {
+                badge.className = 'badge bg-success';
+                badge.textContent = 'ONLINE';
+            } else {
+                badge.className = 'badge bg-danger';
+                badge.textContent = 'OFFLINE';
+            }
+        });
+    </script>
+
+</body>
+</html>

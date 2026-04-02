@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<!--
+  =====================================================================
+  06_05_08 - API Security
+  =====================================================================
+  This lesson covers critical security concepts for web APIs:
+    - Cross-Origin Resource Sharing (CORS)
+    - Content Security Policy (CSP)
+    - Input Validation & Sanitization
+    - Cross-Site Scripting (XSS) Prevention
+    - SQL Injection Prevention
+    - HTTPS / TLS
+    - Security Headers Checklist
+    - Vulnerability Scanner Simulation
+
+  All examples are client-side demonstrations. Real-world API security
+  also requires server-side enforcement of every policy shown here.
+  =====================================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!--
+    META VIEWPORT
+    -------------
+    Ensures proper rendering on all devices. Without this tag the page
+    may appear zoomed-out on mobile browsers, breaking responsive layout.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>06_05_08 - API Security</title>
+
+  <!--
+    BOOTSTRAP 5.3.3 CDN – CSS
+    -------------------------
+    Loaded from the official jsDelivr CDN. Provides the responsive grid,
+    utility classes, and component styles used throughout this page.
+  -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs1FkM2Y"
+    crossorigin="anonymous"
+  />
+
+  <!--
+    INLINE STYLES
+    -------------
+    Minimal custom CSS for diagrams and interactive demos that Bootstrap
+    utilities alone cannot express.
+  -->
+  <style>
+    /* ===== CORS Diagram ===== */
+    /* Container that holds the origin boxes and the arrow between them */
+    .cors-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: wrap;
+      padding: 2rem 0;
+    }
+    .cors-box {
+      width: 180px;
+      padding: 1.25rem;
+      border-radius: .5rem;
+      text-align: center;
+      font-weight: 600;
+      font-size: .95rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    .cors-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 120px;
+      padding: 0 .5rem;
+    }
+    .cors-arrow svg {
+      width: 100%;
+      height: 40px;
+    }
+    .cors-arrow span {
+      font-size: .75rem;
+      margin-top: .15rem;
+    }
+
+    /* ===== CSP Header Display ===== */
+    .csp-header {
+      font-family: 'Courier New', Courier, monospace;
+      background: #1e1e2e;
+      color: #a6e3a1;
+      padding: 1rem 1.25rem;
+      border-radius: .5rem;
+      font-size: .85rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .csp-header .directive {
+      color: #89b4fa;
+    }
+    .csp-header .value {
+      color: #f9e2af;
+    }
+
+    /* ===== XSS Demo ===== */
+    .xss-sandbox {
+      border: 2px dashed #dc3545;
+      border-radius: .5rem;
+      padding: 1rem;
+      min-height: 60px;
+      background: #fff5f5;
+    }
+    .xss-safe {
+      border-color: #198754;
+      background: #f0fff4;
+    }
+
+    /* ===== SQL Pattern ===== */
+    .sql-bad {
+      background: #fff5f5;
+      border-left: 4px solid #dc3545;
+      padding: .75rem 1rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: .85rem;
+      border-radius: 0 .5rem .5rem 0;
+    }
+    .sql-good {
+      background: #f0fff4;
+      border-left: 4px solid #198754;
+      padding: .75rem 1rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: .85rem;
+      border-radius: 0 .5rem .5rem 0;
+    }
+
+    /* ===== HTTPS Lock ===== */
+    .lock-icon {
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    /* ===== Scanner progress bar animation ===== */
+    @keyframes scanPulse {
+      0%   { width: 0%; }
+      100% { width: 100%; }
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+
+  <!-- ================================================================
+       NAVBAR
+       ================================================================
+       Standard Bootstrap navbar for page navigation. Collapses on
+       smaller viewports thanks to the responsive toggler.
+  -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">API Security</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#mainNav"
+        aria-controls="mainNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="#cors">CORS</a></li>
+          <li class="nav-item"><a class="nav-link" href="#csp">CSP</a></li>
+          <li class="nav-item"><a class="nav-link" href="#validation">Validation</a></li>
+          <li class="nav-item"><a class="nav-link" href="#xss">XSS</a></li>
+          <li class="nav-item"><a class="nav-link" href="#sql">SQL Injection</a></li>
+          <li class="nav-item"><a class="nav-link" href="#https">HTTPS</a></li>
+          <li class="nav-item"><a class="nav-link" href="#headers">Headers</a></li>
+          <li class="nav-item"><a class="nav-link" href="#scanner">Scanner</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ================================================================
+       HERO / JUMBOTRON
+       ================================================================
+       Introductory section that sets the tone for the page.
+  -->
+  <header class="bg-dark text-white py-5">
+    <div class="container text-center">
+      <h1 class="display-4 fw-bold">API Security</h1>
+      <p class="lead col-lg-8 mx-auto">
+        Protecting your APIs requires a layered defence strategy. This page
+        demonstrates common vulnerabilities and the techniques used to
+        mitigate them&mdash;all built with Bootstrap&nbsp;5 components.
+      </p>
+      <a href="#cors" class="btn btn-outline-light btn-lg mt-3">Explore Topics</a>
+    </div>
+  </header>
+
+  <main class="container py-5">
+
+    <!-- ============================================================
+         1. CORS – Cross-Origin Resource Sharing
+         ============================================================
+         CORS is a browser-enforced mechanism that restricts HTTP
+         requests made from one origin (scheme + host + port) to
+         another. The server signals permission via response headers
+         such as Access-Control-Allow-Origin.
+
+         WHY IT MATTERS FOR APIs
+         ------------------------
+         Without CORS, any malicious website could make authenticated
+         requests to your API on behalf of a logged-in user (e.g.,
+         reading their private data). CORS limits which external
+         origins may consume your API.
+
+         VISUAL DIAGRAM
+         --------------
+         The diagram below illustrates a browser on one origin making
+         a cross-origin request to an API server on a different origin.
+    -->
+    <section id="cors" class="mb-5">
+      <h2 class="border-bottom pb-2 mb-4">1 &mdash; CORS (Cross-Origin Resource Sharing)</h2>
+
+      <div class="row g-4">
+        <!-- Explanation column -->
+        <div class="col-lg-6">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">How CORS Works</h5>
+              <ol class="mb-0">
+                <li class="mb-2">
+                  <strong>Simple request:</strong> The browser sends the request
+                  with an <code>Origin</code> header. The server replies with
+                  <code>Access-Control-Allow-Origin</code>. If the origin is
+                  allowed, the browser exposes the response to JavaScript.
+                </li>
+                <li class="mb-2">
+                  <strong>Preflight request:</strong> For non-simple requests
+                  (e.g., <code>PUT</code>, custom headers), the browser first
+                  sends an <code>OPTIONS</code> request. The server must
+                  respond with appropriate <code>Access-Control-*</code>
+                  headers before the actual request proceeds.
+                </li>
+                <li>
+                  <strong>Credentials:</strong> When cookies or authorization
+                  headers are involved, the server must set
+                  <code>Access-Control-Allow-Credentials: true</code> and
+                  specify an explicit origin (not <code>*</code>).
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diagram column -->
+        <div class="col-lg-6">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Visual Diagram</h5>
+              <div class="cors-diagram">
+                <!-- Browser / Client origin box -->
+                <div class="cors-box bg-primary text-white">
+                  <div>Browser</div>
+                  <small>https://app.example.com</small>
+                </div>
+
+                <!-- Arrow showing request / response -->
+                <div class="cors-arrow">
+                  <svg viewBox="0 0 120 40">
+                    <!-- Right arrow (request) -->
+                    <line x1="0" y1="12" x2="110" y2="12" stroke="#0d6efd" stroke-width="2" marker-end="url(#arrowBlue)" />
+                    <!-- Left arrow (response) -->
+                    <line x1="120" y1="28" x2="10" y2="28" stroke="#198754" stroke-width="2" marker-end="url(#arrowGreen)" />
+                    <defs>
+                      <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+                        <path d="M0,0 L8,4 L0,8 Z" fill="#0d6efd" />
+                      </marker>
+                      <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="0" refY="4" orient="auto-start-reverse">
+                        <path d="M0,0 L8,4 L0,8 Z" fill="#198754" />
+                      </marker>
+                    </defs>
+                  </svg>
+                  <span class="text-primary">Request + Origin</span>
+                  <span class="text-success">CORS Headers</span>
+                </div>
+
+                <!-- API server origin box -->
+                <div class="cors-box bg-success text-white">
+                  <div>API Server</div>
+                  <small>https://api.example.com</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Example CORS headers -->
+      <div class="card mt-4 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Example Server Response Headers</h5>
+          <!--
+            PRE block shows realistic CORS response headers that a server
+            would return. This is purely illustrative; real enforcement
+            happens server-side.
+          -->
+          <pre class="csp-header mb-0"><span class="directive">Access-Control-Allow-Origin</span>:  <span class="value">https://app.example.com</span>
+<span class="directive">Access-Control-Allow-Methods</span>: <span class="value">GET, POST, PUT, DELETE, OPTIONS</span>
+<span class="directive">Access-Control-Allow-Headers</span>: <span class="value">Content-Type, Authorization</span>
+<span class="directive">Access-Control-Allow-Credentials</span>: <span class="value">true</span>
+<span class="directive">Access-Control-Max-Age</span>:        <span class="value">86400</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         2. CONTENT SECURITY POLICY (CSP)
+         ============================================================
+         CSP is an HTTP response header that tells the browser which
+         dynamic resources (scripts, styles, images, fonts, etc.) are
+         allowed to load. It is one of the most powerful defences
+         against XSS because it can block inline scripts and scripts
+         from untrusted domains.
+
+         KEY DIRECTIVES
+         ---------------
+         default-src  – Fallback for other fetch directives.
+         script-src   – Allowed sources for JavaScript.
+         style-src    – Allowed sources for CSS.
+         img-src      – Allowed sources for images.
+         connect-src  – Allowed targets for fetch/XHR/WebSocket.
+         font-src     – Allowed sources for fonts.
+         frame-ancestors – Replaces X-Frame-Options (clickjacking).
+    -->
+    <section id="csp" class="mb-5">
+      <h2 class="border-bottom pb-2 mb-4">2 &mdash; Content Security Policy (CSP)</h2>
+
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title">Recommended CSP Header</h5>
+              <p class="text-muted small mb-2">
+                Deploy this as an HTTP response header named
+                <code>Content-Security-Policy</code>. Adjust sources to match
+                your own domains and CDN dependencies.
+              </p>
+              <pre class="csp-header"><span class="directive">default-src</span>      <span class="value">'self'</span>;
+<span class="directive">script-src</span>       <span class="value">'self' https://cdn.jsdelivr.net</span>;
+<span class="directive">style-src</span>        <span class="value">'self' https://cdn.jsdelivr.net 'unsafe-inline'</span>;
+<span class="directive">img-src</span>          <span class="value">'self' data: https:</span>;
+<span class="directive">font-src</span>         <span class="value">'self' https://cdn.jsdelivr.net</span>;
+<span class="directive">connect-src</span>      <span class="value">'self' https://api.example.com</span>;
+<span class="directive">frame-ancestors</span>  <span class="value">'none'</span>;
+<span class="directive">base-uri</span>         <span class="value">'self'</span>;
+<span class="directive">form-action</span>      <span class="value">'self'</span>;</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title">CSP Quick Reference</h5>
+              <table class="table table-sm table-striped mb-0">
+                <thead class="table-dark">
+                  <tr><th>Directive</th><th>Purpose</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>default-src</code></td><td>Fallback policy</td></tr>
+                  <tr><td><code>script-src</code></td><td>JS sources</td></tr>
+                  <tr><td><code>style-src</code></td><td>CSS sources</td></tr>
+                  <tr><td><code>img-src</code></td><td>Image sources</td></tr>
+                  <tr><td><code>connect-src</code></td><td>fetch / XHR / WS</td></tr>
+                  <tr><td><code>font-src</code></td><td>Font sources</td></tr>
+                  <tr><td><code>frame-ancestors</code></td><td>Embedding control</td></tr>
+                  <tr><td><code>base-uri</code></td><td>Restrict <code>&lt;base&gt;</code></td></tr>
+                  <tr><td><code>form-action</code></td><td>Form submission targets</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         3. INPUT VALIDATION
+         ============================================================
+         Never trust client-side validation alone. It improves UX by
+         providing instant feedback, but attackers can bypass it easily.
+         Always re-validate on the server.
+
+         Bootstrap provides built-in validation styles via
+         .was-validated (or .is-valid / .is-invalid classes).
+    -->
+    <section id="validation" class="mb-5">
+      <h2 class="border-bottom pb-2 mb-4">3 &mdash; Input Validation</h2>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <p class="text-muted">
+            This form uses Bootstrap's custom validation styles. Try
+            submitting with empty or invalid values to see feedback.
+            Remember: <strong>always validate server-side as well.</strong>
+          </p>
+
+          <!--
+            FORM with .needs-validation
+            ----------------------------
+            The 'novalidate' attribute prevents browser-native validation
+            so we can demonstrate Bootstrap's custom feedback instead.
+          -->
+          <form id="validationForm" class="needs-validation" novalidate>
+            <div class="row g-3">
+
+              <!-- Username field -->
+              <div class="col-md-6">
+                <label for="valUsername" class="form-label">Username</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="valUsername"
+                  placeholder="alphanumeric, 3-20 chars"
+                  pattern="^[a-zA-Z0-9]{3,20}$"
+                  required
+                />
+                <div class="valid-feedback">Looks good!</div>
+                <div class="invalid-feedback">
+                  Username must be 3-20 alphanumeric characters.
+                </div>
+              </div>
+
+              <!-- Email field -->
+              <div class="col-md-6">
+                <label for="valEmail" class="form-label">Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="valEmail"
+                  placeholder="you@example.com"
+                  required
+                />
+                <div class="valid-feedback">Looks good!</div>
+                <div class="invalid-feedback">Please enter a valid email.</div>
+              </div>
+
+              <!-- API Key field -->
+              <div class="col-md-6">
+                <label for="valApiKey" class="form-label">API Key</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="valApiKey"
+                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  pattern="^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                  required
+                />
+                <div class="valid-feedback">Valid UUID format.</div>
+                <div class="invalid-feedback">
+                  Must be a valid UUID (e.g., 550e8400-e29b-41d4-a716-446655440000).
+                </div>
+              </div>
+
+              <!-- Endpoint URL -->
+              <div class="col-md-6">
+                <label for="valUrl" class="form-label">Endpoint URL</label>
+                <input
+                  type="url"
+                  class="form-control"
+                  id="valUrl"
+                  placeholder="https://api.example.com/v1"
+                  required
+                />
+                <div class="valid-feedback">Valid URL.</div>
+                <div class="invalid-feedback">Please provide a valid HTTPS URL.</div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary mt-4" type="submit">
+              Validate &amp; Submit
+            </button>
+            <!-- Feedback area for successful submission -->
+            <div id="validationFeedback" class="mt-3"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         4. XSS PREVENTION
+         ============================================================
+         Cross-Site Scripting (XSS) occurs when an attacker injects
+         malicious scripts into content that is then rendered by a
+         victim's browser.
+
+         DEFENCES
+         --------
+         1. Escape/encode output (HTML entities).
+         2. Use textContent instead of innerHTML when possible.
+         3. Apply a strict CSP (script-src) to block inline scripts.
+         4. Sanitise user input with a library (e.g., DOMPurify).
+
+         The demo below shows unsanitised (dangerous) vs sanitised
+         (safe) rendering of the same user-supplied string.
+    -->
+    <section id="xss" class="mb-5">
+      <h2 class="border-bottom pb-2 mb-4">4 &mdash; XSS Prevention</h2>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <p class="text-muted">
+            Enter some text that includes HTML or script tags. The
+            <strong>unsanitized</strong> box will render it as-is
+            (dangerous). The <strong>sanitized</strong> box escapes
+            special characters (safe).
+          </p>
+
+          <div class="row g-3 align-items-end">
+            <div class="col-md-8">
+              <label for="xssInput" class="form-label">User Input</label>
+              <input
+                type="text"
+                class="form-control"
+                id="xssInput"
+                value="<img src=x onerror=alert('XSS')> <b>Bold</b>"
+              />
+            </div>
+            <div class="col-md-4">
+              <button id="xssBtn" class="btn btn-warning w-100" type="button">
+                Render Both
+              </button>
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <!-- Unsafe rendering – uses innerHTML -->
+            <div class="col-md-6">
+              <label class="form-label text-danger fw-bold">
+                Unsanitized (innerHTML)
+              </label>
+              <div id="xssUnsafe" class="xss-sandbox"></div>
+              <small class="text-danger">
+                Scripts and HTML execute&mdash;vulnerable to XSS!
+              </small>
+            </div>
+            <!-- Safe rendering – uses textContent -->
+            <div class="col-md-6">
+              <label class="form-label text-success fw-bold">
+                Sanitized (textContent)
+              </label>
+              <div id="xssSafe" class="xss-sandbox xss-safe"></div>
+              <small class="text-success">
+                Characters are escaped&mdash;safe from XSS.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5. SQL INJECTION PREVENTION
+         ============================================================
+         SQL Injection happens when untrusted input is concatenated
+         directly into a SQL query string, allowing attackers to modify
+         the query logic.
+
+         PREVENTION
+         ----------
+         - Use parameterised queries / prepared statements.
+         - Use an ORM that handles escaping automatically.
+         - Apply least-privilege database accounts.
+         - Validate and whitelist expected input formats.
+
+         The examples below show vulnerable vs safe patterns. These
+         are pseudocode illustrations (not runnable SQL).
+    -->
+    <section id="sql" class="mb-5">
+      <h2 class="border-bottom pb-2 mb-4">5 &mdash; SQL Injection Prevention</h2>
+
+      <div class="row g-4">
+        <!-- Vulnerable pattern -->
+        <div class="col-md-6">
+          <div class="card border-danger shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title text-danger">Vulnerable Pattern</h5>
+              <p class="text-muted small">
+                String concatenation lets an attacker break out of the
+                quoted context and inject arbitrary SQL.
+              </p>
+              <div class="sql-bad">
+                <code>
+-- User input: <span class="text-danger">'; DROP TABLE users; --</span><br><br>
+query = "SELECT * FROM users<br>
+&nbsp;&nbsp;WHERE username = '<span class="text-danger">" + userInput + "</span>'"<br><br>
+-- Resulting query:<br>
+SELECT * FROM users<br>
+WHERE username = '<span class="text-danger">'; DROP TABLE users; --</span>'
+                </code>
+              </div>
+              <div class="alert alert-danger mt-3 mb-0 py-2">
+                <strong>Risk:</strong> Attacker can read, modify, or delete
+                any data in the database.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Safe pattern -->
+        <div class="col-md-6">
+          <div class="card border-success shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title text-success">Safe Pattern (Parameterized)</h5>
+              <p class="text-muted small">
+                Placeholders ensure user input is always treated as data,
+                never as executable SQL.
+              </p>
+              <div class="sql-good">
+                <code>
+-- User input: <span class="text-success">'; DROP TABLE users; --</span><br><br>
+query = "SELECT * FROM users<br>
+&nbsp;&nbsp;WHERE username = <span class="text-success">$1</span>"<br>
+params = <span class="text-success">[userInput]</span><br><br>
+-- The DB driver treats $1 as a literal<br>
+-- string value, neutralising the attack.
+                </code>
+              </div>
+              <div class="alert alert-success mt-3 mb-0 py-2">
+                <strong>Result:</strong> The injected characters are safely
+                escaped; the query returns zero rows instead of dropping
+                the table.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         6. HTTPS / TLS INDICATOR
+         ============================================================
+         HTTPS encrypts data in transit between client and server using
+         TLS. Without it, attackers on the same network can read or
+         modify API requests (man-in-the-middle attacks).
+
+         BEST PRACTICES
+         ---------------
+         - Redirect all HTTP traffic to HTTPS (301).
+         - Use HSTS (Strict-Transport-Security) to prevent downgrade.
+         - Prefer TLS 1.2+; disable SSL 3.0 and TLS 1.0/1.1.
+         - Use strong cipher suites and forward secrecy.
+    -->
+    <section id="https" class="mb-5">
+      <h2 class="border-bottom pb-2 mb-4">6 &mdash; HTTPS / TLS</h2>
+
+      <div class="row g-4">
+        <!-- Current page protocol indicator -->
+        <div class="col-md-4">
+          <div class="card shadow-sm text-center h-100">
+            <div class="card-body d-flex flex-column justify-content-center">
+              <div id="lockIcon" class="lock-icon mb-2"></div>
+              <h5 id="lockStatus" class="mb-2"></h5>
+              <p id="lockDetail" class="text-muted small mb-0"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- HSTS header example -->
+        <div class="col-md-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title">HSTS Header</h5>
+              <p class="text-muted small">
+                The <code>Strict-Transport-Security</code> header forces
+                browsers to use HTTPS for the specified duration.
+              </p>
+              <pre class="csp-header mb-0"><span class="directive">Strict-Transport-Security</span>: <span class="value">max-age=63072000; includeSubDomains; preload</span></pre>
+              <ul class="mt-3 mb-0 small">
+                <li><strong>max-age</strong> – seconds to remember (2 years).</li>
+                <li><strong>includeSubDomains</strong> – apply to all sub-domains.</li>
+                <li><strong>preload</strong> – opt into browser built-in list.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Best practices list -->
+        <div class="col-md-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title">TLS Best Practices</h5>
+              <ul class="mb-0">
+                <li>Redirect HTTP &rarr; HTTPS (301)</li>
+                <li>Enable HSTS with long max-age</li>
+                <li>Use TLS 1.2 or 1.3 only</li>
+                <li>Disable weak cipher suites</li>
+                <li>Use forward secrecy (ECDHE)</li>
+                <li>Keep certificates renewed</li>
+                <li>Use OCSP stapling</li>
+                <li>Pin certificates if appropriate</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         7. SECURITY HEADERS CHECKLIST
+         ============================================================
+         Beyond CORS and CSP, there are several HTTP response headers
+         that harden your API and web application. This section renders
+         them as an interactive checklist so learners can track which
+         headers they have implemented.
+    -->
+    <section id="headers" class="mb-5">
+      <h2 class="border-bottom pb-2 mb-4">7 &mdash; Security Headers Checklist</h2>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <p class="text-muted">
+            Toggle each header as you implement it. The progress bar
+            updates automatically.
+          </p>
+
+          <!-- Progress bar tracks checked headers -->
+          <div class="progress mb-4" style="height: 25px">
+            <div
+              id="headerProgress"
+              class="progress-bar bg-success"
+              role="progressbar"
+              style="width: 0%"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              0 / 9
+            </div>
+          </div>
+
+          <!-- Checklist items – each is a checkbox + description -->
+          <div class="list-group" id="headerChecklist">
+            <!-- 1 -->
+            <label class="list-group-item d-flex gap-3">
+              <input class="form-check-input flex-shrink-0 header-check" type="checkbox" value="1" />
+              <span>
+                <strong>Content-Security-Policy</strong>
+                <span class="d-block text-muted small">
+                  Restricts resource sources; mitigates XSS and data injection.
+                </span>
+              </span>
+            </label>
+            <!-- 2 -->
+            <label class="list-group-item d-flex gap-3">
+              <input class="form-check-input flex-shrink-0 header-check" type="checkbox" value="2" />
+              <span>
+                <strong>Strict-Transport-Security (HSTS)</strong>
+                <span class="d-block text-muted small">
+                  Forces HTTPS; prevents protocol downgrade attacks.
+                </span>
+              </span>
+            </label>
+            <!-- 3 -->
+            <label class="list-group-item d-flex gap-3">
+              <input class="form-check-input flex-shrink-0 header-check" type="checkbox" value="3" />
+              <span>
+                <strong>X-Content-Type-Options</strong>
+                <span class="d-block text-muted small">
+                  Set to <code>nosniff</code>. Prevents MIME-type sniffing.
+                </span>
+              </span>
+            </label>
+            <!-- 4 -->
+            <label class="list-group-item d-flex gap-3">
+              <input class="form-check-input flex-shrink-0 header-check" type="checkbox" value="4" />
+              <span>
+                <strong>X-Frame-Options</strong>
+                <span class="d-block text-muted small">
+                  Set to <code>DENY</code> or <code>SAMEORIGIN</code>. Prevents clickjacking.
+                </span>
+              </span>
+            </label>
+            <!-- 5 -->
+            <label class="list-group-item d-flex gap-3">
+              <input class="form-check-input flex-shrink-0 header-check" type="checkbox" value="5" />
+              <span>
+                <strong>Referrer-Policy</strong>
+                <span class="d-block text-muted small">
+                  Controls how much referrer info is sent. Use <code>strict-origin-when-cross-origin</code>.
+                </span>
+              </span>
+            </label>
+            <!-- 6 -->
+            <label class="list-group-item d-flex gap-3">
+              <input class="form-check-input flex-shrink-0 header-check" type="checkbox" value="6" />
+              <span>
+                <strong>Permissions-Policy</strong>
+                <span class="d-block text-muted small">
+                  Restricts browser features (camera, microphone, geolocation, etc.).
+                </span>
+              </span>
+            </label>
+            <!-- 7 -->
+            <label class="list-group-item d-flex gap-3">
+              <input class="form-check-input flex-shrink-0 header-check" type="checkbox" value="7" />
+              <span>
+                <strong>X-XSS-Protection</strong>
+                <span class="d-block text-muted small">
+                  Legacy; set to <code>0</code> to disable the browser XSS auditor (CSP supersedes it).
+                </span>
+              </span>
+            </label>
+            <!-- 8 -->
+            <label class="list-group-item d-flex gap-3">
+              <input class="form-check-input flex-shrink-0 header-check" type="checkbox" value="8" />
+              <span>
+                <strong>Cache-Control (sensitive data)</strong>
+                <span class="d-block text-muted small">
+                  Use <code>no-store, no-cache</code> for responses containing sensitive data.
+                </span>
+              </span>
+            </label>
+            <!-- 9 -->
+            <label class="list-group-item d-flex gap-3">
+              <input class="form-check-input flex-shrink-0 header-check" type="checkbox" value="9" />
+              <span>
+                <strong>Cross-Origin-Opener-Policy (COOP)</strong>
+                <span class="d-block text-muted small">
+                  Set to <code>same-origin</code> to isolate browsing context groups.
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         8. VULNERABILITY SCANNER SIMULATION
+         ============================================================
+         This section provides a UI-only simulation of an automated
+         vulnerability scanner. It demonstrates the kind of checks a
+         real scanner (e.g., OWASP ZAP, Nikto) might perform.
+
+         IMPORTANT: No real network requests are made. The results
+         are generated with setTimeout to mimic asynchronous scanning.
+    -->
+    <section id="scanner" class="mb-5">
+      <h2 class="border-bottom pb-2 mb-4">8 &mdash; Vulnerability Scanner Simulation</h2>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <p class="text-muted">
+            Enter a URL and click <strong>Start Scan</strong> to simulate
+            an automated security assessment. No real requests are made;
+            results are illustrative only.
+          </p>
+
+          <div class="row g-3 align-items-end">
+            <div class="col-md-8">
+              <label for="scanUrl" class="form-label">Target URL</label>
+              <input
+                type="url"
+                class="form-control"
+                id="scanUrl"
+                placeholder="https://api.example.com"
+                value="https://api.example.com"
+              />
+            </div>
+            <div class="col-md-4">
+              <button id="scanBtn" class="btn btn-danger w-100" type="button">
+                Start Scan
+              </button>
+            </div>
+          </div>
+
+          <!-- Scan progress -->
+          <div class="mt-4 d-none" id="scanProgressWrap">
+            <div class="d-flex justify-content-between mb-1">
+              <span id="scanPhase" class="small fw-bold">Initializing...</span>
+              <span id="scanPercent" class="small">0%</span>
+            </div>
+            <div class="progress" style="height: 8px">
+              <div id="scanBar" class="progress-bar progress-bar-striped progress-bar-animated bg-danger" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Results table – filled dynamically by JS -->
+          <div id="scanResults" class="mt-4 d-none">
+            <h5>Scan Results</h5>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle">
+                <thead class="table-dark">
+                  <tr>
+                    <th style="width: 30%">Check</th>
+                    <th style="width: 15%">Status</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody id="scanTableBody"></tbody>
+              </table>
+            </div>
+            <div id="scanSummary" class="alert mt-3 mb-0"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================================================================
+       FOOTER
+       ================================================================ -->
+  <footer class="bg-dark text-white text-center py-4">
+    <div class="container">
+      <p class="mb-1">06_05_08 &mdash; API Security</p>
+      <p class="mb-0 text-muted small">
+        Bootstrap 5.3.3 &bull; Educational demonstration only
+      </p>
+    </div>
+  </footer>
+
+  <!--
+    BOOTSTRAP 5.3.3 CDN – JS BUNDLE
+    --------------------------------
+    Includes Popper.js for tooltips, popovers, and dropdowns. Placed at
+    end of body for faster page loads (non-blocking).
+  -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"
+  ></script>
+
+  <!--
+    ================================================================
+    PAGE JAVASCRIPT
+    ================================================================
+    All interactive behaviour for the demos above.
+  -->
+  <script>
+    // ==============================================================
+    // 3. FORM VALIDATION
+    // ==============================================================
+    // Uses Bootstrap's .was-validated class to trigger visual feedback.
+    // The form will not actually submit; it just demonstrates the
+    // validation styles.
+    (function () {
+      const form = document.getElementById('validationForm');
+      const feedback = document.getElementById('validationFeedback');
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault(); // prevent real submission for this demo
+
+        // Add .was-validated so Bootstrap shows green/red feedback
+        form.classList.add('was-validated');
+
+        // Check native validity (respects pattern, required, type, etc.)
+        if (form.checkValidity()) {
+          feedback.innerHTML =
+            '<div class="alert alert-success mb-0">' +
+            '<strong>Success!</strong> All inputs passed client-side validation. ' +
+            'Always re-validate on the server as well.' +
+            '</div>';
+        } else {
+          feedback.innerHTML =
+            '<div class="alert alert-danger mb-0">' +
+            '<strong>Invalid!</strong> Please fix the highlighted fields.' +
+            '</div>';
+        }
+      });
+    })();
+
+    // ==============================================================
+    // 4. XSS PREVENTION DEMO
+    // ==============================================================
+    // Renders user input in two ways:
+    //   - innerHTML  (unsanitized, dangerous)
+    //   - textContent (sanitized, safe)
+    // This makes the difference tangible.
+    (function () {
+      const input = document.getElementById('xssInput');
+      const btn = document.getElementById('xssBtn');
+      const unsafe = document.getElementById('xssUnsafe');
+      const safe = document.getElementById('xssSafe');
+
+      btn.addEventListener('click', function () {
+        const raw = input.value;
+
+        // Unsafe: directly injects HTML (scripts can execute)
+        unsafe.innerHTML = raw;
+
+        // Safe: textContent escapes <, >, &, ", ' automatically
+        safe.textContent = raw;
+      });
+
+      // Trigger once on page load so the user sees the difference immediately
+      btn.click();
+    })();
+
+    // ==============================================================
+    // 6. HTTPS / TLS INDICATOR
+    // ==============================================================
+    // Detects whether the current page is served over HTTPS and
+    // displays a visual indicator accordingly.
+    (function () {
+      const icon = document.getElementById('lockIcon');
+      const status = document.getElementById('lockStatus');
+      const detail = document.getElementById('lockDetail');
+
+      if (window.location.protocol === 'https:') {
+        icon.textContent = '\uD83D\uDD12'; // 🔒
+        icon.className = 'lock-icon text-success mb-2';
+        status.textContent = 'Secure Connection (HTTPS)';
+        status.className = 'text-success mb-2';
+        detail.textContent =
+          'This page is served over TLS. Data in transit is encrypted.';
+      } else {
+        icon.textContent = '\uD83D\uDD13'; // 🔓
+        icon.className = 'lock-icon text-danger mb-2';
+        status.textContent = 'Insecure Connection (HTTP)';
+        status.className = 'text-danger mb-2';
+        detail.textContent =
+          'This page is not using HTTPS. Data could be intercepted. ' +
+          'Always deploy APIs behind TLS in production.';
+      }
+    })();
+
+    // ==============================================================
+    // 7. SECURITY HEADERS CHECKLIST – PROGRESS TRACKER
+    // ==============================================================
+    // Listens for checkbox changes and updates the progress bar.
+    (function () {
+      const checks = document.querySelectorAll('.header-check');
+      const bar = document.getElementById('headerProgress');
+      const total = checks.length;
+
+      function updateProgress() {
+        const checked = document.querySelectorAll('.header-check:checked').length;
+        const pct = Math.round((checked / total) * 100);
+        bar.style.width = pct + '%';
+        bar.setAttribute('aria-valuenow', pct);
+        bar.textContent = checked + ' / ' + total;
+      }
+
+      checks.forEach(function (cb) {
+        cb.addEventListener('change', updateProgress);
+      });
+    })();
+
+    // ==============================================================
+    // 8. VULNERABILITY SCANNER SIMULATION
+    // ==============================================================
+    // Simulates a series of security checks with artificial delays.
+    // Each check has a randomised outcome to demonstrate different
+    // result states (pass, warning, fail).
+    (function () {
+      const btn = document.getElementById('scanBtn');
+      const urlInput = document.getElementById('scanUrl');
+      const progressWrap = document.getElementById('scanProgressWrap');
+      const phase = document.getElementById('scanPhase');
+      const percent = document.getElementById('scanPercent');
+      const bar = document.getElementById('scanBar');
+      const results = document.getElementById('scanResults');
+      const tbody = document.getElementById('scanTableBody');
+      const summary = document.getElementById('scanSummary');
+
+      // Define the checks the scanner will perform
+      const checks = [
+        {
+          name: 'HTTPS Enforcement',
+          pass: 'Redirects HTTP to HTTPS; HSTS header present.',
+          warn: 'HTTPS available but no HSTS header detected.',
+          fail: 'Site is not served over HTTPS.'
+        },
+        {
+          name: 'Content-Security-Policy',
+          pass: 'CSP header present with restrictive directives.',
+          warn: 'CSP header present but uses unsafe-inline.',
+          fail: 'No CSP header detected.'
+        },
+        {
+          name: 'X-Content-Type-Options',
+          pass: 'Header set to "nosniff".',
+          warn: '',
+          fail: 'Header missing; MIME sniffing possible.'
+        },
+        {
+          name: 'CORS Configuration',
+          pass: 'CORS allows only specific trusted origins.',
+          warn: 'CORS allows multiple origins; verify necessity.',
+          fail: 'CORS allows all origins (*); overly permissive.'
+        },
+        {
+          name: 'SQL Injection Test',
+          pass: 'Parameterized queries detected; no SQL errors.',
+          warn: 'Server returned generic error; unable to confirm.',
+          fail: 'SQL error in response; possible injection point.'
+        },
+        {
+          name: 'XSS Reflection Test',
+          pass: 'Input is properly escaped; no script execution.',
+          warn: 'Input reflected but CSP may mitigate risk.',
+          fail: 'Input reflected unescaped; XSS possible.'
+        },
+        {
+          name: 'Sensitive Data Exposure',
+          pass: 'No sensitive data found in responses or headers.',
+          warn: 'Server version disclosed in headers.',
+          fail: 'API keys or tokens found in response body.'
+        },
+        {
+          name: 'Rate Limiting',
+          pass: 'Rate limit headers present (X-RateLimit-*).',
+          warn: 'No rate limit headers; verify server config.',
+          fail: 'No rate limiting detected after 100 rapid requests.'
+        }
+      ];
+
+      btn.addEventListener('click', function () {
+        // Reset UI
+        tbody.innerHTML = '';
+        results.classList.add('d-none');
+        progressWrap.classList.remove('d-none');
+        bar.style.width = '0%';
+        btn.disabled = true;
+        btn.textContent = 'Scanning...';
+
+        const target = urlInput.value || 'https://example.com';
+        let idx = 0;
+
+        function runNext() {
+          if (idx >= checks.length) {
+            // Scan complete
+            progressWrap.classList.add('d-none');
+            results.classList.remove('d-none');
+            btn.disabled = false;
+            btn.textContent = 'Start Scan';
+            return;
+          }
+
+          const c = checks[idx];
+          phase.textContent = 'Checking: ' + c.name + '...';
+          const pct = Math.round(((idx + 1) / checks.length) * 100);
+          bar.style.width = pct + '%';
+          bar.textContent = pct + '%';
+          percent.textContent = pct + '%';
+
+          // Random outcome – weighted toward pass for educational balance
+          const roll = Math.random();
+          let status, badge, detail;
+          if (roll < 0.5) {
+            status = 'pass';
+            badge = '<span class="badge bg-success">PASS</span>';
+            detail = c.pass;
+          } else if (roll < 0.8) {
+            status = 'warn';
+            badge = '<span class="badge bg-warning text-dark">WARNING</span>';
+            detail = c.warn || c.pass;
+          } else {
+            status = 'fail';
+            badge = '<span class="badge bg-danger">FAIL</span>';
+            detail = c.fail;
+          }
+
+          // Build table row
+          const row = document.createElement('tr');
+          row.innerHTML =
+            '<td>' + c.name + '</td>' +
+            '<td>' + badge + '</td>' +
+            '<td class="small">' + detail + '</td>';
+          tbody.appendChild(row);
+
+          idx++;
+          // Delay next check to simulate scanning
+          setTimeout(runNext, 600 + Math.random() * 400);
+        }
+
+        runNext();
+      });
+    })();
+  </script>
+</body>
+</html>

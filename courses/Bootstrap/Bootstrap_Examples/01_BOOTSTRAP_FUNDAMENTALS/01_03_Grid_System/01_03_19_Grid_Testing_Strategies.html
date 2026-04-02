@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 01_03_19 - Grid Testing Strategies                             -->
+<!-- Demonstrates testing approaches for Bootstrap grid layouts:   -->
+<!-- visual regression testing, responsive testing, unit tests     -->
+<!-- for grid logic, and accessibility testing patterns.           -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Testing Strategies - Bootstrap 5</title>
+
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .grid-item {
+            padding: 1rem;
+            background-color: #e7f1ff;
+            border: 1px solid #86b7fe;
+            border-radius: 0.375rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .section-divider {
+            margin: 2rem 0;
+            padding: 1rem 0;
+            border-top: 2px solid #dee2e6;
+        }
+        .code-block {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        .code-block .comment { color: #6a9955; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .fn { color: #dcdcaa; }
+
+        /* Test result indicators */
+        .test-pass { color: #198754; }
+        .test-fail { color: #dc3545; }
+        .test-skip { color: #ffc107; }
+
+        /* Responsive iframe for viewport simulation */
+        .viewport-frame {
+            border: 2px solid #dee2e6;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-3">Grid Testing Strategies</h1>
+        <p class="lead text-muted">
+            Testing approaches for Bootstrap grid layouts: visual regression, responsive, unit, and accessibility testing.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: VISUAL REGRESSION TESTING                         -->
+        <!-- Compare screenshots to detect unintended layout changes      -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">1. Visual Regression Testing</h2>
+            <p class="text-muted mb-3">
+                Capture screenshots of grid layouts at specific viewport sizes
+                and compare against baseline images to detect unintended changes.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Tools for Visual Testing</h5>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>Chromatic</strong> (Storybook)</span>
+                            <span class="badge bg-success">Recommended</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>Percy</strong> (BrowserStack)</span>
+                            <span class="badge bg-primary">Popular</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>BackstopJS</strong></span>
+                            <span class="badge bg-info">Open Source</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>Playwright</strong></span>
+                            <span class="badge bg-info">Open Source</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>reg-suit</strong></span>
+                            <span class="badge bg-info">Open Source</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>BackstopJS Config Example</h5>
+                    <div class="code-block">
+{<br>
+&nbsp;&nbsp;<span class="string">"id"</span>: <span class="string">"grid_test"</span>,<br>
+&nbsp;&nbsp;<span class="string">"viewports"</span>: [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"label"</span>: <span class="string">"mobile"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"width"</span>: <span class="keyword">375</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"height"</span>: <span class="keyword">667</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"label"</span>: <span class="string">"tablet"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"width"</span>: <span class="keyword">768</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"height"</span>: <span class="keyword">1024</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"label"</span>: <span class="string">"desktop"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"width"</span>: <span class="keyword">1280</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"height"</span>: <span class="keyword">800</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;<span class="string">"scenarios"</span>: [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"label"</span>: <span class="string">"Grid Homepage"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"url"</span>: <span class="string">"http://localhost:3000"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;]<br>
+}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: RESPONSIVE VIEWPORT TESTING                       -->
+        <!-- Test grid behavior at each Bootstrap breakpoint              -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">2. Responsive Viewport Testing</h2>
+            <p class="text-muted mb-3">
+                Test grid layouts at each Bootstrap breakpoint to ensure
+                columns stack/split correctly at every viewport size.
+            </p>
+
+            <!-- Grid to test at different viewports -->
+            <div id="test-grid" class="row">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="grid-item">
+                        <strong>Test Column 1</strong>
+                        <br><small>col-12 col-md-6 col-lg-4</small>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="grid-item">
+                        <strong>Test Column 2</strong>
+                        <br><small>col-12 col-md-6 col-lg-4</small>
+                    </div>
+                </div>
+                <div class="col-12 col-md-12 col-lg-4">
+                    <div class="grid-item">
+                        <strong>Test Column 3</strong>
+                        <br><small>col-12 col-md-12 col-lg-4</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Playwright test example -->
+            <h5 class="mt-4">Playwright Test Script</h5>
+            <div class="code-block">
+<span class="keyword">const</span> { test, expect } = <span class="fn">require</span>(<span class="string">'@playwright/test'</span>);<br><br>
+<span class="comment">// Test grid behavior at mobile viewport</span><br>
+<span class="fn">test</span>(<span class="string">'grid stacks on mobile'</span>, <span class="keyword">async</span> ({ page }) => {<br>
+&nbsp;&nbsp;<span class="keyword">await</span> page.<span class="fn">setViewportSize</span>({ width: <span class="keyword">375</span>, height: <span class="keyword">667</span> });<br>
+&nbsp;&nbsp;<span class="keyword">await</span> page.<span class="fn">goto</span>(<span class="string">'http://localhost:3000'</span>);<br><br>
+&nbsp;&nbsp;<span class="keyword">const</span> cols = <span class="keyword">await</span> page.<span class="fn">$$</span>(<span class="string">'#test-grid .col-12'</span>);<br><br>
+&nbsp;&nbsp;<span class="comment">// On mobile, columns should stack (each full width)</span><br>
+&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">const</span> col <span class="keyword">of</span> cols) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> box = <span class="keyword">await</span> col.<span class="fn">boundingBox</span>();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">expect</span>(box.width).<span class="fn">toBeGreaterThan</span>(<span class="keyword">300</span>);<br>
+&nbsp;&nbsp;}<br>
+});<br><br>
+<span class="comment">// Test grid behavior at desktop viewport</span><br>
+<span class="fn">test</span>(<span class="string">'grid splits on desktop'</span>, <span class="keyword">async</span> ({ page }) => {<br>
+&nbsp;&nbsp;<span class="keyword">await</span> page.<span class="fn">setViewportSize</span>({ width: <span class="keyword">1280</span>, height: <span class="keyword">800</span> });<br>
+&nbsp;&nbsp;<span class="keyword">await</span> page.<span class="fn">goto</span>(<span class="string">'http://localhost:3000'</span>);<br><br>
+&nbsp;&nbsp;<span class="keyword">const</span> cols = <span class="keyword">await</span> page.<span class="fn">$$</span>(<span class="string">'#test-grid .col-lg-4'</span>);<br><br>
+&nbsp;&nbsp;<span class="comment">// On desktop, 3 columns should be side by side</span><br>
+&nbsp;&nbsp;<span class="keyword">const</span> box1 = <span class="keyword">await</span> cols[<span class="keyword">0</span>].<span class="fn">boundingBox</span>();<br>
+&nbsp;&nbsp;<span class="keyword">const</span> box2 = <span class="keyword">await</span> cols[<span class="keyword">1</span>].<span class="fn">boundingBox</span>();<br>
+&nbsp;&nbsp;<span class="fn">expect</span>(box1.y).<span class="fn">toBe</span>(box2.y); <span class="comment">// Same row</span><br>
+});
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: CSS UNIT TESTS WITH JEST                          -->
+        <!-- Test computed styles and layout properties                   -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">3. CSS Unit Tests (Jest + jsdom)</h2>
+            <p class="text-muted mb-3">
+                Write unit tests to verify that grid classes produce expected
+                computed styles and DOM structure.
+            </p>
+
+            <div class="code-block">
+<span class="comment">// grid.test.js</span><br>
+<span class="keyword">describe</span>(<span class="string">'Bootstrap Grid'</span>, () => {<br>
+&nbsp;&nbsp;<span class="fn">beforeEach</span>(() => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;document.body.innerHTML = <span class="string">`<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div class="container"&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div class="row"&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div class="col-md-6" id="col1"&gt;A&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;div class="col-md-6" id="col2"&gt;B&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/div&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;`</span>;<br>
+&nbsp;&nbsp;});<br><br>
+&nbsp;&nbsp;<span class="fn">test</span>(<span class="string">'row has flexbox display'</span>, () => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> row = document.<span class="fn">querySelector</span>(<span class="string">'.row'</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> styles = window.<span class="fn">getComputedStyle</span>(row);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">expect</span>(styles.display).<span class="fn">toBe</span>(<span class="string">'flex'</span>);<br>
+&nbsp;&nbsp;});<br><br>
+&nbsp;&nbsp;<span class="fn">test</span>(<span class="string">'columns are in the same row'</span>, () => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> col1 = document.<span class="fn">getElementById</span>(<span class="string">'col1'</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> col2 = document.<span class="fn">getElementById</span>(<span class="string">'col2'</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">expect</span>(col1.parentElement).<span class="fn">toBe</span>(col2.parentElement);<br>
+&nbsp;&nbsp;});<br><br>
+&nbsp;&nbsp;<span class="fn">test</span>(<span class="string">'columns have correct class names'</span>, () => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> col1 = document.<span class="fn">getElementById</span>(<span class="string">'col1'</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">expect</span>(col1.classList.<span class="fn">contains</span>(<span class="string">'col-md-6'</span>)).<span class="fn">toBe</span>(<span class="keyword">true</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">expect</span>(col1.classList.<span class="fn">contains</span>(<span class="string">'col'</span>)).<span class="fn">toBe</span>(<span class="keyword">true</span>);<br>
+&nbsp;&nbsp;});<br><br>
+&nbsp;&nbsp;<span class="fn">test</span>(<span class="string">'row does not exceed 12 columns'</span>, () => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> cols = document.<span class="fn">querySelectorAll</span>(<span class="string">'.row > [class*="col"]'</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">let</span> totalCols = <span class="keyword">0</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;cols.<span class="fn">forEach</span>(col => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> match = col.className.<span class="fn">match</span>(/col-md-(\d+)/);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (match) totalCols += <span class="fn">parseInt</span>(match[<span class="keyword">1</span>]);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;});<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">expect</span>(totalCols).<span class="fn">toBeLessThanOrEqual</span>(<span class="keyword">12</span>);<br>
+&nbsp;&nbsp;});<br>
+});
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: ACCESSIBILITY TESTING                              -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">4. Grid Accessibility Testing</h2>
+            <p class="text-muted mb-3">
+                Ensure grid layouts are accessible: proper reading order,
+                screen reader compatibility, and keyboard navigation.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Accessibility Checklist</h5>
+                    <div class="list-group">
+                        <div class="list-group-item">
+                            <span class="test-pass">&#10003;</span>
+                            <strong>DOM order matches visual order</strong>
+                            <br><small class="text-muted">
+                                Don't use order-* classes that contradict reading order
+                            </small>
+                        </div>
+                        <div class="list-group-item">
+                            <span class="test-pass">&#10003;</span>
+                            <strong>Content readable without CSS</strong>
+                            <br><small class="text-muted">
+                                Grid content should make sense linearly
+                            </small>
+                        </div>
+                        <div class="list-group-item">
+                            <span class="test-pass">&#10003;</span>
+                            <strong>Sufficient color contrast</strong>
+                            <br><small class="text-muted">
+                                Text in grid items meets WCAG AA (4.5:1)
+                            </small>
+                        </div>
+                        <div class="list-group-item">
+                            <span class="test-pass">&#10003;</span>
+                            <strong>Touch targets &ge; 44x44px</strong>
+                            <br><small class="text-muted">
+                                Interactive grid elements are easy to tap
+                            </small>
+                        </div>
+                        <div class="list-group-item">
+                            <span class="test-pass">&#10003;</span>
+                            <strong>Responsive layout works at 200% zoom</strong>
+                            <br><small class="text-muted">
+                                No horizontal scrolling at 200% browser zoom
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>axe-core Test Script</h5>
+                    <div class="code-block">
+<span class="keyword">const</span> { AxeBuilder } = <span class="fn">require</span>(<span class="string">'@axe-core/playwright'</span>);<br><br>
+<span class="fn">test</span>(<span class="string">'grid has no accessibility violations'</span>,<br>
+&nbsp;&nbsp;<span class="keyword">async</span> ({ page }) => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">await</span> page.<span class="fn">goto</span>(<span class="string">'http://localhost:3000'</span>);<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> results = <span class="keyword">await</span> <span class="keyword">new</span> <span class="fn">AxeBuilder</span>({ page })<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">include</span>(<span class="string">'.container'</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">analyze</span>();<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">expect</span>(results.violations).<span class="fn">toHaveLength</span>(<span class="keyword">0</span>);<br>
+&nbsp;&nbsp;}<br>
+);
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: TEST RESULTS DISPLAY                              -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">5. Sample Test Results</h2>
+
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Test</th>
+                        <th>Status</th>
+                        <th>Viewport</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Grid stacks on mobile (&lt;576px)</td>
+                        <td class="test-pass"><strong>&#10003; PASS</strong></td>
+                        <td>375px</td>
+                        <td>All columns at 100% width</td>
+                    </tr>
+                    <tr>
+                        <td>Grid splits on tablet (768px+)</td>
+                        <td class="test-pass"><strong>&#10003; PASS</strong></td>
+                        <td>768px</td>
+                        <td>2 columns side by side</td>
+                    </tr>
+                    <tr>
+                        <td>Grid 3-col on desktop (992px+)</td>
+                        <td class="test-pass"><strong>&#10003; PASS</strong></td>
+                        <td>1280px</td>
+                        <td>3 columns side by side</td>
+                    </tr>
+                    <tr>
+                        <td>No horizontal scroll at 200% zoom</td>
+                        <td class="test-pass"><strong>&#10003; PASS</strong></td>
+                        <td>All</td>
+                        <td>Content reflows properly</td>
+                    </tr>
+                    <tr>
+                        <td>Accessibility: no violations</td>
+                        <td class="test-pass"><strong>&#10003; PASS</strong></td>
+                        <td>All</td>
+                        <td>axe-core: 0 violations</td>
+                    </tr>
+                    <tr>
+                        <td>Gutter width consistent</td>
+                        <td class="test-pass"><strong>&#10003; PASS</strong></td>
+                        <td>All</td>
+                        <td>1.5rem gutters maintained</td>
+                    </tr>
+                    <tr>
+                        <td>Nested grid overflow check</td>
+                        <td class="test-pass"><strong>&#10003; PASS</strong></td>
+                        <td>375px</td>
+                        <td>No overflow on nested grids</td>
+                    </tr>
+                    <tr>
+                        <td>Column order preserved (DOM)</td>
+                        <td class="test-pass"><strong>&#10003; PASS</strong></td>
+                        <td>All</td>
+                        <td>Visual order matches DOM</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: CI/CD INTEGRATION                                 -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">6. CI/CD Integration</h2>
+            <p class="text-muted mb-3">
+                Run grid tests automatically in your CI pipeline on every commit.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>GitHub Actions Workflow</h5>
+                    <div class="code-block">
+<span class="comment"># .github/workflows/grid-test.yml</span><br>
+<span class="property">name</span>: Grid Tests<br>
+<span class="property">on</span>: [push, pull_request]<br><br>
+<span class="property">jobs</span>:<br>
+&nbsp;&nbsp;<span class="property">test</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="property">runs-on</span>: ubuntu-latest<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="property">steps</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="property">uses</span>: actions/checkout@v4<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="property">uses</span>: actions/setup-node@v4<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="property">with</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="property">node-version</span>: <span class="string">'20'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="property">run</span>: npm ci<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="property">run</span>: npm run test:grid<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="property">run</span>: npm run test:visual
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>package.json Scripts</h5>
+                    <div class="code-block">
+{<br>
+&nbsp;&nbsp;<span class="string">"scripts"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"test:grid"</span>: <span class="string">"jest grid.test.js"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"test:visual"</span>: <span class="string">"backstop test"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"test:a11y"</span>: <span class="string">"playwright test a11y"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"test:responsive"</span>: <span class="string">"playwright test responsive"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"test:all"</span>: <span class="string">"npm run test:grid && npm run test:visual && npm run test:a11y"</span><br>
+&nbsp;&nbsp;}<br>
+}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="mt-4 mb-5 pt-3 border-top">
+            <p class="text-muted text-center">
+                <small>Grid Testing Strategies - Bootstrap 5.3.3</small>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

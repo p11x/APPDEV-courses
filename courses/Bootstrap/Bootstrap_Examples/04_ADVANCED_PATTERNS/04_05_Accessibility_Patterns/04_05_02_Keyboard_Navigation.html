@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_05_02_Keyboard_Navigation.html
+     Topic: Keyboard Navigation Patterns for Bootstrap Applications
+     
+     Covers focus management, tab order, keyboard shortcuts, roving
+     tabindex, and accessible keyboard interaction patterns.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Keyboard Navigation - Bootstrap 5 Accessibility</title>
+
+    <style>
+        .hero-kb { background: linear-gradient(135deg, #6c757d 0%, #343a40 100%); color: white; padding: 4rem 0; }
+        .code-dark { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.82rem; overflow-x: auto; }
+        .focus-visible-demo *:focus-visible { outline: 3px solid #0d6efd; outline-offset: 2px; }
+        .kbd { background: #212529; color: white; padding: 0.15rem 0.4rem; border-radius: 0.2rem; font-size: 0.8rem; font-family: monospace; }
+        .roving-item { padding: 0.5rem 1rem; border: 2px solid #dee2e6; margin: 0.25rem; cursor: pointer; border-radius: 0.25rem; }
+        .roving-item[tabindex="0"] { border-color: #0d6efd; background: #cfe2ff; }
+    </style>
+</head>
+<body>
+
+    <!-- Skip link for keyboard users -->
+    <a href="#main-content" class="visually-hidden-focusable btn btn-primary position-absolute" style="z-index:9999">
+        Skip to main content
+    </a>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand" href="#">Keyboard Nav</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#principles">Principles</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#taborder">Tab Order</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#shortcuts">Shortcuts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#roving">Roving</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="hero-kb text-center">
+            <div class="container">
+                <h1 class="display-5 fw-bold">Keyboard Navigation</h1>
+                <p class="lead mt-2">Ensure every interaction is accessible without a mouse.</p>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 1: KEYBOARD PRINCIPLES
+             ============================================================ -->
+        <section id="principles" class="py-5">
+            <div class="container">
+                <h2 class="mb-4">Keyboard Navigation Principles</h2>
+
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>All Interactive Elements Focusable</h5>
+                                <p class="small">Every button, link, input, and interactive control must be reachable via Tab key.</p>
+                                <div class="code-dark">
+&lt;!-- Good: naturally focusable --&gt;<br>
+&lt;button&gt;Click&lt;/button&gt;<br><br>
+&lt;!-- Bad: not focusable --&gt;<br>
+&lt;div onclick="doThing()"&gt;Click&lt;/div&gt;
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>Visible Focus Indicator</h5>
+                                <p class="small">Always show a visible focus ring. Use <code>:focus-visible</code> for keyboard-only focus styles.</p>
+                                <div class="code-dark">
+/* Keyboard-only focus style */<br>
+:focus-visible {<br>
+&nbsp;&nbsp;outline: 3px solid #0d6efd;<br>
+&nbsp;&nbsp;outline-offset: 2px;<br>
+}<br><br>
+/* Remove default for mouse */<br>
+:focus:not(:focus-visible) {<br>
+&nbsp;&nbsp;outline: none;<br>
+}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>Logical Tab Order</h5>
+                                <p class="small">Tab order should follow the visual reading order. Avoid positive <code>tabindex</code> values.</p>
+                                <div class="code-dark">
+&lt;!-- Correct: DOM order = tab order --&gt;<br>
+&lt;input id="first"&gt;<br>
+&lt;input id="second"&gt;<br><br>
+&lt;!-- Wrong: tabindex breaks order --&gt;<br>
+&lt;input tabindex="3"&gt;<br>
+&lt;input tabindex="1"&gt;
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 2: TAB ORDER AND TABINDEX
+             ============================================================ -->
+        <section id="taborder" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="mb-4">Tab Order &amp; tabindex</h2>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>tabindex Value</th>
+                                <th>Behavior</th>
+                                <th>When to Use</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>tabindex="0"</code></td>
+                                <td>Adds element to natural tab order</td>
+                                <td>Custom interactive elements (e.g., div with role="button")</td>
+                            </tr>
+                            <tr>
+                                <td><code>tabindex="-1"</code></td>
+                                <td>Programmatically focusable, not in tab order</td>
+                                <td>Modals, alerts, skip targets</td>
+                            </tr>
+                            <tr class="table-danger">
+                                <td><code>tabindex="1+"</code></td>
+                                <td>Forces specific tab order (anti-pattern)</td>
+                                <td><strong>Avoid.</strong> Use DOM ordering instead.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Interactive tab order demo -->
+                <div class="card">
+                    <div class="card-header"><h5 class="mb-0">Tab Order Demo</h5></div>
+                    <div class="card-body focus-visible-demo">
+                        <p class="small text-muted">Press Tab to navigate through these elements:</p>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="demo1" class="form-label">First (natural order)</label>
+                                <input type="text" class="form-control" id="demo1" placeholder="Tab 1">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="demo2" class="form-label">Second (natural order)</label>
+                                <input type="text" class="form-control" id="demo2" placeholder="Tab 2">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="demo3" class="form-label">Third (natural order)</label>
+                                <button class="btn btn-primary w-100" id="demo3">Tab 3</button>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <!-- Custom focusable element with tabindex="0" -->
+                            <div class="roving-item d-inline-block" tabindex="0" role="button"
+                                 aria-label="Custom focusable element"
+                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.style.background='#198754';this.style.color='white';}">
+                                Custom div (tabindex="0") - Press Enter to activate
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 3: KEYBOARD SHORTCUT PATTERNS
+             ============================================================ -->
+        <section id="shortcuts" class="py-5">
+            <div class="container">
+                <h2 class="mb-4">Common Keyboard Patterns</h2>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Component</th>
+                                <th>Key</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>All</td><td><span class="kbd">Tab</span></td><td>Move focus to next focusable element</td></tr>
+                            <tr><td>All</td><td><span class="kbd">Shift+Tab</span></td><td>Move focus to previous focusable element</td></tr>
+                            <tr><td>All</td><td><span class="kbd">Enter</span></td><td>Activate button/link</td></tr>
+                            <tr><td>All</td><td><span class="kbd">Space</span></td><td>Activate button, toggle checkbox</td></tr>
+                            <tr><td>Modal</td><td><span class="kbd">Escape</span></td><td>Close modal</td></tr>
+                            <tr><td>Dropdown</td><td><span class="kbd">Arrow Up/Down</span></td><td>Navigate menu items</td></tr>
+                            <tr><td>Tabs</td><td><span class="kbd">Arrow Left/Right</span></td><td>Switch between tabs</td></tr>
+                            <tr><td>Accordion</td><td><span class="kbd">Arrow Up/Down</span></td><td>Navigate headers</td></tr>
+                            <tr><td>Carousel</td><td><span class="kbd">Arrow Left/Right</span></td><td>Previous/Next slide</td></tr>
+                            <tr><td>Combobox</td><td><span class="kbd">Arrow Up/Down</span></td><td>Navigate options</td></tr>
+                            <tr><td>Combobox</td><td><span class="kbd">Enter</span></td><td>Select option</td></tr>
+                            <tr><td>Combobox</td><td><span class="kbd">Escape</span></td><td>Close listbox</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 4: ROVING TABINDEX DEMO
+             ============================================================ -->
+        <section id="roving" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="mb-4">Roving Tabindex Pattern</h2>
+                <p class="text-muted mb-4">
+                    In a toolbar or tablist, only one item is in the tab order (tabindex="0"). Arrow keys move focus between items.
+                    This reduces Tab stops and provides efficient keyboard navigation.
+                </p>
+
+                <div class="card">
+                    <div class="card-header"><h5 class="mb-0">Roving Tabindex Toolbar Demo</h5></div>
+                    <div class="card-body">
+                        <p class="small text-muted">Use <span class="kbd">Arrow Left/Right</span> to move between buttons. <span class="kbd">Tab</span> enters and exits the toolbar.</p>
+
+                        <div class="btn-group" role="toolbar" aria-label="Text formatting toolbar" id="rovingToolbar">
+                            <button class="btn btn-outline-secondary" tabindex="0" aria-label="Bold">
+                                <strong>B</strong>
+                            </button>
+                            <button class="btn btn-outline-secondary" tabindex="-1" aria-label="Italic">
+                                <em>I</em>
+                            </button>
+                            <button class="btn btn-outline-secondary" tabindex="-1" aria-label="Underline">
+                                <u>U</u>
+                            </button>
+                            <button class="btn btn-outline-secondary" tabindex="-1" aria-label="Strikethrough">
+                                <s>S</s>
+                            </button>
+                            <button class="btn btn-outline-secondary" tabindex="-1" aria-label="Code">
+                                &lt;/&gt;
+                            </button>
+                        </div>
+
+                        <div class="mt-3 code-dark">
+// Roving tabindex JavaScript<br>
+const toolbar = document.getElementById('rovingToolbar');<br>
+const items = [...toolbar.querySelectorAll('button')];<br><br>
+toolbar.addEventListener('keydown', (e) => {<br>
+&nbsp;&nbsp;const current = document.activeElement;<br>
+&nbsp;&nbsp;const idx = items.indexOf(current);<br>
+&nbsp;&nbsp;let next;<br><br>
+&nbsp;&nbsp;if (e.key === 'ArrowRight') next = items[(idx + 1) % items.length];<br>
+&nbsp;&nbsp;if (e.key === 'ArrowLeft') next = items[(idx - 1 + items.length) % items.length];<br>
+&nbsp;&nbsp;if (e.key === 'Home') next = items[0];<br>
+&nbsp;&nbsp;if (e.key === 'End') next = items[items.length - 1];<br><br>
+&nbsp;&nbsp;if (next) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;e.preventDefault();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;current.tabIndex = -1;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;next.tabIndex = 0;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;next.focus();<br>
+&nbsp;&nbsp;}<br>
+});
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Keyboard Navigation &mdash; Bootstrap 5 Accessibility Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+
+    <script>
+        // Roving tabindex implementation
+        const toolbar = document.getElementById('rovingToolbar');
+        const items = [...toolbar.querySelectorAll('button')];
+
+        toolbar.addEventListener('keydown', (e) => {
+            const current = document.activeElement;
+            const idx = items.indexOf(current);
+            if (idx === -1) return;
+
+            let next;
+            if (e.key === 'ArrowRight') next = items[(idx + 1) % items.length];
+            else if (e.key === 'ArrowLeft') next = items[(idx - 1 + items.length) % items.length];
+            else if (e.key === 'Home') next = items[0];
+            else if (e.key === 'End') next = items[items.length - 1];
+
+            if (next) {
+                e.preventDefault();
+                current.tabIndex = -1;
+                next.tabIndex = 0;
+                next.focus();
+            }
+        });
+
+        // Ensure tab re-enters toolbar at last focused item
+        items.forEach(item => {
+            item.addEventListener('focus', () => {
+                items.forEach(i => i.tabIndex = -1);
+                item.tabIndex = 0;
+            });
+        });
+    </script>
+</body>
+</html>

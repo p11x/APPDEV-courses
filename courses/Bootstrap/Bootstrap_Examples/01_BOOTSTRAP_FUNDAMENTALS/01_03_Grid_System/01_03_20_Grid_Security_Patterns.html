@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 01_03_20 - Grid Security Patterns                              -->
+<!-- Demonstrates security considerations when using Bootstrap     -->
+<!-- grids: XSS prevention in dynamic content, Content Security    -->
+<!-- Policy (CSP) compliance, safe dynamic grid generation, and    -->
+<!-- secure template patterns.                                     -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Security Patterns - Bootstrap 5</title>
+
+    <!--
+        CONTENT SECURITY POLICY (CSP) EXAMPLE
+        Add this meta tag or HTTP header to restrict resource loading.
+        This prevents XSS attacks by controlling what scripts, styles,
+        and resources can be loaded.
+
+        <meta http-equiv="Content-Security-Policy"
+              content="default-src 'self';
+                       script-src 'self' https://cdn.jsdelivr.net;
+                       style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';
+                       img-src 'self' data:;">
+    -->
+
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <!-- CSP-safe: loaded from a trusted CDN with integrity hash -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27"
+          crossorigin="anonymous">
+
+    <style>
+        .grid-item {
+            padding: 1rem;
+            background-color: #e7f1ff;
+            border: 1px solid #86b7fe;
+            border-radius: 0.375rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .section-divider {
+            margin: 2rem 0;
+            padding: 1rem 0;
+            border-top: 2px solid #dee2e6;
+        }
+        .code-block {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        .code-block .comment { color: #6a9955; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .danger { color: #f44747; }
+        .code-block .safe { color: #6a9955; }
+
+        /* Sanitization demo */
+        .unsafe-demo {
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+            padding: 1rem;
+            border-radius: 0.375rem;
+        }
+        .safe-demo {
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+            padding: 1rem;
+            border-radius: 0.375rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-3">Grid Security Patterns</h1>
+        <p class="lead text-muted">
+            Security best practices for dynamic Bootstrap grids: XSS prevention, CSP compliance, and safe content generation.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: XSS PREVENTION IN DYNAMIC GRIDS                   -->
+        <!-- Never use innerHTML with user-provided data                  -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">1. XSS Prevention in Dynamic Grids</h2>
+            <p class="text-muted mb-3">
+                When generating grid content dynamically, always sanitize user input
+                to prevent Cross-Site Scripting (XSS) attacks.
+            </p>
+
+            <div class="row">
+                <!-- UNSAFE approach - DO NOT USE -->
+                <div class="col-md-6 mb-3">
+                    <div class="unsafe-demo">
+                        <h5 class="text-danger">&#10007; UNSAFE (DO NOT USE)</h5>
+                        <div class="code-block">
+<span class="comment">// DANGEROUS: innerHTML with user data</span><br>
+<span class="keyword">const</span> userInput = <span class="string">'&lt;img src=x onerror="alert(1)"&gt;'</span>;<br>
+container.innerHTML = <span class="string">`<br>
+&nbsp;&nbsp;&lt;div class="col"&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;${userInput}<br>
+&nbsp;&nbsp;&lt;/div&gt;<br>
+`</span>;<br><br>
+<span class="danger">// XSS executes! User input contains malicious HTML</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SAFE approach - USE THIS -->
+                <div class="col-md-6 mb-3">
+                    <div class="safe-demo">
+                        <h5 class="text-success">&#10003; SAFE (USE THIS)</h5>
+                        <div class="code-block">
+<span class="comment">// SAFE: Use textContent + DOM API</span><br>
+<span class="keyword">const</span> userInput = <span class="string">'&lt;img src=x onerror="alert(1)"&gt;'</span>;<br>
+<span class="keyword">const</span> col = document.<span class="fn">createElement</span>(<span class="string">'div'</span>);<br>
+col.className = <span class="string">'col'</span>;<br>
+col.textContent = userInput; <span class="safe">// Escaped!</span><br>
+container.<span class="fn">appendChild</span>(col);<br><br>
+<span class="safe">// Output: &amp;lt;img src=x onerror=...&amp;gt;</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safe DOM-based grid generation -->
+            <h5 class="mt-4">Safe Dynamic Grid Generation</h5>
+            <div class="code-block">
+<span class="comment">/**
+ * Safely create a Bootstrap grid item with user content.
+ * Uses DOM API instead of innerHTML to prevent XSS.
+ *
+ * @param {Object} data - User data object
+ * @returns {HTMLElement} - Safe grid column element
+ */</span>
+<span class="keyword">function</span> <span class="fn">createSafeGridItem</span>(data) {
+&nbsp;&nbsp;<span class="comment">// Create elements using DOM API (safe from XSS)</span>
+&nbsp;&nbsp;<span class="keyword">const</span> col = document.<span class="fn">createElement</span>(<span class="string">'div'</span>);
+&nbsp;&nbsp;col.className = <span class="string">'col-md-4 mb-3'</span>;
+
+&nbsp;&nbsp;<span class="keyword">const</span> card = document.<span class="fn">createElement</span>(<span class="string">'div'</span>);
+&nbsp;&nbsp;card.className = <span class="string">'card h-100'</span>;
+
+&nbsp;&nbsp;<span class="keyword">const</span> body = document.<span class="fn">createElement</span>(<span class="string">'div'</span>);
+&nbsp;&nbsp;body.className = <span class="string">'card-body'</span>;
+
+&nbsp;&nbsp;<span class="keyword">const</span> title = document.<span class="fn">createElement</span>(<span class="string">'h5'</span>);
+&nbsp;&nbsp;title.className = <span class="string">'card-title'</span>;
+&nbsp;&nbsp;title.textContent = data.title; <span class="comment">// SAFE: textContent escapes HTML</span>
+
+&nbsp;&nbsp;<span class="keyword">const</span> text = document.<span class="fn">createElement</span>(<span class="string">'p'</span>);
+&nbsp;&nbsp;text.className = <span class="string">'card-text'</span>;
+&nbsp;&nbsp;text.textContent = data.description; <span class="comment">// SAFE</span>
+
+&nbsp;&nbsp;body.<span class="fn">appendChild</span>(title);
+&nbsp;&nbsp;body.<span class="fn">appendChild</span>(text);
+&nbsp;&nbsp;card.<span class="fn">appendChild</span>(body);
+&nbsp;&nbsp;col.<span class="fn">appendChild</span>(card);
+
+&nbsp;&nbsp;<span class="keyword">return</span> col;
+}
+            </div>
+
+            <!-- Live demo of safe grid generation -->
+            <div class="row mt-3" id="safe-grid-demo">
+                <!-- Populated by safe JavaScript below -->
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: CONTENT SECURITY POLICY (CSP)                     -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">2. Content Security Policy Compliance</h2>
+            <p class="text-muted mb-3">
+                CSP restricts resource loading to prevent XSS. Bootstrap 5 is CSP-compatible
+                if you avoid inline styles and scripts.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>CSP Header Example</h5>
+                    <div class="code-block">
+Content-Security-Policy:<br>
+&nbsp;&nbsp;default-src <span class="string">'self'</span>;<br>
+&nbsp;&nbsp;script-src <span class="string">'self'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;https://cdn.jsdelivr.net;<br>
+&nbsp;&nbsp;style-src <span class="string">'self'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;https://cdn.jsdelivr.net;<br>
+&nbsp;&nbsp;img-src <span class="string">'self'</span> data: https:;<br>
+&nbsp;&nbsp;font-src <span class="string">'self'</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;https://cdn.jsdelivr.net;
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>CSP Best Practices</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <strong>No inline styles</strong><br>
+                            <small class="text-muted">
+                                Move style="..." to external CSS files
+                            </small>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>No inline scripts</strong><br>
+                            <small class="text-muted">
+                                Move onclick="..." to external JS files
+                            </small>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Use nonce for inline scripts</strong><br>
+                            <small class="text-muted">
+                                &lt;script nonce="random123"&gt;...&lt;/script&gt;
+                            </small>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Use SRI hashes for CDN resources</strong><br>
+                            <small class="text-muted">
+                                integrity="sha384-..." attribute on &lt;link&gt; and &lt;script&gt;
+                            </small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- CSP-safe Bootstrap CDN with SRI -->
+            <div class="alert alert-success mt-3">
+                <strong>CSP-Safe CDN Loading with SRI:</strong><br>
+                <code>&lt;link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-..." crossorigin="anonymous"&gt;</code>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: SANITIZING USER INPUT FOR GRID CONTENT            -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">3. Input Sanitization for Grid Content</h2>
+            <p class="text-muted mb-3">
+                When user input must be rendered as HTML (e.g., rich text), use a
+                sanitizer library to strip dangerous elements.
+            </p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>DOMPurify Sanitization</h5>
+                    <div class="code-block">
+<span class="keyword">import</span> DOMPurify <span class="keyword">from</span> <span class="string">'dompurify'</span>;<br><br>
+<span class="comment">// Sanitize user HTML before inserting into grid</span><br>
+<span class="keyword">const</span> userHTML = userInput;<br>
+<span class="keyword">const</span> safeHTML = DOMPurify.<span class="fn">sanitize</span>(userHTML, {<br>
+&nbsp;&nbsp;<span class="comment">// Only allow specific tags</span><br>
+&nbsp;&nbsp;ALLOWED_TAGS: [<span class="string">'p'</span>, <span class="string">'strong'</span>, <span class="string">'em'</span>, <span class="string">'a'</span>],<br>
+&nbsp;&nbsp;<span class="comment">// Only allow specific attributes</span><br>
+&nbsp;&nbsp;ALLOWED_ATTR: [<span class="string">'href'</span>, <span class="string">'class'</span>],<br>
+&nbsp;&nbsp;<span class="comment">// Prevent data: URIs in href</span><br>
+&nbsp;&nbsp;ALLOW_DATA_ATTR: <span class="keyword">false</span><br>
+});<br><br>
+<span class="comment">// Now safe to use with innerHTML</span><br>
+col.innerHTML = safeHTML;
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Escaping HTML Entities (Vanilla)</h5>
+                    <div class="code-block">
+<span class="comment">/**
+ * Escape HTML entities to prevent XSS.
+ * Use when you can't load a sanitizer library.
+ *
+ * @param {string} str - Potentially dangerous string
+ * @returns {string} - Safe string with entities escaped
+ */</span>
+<span class="keyword">function</span> <span class="fn">escapeHTML</span>(str) {
+&nbsp;&nbsp;<span class="keyword">const</span> div = document.<span class="fn">createElement</span>(<span class="string">'div'</span>);
+&nbsp;&nbsp;div.textContent = str;
+&nbsp;&nbsp;<span class="keyword">return</span> div.innerHTML;
+}
+
+<span class="comment">// Usage:</span>
+<span class="keyword">const</span> safe = <span class="fn">escapeHTML</span>(userInput);
+<span class="comment">// "&lt;script&gt;alert(1)&lt;/script&gt;" →</span>
+<span class="comment">// "&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;"</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: SUBRESOURCE INTEGRITY (SRI)                       -->
+        <!-- Verify CDN resources haven't been tampered with              -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">4. Subresource Integrity (SRI)</h2>
+            <p class="text-muted mb-3">
+                Use the integrity attribute on CDN resources to verify they haven't
+                been modified by a man-in-the-middle attack.
+            </p>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <h5>Bootstrap 5.3.3 SRI Hashes</h5>
+                    <div class="code-block">
+<span class="comment">&lt;!-- CSS with integrity hash --&gt;</span><br>
+&lt;<span class="keyword">link</span><br>
+&nbsp;&nbsp;<span class="property">href</span>=<span class="string">"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"</span><br>
+&nbsp;&nbsp;<span class="property">rel</span>=<span class="string">"stylesheet"</span><br>
+&nbsp;&nbsp;<span class="property">integrity</span>=<span class="string">"sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27"</span><br>
+&nbsp;&nbsp;<span class="property">crossorigin</span>=<span class="string">"anonymous"</span>&gt;<br><br>
+<span class="comment">&lt;!-- JS with integrity hash --&gt;</span><br>
+&lt;<span class="keyword">script</span><br>
+&nbsp;&nbsp;<span class="property">src</span>=<span class="string">"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"</span><br>
+&nbsp;&nbsp;<span class="property">integrity</span>=<span class="string">"sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"</span><br>
+&nbsp;&nbsp;<span class="property">crossorigin</span>=<span class="string">"anonymous"</span>&gt;&lt;/<span class="keyword">script</span>&gt;
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning mt-3">
+                <strong>Without SRI:</strong> If the CDN is compromised, malicious code
+                could be injected into your page. SRI ensures the browser only executes
+                the exact file you intended.
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: SAFE TEMPLATE PATTERNS                            -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">5. Safe Template Patterns</h2>
+            <p class="text-muted mb-3">
+                Patterns for safely rendering dynamic grid content in different frameworks.
+            </p>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <strong>React (Safe by Default)</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block" style="font-size: 0.75rem;">
+<span class="comment">// React auto-escapes JSX content</span><br>
+<span class="keyword">function</span> SafeGrid({ data }) {<br>
+&nbsp;&nbsp;<span class="keyword">return</span> (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="keyword">div</span> <span class="property">className</span>=<span class="string">"row"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{data.map(item =&gt; (<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="keyword">div</span> <span class="property">className</span>=<span class="string">"col"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="property">key</span>={item.id}&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{item.title}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/<span class="keyword">div</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;))}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/<span class="keyword">div</span>&gt;<br>
+&nbsp;&nbsp;);<br>
+}<br>
+<span class="comment">// Title is auto-escaped!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <strong>Vue (Safe by Default)</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block" style="font-size: 0.75rem;">
+<span class="comment">&lt;!-- Vue auto-escapes {{ }} --&gt;</span><br>
+&lt;<span class="keyword">template</span>&gt;<br>
+&nbsp;&nbsp;&lt;<span class="keyword">div</span> <span class="property">class</span>=<span class="string">"row"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="keyword">div</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="property">v-for</span>=<span class="string">"item in items"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="property">:key</span>=<span class="string">"item.id"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="property">class</span>=<span class="string">"col"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ item.title }}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;/<span class="keyword">div</span>&gt;<br>
+&nbsp;&nbsp;&lt;/<span class="keyword">div</span>&gt;<br>
+&lt;/<span class="keyword">template</span>&gt;<br>
+<span class="comment">&lt;!-- Title is auto-escaped! --&gt;</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <strong>Angular (Safe by Default)</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block" style="font-size: 0.75rem;">
+<span class="comment">&lt;!-- Angular auto-escapes {{ }} --&gt;</span><br>
+&lt;<span class="keyword">div</span> <span class="property">class</span>=<span class="string">"row"</span>&gt;<br>
+&nbsp;&nbsp;&lt;<span class="keyword">div</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;*ngFor=<span class="string">"let item of items"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="property">class</span>=<span class="string">"col"</span>&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{{ item.title }}<br>
+&nbsp;&nbsp;&lt;/<span class="keyword">div</span>&gt;<br>
+&lt;/<span class="keyword">div</span>&gt;<br><br>
+<span class="comment">&lt;!-- For HTML: [innerHTML]="sanitized"</span><br>
+<span class="comment">    Use DomSanitizer --&gt;</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: SECURITY CHECKLIST                                -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">6. Grid Security Checklist</h2>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="list-group">
+                        <div class="list-group-item list-group-item-success">
+                            <strong>&#10003; Use textContent</strong> instead of innerHTML for user data
+                        </div>
+                        <div class="list-group-item list-group-item-success">
+                            <strong>&#10003; Enable CSP</strong> with strict directives
+                        </div>
+                        <div class="list-group-item list-group-item-success">
+                            <strong>&#10003; Use SRI hashes</strong> on all CDN resources
+                        </div>
+                        <div class="list-group-item list-group-item-success">
+                            <strong>&#10003; Sanitize HTML</strong> with DOMPurify if needed
+                        </div>
+                        <div class="list-group-item list-group-item-success">
+                            <strong>&#10003; Use HTTPS</strong> for all external resources
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="list-group">
+                        <div class="list-group-item list-group-item-danger">
+                            <strong>&#10007; Don't use innerHTML</strong> with user-provided strings
+                        </div>
+                        <div class="list-group-item list-group-item-danger">
+                            <strong>&#10007; Don't eval()</strong> dynamic grid configurations
+                        </div>
+                        <div class="list-group-item list-group-item-danger">
+                            <strong>&#10007; Don't trust URL params</strong> for grid content
+                        </div>
+                        <div class="list-group-item list-group-item-danger">
+                            <strong>&#10007; Don't use inline event handlers</strong> (onclick, onerror)
+                        </div>
+                        <div class="list-group-item list-group-item-danger">
+                            <strong>&#10007; Don't skip SRI verification</strong> on CDN resources
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="mt-4 mb-5 pt-3 border-top">
+            <p class="text-muted text-center">
+                <small>Grid Security Patterns - Bootstrap 5.3.3</small>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS with SRI integrity hash -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+
+    <!-- Safe dynamic grid generation demo -->
+    <script>
+        // Safe grid generation using DOM API (no innerHTML)
+        (function() {
+            const container = document.getElementById('safe-grid-demo');
+            if (!container) return;
+
+            // Simulated user data (could come from API)
+            const items = [
+                { id: 1, title: '<script>alert("XSS")</script>', description: 'This title contains a script tag' },
+                { id: 2, title: 'Normal Item', description: 'This item is safe' },
+                { id: 3, title: '<img src=x onerror=alert(1)>', description: 'This title has an image XSS' }
+            ];
+
+            items.forEach(function(data) {
+                // Create elements safely using DOM API
+                var col = document.createElement('div');
+                col.className = 'col-md-4 mb-3';
+
+                var card = document.createElement('div');
+                card.className = 'card h-100';
+
+                var header = document.createElement('div');
+                header.className = 'card-header';
+                // textContent auto-escapes - XSS attempts become visible text
+                header.textContent = 'Item #' + data.id;
+
+                var body = document.createElement('div');
+                body.className = 'card-body';
+
+                var title = document.createElement('h6');
+                // SAFE: textContent escapes HTML entities
+                title.textContent = data.title;
+
+                var desc = document.createElement('p');
+                desc.className = 'small text-muted mb-0';
+                desc.textContent = data.description;
+
+                body.appendChild(title);
+                body.appendChild(desc);
+                card.appendChild(header);
+                card.appendChild(body);
+                col.appendChild(card);
+                container.appendChild(col);
+            });
+        })();
+    </script>
+</body>
+</html>

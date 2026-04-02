@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>05_03_11 - Integration Testing Pipelines</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .pipeline-flow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .pipeline-node { padding: 15px 20px; border-radius: 8px; text-align: center; min-width: 120px; }
+        .pipeline-arrow { font-size: 1.5rem; color: #6c757d; }
+        .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 1.2rem; font-family: monospace; font-size: 0.85rem; overflow-x: auto; }
+        .code-block .kw { color: #cba6f7; }
+        .code-block .str { color: #a6e3a1; }
+        .code-block .cmt { color: #6c7086; }
+        .code-block .fn { color: #89b4fa; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Integration Testing</a>
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="nav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#overview">Overview</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#pipeline">Pipeline</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#strategies">Strategies</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#examples">Examples</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-info text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">Integration Testing Pipelines</h1>
+            <p class="lead">Testing component interactions, API contracts, and system integration flows</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- Section 1: Overview -->
+        <section id="overview" class="mb-5">
+            <h2 class="border-bottom pb-2">Integration Testing Overview</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-primary">
+                        <div class="card-body text-center">
+                            <div class="display-4 text-primary">&#128279;</div>
+                            <h5>Component Integration</h5>
+                            <p class="small">Testing how UI components work together - forms, modals, navigation flows between pages.</p>
+                            <span class="badge bg-primary">UI Layer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-body text-center">
+                            <div class="display-4 text-success">&#128268;</div>
+                            <h5>API Integration</h5>
+                            <p class="small">Verifying API endpoints, request/response formats, authentication flows, and error handling.</p>
+                            <span class="badge bg-success">Service Layer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-warning">
+                        <div class="card-body text-center">
+                            <div class="display-4 text-warning">&#128451;</div>
+                            <h5>Database Integration</h5>
+                            <p class="small">Testing data persistence, queries, migrations, and transaction handling with real or test databases.</p>
+                            <span class="badge bg-warning text-dark">Data Layer</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Pipeline Flow -->
+        <section id="pipeline" class="mb-5">
+            <h2 class="border-bottom pb-2">Integration Pipeline Flow</h2>
+
+            <div class="pipeline-flow mb-4">
+                <div class="pipeline-node bg-primary text-white">Setup<br><small>Environment</small></div>
+                <span class="pipeline-arrow">&rarr;</span>
+                <div class="pipeline-node bg-info text-white">Seed<br><small>Test Data</small></div>
+                <span class="pipeline-arrow">&rarr;</span>
+                <div class="pipeline-node bg-warning text-dark">Execute<br><small>Tests</small></div>
+                <span class="pipeline-arrow">&rarr;</span>
+                <div class="pipeline-node bg-success text-white">Validate<br><small>Results</small></div>
+                <span class="pipeline-arrow">&rarr;</span>
+                <div class="pipeline-node bg-danger text-white">Teardown<br><small>Cleanup</small></div>
+            </div>
+
+            <!-- Accordion for pipeline stages -->
+            <div class="accordion" id="pipelineAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#stage1">
+                            Stage 1: Environment Setup
+                        </button>
+                    </h2>
+                    <div id="stage1" class="accordion-collapse collapse show" data-bs-parent="#pipelineAccordion">
+                        <div class="accordion-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Docker Compose Setup</h6>
+                                    <pre class="code-block">
+<span class="cmt"># docker-compose.test.yml</span>
+<span class="kw">version</span>: <span class="str">'3.8'</span>
+<span class="kw">services</span>:
+  <span class="fn">app</span>:
+    <span class="kw">build</span>: .
+    <span class="kw">ports</span>: [<span class="str">"3000:3000"</span>]
+    <span class="kw">depends_on</span>:
+      <span class="kw">db</span>:
+        <span class="kw">condition</span>: service_healthy
+  <span class="fn">db</span>:
+    <span class="kw">image</span>: <span class="str">postgres:16</span>
+    <span class="kw">environment</span>:
+      <span class="kw">POSTGRES_DB</span>: <span class="str">testdb</span>
+    <span class="kw">healthcheck</span>:
+      <span class="kw">test</span>: [<span class="str">"CMD"</span>, <span class="str">"pg_isready"</span>]</pre>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Key Considerations</h6>
+                                    <ul class="list-group list-group-flush small">
+                                        <li class="list-group-item">Use isolated test databases</li>
+                                        <li class="list-group-item">Wait for services to be healthy</li>
+                                        <li class="list-group-item">Use fixed ports for predictability</li>
+                                        <li class="list-group-item">Configure test-specific env vars</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#stage2">
+                            Stage 2: Test Data Seeding
+                        </button>
+                    </h2>
+                    <div id="stage2" class="accordion-collapse collapse" data-bs-parent="#pipelineAccordion">
+                        <div class="accordion-body">
+                            <pre class="code-block">
+<span class="cmt">// tests/fixtures/seed.js</span>
+<span class="kw">const</span> <span class="fn">seedData</span> = <span class="kw">async</span> (db) => {
+  <span class="cmt">// Create test users</span>
+  <span class="kw">await</span> db.users.<span class="fn">createMany</span>({
+    <span class="fn">data</span>: [
+      { <span class="fn">name</span>: <span class="str">'Test User'</span>, <span class="fn">role</span>: <span class="str">'admin'</span> },
+      { <span class="fn">name</span>: <span class="str">'Guest User'</span>, <span class="fn">role</span>: <span class="str">'viewer'</span> }
+    ]
+  });
+  <span class="cmt">// Create test products</span>
+  <span class="kw">await</span> db.products.<span class="fn">createMany</span>({
+    <span class="fn">data</span>: [
+      { <span class="fn">name</span>: <span class="str">'Widget A'</span>, <span class="fn">price</span>: 29.99 },
+      { <span class="fn">name</span>: <span class="str">'Widget B'</span>, <span class="fn">price</span>: 49.99 }
+    ]
+  });
+};</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#stage3">
+                            Stage 3: Execute &amp; Validate
+                        </button>
+                    </h2>
+                    <div id="stage3" class="accordion-collapse collapse" data-bs-parent="#pipelineAccordion">
+                        <div class="accordion-body">
+                            <pre class="code-block">
+<span class="cmt">// tests/integration/api.test.js</span>
+<span class="fn">describe</span>(<span class="str">'Product API Integration'</span>, () => {
+  <span class="fn">beforeAll</span>(<span class="kw">async</span> () => {
+    <span class="kw">await</span> <span class="fn">seedDatabase</span>();
+  });
+
+  <span class="fn">afterAll</span>(<span class="kw">async</span> () => {
+    <span class="kw">await</span> <span class="fn">cleanupDatabase</span>();
+  });
+
+  <span class="fn">test</span>(<span class="str">'GET /api/products returns list'</span>, <span class="kw">async</span> () => {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'http://localhost:3000/api/products'</span>);
+    <span class="fn">expect</span>(res.status).<span class="fn">toBe</span>(200);
+    <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+    <span class="fn">expect</span>(data).<span class="fn">toHaveLength</span>(2);
+  });
+
+  <span class="fn">test</span>(<span class="str">'POST /api/products creates item'</span>, <span class="kw">async</span> () => {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'http://localhost:3000/api/products'</span>, {
+      <span class="fn">method</span>: <span class="str">'POST'</span>,
+      <span class="fn">headers</span>: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+      <span class="fn">body</span>: JSON.<span class="fn">stringify</span>({ <span class="fn">name</span>: <span class="str">'Widget C'</span>, <span class="fn">price</span>: 19.99 })
+    });
+    <span class="fn">expect</span>(res.status).<span class="fn">toBe</span>(201);
+  });
+});</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Testing Strategies -->
+        <section id="strategies" class="mb-5">
+            <h2 class="border-bottom pb-2">Integration Testing Strategies</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">Big Bang Integration</div>
+                        <div class="card-body">
+                            <p class="small">All modules integrated simultaneously and tested as a complete system.</p>
+                            <div class="d-flex gap-2 mb-3">
+                                <span class="badge bg-success">Simple</span>
+                                <span class="badge bg-danger">Hard to Debug</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 20px;">
+                                <div class="progress-bar bg-danger" style="width: 70%">Complexity: 70%</div>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-warning" style="width: 40%">Debug Ease: 40%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">Incremental Integration</div>
+                        <div class="card-body">
+                            <p class="small">Modules integrated one by one, tested incrementally. Top-down or bottom-up approach.</p>
+                            <div class="d-flex gap-2 mb-3">
+                                <span class="badge bg-success">Easy Debug</span>
+                                <span class="badge bg-warning text-dark">More Time</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 20px;">
+                                <div class="progress-bar bg-success" style="width: 30%">Complexity: 30%</div>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-success" style="width: 90%">Debug Ease: 90%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategy comparison table -->
+            <div class="table-responsive mt-4">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Strategy</th>
+                            <th>Approach</th>
+                            <th>Pros</th>
+                            <th>Cons</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Top-Down</strong></td>
+                            <td>Test high-level modules first with stubs</td>
+                            <td>Early interface validation</td>
+                            <td>Needs stubs for lower modules</td>
+                            <td>UI-heavy applications</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Bottom-Up</strong></td>
+                            <td>Test low-level modules first with drivers</td>
+                            <td>No stubs needed</td>
+                            <td>UI tested last</td>
+                            <td>Data-intensive apps</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sandwich</strong></td>
+                            <td>Combines top-down and bottom-up</td>
+                            <td>Best of both</td>
+                            <td>Complex management</td>
+                            <td>Large enterprise systems</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Continuous</strong></td>
+                            <td>Test as modules are completed</td>
+                            <td>Early bug detection</td>
+                            <td>Requires discipline</td>
+                            <td>Agile teams</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 4: Bootstrap Component Integration Tests -->
+        <section id="examples" class="mb-5">
+            <h2 class="border-bottom pb-2">Bootstrap Component Integration Examples</h2>
+
+            <!-- Form + Modal Integration -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Form + Modal Integration Test</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Testing that a form submission opens a confirmation modal and displays correct data.</p>
+
+                    <!-- Interactive demo -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form id="integrationForm" class="border p-3 rounded">
+                                <div class="mb-3">
+                                    <label class="form-label">Product Name</label>
+                                    <input type="text" class="form-control" id="productName" value="Test Product">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Price</label>
+                                    <input type="number" class="form-control" id="productPrice" value="29.99">
+                                </div>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                                    Submit Order
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Test Assertions</h6>
+                            <ul class="list-group list-group-flush small">
+                                <li class="list-group-item list-group-item-success">&#10003; Modal opens on submit click</li>
+                                <li class="list-group-item list-group-item-success">&#10003; Product name displayed in modal</li>
+                                <li class="list-group-item list-group-item-success">&#10003; Price displayed in modal</li>
+                                <li class="list-group-item list-group-item-success">&#10003; Confirm button triggers API call</li>
+                                <li class="list-group-item list-group-item-success">&#10003; Modal closes after confirmation</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Confirmation Modal -->
+                    <div class="modal fade" id="confirmModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Confirm Order</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Order for: <strong id="modalProductName">Test Product</strong></p>
+                                    <p>Price: $<strong id="modalProductPrice">29.99</strong></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="confirmBtn">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nav + Tab Integration -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Navigation + Tab Content Integration</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Verifying tab switching, URL hash updates, and content loading work together correctly.</p>
+
+                    <ul class="nav nav-pills mb-3" id="integrationPills">
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pillHome">Home</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pillProfile">Profile</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pillSettings">Settings</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="pillHome">
+                            <div class="alert alert-primary mb-0">Home content loaded - tab integration working</div>
+                        </div>
+                        <div class="tab-pane fade" id="pillProfile">
+                            <div class="alert alert-success mb-0">Profile content loaded - navigation verified</div>
+                        </div>
+                        <div class="tab-pane fade" id="pillSettings">
+                            <div class="alert alert-warning mb-0">Settings content loaded - state management confirmed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast Notification Integration -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Toast Notification Integration</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Testing that user actions trigger appropriate toast notifications.</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-success" onclick="showToast('success')">Trigger Success</button>
+                        <button class="btn btn-danger" onclick="showToast('error')">Trigger Error</button>
+                        <button class="btn btn-warning" onclick="showToast('warning')">Trigger Warning</button>
+                    </div>
+                    <!-- Toast container -->
+                    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+                        <div id="liveToast" class="toast" role="alert">
+                            <div class="toast-header">
+                                <strong class="me-auto" id="toastTitle">Notification</strong>
+                                <small>Just now</small>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                            </div>
+                            <div class="toast-body" id="toastMessage">Action completed successfully</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">05_03_11 - Integration Testing Pipelines &copy; 2024 Bootstrap Course</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form to modal integration
+        document.getElementById('integrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+
+        // Update modal with form data when modal is about to show
+        document.getElementById('confirmModal').addEventListener('show.bs.modal', function() {
+            document.getElementById('modalProductName').textContent = document.getElementById('productName').value;
+            document.getElementById('modalProductPrice').textContent = document.getElementById('productPrice').value;
+        });
+
+        // Toast notification function
+        function showToast(type) {
+            const toastEl = document.getElementById('liveToast');
+            const titleEl = document.getElementById('toastTitle');
+            const msgEl = document.getElementById('toastMessage');
+
+            const messages = {
+                success: { title: 'Success', msg: 'Operation completed successfully', bg: 'bg-success text-white' },
+                error: { title: 'Error', msg: 'Something went wrong', bg: 'bg-danger text-white' },
+                warning: { title: 'Warning', msg: 'Please review your input', bg: 'bg-warning' }
+            };
+
+            titleEl.textContent = messages[type].title;
+            msgEl.textContent = messages[type].msg;
+            toastEl.className = 'toast ' + messages[type].bg;
+
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+    </script>
+</body>
+</html>

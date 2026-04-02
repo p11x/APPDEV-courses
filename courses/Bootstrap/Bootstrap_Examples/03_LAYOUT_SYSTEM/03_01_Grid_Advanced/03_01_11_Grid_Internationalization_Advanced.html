@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <!-- ============================================
+         03_01_11 - Grid Internationalization Advanced
+         ============================================
+         RTL (right-to-left) grid layouts, multi-language
+         support, logical properties for i18n, and locale-
+         aware grid patterns.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_11 - Grid Internationalization Advanced</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ============================================
+           RTL-AWARE GRID WITH LOGICAL PROPERTIES
+           Using inline-start/inline-end instead of
+           left/right, block-start/block-end instead
+           of top/bottom for automatic RTL support.
+        ================================================ */
+        .i18n-grid {
+            display: grid;
+            grid-template-columns: [main-start] 1fr [main-end sidebar-start] 250px [sidebar-end];
+            gap: 15px;
+        }
+
+        .i18n-header {
+            /* logical property: spans from main-start to sidebar-end */
+            grid-column: main-start / sidebar-end;
+            background: #0d6efd;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .i18n-main {
+            grid-column: main-start / main-end;
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .i18n-sidebar {
+            grid-column: sidebar-start / sidebar-end;
+            background: #198754;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        /* RTL version: swap grid column order */
+        [dir="rtl"] .i18n-grid {
+            grid-template-columns: [sidebar-start] 250px [sidebar-end main-start] 1fr [main-end];
+        }
+
+        /* ============================================
+           BOOTSTRAP RTL COMPATIBILITY
+           Bootstrap 5 has built-in RTL support via
+           [dir="rtl"] selector and logical properties.
+           This section demonstrates grid layouts that
+           work in both LTR and RTL.
+        ================================================ */
+        .bs-rtl-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .bs-rtl-card {
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .bs-rtl-card-img {
+            height: 120px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        /* Text alignment follows document direction */
+        .bs-rtl-card-body {
+            padding: 1rem;
+            /* logical property: text-align works in both LTR and RTL */
+            text-align: start;
+        }
+
+        /* ============================================
+           MULTI-LANGUAGE GRID WITH DIRECTION TOGGLE
+           Simulating language switch between LTR (English)
+           and RTL (Arabic/Hebrew) layouts
+        ================================================ */
+        .lang-switch-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .lang-card {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            /* logical border property */
+            border-inline-start: 4px solid #0d6efd;
+        }
+
+        [dir="rtl"] .lang-card {
+            border-inline-start: 4px solid #dc3545;
+            border-inline-end: none;
+        }
+
+        /* ============================================
+           LOCALE-AWARE NUMBER GRID
+           Numbers displayed according to locale conventions
+        ================================================ */
+        .locale-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .locale-stat {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .locale-stat .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0d6efd;
+        }
+
+        .locale-stat .label {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        /* ============================================
+           LOGICAL PROPERTIES CHEAT SHEET STYLES
+        ================================================ */
+        .logical-demo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .logical-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            /* logical padding: applies to all 4 sides based on writing mode */
+            padding-block: 15px;
+            padding-inline: 20px;
+            /* logical margin */
+            margin-block-end: 10px;
+            /* logical border */
+            border-inline-start: 4px solid #6f42c1;
+        }
+
+        /* ============================================
+           VERTICAL WRITING MODE GRID
+           For CJK (Chinese, Japanese, Korean) vertical
+           text layouts using writing-mode
+        ================================================ */
+        .vertical-grid {
+            display: grid;
+            /* vertical-rl: vertical, right-to-left columns */
+            writing-mode: vertical-rl;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            height: 300px;
+        }
+
+        .vertical-item {
+            background: #fff3cd;
+            border: 2px solid #ffecb5;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .i18n-grid {
+                grid-template-columns: 1fr;
+            }
+            [dir="rtl"] .i18n-grid {
+                grid-template-columns: 1fr;
+            }
+            .lang-switch-grid,
+            .locale-grid,
+            .logical-demo {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">03_01_11 - Grid Internationalization Advanced</h1>
+
+        <!-- ============================================
+             LANGUAGE/DIR TOGGLE BUTTONS
+        ================================================ -->
+        <section class="mb-4">
+            <div class="btn-group mb-3" role="group" aria-label="Language direction">
+                <button class="btn btn-primary" onclick="setDirection('ltr')">LTR (English)</button>
+                <button class="btn btn-outline-primary" onclick="setDirection('rtl')">RTL (Arabic/Hebrew)</button>
+            </div>
+            <div class="alert alert-info">
+                Click the buttons above to toggle between LTR and RTL. All grids below automatically
+                adapt their layout direction using CSS logical properties and Bootstrap's RTL support.
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 1: RTL-Aware Grid Layout
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. RTL-Aware Grid with Named Lines</h2>
+            <div class="alert alert-info">
+                Named grid lines and the <code>[dir="rtl"]</code> selector allow the same HTML
+                to display a mirrored layout for RTL languages.
+            </div>
+
+            <div class="i18n-grid">
+                <div class="i18n-header">
+                    <strong>Header</strong> - Full width, direction-aware
+                </div>
+                <div class="i18n-main">
+                    <strong>Main Content</strong>
+                    <p class="small mb-0">This panel swaps sides when direction changes.</p>
+                </div>
+                <div class="i18n-sidebar">
+                    <strong>Sidebar</strong>
+                    <p class="small mb-0">Opposite side in RTL mode.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 2: Bootstrap RTL Card Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Bootstrap RTL-Compatible Card Grid</h2>
+            <div class="alert alert-info">
+                Bootstrap 5 includes built-in RTL support. Use <code>text-start</code> instead of
+                <code>text-left</code>, and <code>ms-auto</code> / <code>me-auto</code> for logical margins.
+            </div>
+
+            <div class="bs-rtl-card-grid">
+                <div class="bs-rtl-card">
+                    <div class="bs-rtl-card-img">1</div>
+                    <div class="bs-rtl-card-body">
+                        <h6>English Card</h6>
+                        <p class="small text-muted mb-0">Text aligns start (left in LTR, right in RTL).</p>
+                    </div>
+                </div>
+                <div class="bs-rtl-card">
+                    <div class="bs-rtl-card-img" style="background: linear-gradient(135deg, #dc3545, #b02a37);">2</div>
+                    <div class="bs-rtl-card-body">
+                        <h6>بطاقة عربية</h6>
+                        <p class="small text-muted mb-0">النص يبدأ من اليمين في وضع RTL.</p>
+                    </div>
+                </div>
+                <div class="bs-rtl-card">
+                    <div class="bs-rtl-card-img" style="background: linear-gradient(135deg, #198754, #146c43);">3</div>
+                    <div class="bs-rtl-card-body">
+                        <h6>כרטיס עברי</h6>
+                        <p class="small text-muted mb-0">הטקסט מיושר לימין במצב RTL.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 3: Multi-Language Grid with Direction
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Multi-Language Direction Toggle</h2>
+            <div class="alert alert-info">
+                The accent border uses <code>border-inline-start</code> which automatically switches
+                from left to right when the document direction changes.
+            </div>
+
+            <div class="lang-switch-grid">
+                <div class="lang-card">
+                    <h6>Feature One</h6>
+                    <p class="small mb-0">Border follows reading direction.</p>
+                </div>
+                <div class="lang-card">
+                    <h6>Feature Two</h6>
+                    <p class="small mb-0">Logical properties handle the rest.</p>
+                </div>
+                <div class="lang-card">
+                    <h6>Feature Three</h6>
+                    <p class="small mb-0">No manual RTL overrides needed.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 4: Locale-Aware Statistics
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Locale-Aware Number Formatting in Grid</h2>
+            <div class="alert alert-info">
+                Numbers should be formatted according to user locale. JavaScript's
+                <code>Intl.NumberFormat</code> handles currency, decimal separators, etc.
+            </div>
+
+            <div class="locale-grid">
+                <div class="locale-stat">
+                    <div class="value" id="localeRevenue">$1,234,567.89</div>
+                    <div class="label">Revenue (EN)</div>
+                </div>
+                <div class="locale-stat">
+                    <div class="value">1.234.567,89 €</div>
+                    <div class="label">Revenue (DE)</div>
+                </div>
+                <div class="locale-stat">
+                    <div class="value">١٬٢٣٤٬٥٦٧٫٨٩ ر.س</div>
+                    <div class="label">Revenue (AR)</div>
+                </div>
+                <div class="locale-stat">
+                    <div class="value">¥1,234,568</div>
+                    <div class="label">Revenue (JP)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 5: Logical Properties Reference
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. CSS Logical Properties for i18n Grids</h2>
+            <div class="alert alert-info">
+                Replace physical properties (left, right, top, bottom) with logical equivalents
+                (inline-start, inline-end, block-start, block-end) for automatic RTL support.
+            </div>
+
+            <div class="logical-demo">
+                <div class="logical-card">
+                    <h6>margin-inline-start</h6>
+                    <p class="small mb-0">Replaces margin-left (LTR) / margin-right (RTL)</p>
+                </div>
+                <div class="logical-card">
+                    <h6>padding-inline-end</h6>
+                    <p class="small mb-0">Replaces padding-right (LTR) / padding-left (RTL)</p>
+                </div>
+                <div class="logical-card">
+                    <h6>border-block-start</h6>
+                    <p class="small mb-0">Replaces border-top (always top, regardless of direction)</p>
+                </div>
+                <div class="logical-card">
+                    <h6>inset-inline-start</h6>
+                    <p class="small mb-0">Replaces left in position: absolute</p>
+                </div>
+            </div>
+
+            <div class="table-responsive mt-3">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Physical (avoid)</th>
+                            <th>Logical (use)</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>margin-left</td><td>margin-inline-start</td><td>Inline start margin</td></tr>
+                        <tr><td>margin-right</td><td>margin-inline-end</td><td>Inline end margin</td></tr>
+                        <tr><td>padding-left</td><td>padding-inline-start</td><td>Inline start padding</td></tr>
+                        <tr><td>border-top</td><td>border-block-start</td><td>Block start border</td></tr>
+                        <tr><td>text-align: left</td><td>text-align: start</td><td>Text align to start</td></tr>
+                        <tr><td>left: 0</td><td>inset-inline-start: 0</td><td>Position from inline start</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 6: Vertical Writing Mode
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Vertical Writing Mode Grid (CJK Support)</h2>
+            <div class="alert alert-info">
+                <code>writing-mode: vertical-rl</code> creates a right-to-left column layout
+                used for traditional Chinese, Japanese, and Korean text.
+            </div>
+
+            <div class="vertical-grid">
+                <div class="vertical-item">縦書き 1</div>
+                <div class="vertical-item">縦書き 2</div>
+                <div class="vertical-item">縦書き 3</div>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+
+    <script>
+        /* ============================================
+           Direction toggle function
+           Switches document direction between LTR and RTL
+           to demonstrate grid adaptation
+        ================================================ */
+        function setDirection(dir) {
+            document.documentElement.setAttribute('dir', dir);
+            // Update button states
+            const buttons = document.querySelectorAll('.btn-group .btn');
+            buttons[0].className = dir === 'ltr' ? 'btn btn-primary' : 'btn btn-outline-primary';
+            buttons[1].className = dir === 'rtl' ? 'btn btn-primary' : 'btn btn-outline-primary';
+        }
+    </script>
+</body>
+</html>

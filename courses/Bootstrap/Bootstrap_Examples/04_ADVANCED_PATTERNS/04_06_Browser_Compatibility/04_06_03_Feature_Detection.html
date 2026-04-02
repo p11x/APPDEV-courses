@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_06_03_Feature_Detection.html                               -->
+<!-- @supports, Modernizr-style Feature Detection Patterns        -->
+<!-- Demonstrates CSS @supports queries, JavaScript feature       -->
+<!-- detection, and progressive enhancement strategies            -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>04_06_03 - Feature Detection</title>
+    
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* ======================================================== */
+        /* @supports FEATURE QUERIES                                */
+        /* CSS-level feature detection - like media queries but    */
+        /* for CSS property support. Only applies styles if the   */
+        /* browser supports the specified CSS feature.            */
+        /* ======================================================== */
+        
+        /* Base styles for all browsers (graceful degradation) */
+        .feature-box {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            border: 2px solid #dee2e6;
+            /* Fallback background for all browsers */
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        /* ======================================================== */
+        /* @supports for CSS Grid                                   */
+        /* If browser supports CSS Grid, use grid layout           */
+        /* Otherwise, the flexbox styles below serve as fallback   */
+        /* ======================================================== */
+        
+        /* Fallback: Flexbox layout */
+        .grid-demo {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .grid-demo > * {
+            flex: 1 1 200px;
+        }
+        
+        /* Enhanced: CSS Grid layout when supported */
+        @supports (display: grid) {
+            .grid-demo {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                /* Flexbox properties are overridden by grid */
+            }
+            .grid-demo > * {
+                flex: none; /* Reset flex properties */
+            }
+        }
+
+        /* ======================================================== */
+        /* @supports for CSS Custom Properties                      */
+        /* Conditional styling based on CSS variable support       */
+        /* ======================================================== */
+        .theme-demo {
+            /* Fallback colors (no variables) */
+            color: #212529;
+            background-color: #e7f1ff;
+            border-color: #b6d4fe;
+        }
+        
+        /* Override with variables when supported */
+        @supports (color: var(--primary)) {
+            :root {
+                --demo-bg: #e7f1ff;
+                --demo-border: #b6d4fe;
+                --demo-text: #084298;
+            }
+            .theme-demo {
+                color: var(--demo-text, #084298);
+                background-color: var(--demo-bg, #e7f1ff);
+                border-color: var(--demo-border, #b6d4fe);
+            }
+        }
+
+        /* ======================================================== */
+        /* @supports for backdrop-filter (glass morphism)          */
+        /* Falls back to solid background in unsupported browsers  */
+        /* ======================================================== */
+        .glass-card {
+            /* Fallback: solid background */
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        @supports (backdrop-filter: blur(10px)) {
+            .glass-card {
+                background-color: rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        /* ======================================================== */
+        /* @supports for aspect-ratio                               */
+        /* Padding-bottom hack fallback for older browsers         */
+        /* ======================================================== */
+        .ratio-demo {
+            /* Fallback */
+            height: 0;
+            padding-bottom: 56.25%;
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 0.5rem;
+        }
+        
+        @supports (aspect-ratio: 16 / 9) {
+            .ratio-demo {
+                aspect-ratio: 16 / 9;
+                height: auto;
+                padding-bottom: 0;
+                position: static;
+            }
+        }
+        
+        .ratio-demo .inner {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        @supports (aspect-ratio: 16 / 9) {
+            .ratio-demo .inner {
+                position: static;
+                min-height: 200px;
+            }
+        }
+
+        /* ======================================================== */
+        /* @supports with selector() syntax                         */
+        /* Tests for selector support (modern browsers only)       */
+        /* ======================================================== */
+        
+        /* Base focus style */
+        .focus-test-btn {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+        }
+        
+        /* Universal focus for older browsers */
+        .focus-test-btn:focus {
+            outline-color: #0d6efd;
+        }
+        
+        /* Remove general :focus when :focus-visible is supported */
+        @supports selector(:focus-visible) {
+            .focus-test-btn:focus {
+                outline-color: transparent;
+            }
+            .focus-test-btn:focus-visible {
+                outline-color: #0d6efd;
+            }
+        }
+
+        /* ======================================================== */
+        /* @supports with not operator                              */
+        /* Apply styles when feature is NOT supported              */
+        /* ======================================================== */
+        
+        /* If container queries are NOT supported, use max-width */
+        .responsive-card {
+            max-width: 100%;
+        }
+        
+        @supports not (container-type: inline-size) {
+            .responsive-card {
+                /* Fallback: media query based sizing */
+                max-width: 540px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+
+        /* ======================================================== */
+        /* @supports with AND/OR operators                          */
+        /* Compound feature queries for complex detection          */
+        /* ======================================================== */
+        
+        /* Enhanced styling when both grid and custom props are available */
+        @supports (display: grid) and (color: var(--x)) {
+            .compound-support-demo {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--spacing, 1rem);
+                padding: var(--spacing, 1rem);
+                background-color: var(--bg, #d1e7dd);
+            }
+        }
+        
+        /* OR operator - either feature enables enhancement */
+        @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+            .or-support-demo {
+                backdrop-filter: blur(5px);
+                -webkit-backdrop-filter: blur(5px);
+                background: rgba(255,255,255,0.5);
+            }
+        }
+
+        /* ======================================================== */
+        /* MODERNIZR-STYLE CLASSES ON HTML ELEMENT                  */
+        /* Applied via JavaScript to enable CSS-based feature rules */
+        /* ======================================================== */
+        
+        /* Example: When flexbox is not supported, use table layout */
+        .flexbox-fallback-container {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        /* If HTML has .no-flexbox class (set by Modernizr-style script) */
+        .no-flexbox .flexbox-fallback-container {
+            display: table;
+            width: 100%;
+        }
+        .no-flexbox .flexbox-fallback-container > * {
+            display: table-cell;
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- NAVIGATION                                                   -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Feature Detection Lab</a>
+            <button class="navbar-toggler" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#supports">@supports</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#modernizr">Modernizr</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#jsDetection">JS Detection</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#progressive">Progressive</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HERO                                                         -->
+    <!-- ============================================================ -->
+    <header class="bg-info text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Feature Detection</h1>
+            <p class="lead">
+                Using @supports, Modernizr patterns, and JavaScript to detect
+                browser capabilities and progressively enhance the experience.
+            </p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: @supports CSS FEATURE QUERIES                 -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="supports">
+            <h2 class="border-bottom pb-2 mb-4">1. CSS @supports Queries</h2>
+            
+            <!-- Grid support demo -->
+            <div class="feature-box theme-demo">
+                <h5>@supports (display: grid)</h5>
+                <p class="mb-3">
+                    This grid gracefully degrades to flexbox in older browsers.
+                    Check your browser's DevTools to see which layout is active.
+                </p>
+                <div class="grid-demo">
+                    <div class="bg-primary text-white p-3 rounded text-center">Grid Item 1</div>
+                    <div class="bg-success text-white p-3 rounded text-center">Grid Item 2</div>
+                    <div class="bg-warning p-3 rounded text-center">Grid Item 3</div>
+                </div>
+                <p class="mt-2 mb-0 small" id="gridSupportText">Checking...</p>
+            </div>
+            
+            <!-- Backdrop filter demo -->
+            <div class="feature-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem;">
+                <h5 class="text-white">@supports (backdrop-filter: blur)</h5>
+                <div class="glass-card p-4 rounded mt-3">
+                    <h6>Glass Morphism Card</h6>
+                    <p class="mb-0">
+                        If <code>backdrop-filter</code> is supported, this card has a 
+                        frosted glass effect. Otherwise, it uses a solid white background.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Compound @supports demo -->
+            <div class="feature-box mt-3">
+                <h5>@supports Compound Queries</h5>
+                <p>Using AND, OR, and NOT operators in feature queries:</p>
+                <div class="compound-support-demo rounded p-3">
+                    <div class="bg-white p-2 rounded text-center small">A</div>
+                    <div class="bg-white p-2 rounded text-center small">B</div>
+                    <div class="bg-white p-2 rounded text-center small">C</div>
+                </div>
+                <p class="mt-2 mb-0 small text-muted">
+                    Uses: <code>@supports (display: grid) and (color: var(--x))</code>
+                </p>
+            </div>
+            
+            <!-- Focus-visible selector demo -->
+            <div class="feature-box mt-3">
+                <h5>@supports selector(:focus-visible)</h5>
+                <p class="mb-2">Tab to these buttons with keyboard vs click with mouse:</p>
+                <button class="btn btn-primary focus-test-btn me-2">Button 1</button>
+                <button class="btn btn-success focus-test-btn me-2">Button 2</button>
+                <button class="btn btn-warning focus-test-btn">Button 3</button>
+                <p class="mt-2 mb-0 small text-muted" id="focusVisibleSupport">Checking...</p>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: MODERNIZR PATTERNS                            -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="modernizr">
+            <h2 class="border-bottom pb-2 mb-4">2. Modernizr-Style Detection</h2>
+            
+            <div class="alert alert-secondary">
+                <strong>About Modernizr:</strong> Modernizr was a popular library that 
+                added CSS classes to the <code>&lt;html&gt;</code> element indicating 
+                browser capabilities. While less common now, the pattern is still useful.
+            </div>
+            
+            <!-- Feature detection results table -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="featureTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Feature</th>
+                            <th>Property Tested</th>
+                            <th>Supported</th>
+                            <th>Fallback Strategy</th>
+                        </tr>
+                    </thead>
+                    <tbody id="featureTableBody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- CSS class application demo -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">HTML Element Classes (Modernizr Pattern)</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Current classes on <code>&lt;html&gt;</code> element (would be set
+                        by a Modernizr-like library):
+                    </p>
+                    <pre class="bg-light p-3 rounded small" id="htmlClasses">Loading...</pre>
+                    <p class="mb-0 small text-muted">
+                        CSS can then target specific capability states:
+                        <code>.no-cssgrid .fallback-layout { display: flex; }</code>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: JAVASCRIPT FEATURE DETECTION                  -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="jsDetection">
+            <h2 class="border-bottom pb-2 mb-4">3. JavaScript Feature Detection</h2>
+            
+            <div class="row">
+                <!-- API detection -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Web API Detection</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush" id="apiDetectionList">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CSS.supports() tests -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">CSS.supports() Tests</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush" id="cssSupportsList">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interactive detection -->
+            <div class="card mt-3">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Custom Feature Test</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control mb-2" id="customFeatureInput"
+                                   placeholder="Enter CSS to test, e.g., 'display: grid'">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100" onclick="testCustomFeature()">
+                                Test Feature
+                            </button>
+                        </div>
+                    </div>
+                    <div id="customFeatureResult" class="mt-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: PROGRESSIVE ENHANCEMENT EXAMPLES              -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="progressive">
+            <h2 class="border-bottom pb-2 mb-4">4. Progressive Enhancement Examples</h2>
+            
+            <!-- Lazy loading enhancement -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Lazy Loading Images</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">
+                        Native lazy loading with <code>loading="lazy"</code>. Browsers
+                        without support load images eagerly (still works, just not optimized).
+                    </p>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-5 text-center text-muted">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%23dee2e6' width='200' height='150'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3EImage 1%3C/text%3E%3C/svg%3E" 
+                                     loading="lazy" class="img-fluid rounded" 
+                                     alt="Lazy loaded image 1">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-5 text-center text-muted">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%23dee2e6' width='200' height='150'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3EImage 2%3C/text%3E%3C/svg%3E" 
+                                     loading="lazy" class="img-fluid rounded" 
+                                     alt="Lazy loaded image 2">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-5 text-center text-muted">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%23dee2e6' width='200' height='150'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999'%3EImage 3%3C/text%3E%3C/svg%3E" 
+                                     loading="lazy" class="img-fluid rounded" 
+                                     alt="Lazy loaded image 3">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Connection-aware loading -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Network Information API</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">
+                        The Network Information API lets you adapt content based on
+                        connection quality. Not universally supported.
+                    </p>
+                    <div id="networkInfo" class="p-3 bg-light rounded">
+                        Loading network information...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                       -->
+    <!-- ============================================================ -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Feature Detection &copy; 2024 | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- FEATURE DETECTION SCRIPTS                                    -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // COMPREHENSIVE FEATURE DETECTION
+        // Tests for CSS and JS features, populates the UI
+        // ============================================================
+        (function() {
+            // Feature definitions to test
+            var features = [
+                // CSS features
+                { name: 'CSS Grid', test: function(){ return CSS.supports('display','grid'); }, fallback: 'Flexbox layout' },
+                { name: 'CSS Flexbox', test: function(){ return CSS.supports('display','flex'); }, fallback: 'Float/table layout' },
+                { name: 'CSS Custom Properties', test: function(){ return CSS.supports('color','var(--x)'); }, fallback: 'Static values' },
+                { name: 'CSS clamp()', test: function(){ return CSS.supports('width','clamp(1px,50%,100px)'); }, fallback: 'Media queries' },
+                { name: 'CSS aspect-ratio', test: function(){ return CSS.supports('aspect-ratio','16/9'); }, fallback: 'Padding-bottom hack' },
+                { name: 'backdrop-filter', test: function(){ return CSS.supports('backdrop-filter','blur(1px)') || CSS.supports('-webkit-backdrop-filter','blur(1px)'); }, fallback: 'Solid background' },
+                { name: ':focus-visible', test: function(){ return CSS.supports('selector(:focus-visible)'); }, fallback: ':focus pseudo-class' },
+                { name: 'object-fit', test: function(){ return CSS.supports('object-fit','cover'); }, fallback: 'Background-size' },
+                { name: 'CSS scroll-behavior', test: function(){ return CSS.supports('scroll-behavior','smooth'); }, fallback: 'JS scroll animation' },
+                { name: 'CSS container queries', test: function(){ return CSS.supports('container-type','inline-size'); }, fallback: 'Media queries' }
+            ];
+            
+            // Populate feature table
+            var tbody = document.getElementById('featureTableBody');
+            features.forEach(function(f) {
+                var supported = false;
+                try { supported = f.test(); } catch(e) {}
+                var row = '<tr>' +
+                    '<td><strong>' + f.name + '</strong></td>' +
+                    '<td class="small"><code>' + (f.test.toString().match(/'([^']+)'/g) || ['N/A']).join(', ') + '</code></td>' +
+                    '<td>' + (supported ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-danger">No</span>') + '</td>' +
+                    '<td class="small">' + f.fallback + '</td>' +
+                    '</tr>';
+                tbody.innerHTML += row;
+            });
+            
+            // Update grid support text
+            var gridSupported = CSS.supports('display', 'grid');
+            document.getElementById('gridSupportText').innerHTML = 
+                '<strong>Result:</strong> CSS Grid is ' + 
+                (gridSupported ? '<span class="text-success">supported</span> - using grid layout' : 
+                '<span class="text-warning">not supported</span> - using flexbox fallback');
+            
+            // Update focus-visible text
+            var focusVisibleSupported = CSS.supports('selector(:focus-visible)');
+            document.getElementById('focusVisibleSupport').innerHTML = 
+                '<strong>Result:</strong> :focus-visible is ' + 
+                (focusVisibleSupported ? '<span class="text-success">supported</span>' : 
+                '<span class="text-warning">not supported</span> - using :focus fallback');
+            
+            // Show HTML classes
+            document.getElementById('htmlClasses').textContent = 
+                document.documentElement.className || '(no detection classes set)';
+        })();
+
+        // ============================================================
+        // WEB API DETECTION
+        // Tests for common Web APIs
+        // ============================================================
+        (function() {
+            var apis = [
+                { name: 'fetch()', check: function(){ return typeof fetch === 'function'; } },
+                { name: 'Promise', check: function(){ return typeof Promise !== 'undefined'; } },
+                { name: 'IntersectionObserver', check: function(){ return 'IntersectionObserver' in window; } },
+                { name: 'ResizeObserver', check: function(){ return 'ResizeObserver' in window; } },
+                { name: 'MutationObserver', check: function(){ return 'MutationObserver' in window; } },
+                { name: 'Service Worker', check: function(){ return 'serviceWorker' in navigator; } },
+                { name: 'Web Animations API', check: function(){ return 'animate' in Element.prototype; } },
+                { name: 'Clipboard API', check: function(){ return 'clipboard' in navigator; } },
+                { name: 'Web Share API', check: function(){ return 'share' in navigator; } },
+                { name: 'BroadcastChannel', check: function(){ return typeof BroadcastChannel !== 'undefined'; } }
+            ];
+            
+            var list = document.getElementById('apiDetectionList');
+            apis.forEach(function(api) {
+                var supported = false;
+                try { supported = api.check(); } catch(e) {}
+                var item = document.createElement('li');
+                item.className = 'list-group-item d-flex justify-content-between align-items-center';
+                item.innerHTML = '<code>' + api.name + '</code>' +
+                    (supported ? '<span class="badge bg-success">Available</span>' : '<span class="badge bg-secondary">Missing</span>');
+                list.appendChild(item);
+            });
+        })();
+
+        // ============================================================
+        // CSS.supports() DETECTION LIST
+        // ============================================================
+        (function() {
+            var cssTests = [
+                'display: grid',
+                'display: flex',
+                'color: var(--x)',
+                'width: clamp(1px, 50%, 100px)',
+                'aspect-ratio: 16/9',
+                'backdrop-filter: blur(5px)',
+                'gap: 1rem',
+                'container-type: inline-size',
+                'scroll-behavior: smooth',
+                'object-fit: cover'
+            ];
+            
+            var list = document.getElementById('cssSupportsList');
+            cssTests.forEach(function(test) {
+                var supported = CSS.supports(test);
+                var item = document.createElement('li');
+                item.className = 'list-group-item d-flex justify-content-between align-items-center';
+                item.innerHTML = '<code>' + test + '</code>' +
+                    (supported ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>');
+                list.appendChild(item);
+            });
+        })();
+
+        // ============================================================
+        // CUSTOM FEATURE TEST
+        // Allows user to type CSS and test if browser supports it
+        // ============================================================
+        function testCustomFeature() {
+            var input = document.getElementById('customFeatureInput').value.trim();
+            var resultDiv = document.getElementById('customFeatureResult');
+            
+            if (!input) {
+                resultDiv.innerHTML = '<div class="alert alert-warning mb-0">Please enter a CSS property-value pair.</div>';
+                return;
+            }
+            
+            // Ensure format is "property: value"
+            if (input.indexOf(':') === -1) {
+                input = input + ': initial';
+            }
+            
+            try {
+                var supported = CSS.supports(input);
+                resultDiv.innerHTML = '<div class="alert ' + (supported ? 'alert-success' : 'alert-danger') + ' mb-0">' +
+                    '<strong>CSS.supports("' + input + '")</strong> = ' + 
+                    (supported ? 'Supported' : 'Not Supported') + '</div>';
+            } catch(e) {
+                resultDiv.innerHTML = '<div class="alert alert-warning mb-0">Invalid CSS syntax: ' + e.message + '</div>';
+            }
+        }
+
+        // ============================================================
+        // NETWORK INFORMATION API
+        // Adaptively loads content based on connection speed
+        // ============================================================
+        (function() {
+            var networkDiv = document.getElementById('networkInfo');
+            
+            if ('connection' in navigator) {
+                var conn = navigator.connection;
+                networkDiv.innerHTML = 
+                    '<div class="row">' +
+                    '<div class="col-sm-6"><strong>Effective Type:</strong> ' + (conn.effectiveType || 'N/A') + '</div>' +
+                    '<div class="col-sm-6"><strong>Downlink:</strong> ' + (conn.downlink ? conn.downlink + ' Mbps' : 'N/A') + '</div>' +
+                    '<div class="col-sm-6"><strong>RTT:</strong> ' + (conn.rtt ? conn.rtt + ' ms' : 'N/A') + '</div>' +
+                    '<div class="col-sm-6"><strong>Save Data:</strong> ' + (conn.saveData ? 'Yes' : 'No') + '</div>' +
+                    '</div>' +
+                    '<p class="mb-0 mt-2 small text-muted">Use this data to serve lower-quality images on slow connections.</p>';
+            } else {
+                networkDiv.innerHTML = '<span class="text-muted">Network Information API not supported in this browser. Use feature detection before accessing navigator.connection.</span>';
+            }
+        })();
+
+        // Enter key triggers custom feature test
+        document.getElementById('customFeatureInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') testCustomFeature();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_05_Animation_Mobile.html                                 -->
+<!-- Mobile Animation Optimization with Bootstrap 5                -->
+<!-- Covers: touch interactions, viewport-aware animations,         -->
+<!--         performance on low-end devices, battery optimization,  -->
+<!--         responsive animation timing, touch gesture animations  -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>04_01_05 - Animation Mobile</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* MOBILE-FIRST ANIMATION PRINCIPLES                             */
+        /* 1. Use transform/opacity only (GPU-accelerated)              */
+        /* 2. Reduce animation complexity on small screens              */
+        /* 3. Shorter durations on mobile (users expect snappy UI)      */
+        /* 4. Respect prefers-reduced-motion AND connection speed       */
+        /* 5. Avoid infinite animations on mobile (battery drain)       */
+        /* 6. Use IntersectionObserver instead of scroll events         */
+        /* ============================================================= */
+
+        /* --------------------------------------------------------- */
+        /* RESPONSIVE ANIMATION TIMING                               */
+        /* Shorter animation durations on mobile for snappier feel.  */
+        /* Desktop gets longer, more polished animations.            */
+        /* --------------------------------------------------------- */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        /* Base animation (mobile: faster) */
+        .anim-slide-up {
+            animation: slideUp 0.4s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* Desktop: slightly longer for polish */
+        @media (min-width: 768px) {
+            .anim-slide-up {
+                animation-duration: 0.6s;
+            }
+        }
+
+        /* --------------------------------------------------------- */
+        /* REDUCED ANIMATIONS ON SMALL SCREENS                       */
+        /* Complex animations can overwhelm small screens.           */
+        /* Simplify or remove decorative animations on mobile.       */
+        /* --------------------------------------------------------- */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-15px); }
+        }
+
+        .anim-float-desktop {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Disable floating on mobile — save battery and reduce motion */
+        @media (max-width: 767.98px) {
+            .anim-float-desktop {
+                animation: none;
+            }
+        }
+
+        /* Also respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .anim-float-desktop,
+            .anim-slide-up {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+
+        /* --------------------------------------------------------- */
+        /* TOUCH INTERACTION ANIMATIONS                              */
+        /* Touch feedback is critical on mobile. The :active         */
+        /* pseudo-class provides immediate visual feedback.          */
+        /* --------------------------------------------------------- */
+        .touch-card {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            /* Remove 300ms touch delay */
+            touch-action: manipulation;
+            /* Improve touch responsiveness */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Touch feedback: slight press-down effect */
+        .touch-card:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Touch button */
+        .touch-btn {
+            transition: transform 0.1s ease, background-color 0.1s ease;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .touch-btn:active {
+            transform: scale(0.95);
+            filter: brightness(0.9);
+        }
+
+        /* --------------------------------------------------------- */
+        /* SWIPE GESTURE ANIMATION                                   */
+        /* CSS-only swipe indicators and JS-enhanced swipe tracking  */
+        /* --------------------------------------------------------- */
+        .swipe-container {
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            touch-action: pan-x;
+        }
+        .swipe-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .swipe-slide {
+            flex: 0 0 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+
+        /* Swipe indicator dots */
+        .swipe-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .swipe-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #dee2e6;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+        .swipe-dot.active {
+            background: #0d6efd;
+            transform: scale(1.3);
+        }
+
+        /* --------------------------------------------------------- */
+        /* INTERSECTION OBSERVER ANIMATIONS                          */
+        /* Elements animate when they scroll into view.              */
+        /* More efficient than scroll event listeners.               */
+        /* --------------------------------------------------------- */
+        .observe-fade {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .observe-fade.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .observe-left {
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .observe-left.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .observe-right {
+            opacity: 0;
+            transform: translateX(50px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .observe-right.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Staggered observation */
+        .observe-stagger {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .observe-stagger.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --------------------------------------------------------- */
+        /* PULL-TO-REFRESH ANIMATION                                 */
+        /* Common mobile pattern using CSS transforms                */
+        /* --------------------------------------------------------- */
+        @keyframes pullRotate {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        .pull-indicator {
+            transition: transform 0.3s ease;
+        }
+        .pull-indicator.refreshing {
+            animation: pullRotate 0.8s linear infinite;
+        }
+
+        /* --------------------------------------------------------- */
+        /* SKELETON LOADING ANIMATION                                */
+        /* Shimmer effect for loading states on mobile               */
+        /* --------------------------------------------------------- */
+        @keyframes shimmer {
+            0%   { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg,
+                #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            border-radius: 0.375rem;
+        }
+
+        /* Stop skeleton when content loads */
+        .skeleton.loaded {
+            animation: none;
+            background: none;
+        }
+
+        /* --------------------------------------------------------- */
+        /* CONNECTION-AWARE ANIMATIONS                               */
+        /* Reduce animations on slow connections (save data + speed) */
+        /* navigator.connection API provides network info            */
+        /* --------------------------------------------------------- */
+        .connection-aware {
+            animation: slideUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* Class added by JS when connection is slow */
+        .slow-connection .connection-aware {
+            animation-duration: 0.1s !important;
+        }
+
+        /* --------------------------------------------------------- */
+        /* DEVICE PIXEL RATIO AWARE                                  */
+        /* High-DPI screens can handle more complex animations       */
+        /* but also consume more GPU power                           */
+        /* --------------------------------------------------------- */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            /* High-DPI specific optimizations */
+            .gpu-optimized {
+                /* Ensure GPU rendering on retina displays */
+                transform: translateZ(0);
+                backface-visibility: hidden;
+            }
+        }
+
+        /* --------------------------------------------------------- */
+        /* SAFE AREA INSETS (iPhone notch)                           */
+        /* Modern iPhones have notches/dynamic islands.             */
+        /* Ensure animations respect safe area boundaries.          */
+        /* --------------------------------------------------------- */
+        .safe-area-aware {
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* --------------------------------------------------------- */
+        /* HORIZONTAL SCROLL CARD CAROUSEL                           */
+        /* Touch-friendly card carousel with scroll snap             */
+        /* --------------------------------------------------------- */
+        .card-carousel {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            padding: 1rem 0;
+            scrollbar-width: none;
+        }
+        .card-carousel::-webkit-scrollbar { display: none; }
+
+        .card-carousel .card {
+            flex: 0 0 85%;
+            scroll-snap-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .card-carousel .card {
+                flex: 0 0 45%;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .card-carousel .card {
+                flex: 0 0 30%;
+            }
+        }
+
+        /* --------------------------------------------------------- */
+        /* RESPONSIVE PROGRESS BAR ANIMATION                         */
+        /* --------------------------------------------------------- */
+        @keyframes progressFill {
+            from { width: 0; }
+            to   { width: var(--progress-width, 100%); }
+        }
+
+        .animated-progress {
+            animation: progressFill 1s ease-out forwards;
+        }
+
+        @media (max-width: 767.98px) {
+            .animated-progress {
+                animation-duration: 0.5s;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light safe-area-aware">
+
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1 class="display-5 fw-bold text-primary">Mobile Animation</h1>
+                <p class="lead text-muted">
+                    Touch-friendly, battery-conscious, performance-optimized mobile animations.
+                </p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: TOUCH FEEDBACK                                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Touch Feedback Animations</h2>
+            <p class="text-muted">
+                Immediate visual feedback on touch is essential for mobile UX.
+                Uses <code>:active</code> pseudo-class with <code>touch-action: manipulation</code>.
+            </p>
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="card touch-card">
+                        <div class="card-body text-center">
+                            <h6>Touch Card</h6>
+                            <p class="small mb-0">Press to see feedback</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-primary w-100 touch-btn py-3">
+                        Touch Button
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: SWIPE CAROUSEL                                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Touch Swipe Carousel</h2>
+            <p class="text-muted">
+                CSS scroll-snap creates a native-feeling swipe carousel.
+                No JavaScript needed for basic functionality.
+            </p>
+            <div class="swipe-container d-flex">
+                <div class="swipe-slide bg-primary text-white p-5 rounded me-2">
+                    <h4>Slide 1</h4>
+                    <p class="mb-0">Swipe left to continue</p>
+                </div>
+                <div class="swipe-slide bg-success text-white p-5 rounded me-2">
+                    <h4>Slide 2</h4>
+                    <p class="mb-0">CSS scroll-snap handles alignment</p>
+                </div>
+                <div class="swipe-slide bg-danger text-white p-5 rounded me-2">
+                    <h4>Slide 3</h4>
+                    <p class="mb-0">Native touch scrolling feel</p>
+                </div>
+                <div class="swipe-slide bg-warning text-dark p-5 rounded">
+                    <h4>Slide 4</h4>
+                    <p class="mb-0">No JavaScript required</p>
+                </div>
+            </div>
+            <div class="swipe-dots" id="swipeDots">
+                <div class="swipe-dot active"></div>
+                <div class="swipe-dot"></div>
+                <div class="swipe-dot"></div>
+                <div class="swipe-dot"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: CARD CAROUSEL                                      -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Responsive Card Carousel</h2>
+            <div class="card-carousel">
+                <div class="card anim-slide-up" style="animation-delay: 0s">
+                    <div class="card-body">
+                        <h5>Feature 1</h5>
+                        <p class="mb-0">Scroll horizontally on mobile to see more cards.</p>
+                    </div>
+                </div>
+                <div class="card anim-slide-up" style="animation-delay: 0.1s">
+                    <div class="card-body">
+                        <h5>Feature 2</h5>
+                        <p class="mb-0">Cards snap to center on scroll.</p>
+                    </div>
+                </div>
+                <div class="card anim-slide-up" style="animation-delay: 0.2s">
+                    <div class="card-body">
+                        <h5>Feature 3</h5>
+                        <p class="mb-0">Responsive: 85% on mobile, 45% on tablet, 30% on desktop.</p>
+                    </div>
+                </div>
+                <div class="card anim-slide-up" style="animation-delay: 0.3s">
+                    <div class="card-body">
+                        <h5>Feature 4</h5>
+                        <p class="mb-0">Native scroll physics via -webkit-overflow-scrolling.</p>
+                    </div>
+                </div>
+                <div class="card anim-slide-up" style="animation-delay: 0.4s">
+                    <div class="card-body">
+                        <h5>Feature 5</h5>
+                        <p class="mb-0">Smooth, performant, and accessible.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: SCROLL-TRIGGERED ANIMATIONS (IntersectionObserver)  -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Scroll-Triggered Animations</h2>
+            <p class="text-muted">
+                Elements animate into view as you scroll. Uses <code>IntersectionObserver</code>
+                which is far more efficient than scroll event listeners.
+            </p>
+
+            <div class="observe-fade card mb-3">
+                <div class="card-body">
+                    <h5>Fade Up on Scroll</h5>
+                    <p class="mb-0">This card fades up when it enters the viewport.</p>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="observe-left card">
+                        <div class="card-body">
+                            <h5>Slide from Left</h5>
+                            <p class="mb-0">Slides in from the left edge.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="observe-right card">
+                        <div class="card-body">
+                            <h5>Slide from Right</h5>
+                            <p class="mb-0">Slides in from the right edge.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="h6 mb-3">Staggered Items</h5>
+            <div class="row g-2" id="staggerContainer">
+                <div class="col-6 col-md-4">
+                    <div class="observe-stagger bg-primary text-white p-3 rounded text-center">Item 1</div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="observe-stagger bg-success text-white p-3 rounded text-center">Item 2</div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="observe-stagger bg-danger text-white p-3 rounded text-center">Item 3</div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="observe-stagger bg-warning text-dark p-3 rounded text-center">Item 4</div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="observe-stagger bg-info text-white p-3 rounded text-center">Item 5</div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="observe-stagger bg-secondary text-white p-3 rounded text-center">Item 6</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: SKELETON LOADING                                   -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Skeleton Loading Animation</h2>
+            <p class="text-muted">
+                Shimmer effect for loading states. Click "Load Content" to see the transition.
+            </p>
+            <button class="btn btn-primary mb-3" id="loadContentBtn">Load Content</button>
+            <div class="card">
+                <div class="card-body" id="skeletonContainer">
+                    <div class="skeleton mb-2" style="height: 20px; width: 60%;"></div>
+                    <div class="skeleton mb-2" style="height: 14px; width: 90%;"></div>
+                    <div class="skeleton mb-2" style="height: 14px; width: 75%;"></div>
+                    <div class="skeleton" style="height: 14px; width: 80%;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: PULL-TO-REFRESH INDICATOR                          -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Pull-to-Refresh Indicator</h2>
+            <p class="text-muted">
+                Common mobile pattern. The spinner rotates while content refreshes.
+            </p>
+            <div class="text-center">
+                <button class="btn btn-outline-primary" id="refreshBtn">
+                    <span class="pull-indicator d-inline-block" id="refreshSpinner">&#8635;</span>
+                    Pull to Refresh
+                </button>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 7: ANIMATED PROGRESS                                  -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Animated Progress Bars</h2>
+            <div class="mb-3">
+                <label class="form-label small">Upload Progress</label>
+                <div class="progress">
+                    <div class="progress-bar animated-progress" style="--progress-width: 75%"></div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small">Download Progress</label>
+                <div class="progress">
+                    <div class="progress-bar bg-success animated-progress" style="--progress-width: 45%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 8: MOBILE BEST PRACTICES TABLE                        -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Mobile Animation Best Practices</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped small">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Practice</th>
+                            <th>Why</th>
+                            <th>How</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Shorter durations</td>
+                            <td>Mobile users expect snappy UI</td>
+                            <td>200-400ms on mobile vs 400-600ms on desktop</td>
+                        </tr>
+                        <tr>
+                            <td>Disable decorative animations</td>
+                            <td>Saves battery on mobile</td>
+                            <td><code>@media (max-width: 767px)</code></td>
+                        </tr>
+                        <tr>
+                            <td>Touch feedback</td>
+                            <td>Confirms user action</td>
+                            <td><code>:active</code> + <code>touch-action: manipulation</code></td>
+                        </tr>
+                        <tr>
+                            <td>Avoid infinite animations</td>
+                            <td>Battery drain on mobile</td>
+                            <td>Use <code>animation-iteration-count: 1</code></td>
+                        </tr>
+                        <tr>
+                            <td>IntersectionObserver</td>
+                            <td>More efficient than scroll events</td>
+                            <td>Only animate visible elements</td>
+                        </tr>
+                        <tr>
+                            <td>scroll-snap</td>
+                            <td>Native swipe feel</td>
+                            <td>CSS <code>scroll-snap-type</code></td>
+                        </tr>
+                        <tr>
+                            <td>Safe area insets</td>
+                            <td>Respect iPhone notch</td>
+                            <td><code>env(safe-area-inset-*)</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ----------------------------------------------------------- */
+        /* INTERSECTION OBSERVER SETUP                                 */
+        /* Triggers animations when elements enter the viewport.       */
+        /* rootMargin: '0px 0px -50px 0px' triggers slightly before   */
+        /* the element is fully visible for a smoother effect.         */
+        /* ----------------------------------------------------------- */
+        const observerOptions = {
+            root: null, /* viewport */
+            rootMargin: '0px 0px -50px 0px',
+            threshold: 0.15
+        };
+
+        const animationObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    /* Optionally stop observing after animation */
+                    animationObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        /* Observe all animated elements */
+        document.querySelectorAll('.observe-fade, .observe-left, .observe-right, .observe-stagger')
+            .forEach(function (el) {
+                animationObserver.observe(el);
+            });
+
+        /* Stagger delay for grid items */
+        document.querySelectorAll('#staggerContainer .observe-stagger').forEach(function (el, i) {
+            el.style.transitionDelay = (i * 0.1) + 's';
+        });
+
+        /* ----------------------------------------------------------- */
+        /* SWIPE CAROUSEL DOTS                                         */
+        /* Updates dot indicators based on scroll position             */
+        /* ----------------------------------------------------------- */
+        const swipeContainer = document.querySelector('.swipe-container');
+        const swipeDots = document.querySelectorAll('.swipe-dot');
+
+        if (swipeContainer) {
+            swipeContainer.addEventListener('scroll', function () {
+                const scrollLeft = this.scrollLeft;
+                const slideWidth = this.scrollWidth / swipeDots.length;
+                const activeIndex = Math.round(scrollLeft / slideWidth);
+                swipeDots.forEach(function (dot, i) {
+                    dot.classList.toggle('active', i === activeIndex);
+                });
+            });
+        }
+
+        /* ----------------------------------------------------------- */
+        /* SKELETON LOADING DEMO                                       */
+        /* ----------------------------------------------------------- */
+        document.getElementById('loadContentBtn').addEventListener('click', function () {
+            const container = document.getElementById('skeletonContainer');
+            /* Simulate loading delay */
+            setTimeout(function () {
+                container.innerHTML = `
+                    <h5>Loaded Content</h5>
+                    <p>The skeleton shimmer animation creates a perceived performance improvement.
+                    Users feel like content is loading faster even if the actual load time is the same.</p>
+                    <p class="mb-0">This pattern is used by Facebook, LinkedIn, YouTube, and many other
+                    mobile-first applications.</p>
+                `;
+            }, 1500);
+        });
+
+        /* ----------------------------------------------------------- */
+        /* PULL-TO-REFRESH DEMO                                        */
+        /* ----------------------------------------------------------- */
+        document.getElementById('refreshBtn').addEventListener('click', function () {
+            const spinner = document.getElementById('refreshSpinner');
+            spinner.classList.add('refreshing');
+            setTimeout(function () {
+                spinner.classList.remove('refreshing');
+            }, 1500);
+        });
+
+        /* ----------------------------------------------------------- */
+        /* CONNECTION-AWARE ANIMATION                                  */
+        /* Uses Network Information API to detect slow connections     */
+        /* ----------------------------------------------------------- */
+        if ('connection' in navigator) {
+            const conn = navigator.connection;
+            if (conn.saveData || conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g') {
+                document.body.classList.add('slow-connection');
+            }
+        }
+    </script>
+</body>
+</html>

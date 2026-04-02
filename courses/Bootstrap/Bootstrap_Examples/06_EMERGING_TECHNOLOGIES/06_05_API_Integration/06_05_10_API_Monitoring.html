@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<!--
+  ==========================================================================
+  FILE: 06_05_10_API_Monitoring.html
+  TOPIC: API Monitoring Dashboard using Bootstrap 5
+  ==========================================================================
+
+  CONCEPT OVERVIEW:
+  API Monitoring is the practice of continuously tracking the availability,
+  performance, and reliability of APIs to ensure they meet expected service
+  levels. A monitoring dashboard provides a centralized view of API health
+  metrics, enabling teams to detect issues proactively, respond to incidents
+  quickly, and maintain SLA (Service Level Agreement) compliance.
+
+  KEY CONCEPTS COVERED:
+  1. API Health Dashboard  - Visual cards showing the current status of each API
+  2. Uptime Percentage     - Tracks how long an API has been operational (e.g., 99.9%)
+  3. Response Time Graph   - CSS-based visualization of API latency over time
+  4. Status Page           - Service indicators showing green/yellow/red states
+  5. Incident Log Table    - Historical record of outages and degraded performance
+  6. Alert Configuration   - UI to set thresholds and notification channels
+  7. SLA Compliance        - Metrics showing whether services meet contractual obligations
+  8. Real-time Simulation  - JavaScript-driven live metric updates
+
+  WHY API MONITORING MATTERS:
+  - Detect outages before users report them (mean time to detection)
+  - Track performance trends and plan capacity
+  - Meet SLA commitments and avoid penalties
+  - Provide transparency to stakeholders via status pages
+  - Automate alerting to reduce manual oversight
+-->
+
+<html lang="en">
+<head>
+  <!-- ================================================================
+       META TAGS - Essential for responsive behavior and SEO
+       ================================================================
+       viewport: Controls page dimensions and scaling on different devices.
+       charset:   UTF-8 ensures universal character encoding support.
+       ================================================================ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>API Monitoring Dashboard - Bootstrap 5</title>
+
+  <!-- ================================================================
+       BOOTSTRAP 5 CDN - CSS
+       ================================================================
+       Using CDN (Content Delivery Network) ensures fast delivery of
+       CSS assets without hosting them locally. Bootstrap 5.3.3 is the
+       latest stable version providing utility classes, grid system,
+       components, and responsive design patterns.
+       ================================================================ -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    /* ================================================================
+       CUSTOM STYLES FOR API MONITORING
+       ================================================================
+       These styles extend Bootstrap's defaults with monitoring-specific
+       visualizations like status indicators, pulse animations, and
+       CSS-only response time graphs.
+       ================================================================ */
+
+    /* --- Status Indicator Dots ---
+       Small colored circles that reflect service state:
+       green = operational, yellow = degraded, red = down */
+    .status-dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .status-dot.operational { background-color: #198754; }
+    .status-dot.degraded   { background-color: #ffc107; }
+    .status-dot.down       { background-color: #dc3545; }
+
+    /* --- Pulse Animation ---
+       Mimics a heartbeat on live status dots to draw attention to
+       real-time indicators. Uses CSS @keyframes for smooth animation. */
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
+      70%  { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+    }
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+
+    /* --- CSS-Only Response Time Graph ---
+       Each bar represents a single data point (e.g., last 30 requests).
+       Height is set dynamically via inline styles. The container uses
+       flexbox to align bars side by side with uniform spacing. */
+    .response-graph {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 120px;
+      padding: 10px 0;
+    }
+    .response-bar {
+      flex: 1;
+      min-width: 6px;
+      border-radius: 3px 3px 0 0;
+      transition: height 0.4s ease, background-color 0.4s ease;
+    }
+
+    /* --- SLA Progress Ring (CSS-only) ---
+       Uses conic-gradient to draw a circular progress indicator.
+       The --sla-percent custom property controls the fill amount. */
+    .sla-ring {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .sla-ring::before {
+      content: '';
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: white;
+    }
+    .sla-ring span {
+      position: relative;
+      z-index: 1;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    /* --- Uptime Bar ---
+       A segmented bar where each segment represents a day.
+       Green segments = fully operational; red = outage detected.
+       This is a common pattern on public status pages. */
+    .uptime-bar {
+      display: flex;
+      gap: 2px;
+      height: 32px;
+    }
+    .uptime-segment {
+      flex: 1;
+      border-radius: 2px;
+      transition: background-color 0.3s ease;
+    }
+
+    /* --- Metric Card Hover Effect ---
+       Subtle lift effect on hover to indicate interactivity. */
+    .metric-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .metric-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    /* --- Live Indicator ---
+       A blinking "LIVE" badge that signals real-time data streaming. */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.3; }
+    }
+    .live-badge {
+      animation: blink 1.5s infinite;
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+
+  <!-- ================================================================
+       NAVBAR - Top navigation for the monitoring dashboard
+       ================================================================
+       Uses Bootstrap's navbar-expand-lg for responsive collapse behavior.
+       The dark theme (navbar-dark bg-dark) matches typical monitoring UIs.
+       ================================================================ -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <!-- SVG icon representing a monitoring/activity graph -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-activity me-2" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-2 5.5a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l2-5.5A.5.5 0 0 1 6 2z"/>
+        </svg>
+        API Monitor
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link active" href="#health">Health</a></li>
+          <li class="nav-item"><a class="nav-link" href="#uptime">Uptime</a></li>
+          <li class="nav-item"><a class="nav-link" href="#performance">Performance</a></li>
+          <li class="nav-item"><a class="nav-link" href="#incidents">Incidents</a></li>
+          <li class="nav-item"><a class="nav-link" href="#alerts">Alerts</a></li>
+          <li class="nav-item"><a class="nav-link" href="#sla">SLA</a></li>
+        </ul>
+        <!-- Live badge indicating real-time data updates -->
+        <span class="badge bg-success ms-3 live-badge">LIVE</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ================================================================
+       MAIN CONTENT CONTAINER
+       ================================================================
+       Uses container-fluid for full-width layout, common in dashboards.
+       The py-4 class adds vertical padding for breathing room.
+       ================================================================ -->
+  <div class="container-fluid px-4 py-4">
+
+    <!-- ================================================================
+         SECTION 1: API HEALTH DASHBOARD
+         ================================================================
+         Health dashboards display the current operational status of each
+         API endpoint. Each card shows the endpoint name, HTTP method,
+         current status (up/down/degraded), and last check timestamp.
+
+         Bootstrap grid: row of col-lg-3 col-md-6 cards for responsive
+         4-across on large screens, 2-across on medium, stacked on small.
+         ================================================================ -->
+    <section id="health" class="mb-5">
+      <div class="d-flex align-items-center mb-3">
+        <h2 class="mb-0 me-3">API Health Dashboard</h2>
+        <span class="badge bg-secondary" id="lastRefresh">Last refresh: --</span>
+      </div>
+      <p class="text-muted mb-4">
+        Real-time status of all monitored API endpoints. Cards update automatically to reflect
+        the latest health check results from each service.
+      </p>
+
+      <div class="row g-3" id="healthCards">
+        <!-- JavaScript will populate health cards dynamically -->
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SECTION 2: UPTIME PERCENTAGE DISPLAY
+         ================================================================
+         Uptime is a critical reliability metric. It measures the percentage
+         of time a service has been available over a given period (typically
+         30 days). Industry standards:
+           - 99.9%  ("three nines") = ~43 min downtime/month
+           - 99.95%                  = ~22 min downtime/month
+           - 99.99% ("four nines")  = ~4.3 min downtime/month
+
+         The uptime bar below uses 30 segments (one per day) with colors
+         indicating whether each day had any outage.
+         ================================================================ -->
+    <section id="uptime" class="mb-5">
+      <h2>Uptime Overview (Last 30 Days)</h2>
+      <p class="text-muted mb-4">
+        Each segment represents one day. Hover over segments to see detailed uptime data.
+        Green indicates 100% uptime; red indicates an outage was recorded.
+      </p>
+
+      <div class="row g-3" id="uptimeCards">
+        <!-- Each API gets an uptime bar rendered here -->
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SECTION 3: RESPONSE TIME GRAPH (CSS-BASED)
+         ================================================================
+         Response time (latency) measures how long an API takes to respond
+         to a request. Lower is better. Common thresholds:
+           - < 200ms: Excellent
+           - 200-500ms: Acceptable
+           - 500-1000ms: Slow
+           - > 1000ms: Critical
+
+         This graph uses CSS bars (no charting library). Each bar's height
+         is proportional to the response time, and its color indicates
+         severity (green/yellow/red).
+         ================================================================ -->
+    <section id="performance" class="mb-5">
+      <h2>Response Time Monitoring</h2>
+      <p class="text-muted mb-4">
+        Visual representation of API response times. Each bar represents one request.
+        Height indicates latency; color indicates severity:
+        <span class="badge bg-success">Fast (&lt;200ms)</span>
+        <span class="badge bg-warning text-dark">Moderate (200-500ms)</span>
+        <span class="badge bg-danger">Slow (&gt;500ms)</span>
+      </p>
+
+      <div class="row g-3">
+        <!-- Response time graphs are generated per API -->
+        <div class="col-lg-6" id="responseTimeGraphs">
+          <!-- JavaScript populates these -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SECTION 4: STATUS PAGE WITH SERVICE INDICATORS
+         ================================================================
+         A status page is a public-facing dashboard (e.g., status.example.com)
+         that communicates service health to end users. It typically shows:
+           - Overall system status
+           - Individual component statuses
+           - Active and past incidents
+
+         This mirrors the design pattern used by companies like GitHub,
+         Stripe, and AWS for their public status pages.
+         ================================================================ -->
+    <section id="status-page" class="mb-5">
+      <h2>System Status Page</h2>
+      <p class="text-muted mb-4">
+        Component-level status indicators providing a high-level overview of system health.
+        This mirrors public-facing status pages used by SaaS providers.
+      </p>
+
+      <div class="card">
+        <div class="card-header bg-white">
+          <div class="d-flex align-items-center">
+            <span class="status-dot operational pulse me-2"></span>
+            <strong>All Systems Operational</strong>
+          </div>
+        </div>
+        <ul class="list-group list-group-flush" id="statusPageList">
+          <!-- JavaScript populates service status items -->
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SECTION 5: INCIDENT LOG TABLE
+         ================================================================
+         Incident logs provide an audit trail of all service disruptions.
+         Each incident record includes:
+           - Timestamp (when it started)
+           - Affected service/component
+           - Severity level (Critical, Major, Minor)
+           - Status (Investigating, Identified, Monitoring, Resolved)
+           - Duration and resolution notes
+
+         This data is essential for post-incident reviews (postmortems)
+         and trend analysis.
+         ================================================================ -->
+    <section id="incidents" class="mb-5">
+      <h2>Incident Log</h2>
+      <p class="text-muted mb-4">
+        Historical record of service incidents. Use this data for postmortem analysis,
+        identifying recurring failure patterns, and improving system resilience.
+      </p>
+
+      <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <span>Recent Incidents</span>
+          <span class="badge bg-danger" id="openIncidentsCount">0 Open</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Timestamp</th>
+                <th>Service</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody id="incidentTableBody">
+              <!-- JavaScript populates incident rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SECTION 6: ALERT CONFIGURATION PANEL
+         ================================================================
+         Alerting is the mechanism that notifies teams when metrics breach
+         predefined thresholds. A well-configured alert system balances:
+           - Sensitivity: Catch real issues quickly
+           - Specificity: Avoid false positives / alert fatigue
+
+         Common alert channels:
+           - Email notifications
+           - Slack / Microsoft Teams webhooks
+           - PagerDuty / Opsgenie for on-call escalation
+           - SMS for critical-only alerts
+
+         This panel simulates a configuration UI for managing alert rules.
+         ================================================================ -->
+    <section id="alerts" class="mb-5">
+      <h2>Alert Configuration</h2>
+      <p class="text-muted mb-4">
+        Configure monitoring thresholds and notification channels. Effective alerting
+        reduces mean time to detection (MTTD) and prevents alert fatigue.
+      </p>
+
+      <div class="row g-3">
+        <!-- Alert Rules Configuration -->
+        <div class="col-lg-7">
+          <div class="card">
+            <div class="card-header bg-white"><strong>Alert Rules</strong></div>
+            <div class="card-body">
+              <form id="alertConfigForm">
+                <!-- Response Time Threshold -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Response Time Threshold (ms)</label>
+                  <!--
+                    Input range slider for setting the latency threshold.
+                    When a response exceeds this value, an alert is triggered.
+                    Default: 500ms which covers most acceptable latency budgets.
+                  -->
+                  <input type="range" class="form-range" min="100" max="2000" step="50"
+                         id="responseTimeThreshold" value="500">
+                  <div class="d-flex justify-content-between">
+                    <small class="text-muted">100ms</small>
+                    <span class="badge bg-primary" id="responseTimeValue">500ms</span>
+                    <small class="text-muted">2000ms</small>
+                  </div>
+                </div>
+
+                <!-- Error Rate Threshold -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Error Rate Threshold (%)</label>
+                  <!--
+                    Percentage of 5xx responses that trigger an alert.
+                    A 5% error rate on a high-traffic API can mean thousands
+                    of failed requests per minute.
+                  -->
+                  <input type="range" class="form-range" min="1" max="20" step="1"
+                         id="errorRateThreshold" value="5">
+                  <div class="d-flex justify-content-between">
+                    <small class="text-muted">1%</small>
+                    <span class="badge bg-primary" id="errorRateValue">5%</span>
+                    <small class="text-muted">20%</small>
+                  </div>
+                </div>
+
+                <!-- Uptime Alert -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Minimum Uptime (%)</label>
+                  <!--
+                    Triggers an alert if uptime drops below this percentage
+                    within the monitoring window (typically 24 hours).
+                  -->
+                  <input type="range" class="form-range" min="90" max="100" step="0.1"
+                         id="uptimeThreshold" value="99.9">
+                  <div class="d-flex justify-content-between">
+                    <small class="text-muted">90%</small>
+                    <span class="badge bg-primary" id="uptimeValue">99.9%</span>
+                    <small class="text-muted">100%</small>
+                  </div>
+                </div>
+
+                <!-- Notification Channels -->
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Notification Channels</label>
+                  <!--
+                    Checkboxes for enabling/disabling alert destinations.
+                    Each channel is suited for different urgency levels:
+                    - Email: Low urgency, audit trail
+                    - Slack: Medium urgency, team visibility
+                    - PagerDuty: High urgency, on-call escalation
+                    - SMS: Critical only, minimal noise
+                  -->
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="alertEmail" checked>
+                    <label class="form-check-label" for="alertEmail">
+                      Email Notifications
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="alertSlack" checked>
+                    <label class="form-check-label" for="alertSlack">
+                      Slack Webhook
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="alertPagerDuty">
+                    <label class="form-check-label" for="alertPagerDuty">
+                      PagerDuty Integration
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="alertSMS">
+                    <label class="form-check-label" for="alertSMS">
+                      SMS Alerts (Critical Only)
+                    </label>
+                  </div>
+                </div>
+
+                <button type="button" class="btn btn-primary" onclick="saveAlertConfig()">
+                  Save Configuration
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Alerts Feed -->
+        <div class="col-lg-5">
+          <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+              <strong>Active Alerts</strong>
+              <span class="badge bg-danger live-badge" id="activeAlertCount">0</span>
+            </div>
+            <div class="list-group list-group-flush" id="activeAlertsList" style="max-height: 400px; overflow-y: auto;">
+              <!-- JavaScript populates active alerts -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SECTION 7: SLA COMPLIANCE INDICATORS
+         ================================================================
+         SLA (Service Level Agreement) compliance measures whether a service
+         meets the reliability commitments made to customers. SLAs are
+         typically expressed as uptime percentages with financial penalties
+         for breaches.
+
+         SLA tiers commonly include:
+           - Gold:   99.99% uptime (52.6 min downtime/year)
+           - Silver: 99.9%  uptime (8.77 hrs downtime/year)
+           - Bronze: 99.5%  uptime (1.83 days downtime/year)
+
+         The conic-gradient circles below provide an at-a-glance view of
+         each API's SLA compliance status.
+         ================================================================ -->
+    <section id="sla" class="mb-5">
+      <h2>SLA Compliance</h2>
+      <p class="text-muted mb-4">
+        Visual indicators of SLA compliance for each monitored service. The ring shows
+        current performance against the contractual target.
+      </p>
+
+      <div class="row g-3" id="slaCards">
+        <!-- JavaScript populates SLA compliance rings -->
+      </div>
+    </section>
+
+    <!-- ================================================================
+         SECTION 8: REAL-TIME METRICS SIMULATION
+         ================================================================
+         This section demonstrates how a real-time monitoring dashboard
+         would look with live-updating metrics. In production, this data
+         would come from:
+           - Application Performance Monitoring (APM) tools (Datadog, New Relic)
+           - Custom health check endpoints (/health, /ready)
+           - Infrastructure metrics from Prometheus/Grafana
+           - Log aggregation services (ELK Stack, Splunk)
+
+         The simulation uses setInterval to update metrics every 2 seconds,
+         mimicking a WebSocket or Server-Sent Events (SSE) data stream.
+         ================================================================ -->
+    <section id="realtime" class="mb-5">
+      <div class="d-flex align-items-center mb-3">
+        <h2 class="mb-0 me-3">Real-Time Metrics</h2>
+        <span class="badge bg-success live-badge">LIVE</span>
+      </div>
+      <p class="text-muted mb-4">
+        Simulated real-time API metrics updating every 2 seconds. In production, this data
+        streams from monitoring agents via WebSocket or Server-Sent Events (SSE).
+      </p>
+
+      <div class="row g-3" id="realtimeMetrics">
+        <!-- Key metrics updated in real-time -->
+        <div class="col-md-3">
+          <div class="card text-center metric-card">
+            <div class="card-body">
+              <h6 class="card-subtitle text-muted mb-2">Requests / sec</h6>
+              <h2 class="card-title mb-0" id="metricRps">--</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center metric-card">
+            <div class="card-body">
+              <h6 class="card-subtitle text-muted mb-2">Avg Latency (ms)</h6>
+              <h2 class="card-title mb-0" id="metricLatency">--</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center metric-card">
+            <div class="card-body">
+              <h6 class="card-subtitle text-muted mb-2">Error Rate (%)</h6>
+              <h2 class="card-title mb-0" id="metricErrorRate">--</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center metric-card">
+            <div class="card-body">
+              <h6 class="card-subtitle text-muted mb-2">Active Connections</h6>
+              <h2 class="card-title mb-0" id="metricConnections">--</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- End container-fluid -->
+
+  <!-- ================================================================
+       FOOTER
+       ================================================================ -->
+  <footer class="bg-dark text-light text-center py-3">
+    <small>API Monitoring Dashboard &copy; 2026 | Built with Bootstrap 5.3.3</small>
+  </footer>
+
+  <!-- ================================================================
+       BOOTSTRAP 5 CDN - JavaScript Bundle
+       ================================================================
+       The bundle includes Popper.js for tooltip/popover positioning.
+       Must be placed before closing </body> for proper DOM initialization.
+       ================================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ================================================================
+       JAVASCRIPT: API MONITORING LOGIC
+       ================================================================
+       All monitoring simulation logic is contained here. In a production
+       environment, this would be replaced with real API calls, WebSocket
+       connections, and data streaming from monitoring infrastructure.
+       ================================================================ -->
+  <script>
+    /* ================================================================
+       DATA MODELS
+       ================================================================
+       These arrays simulate the data that would come from a real
+       monitoring backend (e.g., Prometheus, Datadog, CloudWatch).
+       ================================================================ */
+
+    /**
+     * API endpoints being monitored.
+     * Each object contains:
+     *   - name: Human-readable API name
+     *   - endpoint: The URL path
+     *   - method: HTTP method (GET, POST, etc.)
+     *   - status: Current operational status
+     *   - uptime: 30-day uptime percentage
+     *   - avgResponse: Average response time in ms
+     *   - slaTarget: Contractual SLA target percentage
+     *   - slaActual: Current actual SLA performance
+     */
+    const apiServices = [
+      {
+        name: 'User Authentication API',
+        endpoint: '/api/v2/auth',
+        method: 'POST',
+        status: 'operational',
+        uptime: 99.98,
+        avgResponse: 145,
+        slaTarget: 99.95,
+        slaActual: 99.98
+      },
+      {
+        name: 'Payment Gateway API',
+        endpoint: '/api/v2/payments',
+        method: 'POST',
+        status: 'operational',
+        uptime: 99.99,
+        avgResponse: 210,
+        slaTarget: 99.99,
+        slaActual: 99.99
+      },
+      {
+        name: 'Product Catalog API',
+        endpoint: '/api/v2/products',
+        method: 'GET',
+        status: 'degraded',
+        uptime: 99.85,
+        avgResponse: 480,
+        slaTarget: 99.9,
+        slaActual: 99.85
+      },
+      {
+        name: 'Notification Service API',
+        endpoint: '/api/v2/notifications',
+        method: 'POST',
+        status: 'operational',
+        uptime: 99.92,
+        avgResponse: 95,
+        slaTarget: 99.9,
+        slaActual: 99.92
+      },
+      {
+        name: 'Search Engine API',
+        endpoint: '/api/v2/search',
+        method: 'GET',
+        status: 'operational',
+        uptime: 99.97,
+        avgResponse: 320,
+        slaTarget: 99.9,
+        slaActual: 99.97
+      },
+      {
+        name: 'File Storage API',
+        endpoint: '/api/v2/storage',
+        method: 'GET',
+        status: 'down',
+        uptime: 98.5,
+        avgResponse: 1200,
+        slaTarget: 99.5,
+        slaActual: 98.5
+      },
+      {
+        name: 'Analytics API',
+        endpoint: '/api/v2/analytics',
+        method: 'GET',
+        status: 'operational',
+        uptime: 99.94,
+        avgResponse: 180,
+        slaTarget: 99.9,
+        slaActual: 99.94
+      },
+      {
+        name: 'Email Service API',
+        endpoint: '/api/v2/email',
+        method: 'POST',
+        status: 'operational',
+        uptime: 99.96,
+        avgResponse: 250,
+        slaTarget: 99.9,
+        slaActual: 99.96
+      }
+    ];
+
+    /**
+     * Component groups for the status page.
+     * Represents logical groupings of services that customers
+     * understand (e.g., "API", "Dashboard", "CDN").
+     */
+    const statusComponents = [
+      { name: 'Core API Services',    status: 'operational' },
+      { name: 'Web Dashboard',         status: 'operational' },
+      { name: 'Authentication System', status: 'operational' },
+      { name: 'Payment Processing',    status: 'operational' },
+      { name: 'CDN & Static Assets',   status: 'operational' },
+      { name: 'Database Cluster',      status: 'degraded' },
+      { name: 'File Storage',          status: 'down' },
+      { name: 'Email Delivery',        status: 'operational' }
+    ];
+
+    /**
+     * Simulated incident history.
+     * Each incident tracks the lifecycle from detection to resolution:
+     * Investigating -> Identified -> Monitoring -> Resolved
+     */
+    const incidents = [
+      {
+        timestamp: '2026-04-02 14:23 UTC',
+        service: 'File Storage API',
+        severity: 'Critical',
+        status: 'Investigating',
+        duration: 'Ongoing',
+        description: 'Elevated error rates on file upload endpoints. Storage backend connectivity issues detected.'
+      },
+      {
+        timestamp: '2026-04-02 11:05 UTC',
+        service: 'Product Catalog API',
+        severity: 'Minor',
+        status: 'Monitoring',
+        duration: '3h 18m',
+        description: 'Increased latency on product search queries. Cache layer was restarted, monitoring for stability.'
+      },
+      {
+        timestamp: '2026-04-01 22:47 UTC',
+        service: 'Payment Gateway API',
+        severity: 'Major',
+        status: 'Resolved',
+        duration: '47m',
+        description: 'Payment processing timeouts due to upstream provider issue. Provider confirmed resolution.'
+      },
+      {
+        timestamp: '2026-04-01 09:12 UTC',
+        service: 'Notification Service API',
+        severity: 'Minor',
+        status: 'Resolved',
+        duration: '23m',
+        description: 'Delayed push notifications due to queue backlog. Auto-scaled workers cleared the backlog.'
+      },
+      {
+        timestamp: '2026-03-31 16:30 UTC',
+        service: 'User Authentication API',
+        severity: 'Critical',
+        status: 'Resolved',
+        duration: '12m',
+        description: 'Authentication token validation failures. Redis cluster failover triggered automatic recovery.'
+      },
+      {
+        timestamp: '2026-03-30 03:15 UTC',
+        service: 'Search Engine API',
+        severity: 'Major',
+        status: 'Resolved',
+        duration: '1h 5m',
+        description: 'Search index corruption detected. Rebuilt index from replica, service fully restored.'
+      }
+    ];
+
+    /**
+     * Active (unresolved) alerts.
+     * Simulates alerts that are currently firing based on threshold breaches.
+     */
+    const activeAlerts = [
+      {
+        level: 'critical',
+        service: 'File Storage API',
+        message: 'Service unreachable — health check failing',
+        triggered: '2026-04-02 14:23 UTC'
+      },
+      {
+        level: 'warning',
+        service: 'Product Catalog API',
+        message: 'Response time exceeds 400ms threshold',
+        triggered: '2026-04-02 11:05 UTC'
+      }
+    ];
+
+    /* ================================================================
+       RENDERING FUNCTIONS
+       ================================================================
+       Functions that transform data into HTML elements for each section
+       of the dashboard.
+       ================================================================ */
+
+    /**
+     * renderHealthCards()
+     * -------------------
+     * Generates Bootstrap cards for each API endpoint showing:
+     *   - API name and endpoint path
+     *   - HTTP method badge (color-coded)
+     *   - Status indicator with pulse animation for operational services
+     *   - Response time and uptime metrics
+     */
+    function renderHealthCards() {
+      const container = document.getElementById('healthCards');
+
+      /* Map HTTP method to Bootstrap badge color for visual distinction */
+      const methodColors = {
+        'GET': 'bg-primary',
+        'POST': 'bg-success',
+        'PUT': 'bg-warning text-dark',
+        'DELETE': 'bg-danger',
+        'PATCH': 'bg-info'
+      };
+
+      /* Map status to appropriate alert class for card border */
+      const statusBorders = {
+        'operational': 'border-success',
+        'degraded': 'border-warning',
+        'down': 'border-danger'
+      };
+
+      container.innerHTML = apiServices.map((api, index) => `
+        <div class="col-lg-3 col-md-6">
+          <div class="card h-100 metric-card ${statusBorders[api.status]}" style="border-left: 4px solid;">
+            <div class="card-body">
+              <!-- API Name -->
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="card-title mb-0">${api.name}</h6>
+                <!-- HTTP Method badge -->
+                <span class="badge ${methodColors[api.method]}">${api.method}</span>
+              </div>
+
+              <!-- Endpoint path in monospace font -->
+              <small class="text-muted font-monospace d-block mb-3">${api.endpoint}</small>
+
+              <!-- Status indicator with pulse for operational -->
+              <div class="d-flex align-items-center mb-2">
+                <span class="status-dot ${api.status} ${api.status === 'operational' ? 'pulse' : ''}"></span>
+                <span class="text-capitalize fw-bold ${api.status === 'operational' ? 'text-success' : api.status === 'degraded' ? 'text-warning' : 'text-danger'}">
+                  ${api.status}
+                </span>
+              </div>
+
+              <!-- Metrics row -->
+              <div class="row text-center mt-3 pt-3 border-top">
+                <div class="col-6">
+                  <small class="text-muted d-block">Response</small>
+                  <strong class="${api.avgResponse > 500 ? 'text-danger' : api.avgResponse > 200 ? 'text-warning' : 'text-success'}">
+                    ${api.avgResponse}ms
+                  </strong>
+                </div>
+                <div class="col-6">
+                  <small class="text-muted d-block">Uptime</small>
+                  <strong class="${api.uptime < 99 ? 'text-danger' : api.uptime < 99.9 ? 'text-warning' : 'text-success'}">
+                    ${api.uptime}%
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /**
+     * renderUptimeBars()
+     * ------------------
+     * Creates a 30-segment bar for each API showing daily uptime.
+     * Green segments = fully operational day
+     * Red segments = day with detected downtime
+     * The 30-day average is displayed alongside the bar.
+     */
+    function renderUptimeBars() {
+      const container = document.getElementById('uptimeCards');
+
+      container.innerHTML = apiServices.map(api => {
+        /* Generate 30 days of uptime data, with random outages for realism */
+        const segments = Array.from({ length: 30 }, (_, i) => {
+          /* Simulate occasional outages: ~5% chance of a red segment */
+          const hasOutage = Math.random() < 0.05;
+          return `<div class="uptime-segment ${hasOutage ? 'bg-danger' : 'bg-success'}"
+                       title="Day ${i + 1}: ${hasOutage ? 'Outage detected' : '100% uptime'}"></div>`;
+        }).join('');
+
+        return `
+          <div class="col-lg-6">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <strong>${api.name}</strong>
+                  <span class="badge ${api.uptime >= 99.9 ? 'bg-success' : api.uptime >= 99 ? 'bg-warning text-dark' : 'bg-danger'}">
+                    ${api.uptime}% uptime
+                  </span>
+                </div>
+                <div class="uptime-bar">${segments}</div>
+                <small class="text-muted">30 days ago &rarr; Today</small>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /**
+     * renderResponseTimeGraphs()
+     * --------------------------
+     * Creates CSS-based bar charts for response time visualization.
+     * Each bar represents one simulated API request.
+     * Bar height = proportional to response time (max 1000ms mapped to 100px).
+     * Bar color = green (<200ms), yellow (200-500ms), red (>500ms).
+     */
+    function renderResponseTimeGraphs() {
+      const container = document.getElementById('responseTimeGraphs');
+
+      /* Select top 4 APIs to display graphs (avoids cluttering the page) */
+      const graphApis = apiServices.slice(0, 4);
+
+      container.innerHTML = graphApis.map(api => {
+        /* Generate 40 data points per API simulating recent request latencies */
+        const bars = Array.from({ length: 40 }, () => {
+          /* Generate response time centered around the API's average with variance */
+          const baseTime = api.avgResponse;
+          const variance = baseTime * 0.6;
+          const time = Math.max(20, baseTime + (Math.random() - 0.5) * variance);
+          const heightPercent = Math.min(100, (time / 1000) * 100);
+
+          /* Color based on latency thresholds */
+          const color = time < 200 ? '#198754' : time < 500 ? '#ffc107' : '#dc3545';
+
+          return `<div class="response-bar" style="height: ${heightPercent}%; background-color: ${color};"
+                       title="${Math.round(time)}ms"></div>`;
+        }).join('');
+
+        return `
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong>${api.name}</strong>
+                <small class="text-muted">Last 40 requests</small>
+              </div>
+              <div class="response-graph">${bars}</div>
+              <div class="d-flex justify-content-between mt-2">
+                <small class="text-muted">Avg: ${api.avgResponse}ms</small>
+                <small class="text-muted">P95: ${Math.round(api.avgResponse * 1.8)}ms</small>
+                <small class="text-muted">P99: ${Math.round(api.avgResponse * 2.5)}ms</small>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /**
+     * renderStatusPage()
+     * ------------------
+     * Renders a list of system components with status indicators.
+     * This mimics the layout of public status pages (e.g., GitHub Status).
+     */
+    function renderStatusPage() {
+      const list = document.getElementById('statusPageList');
+
+      list.innerHTML = statusComponents.map(component => `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center">
+            <span class="status-dot ${component.status} ${component.status === 'operational' ? 'pulse' : ''}"></span>
+            ${component.name}
+          </div>
+          <span class="badge ${
+            component.status === 'operational' ? 'bg-success' :
+            component.status === 'degraded' ? 'bg-warning text-dark' : 'bg-danger'
+          }">
+            ${component.status === 'operational' ? 'Operational' :
+              component.status === 'degraded' ? 'Degraded Performance' : 'Major Outage'}
+          </span>
+        </li>
+      `).join('');
+    }
+
+    /**
+     * renderIncidentTable()
+     * ---------------------
+     * Populates the incident log table with historical incident data.
+     * Severity and status badges use Bootstrap contextual colors.
+     */
+    function renderIncidentTable() {
+      const tbody = document.getElementById('incidentTableBody');
+
+      /* Map severity levels to Bootstrap badge classes */
+      const severityBadges = {
+        'Critical': 'bg-danger',
+        'Major': 'bg-warning text-dark',
+        'Minor': 'bg-info'
+      };
+
+      /* Map incident status to Bootstrap badge classes */
+      const statusBadges = {
+        'Investigating': 'bg-danger',
+        'Identified': 'bg-warning text-dark',
+        'Monitoring': 'bg-info',
+        'Resolved': 'bg-success'
+      };
+
+      tbody.innerHTML = incidents.map(incident => `
+        <tr class="${incident.status !== 'Resolved' ? 'table-warning' : ''}">
+          <td><small>${incident.timestamp}</small></td>
+          <td>${incident.service}</td>
+          <td><span class="badge ${severityBadges[incident.severity]}">${incident.severity}</span></td>
+          <td><span class="badge ${statusBadges[incident.status]}">${incident.status}</span></td>
+          <td>${incident.duration}</td>
+          <td><small>${incident.description}</small></td>
+        </tr>
+      `).join('');
+
+      /* Update the open incidents count badge */
+      const openCount = incidents.filter(i => i.status !== 'Resolved').length;
+      document.getElementById('openIncidentsCount').textContent = `${openCount} Open`;
+    }
+
+    /**
+     * renderActiveAlerts()
+     * --------------------
+     * Shows the current active (firing) alerts in a scrollable list.
+     * Each alert shows its severity, affected service, message, and trigger time.
+     */
+    function renderActiveAlerts() {
+      const list = document.getElementById('activeAlertsList');
+
+      list.innerHTML = activeAlerts.map(alert => `
+        <div class="list-group-item list-group-item-${alert.level === 'critical' ? 'danger' : 'warning'}">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="text-capitalize">${alert.level}</strong>
+            <small>${alert.triggered}</small>
+          </div>
+          <div class="mt-1">
+            <strong>${alert.service}</strong>
+            <p class="mb-0 small">${alert.message}</p>
+          </div>
+        </div>
+      `).join('');
+
+      /* Update badge count */
+      document.getElementById('activeAlertCount').textContent = activeAlerts.length;
+    }
+
+    /**
+     * renderSLACards()
+     * ----------------
+     * Creates circular SLA compliance indicators using CSS conic-gradient.
+     * Each card shows:
+     *   - The API service name
+     *   - A circular ring showing actual vs target performance
+     *   - A textual summary of compliance status
+     */
+    function renderSLACards() {
+      const container = document.getElementById('slaCards');
+
+      container.innerHTML = apiServices.slice(0, 6).map(api => {
+        /* Calculate percentage of SLA target that has been met */
+        const compliance = Math.min(100, (api.slaActual / api.slaTarget) * 100);
+        const isCompliant = api.slaActual >= api.slaTarget;
+
+        /* Determine ring color based on compliance status */
+        const ringColor = isCompliant ? '#198754' : compliance > 98 ? '#ffc107' : '#dc3545';
+
+        return `
+          <div class="col-lg-2 col-md-4 col-6">
+            <div class="card text-center metric-card">
+              <div class="card-body">
+                <h6 class="card-subtitle mb-3">${api.name.replace(' API', '')}</h6>
+                <!--
+                  SLA ring: conic-gradient draws a partial circle.
+                  The fill angle is proportional to compliance percentage.
+                -->
+                <div class="sla-ring mx-auto mb-2"
+                     style="background: conic-gradient(${ringColor} ${compliance * 3.6}deg, #e9ecef ${compliance * 3.6}deg);">
+                  <span>${api.slaActual}%</span>
+                </div>
+                <small class="d-block text-muted">Target: ${api.slaTarget}%</small>
+                <span class="badge ${isCompliant ? 'bg-success' : 'bg-danger'} mt-2">
+                  ${isCompliant ? 'Compliant' : 'Non-Compliant'}
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ================================================================
+       ALERT CONFIGURATION INTERACTIVITY
+       ================================================================
+       These event listeners update the displayed threshold values
+       as the user adjusts the range sliders.
+       ================================================================ */
+
+    /* Response time threshold slider */
+    document.getElementById('responseTimeThreshold').addEventListener('input', function() {
+      document.getElementById('responseTimeValue').textContent = this.value + 'ms';
+    });
+
+    /* Error rate threshold slider */
+    document.getElementById('errorRateThreshold').addEventListener('input', function() {
+      document.getElementById('errorRateValue').textContent = this.value + '%';
+    });
+
+    /* Uptime threshold slider */
+    document.getElementById('uptimeThreshold').addEventListener('input', function() {
+      document.getElementById('uptimeValue').textContent = parseFloat(this.value).toFixed(1) + '%';
+    });
+
+    /**
+     * saveAlertConfig()
+     * -----------------
+     * Simulates saving the alert configuration.
+     * In production, this would POST to an API endpoint that updates
+     * the monitoring system's alert rules.
+     */
+    function saveAlertConfig() {
+      const config = {
+        responseTimeThreshold: document.getElementById('responseTimeThreshold').value,
+        errorRateThreshold: document.getElementById('errorRateThreshold').value,
+        uptimeThreshold: document.getElementById('uptimeThreshold').value,
+        channels: {
+          email: document.getElementById('alertEmail').checked,
+          slack: document.getElementById('alertSlack').checked,
+          pagerDuty: document.getElementById('alertPagerDuty').checked,
+          sms: document.getElementById('alertSMS').checked
+        }
+      };
+
+      console.log('Alert configuration saved:', config);
+
+      /* Show Bootstrap toast-style feedback */
+      const btn = document.querySelector('#alerts .btn-primary');
+      const originalText = btn.textContent;
+      btn.textContent = 'Saved!';
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-success');
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-primary');
+      }, 2000);
+    }
+
+    /* ================================================================
+       REAL-TIME METRICS SIMULATION
+       ================================================================
+       setInterval updates the four key metrics every 2 seconds to
+       simulate a live data feed. Random variations are applied to
+       create realistic fluctuation patterns.
+
+       In a production system, these values would come from:
+       - Prometheus /metrics endpoint
+       - Datadog Agent
+       - Custom metrics pushed via StatsD or OpenTelemetry
+       ================================================================ */
+
+    /* Base values for real-time metrics */
+    let baseRps = 1250;          /* Requests per second */
+    let baseLatency = 185;       /* Average latency in ms */
+    let baseErrorRate = 0.4;     /* Error rate percentage */
+    let baseConnections = 3420;  /* Active WebSocket/HTTP connections */
+
+    function updateRealtimeMetrics() {
+      /* Apply random variance to simulate live fluctuations */
+      const rps = Math.round(baseRps + (Math.random() - 0.5) * 200);
+      const latency = Math.round(baseLatency + (Math.random() - 0.5) * 60);
+      const errorRate = Math.max(0, (baseErrorRate + (Math.random() - 0.5) * 0.3)).toFixed(2);
+      const connections = Math.round(baseConnections + (Math.random() - 0.5) * 400);
+
+      /* Update DOM elements with new values */
+      document.getElementById('metricRps').textContent = rps.toLocaleString();
+      document.getElementById('metricLatency').textContent = latency;
+      document.getElementById('metricErrorRate').textContent = errorRate + '%';
+      document.getElementById('metricConnections').textContent = connections.toLocaleString();
+
+      /* Color-code latency based on threshold */
+      const latencyEl = document.getElementById('metricLatency');
+      latencyEl.className = 'card-title mb-0 ' +
+        (latency > 500 ? 'text-danger' : latency > 200 ? 'text-warning' : 'text-success');
+
+      /* Color-code error rate */
+      const errorEl = document.getElementById('metricErrorRate');
+      errorEl.className = 'card-title mb-0 ' +
+        (parseFloat(errorRate) > 2 ? 'text-danger' : parseFloat(errorRate) > 1 ? 'text-warning' : 'text-success');
+    }
+
+    /* ================================================================
+       INITIALIZATION
+       ================================================================
+       On page load, render all dashboard sections and start the
+       real-time metrics simulation interval.
+       ================================================================ */
+
+    (function init() {
+      /* Render all static sections */
+      renderHealthCards();
+      renderUptimeBars();
+      renderResponseTimeGraphs();
+      renderStatusPage();
+      renderIncidentTable();
+      renderActiveAlerts();
+      renderSLACards();
+
+      /* Update last refresh timestamp */
+      document.getElementById('lastRefresh').textContent =
+        'Last refresh: ' + new Date().toLocaleTimeString();
+
+      /* Start real-time metric updates every 2 seconds */
+      updateRealtimeMetrics();
+      setInterval(updateRealtimeMetrics, 2000);
+
+      /* Refresh the last-updated timestamp every 10 seconds */
+      setInterval(() => {
+        document.getElementById('lastRefresh').textContent =
+          'Last refresh: ' + new Date().toLocaleTimeString();
+      }, 10000);
+    })();
+  </script>
+
+</body>
+</html>

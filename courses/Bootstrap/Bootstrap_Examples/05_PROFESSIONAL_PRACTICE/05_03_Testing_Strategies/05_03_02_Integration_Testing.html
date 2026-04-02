@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 05_03_02_Integration_Testing.html -->
+<!-- Integration Testing Strategies for Bootstrap Applications     -->
+<!-- Demonstrates testing how multiple Bootstrap components work  -->
+<!-- together, form workflows, navigation flows, and data flow    -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <!-- Required meta tags for responsive behavior -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Integration Testing Strategies for Bootstrap">
+
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <title>Integration Testing - Bootstrap</title>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- NAVIGATION - Tests verify navigation links route correctly   -->
+    <!-- and active states update when sections change                -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#" data-testid="brand">Integration Testing</a>
+            <button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#workflow" data-testid="nav-workflow">Workflow</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#data-flow" data-testid="nav-data">Data Flow</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#demo" data-testid="nav-demo">Demo</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HERO SECTION -->
+    <!-- Integration test: verify hero content renders and CTA       -->
+    <!-- button navigates to the workflow section correctly           -->
+    <!-- ============================================================ -->
+    <header class="bg-success text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold" data-testid="hero-title">Integration Testing</h1>
+            <p class="lead mt-3">Testing how multiple Bootstrap components work together as a system</p>
+            <a href="#workflow" class="btn btn-light btn-lg mt-3" data-testid="cta-button">
+                Explore Workflows
+            </a>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- WORKFLOW SECTION -->
+    <!-- Tests: Step navigation updates progress bar, form data      -->
+    <!-- persists across steps, and validation prevents skipping     -->
+    <!-- ============================================================ -->
+    <section class="py-5" id="workflow" data-testid="workflow-section">
+        <div class="container">
+            <h2 class="text-center mb-4">Multi-Step Workflow Test</h2>
+
+            <!-- Progress indicator - test: updates on step change -->
+            <div class="mb-4">
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: 33%;" id="stepProgress"
+                         data-testid="step-progress"></div>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <small class="text-success" data-testid="step-label-1">1. Details</small>
+                    <small class="text-muted" data-testid="step-label-2">2. Review</small>
+                    <small class="text-muted" data-testid="step-label-3">3. Confirm</small>
+                </div>
+            </div>
+
+            <!-- Step 1: Details Form -->
+            <div class="card" id="step1" data-testid="step-1-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Step 1: Enter Details</h5>
+                </div>
+                <div class="card-body">
+                    <form id="detailsForm" data-testid="details-form">
+                        <div class="row g-3">
+                            <!-- Test: input values carry to next step -->
+                            <div class="col-md-6">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="fullName"
+                                       required data-testid="input-name"
+                                       placeholder="John Doe">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email"
+                                       required data-testid="input-email"
+                                       placeholder="john@example.com">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Project Description</label>
+                                <textarea class="form-control" id="projectDesc"
+                                          rows="3" data-testid="input-desc"
+                                          placeholder="Describe your project..."></textarea>
+                            </div>
+                            <!-- Test: select value carries forward -->
+                            <div class="col-md-6">
+                                <label class="form-label">Framework</label>
+                                <select class="form-select" id="framework"
+                                        data-testid="select-framework">
+                                    <option value="bootstrap5">Bootstrap 5</option>
+                                    <option value="bootstrap4">Bootstrap 4</option>
+                                    <option value="tailwind">Tailwind CSS</option>
+                                </select>
+                            </div>
+                            <!-- Test: checkbox state persists -->
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           id="terms" data-testid="checkbox-terms">
+                                    <label class="form-check-label" for="terms">
+                                        I agree to the terms
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Test: next button advances step -->
+                        <button type="button" class="btn btn-primary mt-4"
+                                onclick="goToStep(2)"
+                                data-testid="btn-next-1">
+                            Next: Review &rarr;
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Step 2: Review (hidden initially) -->
+            <div class="card d-none" id="step2" data-testid="step-2-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Step 2: Review Information</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Test: populated values match step 1 inputs -->
+                    <dl class="row" data-testid="review-data">
+                        <dt class="col-sm-3">Name</dt>
+                        <dd class="col-sm-9" data-testid="review-name">-</dd>
+                        <dt class="col-sm-3">Email</dt>
+                        <dd class="col-sm-9" data-testid="review-email">-</dd>
+                        <dt class="col-sm-3">Description</dt>
+                        <dd class="col-sm-9" data-testid="review-desc">-</dd>
+                        <dt class="col-sm-3">Framework</dt>
+                        <dd class="col-sm-9" data-testid="review-framework">-</dd>
+                        <dt class="col-sm-3">Terms</dt>
+                        <dd class="col-sm-9" data-testid="review-terms">-</dd>
+                    </dl>
+                    <!-- Test: back button returns to step 1 -->
+                    <button class="btn btn-outline-secondary"
+                            onclick="goToStep(1)"
+                            data-testid="btn-back-2">
+                        &larr; Back
+                    </button>
+                    <!-- Test: next button advances to step 3 -->
+                    <button class="btn btn-primary ms-2"
+                            onclick="goToStep(3)"
+                            data-testid="btn-next-2">
+                        Next: Confirm &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Confirmation (hidden initially) -->
+            <div class="card d-none" id="step3" data-testid="step-3-card">
+                <div class="card-body text-center py-5">
+                    <!-- Test: success icon and message display -->
+                    <div class="mb-3">
+                        <span class="display-1 text-success">&#10003;</span>
+                    </div>
+                    <h3 class="text-success" data-testid="confirm-title">Integration Test Passed!</h3>
+                    <p class="text-muted" data-testid="confirm-message">
+                        All components worked together correctly across the multi-step workflow.
+                    </p>
+                    <!-- Test: restart button resets all steps -->
+                    <button class="btn btn-outline-primary"
+                            onclick="goToStep(1)"
+                            data-testid="btn-restart">
+                        Start Over
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- DATA FLOW SECTION -->
+    <!-- Integration test: verify data flows between components      -->
+    <!-- correctly - dropdown selection filters the table data        -->
+    <!-- ============================================================ -->
+    <section class="py-5 bg-light" id="data-flow" data-testid="dataflow-section">
+        <div class="container">
+            <h2 class="text-center mb-4">Data Flow Integration Test</h2>
+
+            <div class="row">
+                <!-- Filter controls - test: selection updates table -->
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">Filters</div>
+                        <div class="card-body">
+                            <!-- Test: selecting category filters table rows -->
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="categoryFilter"
+                                        onchange="filterTable()"
+                                        data-testid="filter-category">
+                                    <option value="all">All Categories</option>
+                                    <option value="button">Buttons</option>
+                                    <option value="form">Forms</option>
+                                    <option value="nav">Navigation</option>
+                                </select>
+                            </div>
+                            <!-- Test: search input filters table -->
+                            <div class="mb-3">
+                                <label class="form-label">Search</label>
+                                <input type="text" class="form-control" id="searchFilter"
+                                       oninput="filterTable()"
+                                       placeholder="Search components..."
+                                       data-testid="filter-search">
+                            </div>
+                            <!-- Test: checkbox toggles show only tested -->
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                       id="testedOnly" onchange="filterTable()"
+                                       data-testid="filter-tested">
+                                <label class="form-check-label" for="testedOnly">
+                                    Show only tested
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results table - test: rows update based on filters -->
+                <div class="col-md-8">
+                    <div class="table-responsive">
+                        <table class="table table-striped" data-testid="component-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Category</th>
+                                    <th>Tested</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="componentTableBody" data-testid="table-body">
+                                <!-- Test: each row matches filter criteria -->
+                                <tr data-category="button" data-tested="true">
+                                    <td>Primary Button</td>
+                                    <td><span class="badge bg-info">button</span></td>
+                                    <td><span class="badge bg-success">Yes</span></td>
+                                    <td><span class="badge bg-success">Pass</span></td>
+                                </tr>
+                                <tr data-category="button" data-tested="true">
+                                    <td>Button Group</td>
+                                    <td><span class="badge bg-info">button</span></td>
+                                    <td><span class="badge bg-success">Yes</span></td>
+                                    <td><span class="badge bg-success">Pass</span></td>
+                                </tr>
+                                <tr data-category="form" data-tested="true">
+                                    <td>Text Input</td>
+                                    <td><span class="badge bg-warning text-dark">form</span></td>
+                                    <td><span class="badge bg-success">Yes</span></td>
+                                    <td><span class="badge bg-danger">Fail</span></td>
+                                </tr>
+                                <tr data-category="form" data-tested="false">
+                                    <td>Select Dropdown</td>
+                                    <td><span class="badge bg-warning text-dark">form</span></td>
+                                    <td><span class="badge bg-secondary">No</span></td>
+                                    <td><span class="badge bg-secondary">Pending</span></td>
+                                </tr>
+                                <tr data-category="nav" data-tested="true">
+                                    <td>Navbar</td>
+                                    <td><span class="badge bg-primary">nav</span></td>
+                                    <td><span class="badge bg-success">Yes</span></td>
+                                    <td><span class="badge bg-success">Pass</span></td>
+                                </tr>
+                                <tr data-category="nav" data-tested="false">
+                                    <td>Breadcrumb</td>
+                                    <td><span class="badge bg-primary">nav</span></td>
+                                    <td><span class="badge bg-secondary">No</span></td>
+                                    <td><span class="badge bg-secondary">Pending</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Test: row count updates with filters -->
+                    <p class="text-muted" data-testid="row-count">Showing 6 of 6 components</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- INTERACTIVE DEMO -->
+    <!-- Integration test: modal opens, form submits inside modal,   -->
+    <!-- toast notification appears, and modal closes after submit   -->
+    <!-- ============================================================ -->
+    <section class="py-5" id="demo" data-testid="demo-section">
+        <div class="container text-center">
+            <h2 class="mb-4">Component Interaction Demo</h2>
+            <p class="text-muted mb-4">
+                Test the integration between modal, form, and toast notifications.
+            </p>
+            <!-- Test: button opens modal -->
+            <button class="btn btn-primary btn-lg" data-bs-toggle="modal"
+                    data-bs-target="#integrationModal" data-testid="btn-open-modal">
+                Open Integration Modal
+            </button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODAL COMPONENT -->
+    <!-- Integration test: modal form submits, toast shows, modal   -->
+    <!-- closes - all in sequence without errors                      -->
+    <!-- ============================================================ -->
+    <div class="modal fade" id="integrationModal" tabindex="-1" aria-hidden="true"
+         data-testid="integration-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Integration Feedback</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close" data-testid="modal-close-btn"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="modalForm" data-testid="modal-form">
+                        <!-- Test: rating selection works -->
+                        <div class="mb-3">
+                            <label class="form-label">Rating</label>
+                            <div class="btn-group" role="group" data-testid="rating-group">
+                                <input type="radio" class="btn-check" name="rating"
+                                       id="rate1" value="1">
+                                <label class="btn btn-outline-primary" for="rate1">1</label>
+                                <input type="radio" class="btn-check" name="rating"
+                                       id="rate2" value="2">
+                                <label class="btn btn-outline-primary" for="rate2">2</label>
+                                <input type="radio" class="btn-check" name="rating"
+                                       id="rate3" value="3" checked>
+                                <label class="btn btn-outline-primary" for="rate3">3</label>
+                                <input type="radio" class="btn-check" name="rating"
+                                       id="rate4" value="4">
+                                <label class="btn btn-outline-primary" for="rate4">4</label>
+                                <input type="radio" class="btn-check" name="rating"
+                                       id="rate5" value="5">
+                                <label class="btn btn-outline-primary" for="rate5">5</label>
+                            </div>
+                        </div>
+                        <!-- Test: feedback textarea accepts input -->
+                        <div class="mb-3">
+                            <label class="form-label">Feedback</label>
+                            <textarea class="form-control" id="feedback"
+                                      rows="3" required
+                                      data-testid="modal-feedback"
+                                      placeholder="Share your integration testing experience..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal" data-testid="modal-cancel">
+                        Cancel
+                    </button>
+                    <!-- Test: submit triggers toast and closes modal -->
+                    <button type="button" class="btn btn-primary"
+                            onclick="submitModalForm()" data-testid="modal-submit">
+                        Submit Feedback
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TOAST NOTIFICATION -->
+    <!-- Integration test: toast appears after form submission with  -->
+    <!-- correct message and auto-hides after timeout                 -->
+    <!-- ============================================================ -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast" role="alert" data-testid="success-toast">
+            <div class="toast-header bg-success text-white">
+                <strong class="me-auto">Success</strong>
+                <small>Just now</small>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" data-testid="toast-message">
+                Feedback submitted successfully!
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER -->
+    <!-- ============================================================ -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2026 Integration Testing Guide</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3.3 JS Bundle via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ============================================================ */
+        /* goToStep: Manages multi-step workflow navigation              */
+        /* Integration tests: verify progress bar updates, data flows, */
+        /* and previous step data persists when returning               */
+        /* ============================================================ */
+        let currentStep = 1;
+
+        function goToStep(step) {
+            /* Validate before advancing - test: cannot skip required fields */
+            if (step === 2 && currentStep === 1) {
+                const name = document.getElementById('fullName').value;
+                const email = document.getElementById('email').value;
+                if (!name || !email) {
+                    alert('Please fill in required fields');
+                    return;
+                }
+                /* Populate review data - test: values match input */
+                document.querySelector('[data-testid="review-name"]').textContent = name;
+                document.querySelector('[data-testid="review-email"]').textContent = email;
+                document.querySelector('[data-testid="review-desc"]').textContent =
+                    document.getElementById('projectDesc').value || 'Not provided';
+                document.querySelector('[data-testid="review-framework"]').textContent =
+                    document.getElementById('framework').value;
+                document.querySelector('[data-testid="review-terms"]').textContent =
+                    document.getElementById('terms').checked ? 'Accepted' : 'Not accepted';
+            }
+
+            /* Hide all steps - test: only target step is visible */
+            document.querySelectorAll('[id^="step"]').forEach(el => {
+                if (el.id.match(/^step\d$/)) el.classList.add('d-none');
+            });
+
+            /* Show target step */
+            const targetStep = document.getElementById('step' + step);
+            if (targetStep) targetStep.classList.remove('d-none');
+
+            /* Update progress bar - test: width matches step percentage */
+            const progress = document.getElementById('stepProgress');
+            const percent = (step / 3) * 100;
+            progress.style.width = percent + '%';
+            progress.setAttribute('aria-valuenow', percent);
+
+            /* Update step labels - test: active step label is highlighted */
+            for (let i = 1; i <= 3; i++) {
+                const label = document.querySelector(`[data-testid="step-label-${i}"]`);
+                label.className = i <= step ? 'text-success' : 'text-muted';
+            }
+
+            currentStep = step;
+        }
+
+        /* ============================================================ */
+        /* filterTable: Filters table rows based on dropdown, search,  */
+        /* and checkbox selections simultaneously                        */
+        /* Integration tests: verify combined filters work correctly    */
+        /* ============================================================ */
+        function filterTable() {
+            const category = document.getElementById('categoryFilter').value;
+            const search = document.getElementById('searchFilter').value.toLowerCase();
+            const testedOnly = document.getElementById('testedOnly').checked;
+
+            const rows = document.querySelectorAll('#componentTableBody tr');
+            let visible = 0;
+
+            rows.forEach(row => {
+                /* Test: row visibility matches filter criteria */
+                const rowCategory = row.getAttribute('data-category');
+                const rowTested = row.getAttribute('data-tested') === 'true';
+                const rowText = row.textContent.toLowerCase();
+
+                let show = true;
+
+                if (category !== 'all' && rowCategory !== category) show = false;
+                if (search && !rowText.includes(search)) show = false;
+                if (testedOnly && !rowTested) show = false;
+
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            /* Update row count - test: count matches visible rows */
+            document.querySelector('[data-testid="row-count"]').textContent =
+                `Showing ${visible} of ${rows.length} components`;
+        }
+
+        /* ============================================================ */
+        /* submitModalForm: Handles modal form submission               */
+        /* Integration test: verify modal closes, toast shows, and    */
+        /* form resets in correct sequence                              */
+        /* ============================================================ */
+        function submitModalForm() {
+            const feedback = document.getElementById('feedback').value;
+            if (!feedback) {
+                document.getElementById('feedback').classList.add('is-invalid');
+                return;
+            }
+
+            /* Close modal - test: modal hidden event fires */
+            const modal = bootstrap.Modal.getInstance(
+                document.getElementById('integrationModal')
+            );
+            modal.hide();
+
+            /* Show toast after modal closes - test: toast appears */
+            setTimeout(() => {
+                const toast = new bootstrap.Toast(
+                    document.getElementById('successToast')
+                );
+                toast.show();
+            }, 500);
+
+            /* Reset form - test: form fields are cleared */
+            document.getElementById('modalForm').reset();
+            document.getElementById('feedback').classList.remove('is-invalid');
+        }
+    </script>
+</body>
+</html>

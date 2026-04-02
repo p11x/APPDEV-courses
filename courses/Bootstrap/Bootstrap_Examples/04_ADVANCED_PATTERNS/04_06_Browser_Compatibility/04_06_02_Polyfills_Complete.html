@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_06_02_Polyfills_Complete.html                              -->
+<!-- Polyfill Patterns for Bootstrap 5 Cross-Browser Support      -->
+<!-- Demonstrates common polyfills needed for legacy browser       -->
+<!-- compatibility with Bootstrap 5 components and CSS features   -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>04_06_02 - Polyfill Patterns</title>
+    
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* ======================================================== */
+        /* CSS CUSTOM PROPERTIES FALLBACK EXAMPLE                   */
+        /* Browsers without CSS variable support need fallbacks    */
+        /* ======================================================== */
+        :root {
+            /* Define custom properties for theming */
+            --brand-primary: #0d6efd;
+            --brand-secondary: #6c757d;
+            --brand-success: #198754;
+            --spacing-unit: 1rem;
+        }
+
+        /* ======================================================== */
+        /* FEATURE-DETECTION BASED STYLING                          */
+        /* Progressive enhancement approach - base styles first,   */
+        /* then enhanced styles for capable browsers               */
+        /* ======================================================== */
+        
+        /* Base styles (works everywhere) */
+        .polyfill-demo {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            background-color: #f8f9fa;
+        }
+
+        /* Enhanced styles using custom properties */
+        .polyfill-demo.enhanced {
+            /* Fallback color before var() - old browsers use this */
+            background-color: #e7f1ff;
+            background-color: var(--brand-light, #e7f1ff);
+            border-color: var(--brand-primary, #0d6efd);
+        }
+
+        /* ======================================================== */
+        /* CSS GRID WITH FLEXBOX FALLBACK                           */
+        /* Flexbox fallback for browsers without CSS Grid support   */
+        /* ======================================================== */
+        .grid-polyfill-container {
+            /* Fallback: Flexbox layout (IE 10-11 partial support) */
+            display: -ms-flexbox; /* IE 10 prefix */
+            display: flex;
+            -ms-flex-wrap: wrap; /* IE 10 prefix */
+            flex-wrap: wrap;
+            margin: -0.5rem;
+        }
+        
+        .grid-polyfill-item {
+            /* Flexbox fallback sizing */
+            -ms-flex: 0 0 50%; /* IE 10 */
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding: 0.5rem;
+        }
+        
+        /* Modern browsers override with CSS Grid */
+        @supports (display: grid) {
+            .grid-polyfill-container {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1rem;
+                margin: 0; /* Reset flex negative margin */
+            }
+            .grid-polyfill-item {
+                /* Reset flex properties when grid is available */
+                -ms-flex: none;
+                flex: none;
+                max-width: none;
+                padding: 0;
+            }
+        }
+
+        /* ======================================================== */
+        /* PLACEHOLDER SHIM STYLES                                  */
+        /* CSS fallback for ::placeholder pseudo-element            */
+        /* ======================================================== */
+        .placeholder-shim-input {
+            /* Standard syntax */
+            color: #6c757d;
+        }
+        /* WebKit/Blink browsers */
+        .placeholder-shim-input::-webkit-input-placeholder {
+            color: #6c757d;
+            opacity: 1;
+        }
+        /* Firefox 19- */
+        .placeholder-shim-input::-moz-placeholder {
+            color: #6c757d;
+            opacity: 1;
+        }
+        /* IE 10-11 */
+        .placeholder-shim-input:-ms-input-placeholder {
+            color: #6c757d;
+        }
+        /* Standard (modern browsers) */
+        .placeholder-shim-input::placeholder {
+            color: #6c757d;
+            opacity: 1;
+        }
+
+        /* ======================================================== */
+        /* OBJECT-FIT POLYFILL FALLBACK                             */
+        /* object-fit not supported in IE 11 - needs JS polyfill   */
+        /* ======================================================== */
+        .object-fit-demo img {
+            width: 100%;
+            height: 200px;
+            /* Modern browsers use object-fit */
+            object-fit: cover;
+            /* IE 11 will ignore object-fit and stretch the image */
+        }
+
+        /* ======================================================== */
+        /* FOCUS-VISIBLE FALLBACK                                   */
+        /* :focus-visible not in older browsers - progressive      */
+        /* enhancement approach                                    */
+        /* ======================================================== */
+        .focus-demo-btn {
+            /* Base focus style (all browsers) */
+            outline: none;
+            border: 2px solid transparent;
+        }
+        /* Keyboard-only focus (modern browsers with :focus-visible) */
+        .focus-demo-btn:focus-visible {
+            outline: 2px solid #0d6efd;
+            outline-offset: 2px;
+        }
+        /* Fallback for browsers without :focus-visible */
+        .focus-demo-btn:focus {
+            outline: 2px solid #0d6efd;
+            outline-offset: 2px;
+        }
+        /* Remove the fallback when :focus-visible is supported */
+        @supports selector(:focus-visible) {
+            .focus-demo-btn:focus {
+                outline: none;
+            }
+        }
+
+        /* ======================================================== */
+        /* ASPECT-RATIO FALLBACK                                    */
+        /* aspect-ratio CSS property needs padding-bottom hack     */
+        /* for older browsers                                      */
+        /* ======================================================== */
+        .aspect-ratio-box {
+            /* Modern approach */
+            aspect-ratio: 16 / 9;
+            /* Fallback: padding-bottom hack for older browsers */
+            height: 0;
+            padding-bottom: 56.25%; /* 9/16 = 0.5625 = 56.25% */
+            position: relative;
+            background: #dee2e6;
+            border-radius: 0.375rem;
+        }
+        /* If aspect-ratio is supported, reset the hack */
+        @supports (aspect-ratio: 1) {
+            .aspect-ratio-box {
+                height: auto;
+                padding-bottom: 0;
+            }
+        }
+        .aspect-ratio-box .content {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Reset for modern browsers */
+        @supports (aspect-ratio: 1) {
+            .aspect-ratio-box .content {
+                position: static;
+                min-height: 200px;
+            }
+        }
+
+        /* ======================================================== */
+        /* SCROLL-BEHAVIOR SMOOTH FALLBACK                          */
+        /* smooth scrolling not in Safari <15.4 or IE             */
+        /* ======================================================== */
+        html {
+            /* Fallback: auto scroll for older browsers */
+            scroll-behavior: auto;
+        }
+        @supports (scroll-behavior: smooth) {
+            html {
+                scroll-behavior: smooth;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- NAVIGATION                                                   -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Polyfill Patterns Lab</a>
+            <button class="navbar-toggler" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#cssPolyfills">CSS</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#jsPolyfills">JavaScript</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#html5Polyfills">HTML5</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#polyfillLibraries">Libraries</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HERO SECTION                                                 -->
+    <!-- ============================================================ -->
+    <header class="bg-success text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Polyfill Patterns</h1>
+            <p class="lead">
+                Progressive enhancement through polyfills - adding missing browser
+                features using JavaScript and CSS fallback strategies.
+            </p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: CSS POLYFILLS & FALLBACKS                     -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="cssPolyfills">
+            <h2 class="border-bottom pb-2 mb-4">1. CSS Polyfills & Fallbacks</h2>
+            
+            <!-- CSS Custom Properties Demo -->
+            <div class="polyfill-demo enhanced mb-3">
+                <h5>CSS Custom Properties (Variables)</h5>
+                <p>
+                    Bootstrap 5 uses CSS custom properties extensively for theming.
+                    Browsers without support (IE 11) need fallback values.
+                </p>
+                <code>background-color: var(--brand-light, #e7f1ff);</code>
+                <p class="mt-2 mb-0 small text-muted">
+                    The fallback value (#e7f1ff) after the comma is used when
+                    the browser doesn't support CSS variables.
+                </p>
+            </div>
+            
+            <!-- CSS Grid with Flexbox fallback -->
+            <div class="polyfill-demo mb-3">
+                <h5>CSS Grid with Flexbox Fallback</h5>
+                <p>
+                    Using <code>@supports</code> to provide CSS Grid for capable
+                    browsers and Flexbox fallback for older ones.
+                </p>
+                <div class="grid-polyfill-container">
+                    <div class="grid-polyfill-item">
+                        <div class="bg-primary text-white p-3 rounded text-center">Item 1</div>
+                    </div>
+                    <div class="grid-polyfill-item">
+                        <div class="bg-success text-white p-3 rounded text-center">Item 2</div>
+                    </div>
+                    <div class="grid-polyfill-item">
+                        <div class="bg-warning p-3 rounded text-center">Item 3</div>
+                    </div>
+                    <div class="grid-polyfill-item">
+                        <div class="bg-danger text-white p-3 rounded text-center">Item 4</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Aspect Ratio fallback -->
+            <div class="polyfill-demo mb-3">
+                <h5>Aspect Ratio Fallback</h5>
+                <p>
+                    The <code>aspect-ratio</code> property is relatively new.
+                    Use padding-bottom hack for older browsers.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="aspect-ratio-box">
+                            <div class="content">
+                                <span class="fw-bold">16:9 Aspect Ratio</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mt-3 mt-md-0">
+                            <strong>Padding-bottom hack:</strong><br>
+                            <code>height: 0; padding-bottom: 56.25%;</code><br>
+                            Creates a responsive 16:9 container that works in all browsers.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Focus-visible fallback -->
+            <div class="polyfill-demo mb-3">
+                <h5>:focus-visible Fallback</h5>
+                <p>
+                    <code>:focus-visible</code> allows differentiating keyboard focus
+                    from mouse focus. Not supported in older browsers.
+                </p>
+                <button class="btn btn-primary focus-demo-btn me-2">Tab to me</button>
+                <button class="btn btn-outline-primary focus-demo-btn me-2">Or click me</button>
+                <button class="btn btn-secondary focus-demo-btn">Another button</button>
+                <p class="mt-2 small text-muted">
+                    Keyboard focus shows a ring, mouse click doesn't (in supporting browsers).
+                    Uses <code>@supports selector(:focus-visible)</code> for detection.
+                </p>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: JAVASCRIPT POLYFILLS                          -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="jsPolyfills">
+            <h2 class="border-bottom pb-2 mb-4">2. JavaScript Polyfills</h2>
+            
+            <div class="row">
+                <!-- Array methods polyfills -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Array Methods</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                <code>Array.from()</code>, <code>Array.find()</code>,
+                                <code>Array.includes()</code>, <code>Array.flat()</code>
+                            </p>
+                            <!-- Array.from() polyfill example -->
+                            <pre class="bg-light p-2 rounded small mb-2"><code>// Array.from() polyfill for IE 11
+if (!Array.from) {
+  Array.from = function(arrayLike) {
+    return [].slice.call(arrayLike);
+  };
+}</code></pre>
+                            <!-- Array.includes() polyfill example -->
+                            <pre class="bg-light p-2 rounded small mb-0"><code>// Array.includes() polyfill
+if (!Array.prototype.includes) {
+  Array.prototype.includes = function(searchElement) {
+    return this.indexOf(searchElement) !== -1;
+  };
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Object methods polyfills -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Object Methods</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                <code>Object.assign()</code>, <code>Object.entries()</code>,
+                                <code>Object.values()</code>, <code>Object.keys()</code>
+                            </p>
+                            <pre class="bg-light p-2 rounded small mb-2"><code>// Object.assign() polyfill for IE 11
+if (typeof Object.assign !== 'function') {
+  Object.assign = function(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty
+            .call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- String methods polyfills -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0">String Methods</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                <code>String.includes()</code>, <code>String.startsWith()</code>,
+                                <code>String.endsWith()</code>, <code>String.repeat()</code>
+                            </p>
+                            <pre class="bg-light p-2 rounded small mb-0"><code>// String.includes() polyfill
+if (!String.prototype.includes) {
+  String.prototype.includes = function(search, start) {
+    if (typeof start !== 'number') start = 0;
+    return this.indexOf(search, start) !== -1;
+  };
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- DOM API polyfills -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">DOM API Methods</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                <code>Element.closest()</code>,
+                                <code>Element.matches()</code>,
+                                <code>NodeList.forEach()</code>
+                            </p>
+                            <pre class="bg-light p-2 rounded small mb-0"><code>// Element.closest() polyfill for IE 11
+if (!Element.prototype.closest) {
+  Element.prototype.closest = function(selector) {
+    var el = this;
+    while (el && el.nodeType === 1) {
+      if (el.matches(selector)) return el;
+      el = el.parentElement;
+    }
+    return null;
+  };
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interactive polyfill test -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Interactive Polyfill Tests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary mb-2 w-100" 
+                                    onclick="testPolyfill('assign')">
+                                Test Object.assign()
+                            </button>
+                            <button class="btn btn-outline-success mb-2 w-100" 
+                                    onclick="testPolyfill('includes')">
+                                Test Array.includes()
+                            </button>
+                            <button class="btn btn-outline-warning mb-2 w-100" 
+                                    onclick="testPolyfill('find')">
+                                Test Array.find()
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-info mb-2 w-100" 
+                                    onclick="testPolyfill('closest')">
+                                Test Element.closest()
+                            </button>
+                            <button class="btn btn-outline-danger mb-2 w-100" 
+                                    onclick="testPolyfill('promise')">
+                                Test Promise
+                            </button>
+                            <button class="btn btn-outline-dark mb-2 w-100" 
+                                    onclick="testPolyfill('fetch')">
+                                Test fetch()
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Test results display area -->
+                    <div id="polyfillResults" class="mt-3 p-3 bg-light rounded" style="min-height: 100px;">
+                        <p class="text-muted mb-0">Click a button above to test polyfill support.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: HTML5 ELEMENT POLYFILLS                       -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="html5Polyfills">
+            <h2 class="border-bottom pb-2 mb-4">3. HTML5 Element Polyfills</h2>
+            
+            <div class="row">
+                <!-- Details/Summary polyfill -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">&lt;details&gt; / &lt;summary&gt;</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted">
+                                Native in all modern browsers. IE 11 needs a JS polyfill.
+                            </p>
+                            <!-- details/summary - native accordion behavior -->
+                            <details class="border rounded p-2 mb-2">
+                                <summary class="fw-bold" style="cursor: pointer;">
+                                    Click to expand details
+                                </summary>
+                                <div class="mt-2 p-2 bg-light rounded">
+                                    This content is hidden by default and revealed on click.
+                                    Works natively in Chrome, Firefox, Safari, Edge.
+                                    IE 11 would need a JavaScript polyfill.
+                                </div>
+                            </details>
+                            <details class="border rounded p-2">
+                                <summary class="fw-bold" style="cursor: pointer;">
+                                    Another collapsible section
+                                </summary>
+                                <div class="mt-2 p-2 bg-light rounded">
+                                    Each &lt;details&gt; element operates independently.
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Input type polyfills -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">HTML5 Input Types</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted">
+                                Degrade to text input in unsupported browsers.
+                            </p>
+                            <!-- date input - varies greatly across browsers -->
+                            <div class="mb-2">
+                                <label class="form-label small">Date Picker</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <!-- time input -->
+                            <div class="mb-2">
+                                <label class="form-label small">Time Picker</label>
+                                <input type="time" class="form-control form-control-sm">
+                            </div>
+                            <!-- number input with step -->
+                            <div class="mb-2">
+                                <label class="form-label small">Number (step: 0.5)</label>
+                                <input type="number" class="form-control form-control-sm" 
+                                       step="0.5" min="0" max="10">
+                            </div>
+                            <!-- email input with validation -->
+                            <div class="mb-2">
+                                <label class="form-label small">Email</label>
+                                <input type="email" class="form-control form-control-sm" 
+                                       placeholder="user@example.com">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: POLYFILL LIBRARIES REFERENCE                  -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="polyfillLibraries">
+            <h2 class="border-bottom pb-2 mb-4">4. Polyfill Libraries Reference</h2>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Library</th>
+                            <th>Purpose</th>
+                            <th>Size (gzip)</th>
+                            <th>IE Support</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>core-js</strong></td>
+                            <td>Comprehensive ES6+ polyfills (Array, Object, Promise, etc.)</td>
+                            <td>~30KB (selective)</td>
+                            <td>IE 9+</td>
+                        </tr>
+                        <tr>
+                            <td><strong>polyfill.io</strong></td>
+                            <td>Auto-detects browser, serves only needed polyfills</td>
+                            <td>Variable</td>
+                            <td>IE 9+</td>
+                        </tr>
+                        <tr>
+                            <td><strong>regenerator-runtime</strong></td>
+                            <td>async/await and generator functions</td>
+                            <td>~4KB</td>
+                            <td>IE 9+</td>
+                        </tr>
+                        <tr>
+                            <td><strong>whatwg-fetch</strong></td>
+                            <td>fetch() API polyfill (uses XMLHttpRequest)</td>
+                            <td>~5KB</td>
+                            <td>IE 11+</td>
+                        </tr>
+                        <tr>
+                            <td><strong>element-closest</strong></td>
+                            <td>Element.closest() method</td>
+                            <td>~0.3KB</td>
+                            <td>IE 11+</td>
+                        </tr>
+                        <tr>
+                            <td><strong>classlist-polyfill</strong></td>
+                            <td>Element.classList API</td>
+                            <td>~1KB</td>
+                            <td>IE 10+</td>
+                        </tr>
+                        <tr>
+                            <td><strong>css-vars-ponyfill</strong></td>
+                            <td>CSS Custom Properties runtime support</td>
+                            <td>~7KB</td>
+                            <td>IE 11</td>
+                        </tr>
+                        <tr>
+                            <td><strong>intersection-observer</strong></td>
+                            <td>Intersection Observer API</td>
+                            <td>~3KB</td>
+                            <td>IE 11+</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Conditional loading pattern -->
+            <div class="card mt-3">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Conditional Polyfill Loading Pattern</h5>
+                </div>
+                <div class="card-body">
+                    <p>Load polyfills only when needed, using feature detection:</p>
+                    <pre class="bg-light p-3 rounded small mb-0"><code>&lt;!-- Load polyfills conditionally --&gt;
+&lt;script&gt;
+  // Only load fetch polyfill if fetch is not natively supported
+  if (!window.fetch) {
+    document.write('&lt;script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.2/dist/fetch.umd.js"&gt;&lt;\/script&gt;');
+  }
+  
+  // Only load Promise polyfill if needed
+  if (typeof Promise === 'undefined') {
+    document.write('&lt;script src="https://cdn.jsdelivr.net/npm/es6-promise@4.2.8/dist/es6-promise.auto.min.js"&gt;&lt;\/script&gt;');
+  }
+  
+  // Check for CSS Custom Properties support
+  if (!CSS || !CSS.supports || !CSS.supports('color', 'var(--test)')) {
+    // Load css-vars-ponyfill
+    document.write('&lt;script src="https://cdn.jsdelivr.net/npm/css-vars-ponyfill@2.4.9/dist/css-vars-ponyfill.min.js"&gt;&lt;\/script&gt;');
+  }
+&lt;/script&gt;
+
+&lt;!-- Then load your main application code --&gt;
+&lt;script src="app.js"&gt;&lt;/script&gt;</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 5: BOOTSTRAP 5 POLYFILL REQUIREMENTS             -->
+        <!-- ======================================================== -->
+        <section class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">5. Bootstrap 5 Polyfill Requirements</h2>
+            
+            <div class="alert alert-info">
+                <strong>Important:</strong> Bootstrap 5 dropped IE 11 support. The following
+                information is for reference if you need to support legacy browsers.
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-success h-100">
+                        <div class="card-header bg-success text-white">
+                            What Bootstrap 5 Uses (Modern)
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li><strong>CSS Custom Properties</strong> - theming system</li>
+                                <li><strong>CSS Grid</strong> - utility classes</li>
+                                <li><strong>Flexbox</strong> - grid system core</li>
+                                <li><strong>ES6 JavaScript</strong> - let, const, arrow functions</li>
+                                <li><strong>ES6 Classes</strong> - component architecture</li>
+                                <li><strong>Arrow functions</strong> - event handlers</li>
+                                <li><strong>Template literals</strong> - string building</li>
+                                <li><strong>destructuring</strong> - config objects</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-danger h-100">
+                        <div class="card-header bg-danger text-white">
+                            What IE 11 Would Need
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0">
+                                <li><strong>core-js</strong> - ES6+ polyfills</li>
+                                <li><strong>regenerator-runtime</strong> - async/await</li>
+                                <li><strong>css-vars-ponyfill</strong> - CSS variables</li>
+                                <li><strong>CustomEvent polyfill</strong> - event dispatch</li>
+                                <li><strong>classList polyfill</strong> - class manipulation</li>
+                                <li><strong>Promise polyfill</strong> - async operations</li>
+                                <li><strong>Fetch polyfill</strong> - AJAX requests</li>
+                                <li><strong>Babel transpiler</strong> - ES6 to ES5</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                       -->
+    <!-- ============================================================ -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Polyfill Patterns &copy; 2024 | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <!-- ============================================================ -->
+    <!-- BOOTSTRAP JS BUNDLE                                          -->
+    <!-- ============================================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- POLYFILL TESTING SCRIPTS                                     -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // POLYFILL TEST FUNCTION
+        // Tests whether specific features are natively available
+        // ============================================================
+        function testPolyfill(feature) {
+            var results = document.getElementById('polyfillResults');
+            var output = '<h6>Test Results:</h6>';
+            
+            switch(feature) {
+                case 'assign':
+                    // Test Object.assign() availability
+                    var hasAssign = typeof Object.assign === 'function';
+                    output += '<p><strong>Object.assign():</strong> ' + 
+                              (hasAssign ? '<span class="text-success">Native</span>' : 
+                              '<span class="text-danger">Needs polyfill</span>') + '</p>';
+                    if (hasAssign) {
+                        var obj = Object.assign({}, {a: 1}, {b: 2});
+                        output += '<p class="small">Result: ' + JSON.stringify(obj) + '</p>';
+                    }
+                    break;
+                    
+                case 'includes':
+                    // Test Array.includes() availability
+                    var hasIncludes = typeof Array.prototype.includes === 'function';
+                    output += '<p><strong>Array.includes():</strong> ' + 
+                              (hasIncludes ? '<span class="text-success">Native</span>' : 
+                              '<span class="text-danger">Needs polyfill</span>') + '</p>';
+                    if (hasIncludes) {
+                        output += '<p class="small">[1,2,3].includes(2) = ' + 
+                                  [1,2,3].includes(2) + '</p>';
+                    }
+                    break;
+                    
+                case 'find':
+                    // Test Array.find() availability
+                    var hasFind = typeof Array.prototype.find === 'function';
+                    output += '<p><strong>Array.find():</strong> ' + 
+                              (hasFind ? '<span class="text-success">Native</span>' : 
+                              '<span class="text-danger">Needs polyfill</span>') + '</p>';
+                    if (hasFind) {
+                        var found = [{n:'a'},{n:'b'},{n:'c'}].find(function(x){return x.n==='b';});
+                        output += '<p class="small">Result: ' + JSON.stringify(found) + '</p>';
+                    }
+                    break;
+                    
+                case 'closest':
+                    // Test Element.closest() availability
+                    var hasClosest = typeof Element.prototype.closest === 'function';
+                    output += '<p><strong>Element.closest():</strong> ' + 
+                              (hasClosest ? '<span class="text-success">Native</span>' : 
+                              '<span class="text-danger">Needs polyfill</span>') + '</p>';
+                    break;
+                    
+                case 'promise':
+                    // Test Promise availability
+                    var hasPromise = typeof Promise !== 'undefined';
+                    output += '<p><strong>Promise:</strong> ' + 
+                              (hasPromise ? '<span class="text-success">Native</span>' : 
+                              '<span class="text-danger">Needs polyfill</span>') + '</p>';
+                    if (hasPromise) {
+                        output += '<p class="small">Promise.resolve(42).then() works</p>';
+                    }
+                    break;
+                    
+                case 'fetch':
+                    // Test fetch() API availability
+                    var hasFetch = typeof fetch === 'function';
+                    output += '<p><strong>fetch():</strong> ' + 
+                              (hasFetch ? '<span class="text-success">Native</span>' : 
+                              '<span class="text-danger">Needs polyfill (use XMLHttpRequest)</span>') + '</p>';
+                    break;
+            }
+            
+            // Additional feature tests
+            output += '<hr><h6>Additional Feature Detection:</h6>';
+            output += '<p class="mb-1 small"><strong>CSS Grid:</strong> ' + 
+                      (CSS.supports('display','grid') ? 'Yes' : 'No') + '</p>';
+            output += '<p class="mb-1 small"><strong>CSS Custom Properties:</strong> ' + 
+                      (CSS.supports('color','var(--x)') ? 'Yes' : 'No') + '</p>';
+            output += '<p class="mb-1 small"><strong>CSS clamp():</strong> ' + 
+                      (CSS.supports('width','clamp(1px,50%,100px)') ? 'Yes' : 'No') + '</p>';
+            output += '<p class="mb-0 small"><strong>IntersectionObserver:</strong> ' + 
+                      ('IntersectionObserver' in window ? 'Yes' : 'No') + '</p>';
+            
+            results.innerHTML = output;
+        }
+    </script>
+</body>
+</html>

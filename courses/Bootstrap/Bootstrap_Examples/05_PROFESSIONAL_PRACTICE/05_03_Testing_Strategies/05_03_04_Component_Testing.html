@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 05_03_04_Component_Testing.html -->
+<!-- Component Testing Strategies for Bootstrap Components         -->
+<!-- Isolated component testing with mock data and assertions      -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Component Testing Strategies for Bootstrap">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Component Testing - Bootstrap</title>
+    <style>
+        /* Component isolation container styling */
+        .component-sandbox {
+            border: 2px dashed #6c757d;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .component-sandbox::before {
+            content: attr(data-label);
+            position: absolute;
+            top: -0.75rem;
+            left: 1rem;
+            background: white;
+            padding: 0 0.5rem;
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Component Testing</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#buttons">Buttons</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#cards">Cards</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#forms">Forms</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#modals">Modals</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="bg-secondary text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">Component Testing</h1>
+            <p class="lead mt-3">Testing Bootstrap components in isolated sandboxes with mock data</p>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- BUTTON COMPONENT TESTS -->
+    <!-- Each button variant is tested in isolation for correct       -->
+    <!-- classes, text content, disabled state, and click behavior    -->
+    <!-- ============================================================ -->
+    <section class="py-5" id="buttons" data-testid="buttons-section">
+        <div class="container">
+            <h2 class="text-center mb-4">Button Component Tests</h2>
+
+            <!-- Test sandbox: Primary Button -->
+            <div class="component-sandbox" data-label="btn-primary" data-testid="sandbox-btn-primary">
+                <h5>Test: Primary Button Renders</h5>
+                <p class="text-muted">Verify button has correct classes, text, and is not disabled</p>
+                <button class="btn btn-primary" data-testid="btn-primary">
+                    Primary Action
+                </button>
+                <div class="mt-2">
+                    <small class="text-success">&#10003; Class: btn btn-primary</small><br>
+                    <small class="text-success">&#10003; Text: "Primary Action"</small><br>
+                    <small class="text-success">&#10003; Disabled: false</small>
+                </div>
+            </div>
+
+            <!-- Test sandbox: Disabled Button -->
+            <div class="component-sandbox" data-label="btn-disabled" data-testid="sandbox-btn-disabled">
+                <h5>Test: Disabled Button</h5>
+                <p class="text-muted">Verify button has disabled attribute and correct styling</p>
+                <button class="btn btn-secondary" disabled data-testid="btn-disabled">
+                    Disabled Button
+                </button>
+                <div class="mt-2">
+                    <small class="text-success">&#10003; Has disabled attribute</small><br>
+                    <small class="text-success">&#10003; Opacity reduced</small>
+                </div>
+            </div>
+
+            <!-- Test sandbox: Button Group -->
+            <div class="component-sandbox" data-label="btn-group" data-testid="sandbox-btn-group">
+                <h5>Test: Button Group</h5>
+                <p class="text-muted">Verify group structure and active state management</p>
+                <div class="btn-group" role="group" data-testid="button-group">
+                    <button type="button" class="btn btn-outline-primary active" data-testid="btn-left">Left</button>
+                    <button type="button" class="btn btn-outline-primary" data-testid="btn-middle">Middle</button>
+                    <button type="button" class="btn btn-outline-primary" data-testid="btn-right">Right</button>
+                </div>
+                <div class="mt-2">
+                    <small class="text-success">&#10003; 3 buttons in group</small><br>
+                    <small class="text-success">&#10003; First button has active class</small><br>
+                    <small class="text-success">&#10003; role="group" attribute present</small>
+                </div>
+            </div>
+
+            <!-- Test sandbox: Toggle Button -->
+            <div class="component-sandbox" data-label="btn-toggle" data-testid="sandbox-btn-toggle">
+                <h5>Test: Toggle Button</h5>
+                <p class="text-muted">Verify toggle state changes on click</p>
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="button"
+                        autocomplete="off" data-testid="btn-toggle">
+                    Toggle Me
+                </button>
+                <div class="mt-2">
+                    <small class="text-muted" id="toggle-status">State: inactive</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CARD COMPONENT TESTS -->
+    <!-- Test card variants, layouts, header/footer rendering,       -->
+    <!-- image placement, and content structure                       -->
+    <!-- ============================================================ -->
+    <section class="py-5 bg-light" id="cards" data-testid="cards-section">
+        <div class="container">
+            <h2 class="text-center mb-4">Card Component Tests</h2>
+            <div class="row g-4">
+                <!-- Standard card -->
+                <div class="col-md-4">
+                    <div class="component-sandbox h-100" data-label="card-standard" style="padding-bottom:0;">
+                        <div class="card" data-testid="card-standard">
+                            <div class="card-header">Featured</div>
+                            <div class="card-body">
+                                <h5 class="card-title">Standard Card</h5>
+                                <p class="card-text">Card with header, body, and footer sections.</p>
+                            </div>
+                            <div class="card-footer text-muted">Last updated: today</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Image card -->
+                <div class="col-md-4">
+                    <div class="component-sandbox h-100" data-label="card-image" style="padding-bottom:0;">
+                        <div class="card" data-testid="card-image">
+                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center"
+                                 style="height:120px; color:white;">
+                                Image Placeholder
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Image Card</h5>
+                                <p class="card-text">Card with image at top using card-img-top.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Horizontal card -->
+                <div class="col-md-4">
+                    <div class="component-sandbox h-100" data-label="card-horizontal" style="padding-bottom:0;">
+                        <div class="card" data-testid="card-horizontal">
+                            <div class="row g-0">
+                                <div class="col-4 bg-secondary d-flex align-items-center justify-content-center"
+                                     style="color:white; min-height:100px;">
+                                    Img
+                                </div>
+                                <div class="col-8">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Horizontal</h5>
+                                        <p class="card-text">Side-by-side layout.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- FORM COMPONENT TESTS -->
+    <!-- Test input validation, select options, checkbox/radio groups -->
+    <!-- ============================================================ -->
+    <section class="py-5" id="forms" data-testid="forms-section">
+        <div class="container">
+            <h2 class="text-center mb-4">Form Component Tests</h2>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <form class="needs-validation" novalidate data-testid="component-test-form">
+                        <!-- Text input test -->
+                        <div class="mb-3">
+                            <label class="form-label" for="testEmail">Email Address</label>
+                            <input type="email" class="form-control" id="testEmail"
+                                   required placeholder="name@example.com"
+                                   data-testid="input-email">
+                            <div class="valid-feedback">Looks good!</div>
+                            <div class="invalid-feedback">Please provide a valid email.</div>
+                        </div>
+                        <!-- Select test -->
+                        <div class="mb-3">
+                            <label class="form-label" for="testSelect">Framework</label>
+                            <select class="form-select" id="testSelect" required data-testid="select-framework">
+                                <option value="">Choose...</option>
+                                <option value="bs5">Bootstrap 5</option>
+                                <option value="bs4">Bootstrap 4</option>
+                                <option value="bs3">Bootstrap 3</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a framework.</div>
+                        </div>
+                        <!-- Radio group test -->
+                        <div class="mb-3">
+                            <label class="form-label d-block">Environment</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="env"
+                                       id="envDev" value="dev" checked data-testid="radio-dev">
+                                <label class="form-check-label" for="envDev">Development</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="env"
+                                       id="envProd" value="prod" data-testid="radio-prod">
+                                <label class="form-check-label" for="envProd">Production</label>
+                            </div>
+                        </div>
+                        <!-- Checkbox test -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="testCheck"
+                                       required data-testid="checkbox-agree">
+                                <label class="form-check-label" for="testCheck">
+                                    Agree to terms and conditions
+                                </label>
+                                <div class="invalid-feedback">You must agree before submitting.</div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" data-testid="btn-validate">
+                            Validate Form
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODAL COMPONENT TEST -->
+    <!-- Test modal opens, content renders, and close button works    -->
+    <!-- ============================================================ -->
+    <section class="py-5 bg-light" id="modals" data-testid="modals-section">
+        <div class="container text-center">
+            <h2 class="mb-4">Modal Component Tests</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#testModal"
+                    data-testid="btn-open-modal">
+                Open Test Modal
+            </button>
+        </div>
+    </section>
+
+    <!-- Test Modal -->
+    <div class="modal fade" id="testModal" tabindex="-1" aria-hidden="true" data-testid="test-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Component Test Modal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" data-testid="modal-close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This modal tests:</p>
+                    <ul>
+                        <li>Modal opens on button click</li>
+                        <li>Backdrop is rendered</li>
+                        <li>Close button dismisses modal</li>
+                        <li>ESC key closes modal</li>
+                        <li>Focus is trapped inside modal</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-testid="modal-cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-testid="modal-confirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2026 Component Testing Guide</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3.3 JS Bundle via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* Track toggle button state for testing */
+        document.querySelector('[data-testid="btn-toggle"]')?.addEventListener('click', function() {
+            const isActive = this.classList.contains('active');
+            document.getElementById('toggle-status').textContent =
+                'State: ' + (isActive ? 'active' : 'inactive');
+        });
+
+        /* Form validation handler */
+        document.querySelector('[data-testid="component-test-form"]')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.add('was-validated');
+        });
+    </script>
+</body>
+</html>

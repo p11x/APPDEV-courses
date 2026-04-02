@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cards Testing Strategies - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WR6W8Z16TsA5kqVEf3MzL4FnTRi6lB"
+          crossorigin="anonymous">
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="mb-4">Cards Testing Strategies</h1>
+        <p class="text-body-secondary mb-4">
+            Testing patterns and conventions for ensuring card components work reliably
+            across browsers, devices, and assistive technologies.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- TESTABLE CARD PATTERNS -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">1. Testable Card Components</h2>
+        <!-- Cards should have predictable class names and data attributes for testing -->
+
+        <div class="row g-4">
+            <!-- Card with data-testid for automated testing -->
+            <div class="col-md-4">
+                <div class="card" data-testid="product-card-001">
+                    <!-- data-testid: standard attribute for test selectors
+                         Keeps test selectors separate from CSS/JS selectors
+                         Won't break tests when classes change for styling -->
+                    <img src="https://picsum.photos/seed/test1/400/200"
+                         class="card-img-top" data-testid="product-image"
+                         alt="Test product image" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title" data-testid="product-title">
+                            Test Product
+                        </h5>
+                        <p class="card-text" data-testid="product-description">
+                            Product description for testing purposes.
+                        </p>
+                        <span class="fw-bold" data-testid="product-price">$29.99</span>
+                        <button class="btn btn-primary mt-2 w-100"
+                                data-testid="add-to-cart-btn"
+                                data-product-id="001"
+                                data-action="add-to-cart">
+                            <!-- data-product-id and data-action: custom data attributes
+                                 for event handling and test verification -->
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card with state variations -->
+            <div class="col-md-4">
+                <div class="card" data-testid="product-card-002"
+                     data-state="loading">
+                    <!-- data-state: indicates current card state for testing
+                         Values: loading, loaded, error, empty -->
+                    <div class="skeleton skeleton-img" data-testid="loading-skeleton"
+                         style="height:200px;background:linear-gradient(90deg,#e0e0e0 25%,#f0f0f0 50%,#e0e0e0 75%);
+                                background-size:200% 100%;animation:shimmer 1.5s infinite;">
+                    </div>
+                    <div class="card-body">
+                        <div data-testid="loading-title"
+                             style="height:1.5rem;width:60%;background:#e0e0e0;border-radius:4px;margin-bottom:0.5rem;">
+                        </div>
+                        <div data-testid="loading-text"
+                             style="height:1rem;width:90%;background:#e0e0e0;border-radius:4px;margin-bottom:0.5rem;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error state card -->
+            <div class="col-md-4">
+                <div class="card" data-testid="product-card-003"
+                     data-state="error">
+                    <div class="card-body text-center py-5">
+                        <div class="text-danger mb-3" data-testid="error-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="15" y1="9" x2="9" y2="15"/>
+                                <line x1="9" y1="9" x2="15" y2="15"/>
+                            </svg>
+                        </div>
+                        <h5 class="card-title" data-testid="error-title">Failed to Load</h5>
+                        <p class="card-text text-body-secondary" data-testid="error-message">
+                            Unable to load product data. Please try again.
+                        </p>
+                        <button class="btn btn-outline-primary btn-sm"
+                                data-testid="retry-btn"
+                                data-action="retry">
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- UNIT TEST EXAMPLE PATTERNS -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">2. Unit Test Patterns (Reference)</h2>
+
+        <div class="card mb-4">
+            <div class="card-header">Testing Pattern Reference</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Jest + Testing Library</h6>
+                        <pre class="bg-dark text-light p-3 rounded small"><code>// Test: card renders product title
+test('renders product card with title', () => {
+  render(&lt;ProductCard title="Test" /&gt;);
+  expect(
+    screen.getByTestId('product-title')
+  ).toHaveTextContent('Test');
+});
+
+// Test: add to cart button click
+test('calls onAddToCart when clicked', () => {
+  const handler = jest.fn();
+  render(&lt;ProductCard onAddToCart={handler} /&gt;);
+  fireEvent.click(
+    screen.getByTestId('add-to-cart-btn')
+  );
+  expect(handler).toHaveBeenCalled();
+});
+
+// Test: loading state
+test('shows skeleton when loading', () => {
+  render(&lt;ProductCard state="loading" /&gt;);
+  expect(
+    screen.getByTestId('loading-skeleton')
+  ).toBeInTheDocument();
+});</code></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Cypress E2E</h6>
+                        <pre class="bg-dark text-light p-3 rounded small"><code>// Test: product card visibility
+describe('Product Cards', () => {
+  it('displays product cards', () => {
+    cy.visit('/products');
+    cy.get('[data-testid="product-card-001"]')
+      .should('be.visible');
+    cy.get('[data-testid="product-title"]')
+      .should('contain', 'Test Product');
+  });
+
+  // Test: add to cart interaction
+  it('adds product to cart', () => {
+    cy.get('[data-testid="add-to-cart-btn"]')
+      .click();
+    cy.get('[data-testid="cart-count"]')
+      .should('contain', '1');
+  });
+
+  // Test: responsive layout
+  it('stacks cards on mobile', () => {
+    cy.viewport('iphone-6');
+    cy.get('.card').first()
+      .should('have.css', 'width', '100%');
+  });
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- INTERACTIVE TEST CARDS -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">3. Interactive Test Demos</h2>
+
+        <div class="row g-4">
+            <!-- Toggle state card -->
+            <div class="col-md-4">
+                <div class="card" data-testid="toggle-card">
+                    <div class="card-body">
+                        <h5 class="card-title">State Toggle Test</h5>
+                        <p class="card-text" data-testid="toggle-status">Current: Default</p>
+                        <div class="btn-group" role="group" aria-label="State toggle">
+                            <!-- btn-group: groups related buttons together -->
+                            <button class="btn btn-outline-success btn-sm"
+                                    data-testid="toggle-active"
+                                    onclick="toggleState('active')">
+                                Active
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm"
+                                    data-testid="toggle-pending"
+                                    onclick="toggleState('pending')">
+                                Pending
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm"
+                                    data-testid="toggle-inactive"
+                                    onclick="toggleState('inactive')">
+                                Inactive
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Counter card -->
+            <div class="col-md-4">
+                <div class="card" data-testid="counter-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Counter Test</h5>
+                        <p class="display-4" data-testid="counter-value" id="counter">0</p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button class="btn btn-outline-danger btn-sm"
+                                    data-testid="decrement-btn"
+                                    onclick="updateCounter(-1)">
+                                &minus;
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm"
+                                    data-testid="reset-btn"
+                                    onclick="resetCounter()">
+                                Reset
+                            </button>
+                            <button class="btn btn-outline-success btn-sm"
+                                    data-testid="increment-btn"
+                                    onclick="updateCounter(1)">
+                                +
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form validation card -->
+            <div class="col-md-4">
+                <div class="card" data-testid="validation-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Validation Test</h5>
+                        <div class="mb-3">
+                            <label for="email-test" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email-test"
+                                   data-testid="email-input"
+                                   aria-describedby="email-feedback"
+                                   oninput="validateEmail(this)">
+                            <div class="invalid-feedback" id="email-feedback"
+                                 data-testid="email-error">
+                                Please enter a valid email address.
+                            </div>
+                        </div>
+                        <div id="validation-result" data-testid="validation-result"
+                             class="small text-body-secondary">
+                            Enter an email to test validation.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- VISUAL REGRESSION TESTING -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">4. Visual Regression Test Points</h2>
+
+        <div class="card mb-4">
+            <div class="card-header">Visual Regression Checklist</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Card States to Test</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                Default state
+                                <span class="badge text-bg-success" data-testid="vr-default">Pass</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                Hover state
+                                <span class="badge text-bg-success" data-testid="vr-hover">Pass</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                Focus state
+                                <span class="badge text-bg-success" data-testid="vr-focus">Pass</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                Active state
+                                <span class="badge text-bg-warning" data-testid="vr-active">Review</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                Disabled state
+                                <span class="badge text-bg-success" data-testid="vr-disabled">Pass</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Responsive Breakpoints</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                Mobile (375px)
+                                <span class="badge text-bg-success" data-testid="vr-mobile">Pass</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                Tablet (768px)
+                                <span class="badge text-bg-success" data-testid="vr-tablet">Pass</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                Desktop (1024px)
+                                <span class="badge text-bg-success" data-testid="vr-desktop">Pass</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                Large (1440px)
+                                <span class="badge text-bg-success" data-testid="vr-large">Pass</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                Ultra-wide (2560px)
+                                <span class="badge text-bg-info" data-testid="vr-ultrawide">N/A</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ACCESSIBILITY TESTING -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">5. Accessibility Testing Checklist</h2>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">Automated Checks</div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   id="axe-check" checked data-testid="axe-passed">
+                            <label class="form-check-label" for="axe-check">
+                                axe-core: 0 violations detected
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   id="contrast-check" checked data-testid="contrast-passed">
+                            <label class="form-check-label" for="contrast-check">
+                                Color contrast: WCAG AA compliant
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   id="html-check" checked data-testid="html-valid">
+                            <label class="form-check-label" for="html-check">
+                                HTML: Valid HTML5 structure
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   id="aria-check" checked data-testid="aria-valid">
+                            <label class="form-check-label" for="aria-check">
+                                ARIA: No redundant/invalid attributes
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">Manual Checks</div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   id="keyboard-check" data-testid="keyboard-passed">
+                            <label class="form-check-label" for="keyboard-check">
+                                Keyboard: All cards reachable and operable
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   id="screen-reader-check" data-testid="sr-passed">
+                            <label class="form-check-label" for="screen-reader-check">
+                                Screen reader: Content announced correctly
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   id="zoom-check" data-testid="zoom-passed">
+                            <label class="form-check-label" for="zoom-check">
+                                Zoom: Readable at 200% zoom
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   id="motion-check" data-testid="motion-passed">
+                            <label class="form-check-label" for="motion-check">
+                                Reduced motion: Animations respect preference
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // State toggle test functions
+        function toggleState(state) {
+            const statusEl = document.querySelector('[data-testid="toggle-status"]');
+            const cardEl = document.querySelector('[data-testid="toggle-card"]');
+            statusEl.textContent = 'Current: ' + state.charAt(0).toUpperCase() + state.slice(1);
+            cardEl.setAttribute('data-state', state);
+            // Setting data-state allows tests to verify state changes
+        }
+
+        // Counter test functions
+        let count = 0;
+        function updateCounter(delta) {
+            count += delta;
+            document.getElementById('counter').textContent = count;
+            document.getElementById('counter').setAttribute('data-value', count);
+        }
+        function resetCounter() {
+            count = 0;
+            document.getElementById('counter').textContent = count;
+        }
+
+        // Email validation test
+        function validateEmail(input) {
+            const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value);
+            const resultEl = document.getElementById('validation-result');
+            if (input.value === '') {
+                input.classList.remove('is-valid', 'is-invalid');
+                resultEl.textContent = 'Enter an email to test validation.';
+            } else if (isValid) {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+                resultEl.textContent = 'Valid email format!';
+                resultEl.className = 'small text-success';
+            } else {
+                input.classList.remove('is-valid');
+                input.classList.add('is-invalid');
+                resultEl.textContent = 'Invalid email format.';
+                resultEl.className = 'small text-danger';
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

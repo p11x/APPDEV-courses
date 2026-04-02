@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 05_06_02_Common_Mistakes.html                                 -->
+<!-- Common Pitfalls: Specificity Wars, !important Abuse,          -->
+<!-- Over-Nesting, and How to Fix Them                             -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Common Bootstrap Mistakes - Pitfalls &amp; Fixes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* ============================================================ */
+        <!-- MISTAKE #1: SPECIFICITY WARS                                -->
+        <!-- Developers override Bootstrap with increasingly specific    -->
+        <!-- selectors, creating a cascade of competing rules.           -->
+        <!-- FIX: Keep selectors flat, use utility classes, or           -->
+        <!-- leverage CSS custom properties instead.                     -->
+        /* ============================================================ */
+
+        /* BAD: Escalating specificity to override Bootstrap */
+        /* body div.container div.row div.col div.card { */
+        /*     background-color: red !important; */
+        /* } */
+
+        /* GOOD: Single-class override with clear naming */
+        .cm-custom-card {
+            /* Override only what's needed, keep specificity low */
+            border-left: 4px solid #dc3545;
+        }
+
+        /* ============================================================ */
+        <!-- MISTAKE #2: !important ABUSE                                -->
+        <!-- Using !important as a quick fix creates maintenance debt.   -->
+        <!-- Every !important makes future changes harder.               -->
+        /* ============================================================ */
+
+        /* BAD: !important everywhere */
+        /* .my-button { */
+        /*     background-color: blue !important; */
+        /*     color: white !important; */
+        /*     padding: 10px !important; */
+        /* } */
+
+        /* GOOD: Use Bootstrap's own utility classes or custom properties */
+        .cm-warning-box {
+            /* Instead of !important, use higher specificity naturally */
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 1rem;
+            border-radius: 0.375rem;
+        }
+
+        /* ============================================================ */
+        <!-- MISTAKE #3: OVER-NESTING                                    -->
+        <!-- Deeply nested selectors are fragile and hard to maintain.   -->
+        <!-- Keep nesting under 3 levels maximum.                        -->
+        /* ============================================================ */
+
+        /* BAD: 5+ levels of nesting */
+        /* .page .section .wrapper .content .card .header .title { */
+        /*     font-size: 24px; */
+        /* } */
+
+        /* GOOD: Flat, direct selectors */
+        .cm-section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #212529;
+            border-bottom: 2px solid #dc3545;
+            padding-bottom: 0.5rem;
+        }
+
+        /* ============================================================ */
+        <!-- MISTAKE #4: IGNORING BOOTPOINT BREAKPOINTS                 -->
+        <!-- Writing custom media queries when Bootstrap provides them.  -->
+        /* ============================================================ */
+
+        /* BAD: Custom media query */
+        /* @media (min-width: 768px) { */
+        /*     .my-class { width: 50%; } */
+        /* } */
+
+        /* GOOD: Use Bootstrap responsive classes in HTML */
+        /* class="col-md-6" */
+
+        /* Visual indicators for the mistake cards */
+        .mistake-badge {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            font-size: 0.75rem;
+        }
+
+        .cm-code-bad {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+        }
+        .cm-code-good {
+            background-color: #d1e7dd;
+            border-left: 4px solid #198754;
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- NAVIGATION                                                   -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Common Mistakes</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navContent" aria-controls="navContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#specificity">Specificity</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#important">!important</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#nesting">Over-Nesting</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#grid">Grid Mistakes</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HEADER SECTION                                               -->
+    <!-- ============================================================ -->
+    <header class="bg-danger text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold">&#9888; Common Bootstrap Mistakes</h1>
+            <p class="lead">Learn from the most frequent pitfalls and how to avoid them.</p>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- SPECIFICITY WARS SECTION                                     -->
+    <!-- MISTAKE: Fighting Bootstrap's specificity with longer chains  -->
+    <!-- FIX: Use single-class selectors or CSS custom properties     -->
+    <!-- ============================================================ -->
+    <section id="specificity" class="py-5">
+        <div class="container">
+            <h2 class="cm-section-title">1. Specificity Wars</h2>
+            <p class="text-muted mb-4">When you fight Bootstrap's CSS specificity, you lose. Here's how to work with it instead.</p>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card border-danger position-relative">
+                        <span class="badge bg-danger mistake-badge">WRONG</span>
+                        <div class="card-header bg-danger-subtle">
+                            <h5 class="mb-0 text-danger">Escalating Specificity</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- BAD EXAMPLE: Multiple chained selectors -->
+                            <div class="cm-code-bad">/* DON'T: Chain selectors to override */
+body .container .row .col .card
+    .card-body h5 {
+    color: red;
+}
+
+/* Even worse: adding more selectors */
+html body main .container
+    div.row div.col-lg-6
+    div.card div.card-body h5 {
+    color: red !important;
+}</div>
+                            <p class="mt-3 text-danger">
+                                <strong>Problem:</strong> Each override requires more specificity, creating an arms race.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card border-success position-relative">
+                        <span class="badge bg-success mistake-badge">RIGHT</span>
+                        <div class="card-header bg-success-subtle">
+                            <h5 class="mb-0 text-success">Flat, Simple Selectors</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- GOOD EXAMPLE: Single class selector -->
+                            <div class="cm-code-good">/* DO: Use a single, descriptive class */
+.cm-card-title {
+    color: #dc3545;
+}
+
+/* Or use CSS custom properties */
+:root {
+    --card-title-color: #dc3545;
+}
+.card-title {
+    color: var(--card-title-color);
+}</div>
+                            <p class="mt-3 text-success">
+                                <strong>Solution:</strong> One class, one rule. Clean and maintainable.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live demo showing the fix in action -->
+            <div class="mt-4 p-4 bg-light rounded">
+                <h5>Live Demo: Flat Selector Override</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- This card uses Bootstrap defaults -->
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Default Bootstrap Card</h5>
+                                <p class="card-text">This card uses Bootstrap's default styling with no overrides.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <!-- This card uses a flat custom class override -->
+                        <div class="card cm-custom-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Custom Override Card</h5>
+                                <p class="card-text">This card uses a flat <code>.cm-custom-card</code> class to add a left border.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- !IMPORTANT ABUSE SECTION                                     -->
+    <!-- MISTAKE: Using !important to force overrides                 -->
+    <!-- FIX: Rework selectors or use Bootstrap's built-in options    -->
+    <!-- ============================================================ -->
+    <section id="important" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="cm-section-title">2. !important Abuse</h2>
+            <p class="text-muted mb-4">Every <code>!important</code> declaration is technical debt. Here are alternatives.</p>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <!-- Alternative 1: Higher specificity naturally -->
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <h1 class="text-primary">&#128270;</h1>
+                            <h5>Use Better Selectors</h5>
+                            <p>Instead of <code>!important</code>, write a more specific (but still flat) selector.</p>
+                            <div class="cm-code-good text-start">.card.cm-theme {
+    border-color: blue;
+}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <!-- Alternative 2: CSS Custom Properties -->
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <h1 class="text-success">&#128736;</h1>
+                            <h5>CSS Variables</h5>
+                            <p>Override Bootstrap's CSS custom properties to change values globally.</p>
+                            <div class="cm-code-good text-start">:root {
+    --bs-primary: #ff6600;
+}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <!-- Alternative 3: Sass variables -->
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <h1 class="text-warning">&#128230;</h1>
+                            <h5>Sass Variables</h5>
+                            <p>With Sass, override Bootstrap variables before importing to change defaults.</p>
+                            <div class="cm-code-good text-start">$primary: #ff6600;
+@import "bootstrap";</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <!-- Alternative 4: Utility classes -->
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <h1 class="text-info">&#127919;</h1>
+                            <h5>Utility Classes</h5>
+                            <p>Bootstrap utilities have the right specificity. Use them directly.</p>
+                            <div class="cm-code-good text-start">class="bg-primary
+    text-white
+    p-3 rounded"</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Counter showing !important impact -->
+            <div class="mt-4 p-4 border rounded bg-white">
+                <h5>Specificity Score Visualization</h5>
+                <div class="mb-3">
+                    <label class="form-label"><code>.btn-primary</code> (Bootstrap default)</label>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-primary" style="width: 10%;">0,1,0</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><code>.custom .btn-primary</code> (your override)</label>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-success" style="width: 20%;">0,2,0</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><code>body .custom .btn-primary</code> (unnecessary)</label>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-warning" style="width: 30%;">0,3,0</div>
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label"><code>.btn-primary { ... !important }</code> (nuclear option)</label>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-danger" style="width: 100%;">!important</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- OVER-NESTING SECTION                                         -->
+    <!-- MISTAKE: Writing deeply nested CSS selectors                 -->
+    <!-- FIX: Keep selectors flat, 2-3 levels max                     -->
+    <!-- ============================================================ -->
+    <section id="nesting" class="py-5">
+        <div class="container">
+            <h2 class="cm-section-title">3. Over-Nesting</h2>
+            <p class="text-muted mb-4">Deep nesting makes CSS brittle and hard to debug.</p>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger-subtle">
+                            <h5 class="mb-0 text-danger">Over-Nested CSS (6 levels deep)</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre class="cm-code-bad mb-0">.page-wrapper .main-content
+  .content-area .section
+  .section-inner .card-group
+  .card .card-header
+  .card-header .title {
+  font-size: 1.25rem;
+}
+
+/* If structure changes, this breaks! */</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success-subtle">
+                            <h5 class="mb-0 text-success">Flat CSS (1 level)</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre class="cm-code-good mb-0">.cm-card-title {
+  font-size: 1.25rem;
+}
+
+/* Survives any structural change! */</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nesting depth ruler -->
+            <div class="mt-4 p-4 bg-light rounded">
+                <h5>Nesting Depth Guide</h5>
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Depth</th>
+                            <th>Example</th>
+                            <th>Verdict</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-success">
+                            <td>1 level</td>
+                            <td><code>.my-component</code></td>
+                            <td>&#10004; Ideal</td>
+                        </tr>
+                        <tr class="table-success">
+                            <td>2 levels</td>
+                            <td><code>.card .card-title</code></td>
+                            <td>&#10004; Acceptable (Bootstrap pattern)</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td>3 levels</td>
+                            <td><code>.card .card-body .card-title</code></td>
+                            <td>&#9888; Max recommended</td>
+                        </tr>
+                        <tr class="table-danger">
+                            <td>4+ levels</td>
+                            <td><code>.page .section .card .body .title</code></td>
+                            <td>&#10008; Refactor needed</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- GRID MISTAKES SECTION                                        -->
+    <!-- MISTAKE: Misusing Bootstrap's grid system                    -->
+    <!-- ============================================================ -->
+    <section id="grid" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="cm-section-title">4. Grid System Mistakes</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card border-danger h-100">
+                        <div class="card-header bg-danger-subtle">
+                            <h5 class="mb-0 text-danger">&#10008; Missing container</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Without <code>.container</code>, rows have no max-width and content stretches edge-to-edge.</p>
+                            <pre class="cm-code-bad mb-0">&lt;!-- WRONG: No container --&gt;
+&lt;div class="row"&gt;
+  &lt;div class="col"&gt;...&lt;/div&gt;
+&lt;/div&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success h-100">
+                        <div class="card-header bg-success-subtle">
+                            <h5 class="mb-0 text-success">&#10004; Proper nesting</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Always: container &gt; row &gt; col. No exceptions.</p>
+                            <pre class="cm-code-good mb-0">&lt;!-- CORRECT --&gt;
+&lt;div class="container"&gt;
+  &lt;div class="row"&gt;
+    &lt;div class="col"&gt;...&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-danger h-100">
+                        <div class="card-header bg-danger-subtle">
+                            <h5 class="mb-0 text-danger">&#10008; Columns exceed 12</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Bootstrap grid = 12 columns. Exceeding wraps to new line unexpectedly.</p>
+                            <pre class="cm-code-bad mb-0">&lt;!-- WRONG: 13 total --&gt;
+&lt;div class="row"&gt;
+  &lt;div class="col-8"&gt;...&lt;/div&gt;
+  &lt;div class="col-6"&gt;...&lt;/div&gt;
+&lt;/div&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success h-100">
+                        <div class="card-header bg-success-subtle">
+                            <h5 class="mb-0 text-success">&#10004; Columns total 12</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Keep total column span at 12 or use <code>.col</code> for auto-sizing.</p>
+                            <pre class="cm-code-good mb-0">&lt;!-- CORRECT: 8 + 4 = 12 --&gt;
+&lt;div class="row"&gt;
+  &lt;div class="col-8"&gt;...&lt;/div&gt;
+  &lt;div class="col-4"&gt;...&lt;/div&gt;
+&lt;/div&gt;</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- COMMON MISTAKES CHECKLIST                                    -->
+    <!-- ============================================================ -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="cm-section-title">Mistake Checklist</h2>
+            <div class="alert alert-danger" role="alert">
+                <h5 class="alert-heading">&#9888; If your code has any of these, refactor!</h5>
+                <ul class="mb-0">
+                    <li>Selectors with 4+ levels of nesting</li>
+                    <li>More than 5 <code>!important</code> declarations in your custom CSS</li>
+                    <li>Custom media queries matching Bootstrap breakpoints</li>
+                    <li><code>div</code> or <code>span</code> as direct selectors in CSS</li>
+                    <li>Inline styles overriding Bootstrap classes</li>
+                    <li>IDs in CSS selectors (e.g., <code>#myDiv .card</code>)</li>
+                    <li>Overriding <code>.container</code> max-width without good reason</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Common Bootstrap Mistakes. Professional Practice Series.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

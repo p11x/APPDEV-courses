@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!-- Bootstrap 5 Responsive Grid - Advanced Techniques -->
+<!-- Covers: Nested grids, column wrapping, auto-layout columns, -->
+<!-- offset columns, column reordering, alignment, and complex layouts -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_06_03 Responsive Grid Advanced</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .grid-demo .row { background: #f8f9fa; border: 2px dashed #adb5bd; margin-bottom: 15px; }
+        .grid-demo .col, [class*="col-"] { background: #cfe2ff; border: 1px solid #0d6efd; padding: 10px; text-align: center; }
+        .grid-demo .row > [class*="col-"] { margin-bottom: 0; }
+        .nested-col { background: #d1e7dd !important; border-color: #198754 !important; }
+        .offset-highlight { background: #fff3cd !important; border-color: #ffc107 !important; }
+        .order-highlight { background: #f8d7da !important; border-color: #dc3545 !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container my-5">
+        <h1 class="mb-4">Advanced Responsive Grid Techniques</h1>
+
+        <!-- ============================================================ -->
+        <!-- 1. NESTED GRIDS -->
+        <!-- Place a .row inside a .col to create nested columns -->
+        <!-- The nested row's columns add up to 12 WITHIN the parent column -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3">1. Nested Grids</h2>
+        <p class="text-muted mb-3">A .row inside a .col creates a nested 12-column grid within that column.</p>
+        <div class="grid-demo">
+            <!-- Parent row: 2 columns (6 + 6 = 12) -->
+            <div class="row">
+                <!-- Left column with nested grid -->
+                <div class="col-12 col-md-6">
+                    <strong>Parent col-md-6</strong>
+                    <!-- Nested row inside the parent column -->
+                    <!-- These 3 cols (4+4+4=12) are relative to the PARENT col-md-6 width -->
+                    <div class="row mt-2">
+                        <div class="col-4 nested-col">Nested 4</div>
+                        <div class="col-4 nested-col">Nested 4</div>
+                        <div class="col-4 nested-col">Nested 4</div>
+                    </div>
+                    <!-- Another nested row with different split -->
+                    <div class="row mt-2">
+                        <div class="col-8 nested-col">Nested 8</div>
+                        <div class="col-4 nested-col">Nested 4</div>
+                    </div>
+                </div>
+                <!-- Right column with deeply nested grid -->
+                <div class="col-12 col-md-6">
+                    <strong>Parent col-md-6</strong>
+                    <!-- Level 1 nesting -->
+                    <div class="row mt-2">
+                        <div class="col-6 nested-col">
+                            Level 1 (6)
+                            <!-- Level 2 nesting - deeply nested grid -->
+                            <div class="row mt-1">
+                                <div class="col-6" style="background: #f8d7da; border-color: #dc3545;">L2-6</div>
+                                <div class="col-6" style="background: #f8d7da; border-color: #dc3545;">L2-6</div>
+                            </div>
+                        </div>
+                        <div class="col-6 nested-col">Level 1 (6)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 2. COLUMN WRAPPING (Row Breaks) -->
+        <!-- Columns that exceed 12 units wrap to a new line -->
+        <!-- Use w-100 to force a line break without adding content -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">2. Column Wrapping & Row Breaks</h2>
+        <p class="text-muted mb-3">Columns exceeding 12 units wrap automatically. Use <code>.w-100</code> for manual breaks.</p>
+        <div class="grid-demo">
+            <!-- 9 + 6 = 15 > 12, so the 6-col wraps to the next line -->
+            <div class="row">
+                <div class="col-9">col-9 (first row)</div>
+                <div class="col-6">col-6 (wraps to second row because 9+6>12)</div>
+            </div>
+        </div>
+
+        <!-- Using w-100 for responsive line breaks -->
+        <div class="grid-demo mt-3">
+            <div class="row">
+                <div class="col-6 col-sm-3">col-sm-3</div>
+                <div class="col-6 col-sm-3">col-sm-3</div>
+                <!-- w-100 d-none d-sm-block creates a break on sm+ but not xs -->
+                <div class="w-100 d-none d-sm-block"></div>
+                <div class="col-6 col-sm-3">col-sm-3</div>
+                <div class="col-6 col-sm-3">col-sm-3</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 3. AUTO-LAYOUT COLUMNS (No number specified) -->
+        <!-- col / col-sm / col-md etc. auto-size equally -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">3. Auto-Layout Columns</h2>
+        <p class="text-muted mb-3">Using <code>.col</code> without a number auto-sizes columns equally.</p>
+        <div class="grid-demo">
+            <!-- All 3 columns auto-size equally at all breakpoints -->
+            <div class="row">
+                <div class="col">Auto 1</div>
+                <div class="col">Auto 2</div>
+                <div class="col">Auto 3</div>
+            </div>
+            <!-- Mixed: auto on sm+, fixed on md+ -->
+            <div class="row mt-2">
+                <div class="col-12 col-md-auto" style="flex: 0 0 auto; width: auto; max-width: 100%;">col-md-auto (content width)</div>
+                <div class="col">Remaining space (auto)</div>
+                <div class="col">Remaining space (auto)</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 4. RESPONSIVE COLUMN WIDTH MIXING -->
+        <!-- Different column widths at each breakpoint -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">4. Responsive Column Widths</h2>
+        <p class="text-muted mb-3">Columns that change width at each breakpoint.</p>
+        <div class="grid-demo">
+            <!-- Full width on xs, half on sm, third on md, quarter on lg -->
+            <div class="row">
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    12 / sm-6 / md-4 / lg-3
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    12 / sm-6 / md-4 / lg-3
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    12 / sm-6 / md-4 / lg-3
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    12 / sm-6 / md-4 / lg-3
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 5. RESPONSIVE OFFSETS -->
+        <!-- offset-{breakpoint}-{size} pushes columns to the right -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">5. Responsive Offsets</h2>
+        <p class="text-muted mb-3">offset-{breakpoint}-{size} creates space before a column.</p>
+        <div class="grid-demo">
+            <!-- No offset on xs, offset-md-2 on md+ -->
+            <div class="row">
+                <div class="col-md-4 offset-md-2 offset-highlight">col-md-4 offset-md-2</div>
+                <div class="col-md-4">col-md-4</div>
+            </div>
+            <!-- Responsive offset changes -->
+            <div class="row mt-2">
+                <div class="col-sm-5 col-lg-3 offset-sm-2 offset-lg-0 offset-highlight">col-lg-3 offset-sm-2</div>
+                <div class="col-sm-5 col-lg-3">col-lg-3</div>
+                <div class="col-sm-5 col-lg-3 offset-sm-2 offset-lg-0 offset-highlight">col-lg-3 offset-sm-2</div>
+                <div class="col-sm-5 col-lg-3">col-lg-3</div>
+            </div>
+            <!-- Center a column with mx-auto -->
+            <div class="row mt-2">
+                <div class="col-6 col-md-4 mx-auto offset-highlight">col-md-4 mx-auto (centered)</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 6. RESPONSIVE COLUMN REORDERING -->
+        <!-- order-{breakpoint}-{number}: 1 through 12, or first/last -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">6. Responsive Column Reordering</h2>
+        <p class="text-muted mb-3">order-{breakpoint}-{n} changes visual order without changing HTML order.</p>
+        <div class="grid-demo">
+            <div class="row">
+                <!-- HTML order: A, B, C -->
+                <!-- Visual on xs: A(1), B(2), C(3) -->
+                <!-- Visual on md: C(1), A(2), B(3) - C moved to first -->
+                <div class="col-12 col-md-4 order-2 order-md-2 order-highlight">
+                    <strong>A</strong> (order-2 on xs, order-md-2)
+                </div>
+                <div class="col-12 col-md-4 order-3 order-md-3 order-highlight">
+                    <strong>B</strong> (order-3 on xs, order-md-3)
+                </div>
+                <div class="col-12 col-md-4 order-1 order-md-1 order-highlight">
+                    <strong>C</strong> (order-1 on xs, order-md-1 - appears first on md+)
+                </div>
+            </div>
+            <!-- order-first and order-last utilities -->
+            <div class="row mt-2">
+                <div class="col-md-4 order-last order-md-first order-highlight">
+                    <strong>1</strong> (order-last default, order-md-first)
+                </div>
+                <div class="col-md-4">
+                    <strong>2</strong> (default order)
+                </div>
+                <div class="col-md-4 order-first order-md-last order-highlight">
+                    <strong>3</strong> (order-first default, order-md-last)
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 7. ROW COLUMNS - Auto-create equal columns -->
+        <!-- row-cols-{breakpoint}-{n} defines how many columns per row -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">7. Row Columns (Auto Grid)</h2>
+        <p class="text-muted mb-3">row-cols-{breakpoint}-{n} sets the number of columns per row automatically.</p>
+        <div class="grid-demo">
+            <!-- 1 col per row on xs, 2 on sm, 3 on md, 4 on lg -->
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+                <div class="col">Item 1</div>
+                <div class="col">Item 2</div>
+                <div class="col">Item 3</div>
+                <div class="col">Item 4</div>
+                <div class="col">Item 5</div>
+                <div class="col">Item 6</div>
+                <div class="col">Item 7</div>
+                <div class="col">Item 8</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 8. VERTICAL ALIGNMENT WITHIN ROWS -->
+        <!-- align-items-{start|center|end} on the row -->
+        <!-- align-self-{start|center|end} on individual columns -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">8. Responsive Vertical Alignment</h2>
+        <p class="text-muted mb-3">align-items-{breakpoint}-{value} and align-self-{breakpoint}-{value}.</p>
+        <div class="grid-demo">
+            <!-- align-items-start on xs, align-items-md-center on md, align-items-lg-end on lg -->
+            <div class="row align-items-start align-items-md-center align-items-lg-end" style="min-height: 150px;">
+                <div class="col-4">Short</div>
+                <div class="col-4" style="height: 80px;">Tall</div>
+                <div class="col-4">Short</div>
+            </div>
+        </div>
+
+        <!-- Individual column alignment -->
+        <div class="grid-demo mt-3">
+            <div class="row" style="min-height: 120px;">
+                <div class="col-4 align-self-start">align-self-start</div>
+                <div class="col-4 align-self-center">align-self-center</div>
+                <div class="col-4 align-self-end">align-self-end</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 9. HORIZONTAL ALIGNMENT (justify-content) -->
+        <!-- justify-content-{start|center|end|around|between|evenly} -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">9. Responsive Horizontal Alignment</h2>
+        <p class="text-muted mb-3">justify-content-{breakpoint}-{value} distributes column space.</p>
+        <div class="grid-demo">
+            <!-- Center on md, space-between on lg -->
+            <div class="row justify-content-center justify-content-lg-between">
+                <div class="col-3">A</div>
+                <div class="col-3">B</div>
+                <div class="col-3">C</div>
+            </div>
+        </div>
+        <div class="grid-demo mt-3">
+            <!-- End on sm, evenly on lg -->
+            <div class="row justify-content-sm-end justify-content-lg-evenly">
+                <div class="col-2">X</div>
+                <div class="col-2">Y</div>
+                <div class="col-2">Z</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 10. GUTTER UTILITIES (Responsive) -->
+        <!-- g-{breakpoint}-{size} for horizontal and vertical gutters -->
+        <!-- gx-* (horizontal), gy-* (vertical) -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">10. Responsive Gutters</h2>
+        <p class="text-muted mb-3">g-{breakpoint}-{size}: 0-5 for responsive column spacing.</p>
+        <div class="grid-demo">
+            <!-- Small gutters on xs, larger on md, largest on lg -->
+            <div class="row g-1 g-md-3 g-lg-5">
+                <div class="col-6">col-6</div>
+                <div class="col-6">col-6</div>
+                <div class="col-6">col-6</div>
+                <div class="col-6">col-6</div>
+            </div>
+        </div>
+        <!-- Separate horizontal and vertical gutters -->
+        <div class="grid-demo mt-3">
+            <div class="row gx-md-4 gy-md-2">
+                <div class="col-6">gx-md-4 gy-md-2</div>
+                <div class="col-6">gx-md-4 gy-md-2</div>
+                <div class="col-6">gx-md-4 gy-md-2</div>
+                <div class="col-6">gx-md-4 gy-md-2</div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 11. STICKY COLUMNS (Sticky sidebar) -->
+        <!-- position-sticky with top-0 for fixed sidebar on scroll -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">11. Sticky Column (Sidebar)</h2>
+        <p class="text-muted mb-3">position-sticky top-0 keeps a column fixed while scrolling.</p>
+        <div class="row">
+            <!-- Sticky sidebar on md+, normal flow on xs -->
+            <div class="col-12 col-md-4 col-lg-3 mb-3 mb-md-0">
+                <div class="bg-light p-3 rounded" style="position: sticky; top: 20px;">
+                    <h5>Sticky Sidebar</h5>
+                    <p class="small text-muted">This sidebar stays visible as you scroll the main content.</p>
+                    <ul class="list-unstyled small">
+                        <li>Nav Item 1</li>
+                        <li>Nav Item 2</li>
+                        <li>Nav Item 3</li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Main content area -->
+            <div class="col-12 col-md-8 col-lg-9">
+                <div class="bg-light p-3 rounded">
+                    <h5>Main Content</h5>
+                    <p>Scroll down to see the sidebar stick in place on larger screens.</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.</p>
+                    <p>Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor. Ut in nulla enim. Phasellus molestie magna non est bibendum non venenatis nisl tempor.</p>
+                    <p>Suspendisse dictum feugiat nisl ut dapibus. Mauris iaculis porttitor posuere. Praesent id metus massa, ut blandit odio.</p>
+                    <p>Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 12. COMPLEX REAL-WORLD GRID: DASHBOARD LAYOUT -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">12. Complex Dashboard Grid</h2>
+        <p class="text-muted mb-3">A practical dashboard layout combining multiple grid techniques.</p>
+        <div class="row g-3">
+            <!-- Stat cards: 1 per row xs, 2 sm, 4 lg -->
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="bg-primary text-white p-3 rounded">
+                    <small>Total Users</small>
+                    <h3>12,345</h3>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="bg-success text-white p-3 rounded">
+                    <small>Revenue</small>
+                    <h3>$54,321</h3>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="bg-warning text-dark p-3 rounded">
+                    <small>Orders</small>
+                    <h3>1,234</h3>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="bg-danger text-white p-3 rounded">
+                    <small>Refunds</small>
+                    <h3>23</h3>
+                </div>
+            </div>
+            <!-- Main chart: full width xs, 8 cols on lg -->
+            <div class="col-12 col-lg-8">
+                <div class="bg-light p-3 rounded" style="height: 250px;">
+                    <h5>Revenue Chart</h5>
+                    <p class="text-muted">Main chart area (col-lg-8)</p>
+                </div>
+            </div>
+            <!-- Side panel: full width xs, 4 cols on lg -->
+            <div class="col-12 col-lg-4">
+                <div class="bg-light p-3 rounded mb-3">
+                    <h6>Recent Activity</h6>
+                    <ul class="list-unstyled small mb-0">
+                        <li>User signed up - 2m ago</li>
+                        <li>Order placed - 5m ago</li>
+                        <li>Payment received - 10m ago</li>
+                    </ul>
+                </div>
+                <div class="bg-light p-3 rounded">
+                    <h6>Quick Stats</h6>
+                    <div class="row row-cols-2 g-2 text-center">
+                        <div class="col"><strong>89%</strong><br><small>Satisfaction</small></div>
+                        <div class="col"><strong>4.8</strong><br><small>Rating</small></div>
+                        <div class="col"><strong>256</strong><br><small>Active</small></div>
+                        <div class="col"><strong>12</strong><br><small>Pending</small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

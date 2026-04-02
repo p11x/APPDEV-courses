@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     05_02_11_Testing_Integration.html
+     Topic: Testing in CI/CD, Test Runners, Coverage
+     ============================================================
+     Automated testing catches bugs before deployment.
+     This covers unit testing, integration testing, and
+     visual regression testing for Bootstrap components.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing Integration - Bootstrap Development Workflow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .config-block {
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.82rem;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.5;
+        }
+        .test-pyramid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .test-pyramid .level {
+            text-align: center;
+            padding: 0.5rem 1rem;
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Testing</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="#pyramid">Test Pyramid</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#unit">Unit Tests</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#e2e">E2E Tests</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#ci">CI/CD</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Testing Integration</h1>
+            <p class="lead">Test runners, coverage, and CI/CD testing for Bootstrap 5 projects.</p>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#" class="text-white-50">Workflow</a></li>
+                    <li class="breadcrumb-item active text-white">Testing</li>
+                </ol>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- SECTION 1: TEST PYRAMID -->
+        <section id="pyramid" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">1. Test Pyramid</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="test-pyramid">
+                        <div class="level bg-info text-white rounded-top" style="width: 40%;">
+                            <strong>E2E Tests</strong><br>
+                            <small>Few, slow, high confidence</small>
+                        </div>
+                        <div class="level bg-warning" style="width: 65%;">
+                            <strong>Integration Tests</strong><br>
+                            <small>Moderate count and speed</small>
+                        </div>
+                        <div class="level bg-success text-white rounded-bottom" style="width: 90%;">
+                            <strong>Unit Tests</strong><br>
+                            <small>Many, fast, focused</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Bootstrap-Specific Testing</h5>
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-dark">
+                            <tr><th>Type</th><th>What to Test</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Unit</strong></td>
+                                <td>Custom JS functions, SCSS mixins, utility functions</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Component</strong></td>
+                                <td>Modal open/close, tooltip positioning, dropdown behavior</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Visual</strong></td>
+                                <td>Responsive layouts, theme variations, component rendering</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Accessibility</strong></td>
+                                <td>ARIA attributes, keyboard navigation, screen reader</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cross-browser</strong></td>
+                                <td>Layout consistency across browsers/devices</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 2: UNIT TESTING -->
+        <section id="unit" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">2. Unit & Component Testing</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Jest Setup</h5>
+                    <div class="config-block">
+<span class="comment"># Install Jest</span>
+npm install --save-dev jest @testing-library/dom
+npm install --save-dev @testing-library/jest-dom
+npm install --save-dev jest-environment-jsdom</div>
+
+                    <h5 class="mt-4 mb-3">jest.config.js</h5>
+                    <div class="config-block">
+<span class="comment">// jest.config.js</span>
+module.exports = {
+  testEnvironment: <span class="string">'jsdom'</span>,
+  setupFilesAfterSetup: [<span class="string">'&lt;rootDir>/src/test/setup.js'</span>],
+  moduleNameMapper: {
+    <span class="comment">// Handle CSS imports in tests</span>
+    <span class="string">'\\.(css|scss)$'</span>: <span class="string">'identity-obj-proxy'</span>,
+  },
+  collectCoverageFrom: [
+    <span class="string">'src/**/*.js'</span>,
+    <span class="string">'!src/**/*.test.js'</span>,
+  ],
+  coverageThresholds: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+    },
+  },
+};</div>
+
+                    <h5 class="mt-4 mb-3">Testing Bootstrap Components</h5>
+                    <div class="config-block">
+<span class="comment">// src/__tests__/modal.test.js</span>
+<span class="keyword">import</span> { Modal } <span class="keyword">from</span> <span class="string">'bootstrap'</span>;
+<span class="keyword">import</span> <span class="string">'@testing-library/jest-dom'</span>;
+
+<span class="function">describe</span>(<span class="string">'Modal Component'</span>, () => {
+  <span class="function">beforeEach</span>(() => {
+    document.body.innerHTML = <span class="string">`
+      &lt;button data-bs-toggle="modal" data-bs-target="#testModal"&gt;
+        Open
+      &lt;/button&gt;
+      &lt;div class="modal" id="testModal"&gt;
+        &lt;div class="modal-dialog"&gt;
+          &lt;div class="modal-content"&gt;
+            &lt;div class="modal-body"&gt;Test Content&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    `</span>;
+  });
+
+  <span class="function">test</span>(<span class="string">'should open modal on trigger click'</span>, () => {
+    <span class="keyword">const</span> trigger = document.<span class="function">querySelector</span>(<span class="string">'[data-bs-toggle]'</span>);
+    <span class="keyword">const</span> modal = <span class="keyword">new</span> <span class="function">Modal</span>(document.<span class="function">getElementById</span>(<span class="string">'testModal'</span>));
+    
+    trigger.<span class="function">click</span>();
+    
+    <span class="function">expect</span>(document.<span class="function">getElementById</span>(<span class="string">'testModal'</span>))
+      .<span class="function">toHaveClass</span>(<span class="string">'show'</span>);
+  });
+
+  <span class="function">test</span>(<span class="string">'should close modal'</span>, () => {
+    <span class="keyword">const</span> modal = <span class="keyword">new</span> <span class="function">Modal</span>(document.<span class="function">getElementById</span>(<span class="string">'testModal'</span>));
+    modal.<span class="function">show</span>();
+    modal.<span class="function">hide</span>();
+    
+    <span class="function">expect</span>(document.<span class="function">getElementById</span>(<span class="string">'testModal'</span>))
+      .<span class="function">not</span>.<span class="function">toHaveClass</span>(<span class="string">'show'</span>);
+  });
+});</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Vitest (Faster Alternative)</h5>
+                    <div class="config-block">
+<span class="comment"># Install Vitest</span>
+npm install --save-dev vitest @testing-library/dom
+npm install --save-dev @testing-library/jest-dom
+npm install --save-dev jsdom</div>
+
+                    <h5 class="mt-4 mb-3">vitest.config.js</h5>
+                    <div class="config-block">
+<span class="comment">// vitest.config.js</span>
+<span class="keyword">import</span> { defineConfig } <span class="keyword">from</span> <span class="string">'vitest/config'</span>;
+
+<span class="function">export default</span> <span class="function">defineConfig</span>({
+  test: {
+    environment: <span class="string">'jsdom'</span>,
+    globals: <span class="keyword">true</span>,
+    setupFiles: [<span class="string">'./src/test/setup.js'</span>],
+    css: <span class="keyword">true</span>, <span class="comment">// Process CSS in tests</span>
+    coverage: {
+      reporter: [<span class="string">'text'</span>, <span class="string">'html'</span>, <span class="string">'lcov'</span>],
+      thresholds: {
+        branches: 80,
+        functions: 80,
+        lines: 80,
+      },
+    },
+  },
+});</div>
+
+                    <h5 class="mt-4 mb-3">npm Scripts</h5>
+                    <div class="config-block">
+{
+  <span class="string">"scripts"</span>: {
+    <span class="string">"test"</span>: <span class="string">"vitest"</span>,
+    <span class="string">"test:watch"</span>: <span class="string">"vitest --watch"</span>,
+    <span class="string">"test:coverage"</span>: <span class="string">"vitest run --coverage"</span>,
+    <span class="string">"test:ui"</span>: <span class="string">"vitest --ui"</span>
+  }
+}</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 3: E2E TESTING -->
+        <section id="e2e" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">3. End-to-End Testing</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Playwright Setup</h5>
+                    <div class="config-block">
+<span class="comment"># Install Playwright</span>
+npm init playwright@latest</div>
+
+                    <h5 class="mt-4 mb-3">Bootstrap E2E Tests</h5>
+                    <div class="config-block">
+<span class="comment">// tests/navbar.spec.js</span>
+<span class="keyword">import</span> { test, expect } <span class="keyword">from</span> <span class="string">'@playwright/test'</span>;
+
+<span class="function">test</span>(<span class="string">'navbar collapse on mobile'</span>, <span class="keyword">async</span> ({ page }) => {
+  <span class="comment">// Set mobile viewport</span>
+  <span class="keyword">await</span> page.<span class="function">setViewportSize</span>({ width: 375, height: 667 });
+  <span class="keyword">await</span> page.<span class="function">goto</span>(<span class="string">'http://localhost:5173'</span>);
+  
+  <span class="comment">// Navbar should be collapsed</span>
+  <span class="keyword">const</span> nav = page.<span class="function">locator</span>(<span class="string">'.navbar-collapse'</span>);
+  <span class="keyword">await</span> <span class="function">expect</span>(nav).<span class="function">not</span>.<span class="function">toBeVisible</span>();
+  
+  <span class="comment">// Click toggle button</span>
+  <span class="keyword">await</span> page.<span class="function">locator</span>(<span class="string">'.navbar-toggler'</span>).<span class="function">click</span>();
+  
+  <span class="comment">// Nav should be visible now</span>
+  <span class="keyword">await</span> <span class="function">expect</span>(nav).<span class="function">toBeVisible</span>();
+});
+
+<span class="function">test</span>(<span class="string">'modal opens and closes'</span>, <span class="keyword">async</span> ({ page }) => {
+  <span class="keyword">await</span> page.<span class="function">goto</span>(<span class="string">'http://localhost:5173'</span>);
+  
+  <span class="comment">// Open modal</span>
+  <span class="keyword">await</span> page.<span class="function">locator</span>(<span class="string">'[data-bs-target="#myModal"]'</span>).<span class="function">click</span>();
+  <span class="keyword">await</span> <span class="function">expect</span>(page.<span class="function">locator</span>(<span class="string">'#myModal'</span>)).<span class="function">toBeVisible</span>();
+  
+  <span class="comment">// Close with Escape</span>
+  <span class="keyword">await</span> page.<span class="function">keyboard</span>.<span class="function">press</span>(<span class="string">'Escape'</span>);
+  <span class="keyword">await</span> <span class="function">expect</span>(page.<span class="function">locator</span>(<span class="string">'#myModal'</span>)).<span class="function">not</span>.<span class="function">toBeVisible</span>();
+});</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Visual Regression Testing</h5>
+                    <div class="config-block">
+<span class="comment"># Playwright visual comparisons</span>
+<span class="function">test</span>(<span class="string">'card component renders correctly'</span>, <span class="keyword">async</span> ({ page }) => {
+  <span class="keyword">await</span> page.<span class="function">goto</span>(<span class="string">'http://localhost:5173/components/cards'</span>);
+  
+  <span class="comment">// Compare screenshot with baseline</span>
+  <span class="keyword">await</span> <span class="function">expect</span>(page.<span class="function">locator</span>(<span class="string">'.card-container'</span>))
+    .<span class="function">toHaveScreenshot</span>(<span class="string">'card-component.png'</span>);
+});
+
+<span class="comment"># Generate baseline: npx playwright test --update-snapshots</span></div>
+
+                    <h5 class="mt-4 mb-3">Playwright Config</h5>
+                    <div class="config-block">
+<span class="comment">// playwright.config.js</span>
+<span class="keyword">import</span> { defineConfig } <span class="keyword">from</span> <span class="string">'@playwright/test'</span>;
+
+<span class="function">export default</span> <span class="function">defineConfig</span>({
+  testDir: <span class="string">'./tests'</span>,
+  timeout: 30000,
+  use: {
+    baseURL: <span class="string">'http://localhost:5173'</span>,
+    screenshot: <span class="string">'only-on-failure'</span>,
+    trace: <span class="string">'on-first-retry'</span>,
+  },
+  projects: [
+    { name: <span class="string">'chromium'</span>, use: { browserName: <span class="string">'chromium'</span> } },
+    { name: <span class="string">'firefox'</span>, use: { browserName: <span class="string">'firefox'</span> } },
+    { name: <span class="string">'webkit'</span>, use: { browserName: <span class="string">'webkit'</span> } },
+    { name: <span class="string">'mobile'</span>, use: { ...devices[<span class="string">'iPhone 13'</span>] } },
+  ],
+});</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 4: CI/CD TESTING -->
+        <section id="ci" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">4. CI/CD Testing</h2>
+            
+            <div class="config-block">
+<span class="comment"># .github/workflows/test.yml</span>
+name: Tests
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      - run: npm ci
+      - run: npm run test:coverage
+      - uses: codecov/codecov-action@v3
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - run: npm run build
+      - run: npx playwright test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      - run: npm ci
+      - run: npm run build</div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="text-muted mb-0">Bootstrap 5.3.3 Development Workflow - Module 05_02_11</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<!-- Bootstrap 5 Responsive Performance -->
+<!-- Covers: Performance optimization for responsive layouts: -->
+<!-- Lazy loading, responsive images, critical CSS, -->
+<!-- efficient grid usage, and rendering performance -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_06_09 Responsive Performance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Critical CSS: Inline above-the-fold styles for faster first paint */
+        /* These styles load before the full Bootstrap CSS */
+
+        /* Skeleton loading placeholder animation */
+        @keyframes skeleton-loading {
+            0% { background-position: -200px 0; }
+            100% { background-position: calc(200px + 100%) 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200px 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 4px;
+        }
+        .skeleton-text { height: 1rem; margin-bottom: 0.5rem; }
+        .skeleton-heading { height: 1.5rem; width: 60%; margin-bottom: 1rem; }
+        .skeleton-img { height: 200px; }
+    </style>
+</head>
+<body>
+
+    <div class="container my-5">
+        <h1 class="mb-4">Responsive Performance Optimization</h1>
+        <p class="lead">Techniques to keep responsive layouts fast and efficient.</p>
+
+        <!-- ============================================================ -->
+        <!-- 1. RESPONSIVE IMAGES WITH srcset -->
+        <!-- Serve different image sizes based on viewport width -->
+        <!-- Reduces bandwidth on mobile devices -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3">1. Responsive Images with srcset</h2>
+        <p class="text-muted">Serve appropriately sized images for each screen size.</p>
+
+        <div class="row mb-5">
+            <div class="col-12 col-md-6">
+                <!-- srcset: Multiple image sources at different resolutions -->
+                <!-- sizes: Tells browser which image to use at each viewport width -->
+                <!-- This loads a smaller image on mobile and larger on desktop -->
+                <img
+                    src="https://via.placeholder.com/800x400/0d6efd/ffffff?text=800x400"
+                    srcset="
+                        https://via.placeholder.com/400x200/0d6efd/ffffff?text=400x200 400w,
+                        https://via.placeholder.com/800x400/0d6efd/ffffff?text=800x400 800w,
+                        https://via.placeholder.com/1200x600/0d6efd/ffffff?text=1200x600 1200w"
+                    sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw"
+                    class="img-fluid rounded"
+                    alt="Responsive image with srcset"
+                >
+                <p class="small text-muted mt-2">
+                    <strong>srcset</strong> provides different image resolutions (400w, 800w, 1200w).<br>
+                    <strong>sizes</strong> tells the browser: 100% width on xs, 50% on md, 33% on lg+.
+                </p>
+            </div>
+            <div class="col-12 col-md-6">
+                <pre class="bg-light p-3 rounded"><code>&lt;img
+  src="image-800.jpg"
+  srcset="
+    image-400.jpg 400w,
+    image-800.jpg 800w,
+    image-1200.jpg 1200w"
+  sizes="
+    (max-width: 576px) 100vw,
+    (max-width: 992px) 50vw,
+    33vw"
+  class="img-fluid"
+&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 2. LAZY LOADING IMAGES -->
+        <!-- loading="lazy" defers loading offscreen images -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3">2. Lazy Loading</h2>
+        <p class="text-muted">loading="lazy" defers image loading until they're near the viewport.</p>
+
+        <div class="row g-4 mb-5">
+            <div class="col-12 col-md-4">
+                <!-- loading="lazy": Browser loads image only when scrolled near -->
+                <img src="https://via.placeholder.com/400x300/198754/ffffff?text=Lazy+1" class="img-fluid rounded" loading="lazy" alt="Lazy loaded 1">
+                <p class="small text-muted mt-1">loading="lazy"</p>
+            </div>
+            <div class="col-12 col-md-4">
+                <img src="https://via.placeholder.com/400x300/dc3545/ffffff?text=Lazy+2" class="img-fluid rounded" loading="lazy" alt="Lazy loaded 2">
+                <p class="small text-muted mt-1">loading="lazy"</p>
+            </div>
+            <div class="col-12 col-md-4">
+                <img src="https://via.placeholder.com/400x300/ffc107/000000?text=Lazy+3" class="img-fluid rounded" loading="lazy" alt="Lazy loaded 3">
+                <p class="small text-muted mt-1">loading="lazy"</p>
+            </div>
+        </div>
+
+        <!-- Above-the-fold images should NOT be lazy loaded -->
+        <div class="alert alert-info">
+            <strong>Tip:</strong> Only use <code>loading="lazy"</code> on images below the fold.
+            Above-the-fold images should load normally for better perceived performance.
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 3. RESPONSIVE IMAGES WITH picture ELEMENT -->
+        <!-- Serve completely different images at different breakpoints -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3 mt-5">3. Art Direction with picture Element</h2>
+        <p class="text-muted">Serve different image crops/layouts at different screen sizes.</p>
+
+        <div class="row mb-5">
+            <div class="col-12 col-md-8">
+                <!-- picture element: different image for each breakpoint -->
+                <picture>
+                    <!-- source for lg+: landscape image -->
+                    <source media="(min-width: 992px)" srcset="https://via.placeholder.com/800x300/6f42c1/ffffff?text=Landscape+Desktop">
+                    <!-- source for md: square image -->
+                    <source media="(min-width: 768px)" srcset="https://via.placeholder.com/600x400/6f42c1/ffffff?text=Square+Tablet">
+                    <!-- default: portrait image for mobile -->
+                    <img src="https://via.placeholder.com/400x500/6f42c1/ffffff?text=Portrait+Mobile" class="img-fluid rounded w-100" alt="Art directed image">
+                </picture>
+                <p class="small text-muted mt-2">
+                    Desktop: landscape (800x300) | Tablet: square (600x400) | Mobile: portrait (400x500)
+                </p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 4. EFFICIENT GRID USAGE -->
+        <!-- Avoid unnecessary nesting and wrapper elements -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3">4. Efficient Grid Patterns</h2>
+
+        <div class="row mb-5">
+            <div class="col-12 col-lg-6">
+                <h5 class="text-success">✓ Efficient: Minimal nesting</h5>
+                <!-- Good: Direct column usage without extra wrappers -->
+                <div class="row g-3">
+                    <div class="col-6 col-md-4">
+                        <div class="bg-success text-white p-3 rounded text-center">Item</div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="bg-success text-white p-3 rounded text-center">Item</div>
+                    </div>
+                    <div class="col-6 col-md-4">
+                        <div class="bg-success text-white p-3 rounded text-center">Item</div>
+                    </div>
+                </div>
+                <pre class="bg-light p-2 mt-2 rounded small"><code>// Uses row-cols for automatic column count
+.row.row-cols-2.row-cols-md-3.g-3
+  .col -> Item
+  .col -> Item
+  .col -> Item</code></pre>
+            </div>
+            <div class="col-12 col-lg-6">
+                <h5 class="text-danger">✗ Inefficient: Excessive nesting</h5>
+                <!-- Bad: Unnecessary wrapper divs add DOM weight -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="bg-danger text-white p-3 rounded text-center">Wrapped</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-danger text-white p-3 rounded text-center">Wrapped</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <pre class="bg-light p-2 mt-2 rounded small"><code>// Avoid: Too many nested wrappers
+.row > .col-12 > .row > .col-6
+// Each wrapper = extra DOM node</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 5. CSS-ONLY RESPONSIVE PATTERNS -->
+        <!-- Avoid JavaScript for layout changes when possible -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3">5. CSS-Only Responsive Patterns</h2>
+        <p class="text-muted">Use CSS media queries and utilities instead of JavaScript for layout.</p>
+
+        <div class="row g-4 mb-5">
+            <!-- CSS Grid auto-fit for responsive without breakpoints -->
+            <div class="col-12 col-lg-6">
+                <h5>CSS Grid auto-fit (No JS needed)</h5>
+                <!-- style uses CSS grid with minmax for automatic responsive columns -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                    <div class="bg-primary text-white p-3 rounded text-center">Auto-fit 1</div>
+                    <div class="bg-primary text-white p-3 rounded text-center">Auto-fit 2</div>
+                    <div class="bg-primary text-white p-3 rounded text-center">Auto-fit 3</div>
+                    <div class="bg-primary text-white p-3 rounded text-center">Auto-fit 4</div>
+                </div>
+                <pre class="bg-light p-2 mt-2 rounded small"><code>grid-template-columns:
+  repeat(auto-fit, minmax(150px, 1fr));</code></pre>
+            </div>
+
+            <!-- Container queries (modern browsers) -->
+            <div class="col-12 col-lg-6">
+                <h5>Responsive Container</h5>
+                <div class="bg-light p-3 rounded">
+                    <div class="row row-cols-1 row-cols-sm-2 g-2">
+                        <div class="col">
+                            <div class="border rounded p-3">
+                                <h6>Content 1</h6>
+                                <p class="small mb-0">Uses Bootstrap grid for responsive behavior without custom CSS.</p>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="border rounded p-3">
+                                <h6>Content 2</h6>
+                                <p class="small mb-0">Bootstrap utilities handle all responsive changes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 6. SKELETON LOADERS -->
+        <!-- Show loading placeholders while content loads -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3">6. Skeleton Loaders (Performance UX)</h2>
+        <p class="text-muted">Show content placeholders while data loads, reducing perceived wait time.</p>
+
+        <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+            <!-- Skeleton card 1: simulating loading state -->
+            <div class="col">
+                <div class="card">
+                    <div class="skeleton skeleton-img"></div>
+                    <div class="card-body">
+                        <div class="skeleton skeleton-heading"></div>
+                        <div class="skeleton skeleton-text" style="width: 100%;"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Skeleton card 2 -->
+            <div class="col">
+                <div class="card">
+                    <div class="skeleton skeleton-img"></div>
+                    <div class="card-body">
+                        <div class="skeleton skeleton-heading"></div>
+                        <div class="skeleton skeleton-text" style="width: 100%;"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Loaded card for comparison -->
+            <div class="col">
+                <div class="card">
+                    <img src="https://via.placeholder.com/400x200/198754/ffffff?text=Loaded" class="card-img-top" alt="Loaded">
+                    <div class="card-body">
+                        <h5 class="card-title">Loaded Content</h5>
+                        <p class="card-text">This is the actual loaded content for comparison.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 7. CONDITIONAL CONTENT LOADING -->
+        <!-- Show/hide content based on screen size using d-* utilities -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3">7. Conditional Content Loading</h2>
+        <p class="text-muted">Use d-* utilities to load different content per breakpoint.</p>
+
+        <div class="row mb-5">
+            <div class="col-12">
+                <!-- Desktop-only content: complex table -->
+                <div class="d-none d-lg-block">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>John Doe</td><td>john@test.com</td>
+                                <td>Admin</td><td><span class="badge bg-success">Active</span></td>
+                                <td><button class="btn btn-sm btn-primary">Edit</button></td>
+                            </tr>
+                            <tr>
+                                <td>Jane Smith</td><td>jane@test.com</td>
+                                <td>User</td><td><span class="badge bg-warning text-dark">Pending</span></td>
+                                <td><button class="btn btn-sm btn-primary">Edit</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Mobile-only content: simplified cards -->
+                <div class="d-lg-none">
+                    <div class="card mb-2">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div><strong>John Doe</strong><br><small class="text-muted">Admin</small></div>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                    <div class="card mb-2">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div><strong>Jane Smith</strong><br><small class="text-muted">User</small></div>
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 8. FONT LOADING OPTIMIZATION -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3">8. Font Loading Strategy</h2>
+
+        <div class="card mb-5">
+            <div class="card-body">
+                <h5>Best Practices for Responsive Font Loading</h5>
+                <ul>
+                    <li><strong>font-display: swap</strong> - Shows fallback font immediately, swaps to web font when loaded</li>
+                    <li><strong>Preload critical fonts</strong> - <code>&lt;link rel="preload" href="font.woff2" as="font" crossorigin&gt;</code></li>
+                    <li><strong>Subset fonts</strong> - Only load the characters you need</li>
+                    <li><strong>Use system fonts for body text</strong> - No loading delay</li>
+                </ul>
+                <pre class="bg-light p-3 rounded"><code>/* CSS for optimized font loading */
+@font-face {
+    font-family: 'CustomFont';
+    src: url('font.woff2') format('woff2');
+    font-display: swap; /* Shows fallback immediately */
+    unicode-range: U+0000-00FF; /* Latin characters only */
+}
+
+/* Use system fonts for body text */
+body {
+    font-family: -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 9. CRITICAL CSS STRATEGY -->
+        <!-- Inline above-the-fold CSS, defer the rest -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3">9. Critical CSS Loading</h2>
+
+        <div class="card mb-5">
+            <div class="card-body">
+                <h5>Critical CSS Strategy</h5>
+                <ol>
+                    <li><strong>Inline critical CSS</strong> in the &lt;head&gt; for above-the-fold content</li>
+                    <li><strong>Defer full CSS</strong> with <code>media="print" onload="this.media='all'"</code></li>
+                    <li><strong>Split CSS</strong> into critical and non-critical bundles</li>
+                </ol>
+                <pre class="bg-light p-3 rounded"><code>&lt;!-- Critical CSS inlined in head --&gt;
+&lt;style&gt;
+  /* Only above-the-fold styles */
+  .hero { min-height: 100vh; }
+  .navbar { position: sticky; }
+&lt;/style&gt;
+
+&lt;!-- Full CSS deferred --&gt;
+&lt;link href="bootstrap.min.css"
+  rel="stylesheet"
+  media="print"
+  onload="this.media='all'"&gt;
+
+&lt;!-- Noscript fallback --&gt;
+&lt;noscript&gt;
+  &lt;link href="bootstrap.min.css" rel="stylesheet"&gt;
+&lt;/noscript&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 10. PERFORMANCE CHECKLIST -->
+        <!-- ============================================================ -->
+        <h2 class="mb-3">10. Responsive Performance Checklist</h2>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Category</th>
+                        <th>Optimization</th>
+                        <th>Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Images</td>
+                        <td>Use <code>srcset</code> and <code>sizes</code></td>
+                        <td class="text-success">High - Serves correct image size</td>
+                    </tr>
+                    <tr>
+                        <td>Images</td>
+                        <td><code>loading="lazy"</code> for below-fold images</td>
+                        <td class="text-success">High - Defers unnecessary loads</td>
+                    </tr>
+                    <tr>
+                        <td>Images</td>
+                        <td>Use <code>&lt;picture&gt;</code> for art direction</td>
+                        <td class="text-warning">Medium - Better visual quality</td>
+                    </tr>
+                    <tr>
+                        <td>Images</td>
+                        <td>Use WebP/AVIF formats</td>
+                        <td class="text-success">High - 30-50% smaller files</td>
+                    </tr>
+                    <tr>
+                        <td>CSS</td>
+                        <td>Critical CSS inlined in head</td>
+                        <td class="text-success">High - Faster first paint</td>
+                    </tr>
+                    <tr>
+                        <td>CSS</td>
+                        <td>Defer non-critical CSS</td>
+                        <td class="text-success">High - Faster page load</td>
+                    </tr>
+                    <tr>
+                        <td>Layout</td>
+                        <td>Use CSS grid auto-fit (no JS)</td>
+                        <td class="text-warning">Medium - Less JS overhead</td>
+                    </tr>
+                    <tr>
+                        <td>Layout</td>
+                        <td>Minimize DOM nesting</td>
+                        <td class="text-warning">Medium - Faster rendering</td>
+                    </tr>
+                    <tr>
+                        <td>JS</td>
+                        <td>Defer Bootstrap JS</td>
+                        <td class="text-success">High - Non-blocking load</td>
+                    </tr>
+                    <tr>
+                        <td>UX</td>
+                        <td>Skeleton loaders during load</td>
+                        <td class="text-warning">Medium - Better perceived speed</td>
+                    </tr>
+                    <tr>
+                        <td>UX</td>
+                        <td>Conditional content per breakpoint</td>
+                        <td class="text-warning">Medium - Less data on mobile</td>
+                    </tr>
+                    <tr>
+                        <td>Fonts</td>
+                        <td>font-display: swap</td>
+                        <td class="text-warning">Medium - No invisible text</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- Deferred JS: Loads after HTML is parsed -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

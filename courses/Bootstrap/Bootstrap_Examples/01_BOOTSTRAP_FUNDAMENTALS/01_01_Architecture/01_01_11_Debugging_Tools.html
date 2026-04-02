@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================ -->
+    <!-- CORE META TAGS                               -->
+    <!-- ============================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bootstrap 5 Debugging Tools - Browser DevTools, inspectors, and debugging techniques">
+    <meta name="author" content="Bootstrap Course">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- ============================================ -->
+    <!-- TITLE                                        -->
+    <!-- ============================================ -->
+    <title>01_01_11 - Debugging Tools</title>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 CSS CDN                          -->
+    <!-- ============================================ -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aV76Ug"
+        crossorigin="anonymous"
+    >
+
+    <!-- Bootstrap Icons CDN -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <!-- ============================================ -->
+    <!-- CUSTOM STYLES                                -->
+    <!-- ============================================ -->
+    <!--
+        Debug helper styles that can be toggled on/off during development.
+        These are intentionally visible to help understand layout issues.
+    -->
+    <style>
+        /*
+            Debug mode styles.
+            Add class "debug-mode" to <body> to activate.
+            Highlights all Bootstrap grid columns with colored borders.
+        */
+        .debug-mode .row {
+            outline: 2px dashed #dc3545;
+            outline-offset: -2px;
+        }
+        .debug-mode [class*="col-"] {
+            outline: 2px solid #0d6efd;
+            outline-offset: -2px;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .debug-mode .container,
+        .debug-mode .container-fluid {
+            outline: 2px solid #198754;
+            outline-offset: -2px;
+        }
+
+        /*
+            Spacer visualization.
+            Shows spacing utility values visually.
+        */
+        .spacer-visual {
+            position: relative;
+        }
+        .spacer-visual::before {
+            content: attr(data-spacing);
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: rgba(255, 193, 7, 0.3);
+            font-size: 0.65rem;
+            padding: 0 4px;
+            border-radius: 2px;
+            font-family: monospace;
+            color: #664d03;
+        }
+
+        /*
+            DevTools shortcut styling.
+        */
+        .shortcut-key {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /*
+            Terminal styling.
+        */
+        .debug-terminal {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        .debug-terminal .cmd { color: #dcdcaa; }
+        .debug-terminal .sel { color: #ce9178; }
+        .debug-terminal .val { color: #6a9955; }
+        .debug-terminal .prop { color: #9cdcfe; }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================ -->
+    <!-- NAVIGATION BAR                               -->
+    <!-- ============================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-bug me-2"></i>Debugging Tools
+            </a>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#devtools">DevTools</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#css-debug">CSS Debug</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#js-debug">JS Debug</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tips">Tips</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================ -->
+    <!-- HERO SECTION                                 -->
+    <!-- ============================================ -->
+    <header class="bg-dark text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Debugging Tools</h1>
+            <p class="lead mb-0">
+                Browser DevTools, debugging techniques, and troubleshooting strategies
+                for Bootstrap CSS and JavaScript components.
+            </p>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT                                 -->
+    <!-- ============================================ -->
+    <main class="container py-5">
+
+        <!-- ============================================ -->
+        <!-- BROWSER DEVTOOLS SECTION                     -->
+        <!-- ============================================ -->
+        <!--
+            Browser Developer Tools are the primary debugging environment.
+            Each major browser has built-in tools for inspecting HTML, CSS, and JS.
+        -->
+        <section class="mb-5" id="devtools">
+            <h2 class="mb-4">
+                <i class="bi bi-browser-edge me-2"></i>Browser DevTools
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Opening DevTools</h5>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="text-center p-3 bg-light rounded">
+                                        <i class="bi bi-browser-chrome fs-2 text-primary"></i>
+                                        <h6 class="mt-2">Chrome</h6>
+                                        <p class="mb-0 small">
+                                            <span class="shortcut-key">F12</span> or
+                                            <span class="shortcut-key">Ctrl</span>+<span class="shortcut-key">Shift</span>+<span class="shortcut-key">I</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="text-center p-3 bg-light rounded">
+                                        <i class="bi bi-browser-firefox fs-2 text-warning"></i>
+                                        <h6 class="mt-2">Firefox</h6>
+                                        <p class="mb-0 small">
+                                            <span class="shortcut-key">F12</span> or
+                                            <span class="shortcut-key">Ctrl</span>+<span class="shortcut-key">Shift</span>+<span class="shortcut-key">I</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="text-center p-3 bg-light rounded">
+                                        <i class="bi bi-browser-edge fs-2 text-info"></i>
+                                        <h6 class="mt-2">Edge</h6>
+                                        <p class="mb-0 small">
+                                            <span class="shortcut-key">F12</span> or
+                                            <span class="shortcut-key">Ctrl</span>+<span class="shortcut-key">Shift</span>+<span class="shortcut-key">I</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        DevTools tabs explained.
+                        Each tab serves a different debugging purpose.
+                    -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Key DevTools Panels</h5>
+                            <div class="accordion" id="devtoolsAccordion">
+                                <!-- Elements Panel -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panel-elements">
+                                            <i class="bi bi-code-slash me-2"></i>Elements Panel (CSS/HTML)
+                                        </button>
+                                    </h2>
+                                    <div id="panel-elements" class="accordion-collapse collapse show" data-bs-parent="#devtoolsAccordion">
+                                        <div class="accordion-body">
+                                            <p class="small text-muted mb-2">
+                                                Inspect and modify HTML and CSS in real-time.
+                                            </p>
+                                            <ul class="small mb-0">
+                                                <li>Click the <i class="bi bi-cursor"></i> picker to select elements on page</li>
+                                                <li>View computed styles, box model, and CSS rules</li>
+                                                <li>Toggle CSS properties on/off with checkboxes</li>
+                                                <li>Edit HTML directly by double-clicking elements</li>
+                                                <li>See which Bootstrap classes apply which styles</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Console Panel -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel-console">
+                                            <i class="bi bi-terminal me-2"></i>Console Panel (JavaScript)
+                                        </button>
+                                    </h2>
+                                    <div id="panel-console" class="accordion-collapse collapse" data-bs-parent="#devtoolsAccordion">
+                                        <div class="accordion-body">
+                                            <p class="small text-muted mb-2">
+                                                View logs, errors, and execute JavaScript.
+                                            </p>
+                                            <div class="debug-terminal small mb-2">
+                                                <div><span class="val">// Check Bootstrap version</span></div>
+                                                <div><span class="cmd">console</span>.<span class="sel">log</span>(bootstrap.Tooltip.VERSION);</div>
+                                                <div class="mt-1"><span class="val">// Test if Bootstrap is loaded</span></div>
+                                                <div><span class="cmd">console</span>.<span class="sel">log</span>(<span class="prop">typeof</span> bootstrap); <span class="val">// "object"</span></div>
+                                                <div class="mt-1"><span class="val">// List all Bootstrap components</span></div>
+                                                <div><span class="cmd">console</span>.<span class="sel">log</span>(Object.<span class="sel">keys</span>(bootstrap));</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Network Panel -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel-network">
+                                            <i class="bi bi-wifi me-2"></i>Network Panel (Resources)
+                                        </button>
+                                    </h2>
+                                    <div id="panel-network" class="accordion-collapse collapse" data-bs-parent="#devtoolsAccordion">
+                                        <div class="accordion-body">
+                                            <p class="small text-muted mb-2">
+                                                Monitor all network requests and their timing.
+                                            </p>
+                                            <ul class="small mb-0">
+                                                <li>See Bootstrap CSS/JS file sizes and load times</li>
+                                                <li>Filter by type: CSS, JS, XHR, etc.</li>
+                                                <li>Check CDN response headers and caching</li>
+                                                <li>Identify slow or failed requests</li>
+                                                <li>Throttle network to simulate slow connections</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Coverage Panel -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel-coverage">
+                                            <i class="bi bi-pie-chart me-2"></i>Coverage Panel (Unused Code)
+                                        </button>
+                                    </h2>
+                                    <div id="panel-coverage" class="accordion-collapse collapse" data-bs-parent="#devtoolsAccordion">
+                                        <div class="accordion-body">
+                                            <p class="small text-muted mb-2">
+                                                Shows how much CSS/JS is actually used on the page.
+                                            </p>
+                                            <ul class="small mb-0">
+                                                <li>Open with <span class="shortcut-key">Ctrl</span>+<span class="shortcut-key">Shift</span>+<span class="shortcut-key">P</span> → "Show Coverage"</li>
+                                                <li>Red = unused bytes, Blue = used bytes</li>
+                                                <li>Click a file to see line-by-line usage</li>
+                                                <li>Typically 60-80% of Bootstrap CSS is unused per page</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!--
+                        Quick reference card for common debugging tasks.
+                    -->
+                    <div class="card sticky-lg-top">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-lightning me-2"></i>Quick Debug Commands
+                            </h5>
+                            <div class="debug-terminal small">
+                                <div><span class="val">// In browser console</span></div>
+                                <div class="mt-1"><span class="val">// Check if Bootstrap loaded</span></div>
+                                <div><span class="prop">typeof</span> bootstrap</div>
+                                <div class="mt-1"><span class="val">// Get Bootstrap version</span></div>
+                                <div>bootstrap.Tooltip.VERSION</div>
+                                <div class="mt-1"><span class="val">// List all components</span></div>
+                                <div>Object.keys(bootstrap)</div>
+                                <div class="mt-1"><span class="val">// Inspect a modal instance</span></div>
+                                <div><span class="prop">const</span> el = document.</div>
+                                <div>&nbsp;&nbsp;querySelector(<span class="sel">'#myModal'</span>);</div>
+                                <div>bootstrap.Modal.getInstance(el);</div>
+                                <div class="mt-1"><span class="val">// Check CSS custom props</span></div>
+                                <div>getComputedStyle(</div>
+                                <div>&nbsp;&nbsp;document.documentElement</div>
+                                <div>).getPropertyValue(</div>
+                                <div>&nbsp;&nbsp;<span class="sel">'--bs-primary'</span></div>
+                                <div>);</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- CSS DEBUGGING SECTION                        -->
+        <!-- ============================================ -->
+        <!--
+            Techniques for debugging CSS issues in Bootstrap.
+        -->
+        <section class="mb-5" id="css-debug">
+            <h2 class="mb-4">
+                <i class="bi bi-palette me-2"></i>CSS Debugging
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Grid Debug Mode</h5>
+                            <p class="card-text text-muted small">
+                                Add <code>debug-mode</code> class to <code>&lt;body&gt;</code> to visualize
+                                the grid. This code is already on this page - try it!
+                            </p>
+                            <div class="debug-terminal small">
+                                <div><span class="val">/* Add to your CSS */</span></div>
+                                <div>.debug-mode .row {</div>
+                                <div>&nbsp;&nbsp;<span class="prop">outline</span>: <span class="val">2px dashed red</span>;</div>
+                                <div>}</div>
+                                <div>.debug-mode [class*=<span class="sel">"col-"</span>] {</div>
+                                <div>&nbsp;&nbsp;<span class="prop">outline</span>: <span class="val">2px solid blue</span>;</div>
+                                <div>&nbsp;&nbsp;<span class="prop">background</span>: <span class="val">rgba(0,0,255,0.05)</span>;</div>
+                                <div>}</div>
+                            </div>
+
+                            <!--
+                                Demo grid to test debug mode.
+                            -->
+                            <div class="mt-3 p-2 border rounded">
+                                <small class="text-muted">Debug grid preview:</small>
+                                <div class="row mt-2">
+                                    <div class="col-4 bg-light border text-center py-2 small">col-4</div>
+                                    <div class="col-4 bg-light border text-center py-2 small">col-4</div>
+                                    <div class="col-4 bg-light border text-center py-2 small">col-4</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Common CSS Issues</h5>
+                            <!--
+                                Accordion of common Bootstrap CSS issues and their solutions.
+                            -->
+                            <div class="accordion" id="cssIssues">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed small" type="button" data-bs-toggle="collapse" data-bs-target="#issue-specificity">
+                                            Specificity conflicts
+                                        </button>
+                                    </h2>
+                                    <div id="issue-specificity" class="accordion-collapse collapse" data-bs-parent="#cssIssues">
+                                        <div class="accordion-body small">
+                                            <strong>Problem:</strong> Your styles don't override Bootstrap.<br>
+                                            <strong>Fix:</strong> Ensure your CSS loads after Bootstrap.
+                                            Use equal or higher specificity.
+                                            <div class="debug-terminal small mt-2">
+                                                <div><span class="val">// Bad: loads before Bootstrap</span></div>
+                                                <div><span class="val">// Good: loads after Bootstrap</span></div>
+                                                <div>&lt;link href=<span class="sel">"bootstrap.css"</span>&gt;</div>
+                                                <div>&lt;link href=<span class="sel">"custom.css"</span>&gt;</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed small" type="button" data-bs-toggle="collapse" data-bs-target="#issue-breakpoints">
+                                            Breakpoint not working
+                                        </button>
+                                    </h2>
+                                    <div id="issue-breakpoints" class="accordion-collapse collapse" data-bs-parent="#cssIssues">
+                                        <div class="accordion-body small">
+                                            <strong>Problem:</strong> <code>col-md-6</code> doesn't activate.<br>
+                                            <strong>Fix:</strong> Check viewport meta tag is present.
+                                            Resize browser to test breakpoints.
+                                            Bootstrap breakpoints: sm=576, md=768, lg=992, xl=1200, xxl=1400.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed small" type="button" data-bs-toggle="collapse" data-bs-target="#issue-spacing">
+                                            Unexpected spacing
+                                        </button>
+                                    </h2>
+                                    <div id="issue-spacing" class="accordion-collapse collapse" data-bs-parent="#cssIssues">
+                                        <div class="accordion-body small">
+                                            <strong>Problem:</strong> Gaps or margins you didn't set.<br>
+                                            <strong>Fix:</strong> Check for <code>g-*</code> (gutters) on rows,
+                                            <code>mb-*</code> on elements, and default margins on <code>&lt;p&gt;</code>,
+                                            <code>&lt;h*&gt;</code> tags. Use <code>m-0</code> or <code>p-0</code> to remove.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- JAVASCRIPT DEBUGGING SECTION                 -->
+        <!-- ============================================ -->
+        <!--
+            Techniques for debugging Bootstrap's JavaScript components.
+        -->
+        <section class="mb-5" id="js-debug">
+            <h2 class="mb-4">
+                <i class="bi bi-filetype-js me-2"></i>JavaScript Debugging
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Component Instance Debugging</h5>
+                            <p class="card-text text-muted small">
+                                Access Bootstrap component instances from the console to inspect their state.
+                            </p>
+                            <div class="debug-terminal small">
+                                <div><span class="val">// Get a modal's instance</span></div>
+                                <div><span class="prop">const</span> modalEl = document.</div>
+                                <div>&nbsp;&nbsp;querySelector(<span class="sel">'#exampleModal'</span>);</div>
+                                <div><span class="prop">const</span> modal = bootstrap.Modal</div>
+                                <div>&nbsp;&nbsp;.getInstance(modalEl);</div>
+                                <div class="mt-1"><span class="val">// Check its options</span></div>
+                                <div>modal._config <span class="val">// {backdrop: true, ...}</span></div>
+                                <div class="mt-1"><span class="val">// Check if it's shown</span></div>
+                                <div>modalEl.classList</div>
+                                <div>&nbsp;&nbsp;.contains(<span class="sel">'show'</span>);</div>
+                                <div class="mt-1"><span class="val">// Listen for events</span></div>
+                                <div>modalEl.addEventListener(</div>
+                                <div>&nbsp;&nbsp;<span class="sel">'show.bs.modal'</span>,</div>
+                                <div>&nbsp;&nbsp;e => console.log(e)</div>
+                                <div>);</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Bootstrap Events</h5>
+                            <p class="card-text text-muted small">
+                                Bootstrap fires events at each stage of a component's lifecycle.
+                                These help you debug timing issues.
+                            </p>
+                            <!--
+                                Live event demo using a collapse component.
+                            -->
+                            <p>
+                                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDemo">
+                                    Toggle Collapse
+                                </button>
+                            </p>
+                            <div class="collapse" id="collapseDemo">
+                                <div class="card card-body">
+                                    This content is toggled by Bootstrap's collapse plugin.
+                                    Check the console for fired events.
+                                </div>
+                            </div>
+                            <div id="eventLog" class="debug-terminal small mt-3" style="max-height: 100px; overflow-y: auto;">
+                                <div class="val">Event log will appear here...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <!--
+                        Common JS issues and fixes.
+                    -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Common JavaScript Issues</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm small">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Problem</th>
+                                            <th>Cause</th>
+                                            <th>Solution</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Modal won't open</td>
+                                            <td>JS loaded before DOM</td>
+                                            <td>Move <code>&lt;script&gt;</code> to end of <code>&lt;body&gt;</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Tooltip not showing</td>
+                                            <td>Missing Popper.js</td>
+                                            <td>Use <code>bootstrap.bundle.min.js</code> (includes Popper)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Dropdown not working</td>
+                                            <td>Bootstrap JS not loaded</td>
+                                            <td>Check console for errors, verify CDN URL</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Carousel won't auto-play</td>
+                                            <td>Missing <code>data-bs-ride</code></td>
+                                            <td>Add <code>data-bs-ride="carousel"</code> to the container</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Tab content not switching</td>
+                                            <td>Wrong <code>data-bs-target</code></td>
+                                            <td>Verify target ID matches the panel ID</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- DEBUGGING TIPS SECTION                       -->
+        <!-- ============================================ -->
+        <section id="tips">
+            <h2 class="mb-4">
+                <i class="bi bi-lightbulb me-2"></i>Debugging Tips
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-primary">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">
+                                <i class="bi bi-1-circle me-2"></i>Isolate the Problem
+                            </h5>
+                            <p class="card-text small">
+                                Create a minimal reproduction. Strip your page down to just
+                                the Bootstrap component that's broken. This helps identify
+                                if the issue is Bootstrap or your custom code.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-warning">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">
+                                <i class="bi bi-2-circle me-2"></i>Check the Console
+                            </h5>
+                            <p class="card-text small">
+                                JavaScript errors appear in the console. Look for red error
+                                messages. Warnings often indicate deprecated APIs or
+                                missing configurations.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">
+                                <i class="bi bi-3-circle me-2"></i>Use Breakpoints
+                            </h5>
+                            <p class="card-text small">
+                                In the Sources panel, click line numbers to set breakpoints.
+                                Step through code with <span class="shortcut-key">F10</span> (step over)
+                                and <span class="shortcut-key">F11</span> (step into) to trace execution.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================ -->
+    <!-- FOOTER                                       -->
+    <!-- ============================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Debugging Tools</h5>
+                    <p class="text-muted mb-0">
+                        Browser DevTools, CSS debugging, and JavaScript troubleshooting for Bootstrap projects.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-github"></i></a>
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <p class="text-center text-muted mb-0">
+                &copy; 2024 Bootstrap Course. Built with Bootstrap 5.3.3
+            </p>
+        </div>
+    </footer>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 JAVASCRIPT BUNDLE CDN            -->
+    <!-- ============================================ -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- ============================================ -->
+    <!-- CUSTOM JAVASCRIPT                            -->
+    <!-- ============================================ -->
+    <!--
+        Debugging JavaScript that logs Bootstrap events to demonstrate
+        how to monitor component lifecycle events.
+    -->
+    <script>
+        // Confirm Bootstrap is loaded
+        console.log('Bootstrap version:', bootstrap.Tooltip.VERSION || '5.3.3');
+
+        // Initialize tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(
+            tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl)
+        );
+
+        /*
+            Event logging for the collapse demo.
+            Demonstrates how to listen for Bootstrap's component events.
+            Each event type fires at a specific point in the component lifecycle:
+            - show.bs.*: Before the show animation starts
+            - shown.bs.*: After the show animation completes
+            - hide.bs.*: Before the hide animation starts
+            - hidden.bs.*: After the hide animation completes
+        */
+        const collapseEl = document.getElementById('collapseDemo');
+        const eventLog = document.getElementById('eventLog');
+
+        ['show', 'shown', 'hide', 'hidden'].forEach(eventName => {
+            collapseEl.addEventListener(eventName + '.bs.collapse', function(e) {
+                const time = new Date().toLocaleTimeString();
+                const entry = document.createElement('div');
+                entry.innerHTML = '<span class="text-muted">[' + time + ']</span> <span class="text-success">' + eventName + '.bs.collapse</span>';
+                eventLog.appendChild(entry);
+                eventLog.scrollTop = eventLog.scrollHeight;
+            });
+        });
+    </script>
+</body>
+</html>

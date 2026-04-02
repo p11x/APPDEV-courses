@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_06_05_Browser_Specific_CSS.html                            -->
+<!-- Browser-Specific CSS Workarounds                             -->
+<!-- Demonstrates CSS hacks, conditional comments, and targeted   -->
+<!-- workarounds for specific browser rendering issues            -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>04_06_05 - Browser-Specific CSS</title>
+    
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* ======================================================== */
+        /* SAFARI-SPECIFIC WORKAROUNDS                              */
+        /* Safari (WebKit) has unique quirks that need fixes       */
+        /* ======================================================== */
+
+        /* Safari flexbox gap workaround for older versions */
+        /* Safari <14.1 doesn't support gap in flexbox */
+        .flex-gap-container {
+            display: flex;
+            flex-wrap: wrap;
+            /* Fallback for older Safari */
+            margin: -0.5rem;
+        }
+        .flex-gap-container > * {
+            /* Fallback margin for gap */
+            margin: 0.5rem;
+        }
+        /* Modern browsers use gap */
+        @supports (gap: 1rem) {
+            .flex-gap-container {
+                gap: 1rem;
+                margin: 0;
+            }
+            .flex-gap-container > * {
+                margin: 0;
+            }
+        }
+
+        /* Safari 100vh bug - mobile Safari includes address bar in 100vh */
+        .full-height-section {
+            /* Fallback */
+            height: 100vh;
+            /* Fix for Safari mobile */
+            height: -webkit-fill-available;
+        }
+        /* Use dvh (dynamic viewport height) where supported */
+        @supports (height: 100dvh) {
+            .full-height-section {
+                height: 100dvh;
+            }
+        }
+
+        /* Safari input zoom fix - font-size <16px causes zoom */
+        /* Workaround: ensure all inputs have font-size >= 16px on mobile */
+        @media screen and (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important; /* Prevent Safari auto-zoom */
+            }
+        }
+
+        /* ======================================================== */
+        /* FIREFOX-SPECIFIC WORKAROUNDS                             */
+        /* ======================================================== */
+
+        /* Firefox button inner focus fix */
+        /* Firefox adds an inner focus ring on buttons */
+        .ff-button::-moz-focus-inner {
+            border: 0; /* Remove Firefox inner button border */
+            padding: 0;
+        }
+
+        /* Firefox number input spinner removal */
+        .ff-number-input[type="number"]::-webkit-inner-spin-button,
+        .ff-number-input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .ff-number-input[type="number"] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+
+        /* Firefox select dropdown arrow removal */
+        .ff-select {
+            -moz-appearance: none; /* Firefox */
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2.5rem;
+        }
+
+        /* ======================================================== */
+        /* CHROME/BLINK-SPECIFIC WORKAROUNDS                        */
+        /* ======================================================== */
+
+        /* Chrome autofill background override */
+        /* Chrome adds a yellow background to autofilled inputs */
+        .no-autofill-bg:-webkit-autofill,
+        .no-autofill-bg:-webkit-autofill:hover,
+        .no-autofill-bg:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px white inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* Chrome smooth scroll snap */
+        .snap-container {
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            height: 300px;
+        }
+        .snap-item {
+            scroll-snap-align: start;
+            height: 300px;
+        }
+
+        /* ======================================================== */
+        /* EDGE-SPECIFIC WORKAROUNDS                                */
+        /* Legacy Edge (non-Chromium) had unique issues            */
+        /* ======================================================== */
+
+        /* Edge CSS Grid auto-placement fix */
+        /* Legacy Edge had issues with grid auto-placement */
+        .edge-grid-fix {
+            display: -ms-grid; /* IE/Edge prefix */
+            display: grid;
+            -ms-grid-columns: 1fr 1fr 1fr; /* Edge prefix */
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        /* Edge flexbox height bug fix */
+        .edge-flex-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 300px;
+        }
+        .edge-flex-content {
+            flex: 1 0 auto; /* Edge needs 0 instead of 1 for flex-basis */
+        }
+
+        /* ======================================================== */
+        /* IE 11 WORKAROUNDS (Educational - IE is deprecated)       */
+        /* ======================================================== */
+
+        /* IE 11 flexbox min-height fix */
+        .ie-flex-fix {
+            display: -ms-flexbox; /* IE 10 */
+            display: flex;
+            -ms-flex-direction: column;
+            flex-direction: column;
+        }
+        .ie-flex-fix > .ie-flex-grow {
+            -ms-flex: 1 0 auto;
+            flex: 1 0 auto;
+        }
+
+        /* ======================================================== */
+        /* CROSS-BROWSER WORKAROUND DEMOS                           */
+        /* ======================================================== */
+
+        /* Consistent focus styles across browsers */
+        .focus-fix:focus {
+            /* Remove default browser focus ring */
+            outline: none;
+            /* Apply consistent custom focus ring */
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.5);
+        }
+
+        /* Consistent placeholder styling */
+        .placeholder-fix::placeholder {
+            color: #999;
+            opacity: 1; /* Firefox default is 0.4 */
+        }
+        .placeholder-fix::-webkit-input-placeholder { color: #999; }
+        .placeholder-fix::-moz-placeholder { color: #999; opacity: 1; }
+        .placeholder-fix:-ms-input-placeholder { color: #999; }
+
+        /* Consistent disabled styling */
+        .consistent-disabled:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            /* Override Firefox default disabled opacity */
+            -moz-appearance: none;
+        }
+
+        /* ======================================================== */
+        /* BROWSER-SPECIFIC CSS HACK PATTERNS                       */
+        /* These are generally AVOIDED in favor of @supports       */
+        /* but documented for educational reference                */
+        /* ======================================================== */
+
+        /* Star hack (IE 7 and below) - NEVER USE IN PRODUCTION */
+        .hack-reference {
+            color: black;
+            *color: blue; /* IE 7 only - targets IE7 */
+        }
+
+        /* \9 hack (IE 8 and below) - NEVER USE IN PRODUCTION */
+        .hack-reference {
+            color: black\9; /* IE 8 and below */
+        }
+
+        /* \0 hack (IE 9-11) - NEVER USE IN PRODUCTION */
+        .hack-reference {
+            color: black\0; /* IE 9-11 */
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- NAVIGATION                                                   -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Browser-Specific CSS</a>
+            <button class="navbar-toggler" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#safari">Safari</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#firefox">Firefox</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#chrome">Chrome</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#crossBrowser">Cross-Browser</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HERO                                                         -->
+    <!-- ============================================================ -->
+    <header class="bg-danger text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Browser-Specific CSS</h1>
+            <p class="lead">
+                Common workarounds for Safari, Firefox, Chrome, and Edge rendering
+                quirks. These patterns solve real cross-browser compatibility issues.
+            </p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: SAFARI WORKAROUNDS                            -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="safari">
+            <h2 class="border-bottom pb-2 mb-4">1. Safari (WebKit) Workarounds</h2>
+            
+            <!-- 100vh bug -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">The 100vh Mobile Safari Bug</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Mobile Safari's <code>100vh</code> includes the address bar, causing
+                        content to be hidden behind it. Solutions:
+                    </p>
+                    <pre class="bg-light p-3 rounded small"><code>/* Problem: 100vh includes Safari's address bar */
+.full-height { height: 100vh; }
+
+/* Solution 1: -webkit-fill-available */
+.full-height {
+  height: 100vh;
+  height: -webkit-fill-available;
+}
+
+/* Solution 2: Use dvh (dynamic viewport height) */
+.full-height { height: 100dvh; }
+
+/* Solution 3: JavaScript-based fix */
+.full-height { height: calc(var(--vh, 1vh) * 100); }
+/* JS: document.documentElement.style.setProperty('--vh',
+       window.innerHeight * 0.01 + 'px'); */</code></pre>
+                </div>
+            </div>
+            
+            <!-- Flexbox gap -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Flexbox Gap (Safari &lt;14.1)</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Safari versions before 14.1 don't support <code>gap</code> in flexbox.
+                        Use margin fallback:
+                    </p>
+                    <div class="flex-gap-container">
+                        <div class="bg-primary text-white p-3 rounded">Item 1</div>
+                        <div class="bg-success text-white p-3 rounded">Item 2</div>
+                        <div class="bg-warning p-3 rounded">Item 3</div>
+                    </div>
+                    <pre class="bg-light p-3 rounded small mt-2"><code>/* Fallback: negative margin on container */
+.flex-container {
+  display: flex;
+  margin: -0.5rem; /* Half the desired gap */
+}
+.flex-container > * {
+  margin: 0.5rem;
+}
+
+/* Modern: use @supports to override */
+@supports (gap: 1rem) {
+  .flex-container { gap: 1rem; margin: 0; }
+  .flex-container > * { margin: 0; }
+}</code></pre>
+                </div>
+            </div>
+
+            <!-- Input zoom -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Safari Auto-Zoom on Input Focus</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Mobile Safari auto-zooms when focusing an input with
+                        <code>font-size &lt; 16px</code>. Fix by ensuring 16px minimum:
+                    </p>
+                    <pre class="bg-light p-3 rounded small mb-0"><code>@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: FIREFOX WORKAROUNDS                           -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="firefox">
+            <h2 class="border-bottom pb-2 mb-4">2. Firefox (Gecko) Workarounds</h2>
+            
+            <div class="row">
+                <!-- Button focus -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Button Inner Focus Ring</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Firefox adds an inner dotted border on focused buttons:</p>
+                            <button class="btn btn-primary ff-button">Firefox Button</button>
+                            <pre class="bg-light p-2 rounded small mt-2"><code>.btn::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Number input -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Number Input Spinner</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Remove spin buttons from number inputs:</p>
+                            <input type="number" class="form-control ff-number-input" 
+                                   placeholder="No spinners" style="max-width:200px;">
+                            <pre class="bg-light p-2 rounded small mt-2"><code>/* Chrome */
+input::-webkit-inner-spin-button { display:none; }
+/* Firefox */
+input { -moz-appearance: textfield; }</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Select dropdown -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Custom Select Arrow</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Replace native select arrow consistently:</p>
+                            <select class="form-select ff-select" style="max-width:250px;">
+                                <option>Custom arrow select</option>
+                                <option>Option 2</option>
+                            </select>
+                            <pre class="bg-light p-2 rounded small mt-2"><code>select {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("arrow.svg");
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem;
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Scrollbar -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Scrollbar Styling</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Different approaches per browser engine:</p>
+                            <pre class="bg-light p-2 rounded small mb-0"><code>/* WebKit (Chrome, Safari, Edge) */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: #888; }
+
+/* Firefox */
+scrollbar-width: thin;
+scrollbar-color: #888 #f1f1f1;
+
+/* IE/Edge Legacy */
+-ms-overflow-style: -ms-autohiding-scrollbar;</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: CHROME WORKAROUNDS                            -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="chrome">
+            <h2 class="border-bottom pb-2 mb-4">3. Chrome (Blink) Workarounds</h2>
+            
+            <!-- Autofill -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Autofill Yellow Background</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Chrome applies a yellow background to autofilled inputs.
+                        This cannot be removed with <code>background-color</code>.
+                    </p>
+                    <input type="email" class="form-control no-autofill-bg mb-2" 
+                           placeholder="email@example.com" style="max-width:300px;">
+                    <pre class="bg-light p-3 rounded small mb-0"><code>input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px white inset;
+  transition: background-color 5000s ease-in-out 0s;
+}</code></pre>
+                </div>
+            </div>
+            
+            <!-- Smooth scroll snap -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">CSS Scroll Snap</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">
+                        Scroll snapping works across modern browsers but has subtle
+                        differences in behavior.
+                    </p>
+                    <div class="snap-container border rounded" style="height:200px;">
+                        <div class="snap-item d-flex align-items-center justify-content-center bg-primary text-white" 
+                             style="height:200px;">Snap Point 1</div>
+                        <div class="snap-item d-flex align-items-center justify-content-center bg-success text-white" 
+                             style="height:200px;">Snap Point 2</div>
+                        <div class="snap-item d-flex align-items-center justify-content-center bg-warning" 
+                             style="height:200px;">Snap Point 3</div>
+                    </div>
+                    <pre class="bg-light p-2 rounded small mt-2"><code>.container {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+}
+.item {
+  scroll-snap-align: start;
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: CROSS-BROWSER PATTERNS                        -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="crossBrowser">
+            <h2 class="border-bottom pb-2 mb-4">4. Cross-Browser Consistency Patterns</h2>
+            
+            <div class="row">
+                <!-- Focus styles -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Consistent Focus Styles</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Override default browser focus rings:</p>
+                            <button class="btn btn-primary focus-fix me-2 mb-2">Focus Me</button>
+                            <input type="text" class="form-control focus-fix" 
+                                   placeholder="Focus me too" style="max-width:200px;display:inline-block;">
+                            <pre class="bg-light p-2 rounded small mt-2"><code>:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(13,110,253,0.5);
+}
+/* Or use :focus-visible for keyboard-only */</code></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Placeholder -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Consistent Placeholder</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Firefox defaults to 0.4 opacity:</p>
+                            <input type="text" class="form-control placeholder-fix mb-2" 
+                                   placeholder="Consistent placeholder">
+                            <pre class="bg-light p-2 rounded small mb-0"><code>::placeholder { color: #999; opacity: 1; }
+::-webkit-input-placeholder { color: #999; }
+::-moz-placeholder { color: #999; opacity: 1; }
+:-ms-input-placeholder { color: #999; }</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Workaround summary -->
+            <div class="alert alert-info mt-3">
+                <h5>Best Practice Summary</h5>
+                <ul class="mb-0">
+                    <li>Use <code>@supports</code> for feature detection over browser hacks</li>
+                    <li>Use Autoprefixer in your build process</li>
+                    <li>Test on real devices and browsers, not just DevTools emulation</li>
+                    <li>Apply progressive enhancement - base experience works everywhere</li>
+                    <li>Avoid CSS hacks (star hack, \9 hack) - they're brittle and unmaintainable</li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                       -->
+    <!-- ============================================================ -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Browser-Specific CSS &copy; 2024 | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

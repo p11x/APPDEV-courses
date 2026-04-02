@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cards Performance Optimization - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WR6W8Z16TsA5kqVEf3MzL4FnTRi6lB"
+          crossorigin="anonymous">
+    <style>
+        /* ============================================================ */
+        /* SKELETON LOADING SCREEN STYLES */
+        /* ============================================================ */
+        /* Skeleton screens provide perceived performance improvement
+           by showing placeholder UI while content loads */
+        .skeleton {
+            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            /* Shimmer effect using gradient animation */
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            /* Infinite animation creates loading effect */
+            border-radius: 4px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+            /* Moves gradient position to create shimmer illusion */
+        }
+        .skeleton-text {
+            height: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .skeleton-title {
+            height: 1.5rem;
+            width: 60%;
+            margin-bottom: 1rem;
+        }
+        .skeleton-img {
+            height: 200px;
+        }
+
+        /* Lazy loaded image fade-in effect */
+        .lazy-img {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .lazy-img.loaded {
+            opacity: 1;
+        }
+
+        /* Responsive image placeholder aspect ratio */
+        .img-placeholder {
+            aspect-ratio: 16 / 10;
+            /* aspect-ratio: maintains consistent proportions */
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="mb-4">Cards Performance Optimization</h1>
+
+        <!-- ============================================================ -->
+        <!-- LAZY LOADING IMAGES -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">1. Lazy Loading Images</h2>
+        <!-- Lazy loading defers image loading until they enter the viewport
+             Reduces initial page load time and bandwidth usage -->
+
+        <div class="row g-4">
+
+            <!-- Native lazy loading (recommended) -->
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="https://picsum.photos/seed/lazy1/400/250"
+                         class="card-img-top lazy-img"
+                         alt="Lazy loaded landscape photo"
+                         loading="lazy"
+                         onload="this.classList.add('loaded')">
+                    <!-- loading="lazy": browser defers loading until image is near viewport
+                         onload: adds 'loaded' class for fade-in animation -->
+                    <div class="card-body">
+                        <h5 class="card-title">Native Lazy Loading</h5>
+                        <p class="card-text">
+                            The <code>loading="lazy"</code> attribute is the simplest way to
+                            implement lazy loading. Supported in all modern browsers.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lazy loading with placeholder -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="img-placeholder">
+                        <img src="https://picsum.photos/seed/lazy2/400/250"
+                             class="card-img-top lazy-img"
+                             alt="Lazy loaded city photo"
+                             loading="lazy"
+                             onload="this.classList.add('loaded')">
+                    </div>
+                    <!-- Placeholder maintains layout height while image loads,
+                         preventing Cumulative Layout Shift (CLS) -->
+                    <div class="card-body">
+                        <h5 class="card-title">Placeholder Pattern</h5>
+                        <p class="card-text">
+                            Using a placeholder container with aspect-ratio prevents
+                            layout shift when images load.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lazy loading with error handling -->
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="https://picsum.photos/seed/lazy3/400/250"
+                         class="card-img-top"
+                         alt="Image with fallback on error"
+                         loading="lazy"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22250%22%3E%3Crect fill=%22%23e9ecef%22 width=%22100%25%22 height=%22100%25%22/%3E%3Ctext fill=%22%236c757d%22 font-family=%22sans-serif%22 font-size=%2216%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EImage unavailable%3C/text%3E%3C/svg%3E'">
+                    <!-- onerror: falls back to an inline SVG placeholder if image fails to load -->
+                    <div class="card-body">
+                        <h5 class="card-title">Error Fallback</h5>
+                        <p class="card-text">
+                            Use <code>onerror</code> to show a fallback SVG when images
+                            fail to load. Prevents broken image icons.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SKELETON SCREENS -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">2. Skeleton Loading Screens</h2>
+        <!-- Skeleton screens improve perceived performance by showing content shape
+             before actual data loads -->
+
+        <div class="row g-4">
+
+            <!-- Skeleton card (loading state) -->
+            <div class="col-md-4">
+                <div class="card" aria-busy="true" aria-label="Loading product card">
+                    <!-- aria-busy="true": informs screen readers content is loading
+                         aria-label: describes the loading state -->
+                    <div class="skeleton skeleton-img"></div>
+                    <div class="card-body">
+                        <div class="skeleton skeleton-title"></div>
+                        <!-- Text line skeletons simulate final content layout -->
+                        <div class="skeleton skeleton-text" style="width: 90%"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%"></div>
+                        <div class="skeleton skeleton-text" style="width: 70%"></div>
+                        <div class="skeleton" style="height: 2rem; width: 100%; margin-top: 1rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loaded card (final state) -->
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="https://picsum.photos/seed/skel1/400/250"
+                         class="card-img-top" alt="Loaded product photo" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title">Loaded State</h5>
+                        <p class="card-text">
+                            This card shows the final loaded state. Replace skeleton
+                            elements with real content when data is available.
+                        </p>
+                        <button class="btn btn-primary w-100">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skeleton with multiple content types -->
+            <div class="col-md-4">
+                <div class="card" aria-busy="true" aria-label="Loading profile card">
+                    <div class="card-body text-center">
+                        <div class="skeleton rounded-circle mx-auto mb-3"
+                             style="width: 80px; height: 80px;"></div>
+                        <!-- Circular skeleton for avatar -->
+                        <div class="skeleton skeleton-title mx-auto" style="width: 50%"></div>
+                        <div class="skeleton skeleton-text mx-auto" style="width: 40%"></div>
+                        <div class="skeleton skeleton-text mx-auto" style="width: 80%"></div>
+                        <div class="skeleton skeleton-text mx-auto" style="width: 60%"></div>
+                        <div class="d-flex justify-content-center gap-2 mt-3">
+                            <div class="skeleton" style="height: 2rem; width: 4rem; border-radius: 4px;"></div>
+                            <div class="skeleton" style="height: 2rem; width: 4rem; border-radius: 4px;"></div>
+                            <div class="skeleton" style="height: 2rem; width: 4rem; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- INTERSECTION OBSERVER LAZY LOADING -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">3. Intersection Observer Pattern</h2>
+        <!-- For advanced lazy loading, Intersection Observer API loads content
+             only when elements approach the viewport -->
+
+        <div class="row g-4" id="observer-cards">
+            <!-- Cards will be loaded via Intersection Observer -->
+            <div class="col-md-4">
+                <div class="card observer-card" data-src="https://picsum.photos/seed/io1/400/250">
+                    <!-- data-src: stores actual image URL for JS to load -->
+                    <div class="img-placeholder">
+                        <div class="spinner-border text-primary" role="status">
+                            <!-- spinner-border: Bootstrap loading spinner -->
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Observer Card 1</h5>
+                        <p class="card-text">Images load when scrolled into view using IntersectionObserver.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card observer-card" data-src="https://picsum.photos/seed/io2/400/250">
+                    <div class="img-placeholder">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Observer Card 2</h5>
+                        <p class="card-text">Only visible cards load images, saving bandwidth.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card observer-card" data-src="https://picsum.photos/seed/io3/400/250">
+                    <div class="img-placeholder">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">Observer Card 3</h5>
+                        <p class="card-text">Scroll down to see these cards load their images.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- OPTIMIZED IMAGE FORMATS -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">4. Responsive Images with srcset</h2>
+        <!-- srcset serves different image sizes based on viewport width -->
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <picture>
+                        <!-- picture element: allows multiple source formats -->
+                        <source media="(min-width: 768px)"
+                                srcset="https://picsum.photos/seed/src1/800/400">
+                        <!-- Serves larger image for tablet+ viewports -->
+                        <source media="(min-width: 576px)"
+                                srcset="https://picsum.photos/seed/src1/600/300">
+                        <!-- Serves medium image for small screens -->
+                        <img src="https://picsum.photos/seed/src1/400/200"
+                             class="card-img-top"
+                             alt="Responsive image adapting to screen size"
+                             loading="lazy">
+                        <!-- Fallback for browsers that don't support picture -->
+                    </picture>
+                    <div class="card-body">
+                        <h5 class="card-title">Responsive with picture/source</h5>
+                        <p class="card-text">
+                            The <code>&lt;picture&gt;</code> element serves different image
+                            sizes based on media queries, reducing bandwidth on mobile.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <img src="https://picsum.photos/seed/src2/400/200"
+                         srcset="https://picsum.photos/seed/src2/400/200 400w,
+                                 https://picsum.photos/seed/src2/600/300 600w,
+                                 https://picsum.photos/seed/src2/800/400 800w"
+                         sizes="(max-width: 576px) 100vw, (max-width: 992px) 50vw, 33vw"
+                         class="card-img-top"
+                         alt="Image with srcset for resolution switching"
+                         loading="lazy">
+                    <!-- srcset: provides multiple image candidates
+                         sizes: tells browser which size to use at each breakpoint
+                         100vw = full viewport width, 50vw = half, etc. -->
+                    <div class="card-body">
+                        <h5 class="card-title">Responsive with srcset/sizes</h5>
+                        <p class="card-text">
+                            <code>srcset</code> with <code>sizes</code> lets the browser
+                            choose the optimal image based on viewport and device pixel ratio.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- CSS PERFORMANCE OPTIMIZATIONS -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">5. CSS Performance Tips</h2>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="https://picsum.photos/seed/css1/400/200"
+                         class="card-img-top" alt="CSS optimization example"
+                         loading="lazy" decoding="async">
+                    <!-- decoding="async": allows browser to decode image off main thread
+                         Prevents blocking the main render thread -->
+                    <div class="card-body">
+                        <h5 class="card-title">Async Decoding</h5>
+                        <p class="card-text">
+                            <code>decoding="async"</code> lets the browser decode images
+                            off the main thread, preventing render blocking.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">content-visibility</h5>
+                        <p class="card-text">
+                            The <code>content-visibility: auto</code> CSS property skips
+                            rendering of off-screen content entirely.
+                        </p>
+                        <pre class="bg-light p-2 rounded small mb-0"><code>.card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}</code></pre>
+                        <!-- content-visibility: auto: browser skips layout/paint for off-screen cards
+                             contain-intrinsic-size: provides estimated size to prevent layout shift -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">will-change</h5>
+                        <p class="card-text">
+                            <code>will-change</code> hints the browser about upcoming changes
+                            for GPU-accelerated animations.
+                        </p>
+                        <pre class="bg-light p-2 rounded small mb-0"><code>.card:hover {
+  will-change: transform;
+  transform: translateY(-4px);
+}</code></pre>
+                        <!-- will-change: tells browser to promote element to GPU layer
+                             Use sparingly - too many GPU layers hurt performance -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- VIRTUAL SCROLLING CONCEPT -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5 mb-3">6. Performance Metrics Summary</h2>
+
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">Core Web Vitals Impact on Cards</div>
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Target</th>
+                                    <th>Card Optimization</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>LCP</strong> (Largest Contentful Paint)</td>
+                                    <td>&lt; 2.5s</td>
+                                    <td>Lazy load below-fold card images, preload hero card image</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>FID</strong> (First Input Delay)</td>
+                                    <td>&lt; 100ms</td>
+                                    <td>Defer non-critical card interactivity, use async event handlers</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>CLS</strong> (Cumulative Layout Shift)</td>
+                                    <td>&lt; 0.1</td>
+                                    <td>Set explicit dimensions on card images, use aspect-ratio containers</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>INP</strong> (Interaction to Next Paint)</td>
+                                    <td>&lt; 200ms</td>
+                                    <td>Optimize card click handlers, avoid layout thrashing</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================
+        // INTERSECTION OBSERVER FOR LAZY LOADING
+        // ============================================================
+        // IntersectionObserver watches elements and fires callbacks when
+        // they enter/exit the viewport
+
+        const observerOptions = {
+            root: null,
+            // root: null means viewport is the observation root
+            rootMargin: '100px',
+            // rootMargin: extends the observation area 100px beyond viewport
+            // Images start loading 100px before they become visible
+            threshold: 0.1
+            // threshold: callback fires when 10% of element is visible
+        };
+
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Element is now visible in viewport
+                    const card = entry.target;
+                    const imgSrc = card.dataset.src;
+
+                    // Create and load the actual image
+                    const img = document.createElement('img');
+                    img.src = imgSrc;
+                    img.className = 'card-img-top lazy-img';
+                    img.alt = 'Dynamically loaded image';
+                    img.loading = 'lazy';
+                    img.onload = () => img.classList.add('loaded');
+
+                    // Replace placeholder with real image
+                    const placeholder = card.querySelector('.img-placeholder');
+                    if (placeholder) {
+                        placeholder.replaceWith(img);
+                    }
+
+                    // Stop observing this card - no need to watch it again
+                    observer.unobserve(card);
+                }
+            });
+        }, observerOptions);
+
+        // Start observing all cards with the observer-card class
+        document.querySelectorAll('.observer-card').forEach(card => {
+            imageObserver.observe(card);
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

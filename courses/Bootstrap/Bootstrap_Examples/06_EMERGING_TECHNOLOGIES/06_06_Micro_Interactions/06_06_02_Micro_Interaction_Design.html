@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<!-- ====================================================================
+     06_06_02_Micro_Interaction_Design.html
+     
+     PURPOSE: Design principles for micro interactions
+     TOPICS:  Feedback, affordance, constraints, mapping,
+              discoverability, progressive disclosure
+     
+     Micro interactions follow established design principles from
+     Don Norman's "Design of Everyday Things." This file demonstrates
+     how to apply these principles using Bootstrap components.
+     ==================================================================== -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro Interaction Design Principles - Bootstrap Mastery</title>
+    
+    <link 
+        rel="stylesheet" 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aVf636N"
+        crossorigin="anonymous">
+    
+    <style>
+        /* ==============================================================
+           DESIGN PRINCIPLE: AFFORDANCE
+           
+           Visual cues that suggest how an element should be used.
+           Buttons should look pressable, links should look clickable.
+           ============================================================== */
+        
+        /* A button that looks pressable */
+        .affordance-btn {
+            border: 2px solid;
+            border-bottom-width: 4px; /* Thicker bottom = looks "raised" */
+            transition: all 150ms ease;
+        }
+        
+        .affordance-btn:active {
+            border-bottom-width: 2px; /* Flatten on press */
+            transform: translateY(2px); /* Move down to simulate pressing */
+        }
+        
+        /* A card that looks grabbable */
+        .affordance-grab {
+            cursor: grab;
+            transition: box-shadow 200ms ease, transform 200ms ease;
+        }
+        
+        .affordance-grab:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .affordance-grab:active {
+            cursor: grabbing;
+        }
+        
+        /* ==============================================================
+           DESIGN PRINCIPLE: FEEDBACK
+           
+           Every action should have immediate, visible feedback.
+           The system should always tell users what's happening.
+           ============================================================== */
+        
+        /* Click feedback with checkmark */
+        .feedback-click {
+            position: relative;
+            transition: all 200ms ease;
+        }
+        
+        .feedback-click.clicked {
+            background-color: #198754 !important;
+            border-color: #198754 !important;
+        }
+        
+        .feedback-click.clicked::after {
+            content: '✓';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: check-pop 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes check-pop {
+            from { transform: translateY(-50%) scale(0); }
+            to { transform: translateY(-50%) scale(1); }
+        }
+        
+        /* Loading feedback */
+        .feedback-loading {
+            position: relative;
+            color: transparent !important;
+        }
+        
+        .feedback-loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 600ms linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ==============================================================
+           DESIGN PRINCIPLE: CONSTRAINTS
+           
+           Limit user actions to prevent errors.
+           Disable unavailable options, limit input ranges.
+           ============================================================== */
+        
+        /* Visual constraint: disabled state */
+        .constrained {
+            opacity: 0.5;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+        
+        /* Step progress constraint */
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 300ms ease;
+        }
+        
+        .step-dot.completed {
+            background: #198754;
+            color: white;
+        }
+        
+        .step-dot.current {
+            background: #0d6efd;
+            color: white;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+        }
+        
+        .step-dot.upcoming {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .step-line {
+            height: 2px;
+            width: 40px;
+            background: #dee2e6;
+            transition: background 300ms ease;
+        }
+        
+        .step-line.completed {
+            background: #198754;
+        }
+        
+        /* ==============================================================
+           DESIGN PRINCIPLE: MAPPING
+           
+           Controls should relate logically to what they control.
+           Spatial mapping: up/down for increase/decrease.
+           ============================================================== */
+        
+        /* Volume-style slider mapping */
+        .mapping-demo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .volume-bar {
+            width: 40px;
+            height: 8px;
+            background: #dee2e6;
+            border-radius: 4px;
+            transition: background 200ms ease;
+        }
+        
+        .volume-bar.active {
+            background: #0d6efd;
+        }
+        
+        /* ==============================================================
+           DESIGN PRINCIPLE: PROGRESSIVE DISCLOSURE
+           
+           Show only what's needed at each step.
+           Reveal complexity gradually to avoid overwhelming users.
+           ============================================================== */
+        
+        .disclose-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 400ms ease, opacity 300ms ease;
+            opacity: 0;
+        }
+        
+        .disclose-content.show {
+            max-height: 500px;
+            opacity: 1;
+        }
+        
+        /* ==============================================================
+           ACCESSIBILITY: REDUCED MOTION
+           ============================================================== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">🎨 Interaction Design</a>
+        </div>
+    </nav>
+
+    <header class="bg-dark text-white py-5">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Micro Interaction Design Principles</h1>
+            <p class="lead">Applying Don Norman's design principles to Bootstrap UI</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- ==============================================================
+             PRINCIPLE 1: AFFORDANCE
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Affordance</h2>
+            <p class="text-muted">Visual cues that suggest how elements should be used.</p>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Pressable Buttons</h6>
+                            <p class="small text-muted">Border thickness creates a "raised" look that invites pressing.</p>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-primary affordance-btn">Save</button>
+                                <button class="btn btn-success affordance-btn">Confirm</button>
+                                <button class="btn btn-outline-danger affordance-btn">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Grabbable Cards</h6>
+                            <p class="small text-muted">Elevation on hover suggests the card can be moved.</p>
+                            <div class="card affordance-grab">
+                                <div class="card-body py-3">
+                                    <strong>Drag me</strong>
+                                    <p class="mb-0 small text-muted">Hover to see elevation effect</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             PRINCIPLE 2: FEEDBACK
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Feedback</h2>
+            <p class="text-muted">Every action needs immediate, visible response.</p>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Click Confirmation</h6>
+                            <p class="small text-muted">Button changes color and shows checkmark on click.</p>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary feedback-click" onclick="this.classList.toggle('clicked')">
+                                    Like
+                                </button>
+                                <button class="btn btn-outline-primary feedback-click" onclick="this.classList.toggle('clicked')">
+                                    Save
+                                </button>
+                                <button class="btn btn-outline-primary feedback-click" onclick="this.classList.toggle('clicked')">
+                                    Follow
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Loading State</h6>
+                            <p class="small text-muted">Button shows spinner while processing.</p>
+                            <button class="btn btn-primary" id="loadingBtn" onclick="simulateLoading()">
+                                Submit Form
+                            </button>
+                            <span id="loadingStatus" class="ms-2 small text-muted"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             PRINCIPLE 3: CONSTRAINTS
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Constraints</h2>
+            <p class="text-muted">Limit actions to prevent errors and guide users.</p>
+            
+            <div class="card">
+                <div class="card-body">
+                    <h6>Multi-Step Wizard with Constraints</h6>
+                    <p class="small text-muted">Users can only proceed after completing current step.</p>
+                    
+                    <!-- Step indicator -->
+                    <div class="step-indicator mb-4">
+                        <div class="step-dot completed" id="step1dot">1</div>
+                        <div class="step-line completed" id="line1"></div>
+                        <div class="step-dot current" id="step2dot">2</div>
+                        <div class="step-line" id="line2"></div>
+                        <div class="step-dot upcoming" id="step3dot">3</div>
+                    </div>
+                    
+                    <!-- Step content -->
+                    <div id="wizardStep1" class="d-none">
+                        <div class="mb-3">
+                            <label class="form-label">Your Name</label>
+                            <input type="text" class="form-control" id="nameInput">
+                        </div>
+                    </div>
+                    <div id="wizardStep2">
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="emailInput">
+                        </div>
+                    </div>
+                    <div id="wizardStep3" class="d-none">
+                        <div class="alert alert-success mb-0">All steps complete!</div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-outline-secondary" id="prevBtn" onclick="wizardPrev()" disabled>Back</button>
+                        <button class="btn btn-primary" id="nextBtn" onclick="wizardNext()">Next</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             PRINCIPLE 4: MAPPING
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Mapping</h2>
+            <p class="text-muted">Controls should relate logically to what they control.</p>
+            
+            <div class="card">
+                <div class="card-body">
+                    <h6>Volume Control (Vertical = Loudness)</h6>
+                    <p class="small text-muted">Up = louder, Down = quieter. Natural spatial mapping.</p>
+                    
+                    <div class="d-flex align-items-end gap-1 mb-2" id="volumeBars">
+                        <div class="volume-bar active"></div>
+                        <div class="volume-bar active"></div>
+                        <div class="volume-bar active"></div>
+                        <div class="volume-bar active"></div>
+                        <div class="volume-bar active"></div>
+                        <div class="volume-bar"></div>
+                        <div class="volume-bar"></div>
+                        <div class="volume-bar"></div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="changeVolume(-1)">▼ Quieter</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="changeVolume(1)">▲ Louder</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             PRINCIPLE 5: PROGRESSIVE DISCLOSURE
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Progressive Disclosure</h2>
+            <p class="text-muted">Show only what's needed; reveal complexity gradually.</p>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Advanced Settings</h6>
+                        <button class="btn btn-sm btn-outline-primary" onclick="toggleDisclosure(this)">
+                            Show More
+                        </button>
+                    </div>
+                    
+                    <div class="disclose-content mt-3" id="discloseContent">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Cache TTL (seconds)</label>
+                                <input type="number" class="form-control" value="3600">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Max Connections</label>
+                                <input type="number" class="form-control" value="100">
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="debugMode">
+                                    <label class="form-check-label" for="debugMode">Enable Debug Mode</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">Micro Interaction Design Principles - Bootstrap Mastery</p>
+            <small class="text-muted">06_06_02_Micro_Interaction_Design.html</small>
+        </div>
+    </footer>
+
+    <script 
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLSfVQmvFPwCq8mFpDrNvbTNpsMxMXJLZl1FTERFBzNEk9"
+        crossorigin="anonymous">
+    </script>
+
+    <script>
+        // Loading simulation
+        function simulateLoading() {
+            const btn = document.getElementById('loadingBtn');
+            const status = document.getElementById('loadingStatus');
+            btn.classList.add('feedback-loading');
+            btn.disabled = true;
+            status.textContent = 'Processing...';
+            
+            setTimeout(() => {
+                btn.classList.remove('feedback-loading');
+                btn.disabled = false;
+                btn.textContent = 'Submitted ✓';
+                btn.classList.replace('btn-primary', 'btn-success');
+                status.textContent = '';
+            }, 2000);
+        }
+        
+        // Wizard state
+        let currentStep = 2;
+        
+        function wizardNext() {
+            if (currentStep < 3) {
+                currentStep++;
+                updateWizard();
+            }
+        }
+        
+        function wizardPrev() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizard();
+            }
+        }
+        
+        function updateWizard() {
+            // Update step dots
+            for (let i = 1; i <= 3; i++) {
+                const dot = document.getElementById(`step${i}dot`);
+                dot.className = 'step-dot';
+                if (i < currentStep) dot.classList.add('completed');
+                else if (i === currentStep) dot.classList.add('current');
+                else dot.classList.add('upcoming');
+            }
+            
+            // Update lines
+            document.getElementById('line1').className = currentStep > 1 ? 'step-line completed' : 'step-line';
+            document.getElementById('line2').className = currentStep > 2 ? 'step-line completed' : 'step-line';
+            
+            // Update content
+            document.getElementById('wizardStep1').className = currentStep === 1 ? '' : 'd-none';
+            document.getElementById('wizardStep2').className = currentStep === 2 ? '' : 'd-none';
+            document.getElementById('wizardStep3').className = currentStep === 3 ? '' : 'd-none';
+            
+            // Update buttons
+            document.getElementById('prevBtn').disabled = currentStep === 1;
+            document.getElementById('nextBtn').textContent = currentStep === 3 ? 'Finish' : 'Next';
+        }
+        
+        // Volume control
+        let volume = 5;
+        
+        function changeVolume(delta) {
+            volume = Math.max(1, Math.min(8, volume + delta));
+            const bars = document.querySelectorAll('#volumeBars .volume-bar');
+            bars.forEach((bar, i) => {
+                bar.classList.toggle('active', i < volume);
+            });
+        }
+        
+        // Progressive disclosure
+        function toggleDisclosure(btn) {
+            const content = document.getElementById('discloseContent');
+            content.classList.toggle('show');
+            btn.textContent = content.classList.contains('show') ? 'Show Less' : 'Show More';
+        }
+    </script>
+</body>
+</html>

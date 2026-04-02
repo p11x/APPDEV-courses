@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_02_13_Component_Performance_Monitoring.html                -->
+<!-- Bootstrap 5 Performance Monitoring & Profiling               -->
+<!-- Measure, track, and optimize Bootstrap component performance -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap JS Performance Monitoring</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="mb-4">Performance Monitoring</h1>
+        <p class="lead text-muted">
+            Tools and patterns for measuring, profiling, and optimizing Bootstrap component performance.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- Section 1: Performance Metrics Dashboard                     -->
+        <!-- Real-time display of key performance indicators              -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>1. Performance Metrics</h2>
+            <p>Real-time performance metrics from the browser's Performance API.</p>
+
+            <div class="row g-3" id="perfMetrics">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted">DOM Content Loaded</h6>
+                            <h3 class="mt-2" id="metricDCL">--</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted">Load Complete</h6>
+                            <h3 class="mt-2" id="metricLoad">--</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted">DOM Elements</h6>
+                            <h3 class="mt-2" id="metricDOM">--</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h6 class="card-subtitle text-muted">JS Heap Size</h6>
+                            <h3 class="mt-2" id="metricHeap">--</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Section 2: Component Init Benchmark                          -->
+        <!-- Measure time to initialize Bootstrap components              -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>2. Component Initialization Benchmark</h2>
+            <p>Benchmark how long it takes to initialize various Bootstrap components.</p>
+
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-primary" id="benchSingle">Benchmark Single Init</button>
+                <button class="btn btn-success" id="benchBulk">Benchmark 100 Tooltips</button>
+                <button class="btn btn-warning" id="benchDestruction">Benchmark 100 Dispose</button>
+            </div>
+            <div class="card">
+                <div class="card-body" id="benchResults">
+                    <em class="text-muted">Click a button to run benchmarks...</em>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Section 3: Render Timing                                     -->
+        <!-- Measure component show/hide transition durations             -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>3. Transition Timing</h2>
+            <p>Measure actual transition durations of Bootstrap components.</p>
+
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#timingModal">Open Modal</button>
+                <button class="btn btn-info" id="timingCollapseBtn" data-bs-toggle="collapse" data-bs-target="#timingCollapse">Toggle Collapse</button>
+                <button class="btn btn-warning" id="timingToastBtn">Show Toast</button>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">Timing Results</div>
+                <div class="card-body" id="timingResults">
+                    <em class="text-muted">Interact with components to measure timing...</em>
+                </div>
+            </div>
+
+            <div class="modal fade" id="timingModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Timing Modal</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">Transition times are measured automatically.</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapse" id="timingCollapse">
+                <div class="card card-body">Collapsible content for timing measurement.</div>
+            </div>
+
+            <div class="toast-container position-fixed bottom-0 end-0 p-3">
+                <div id="timingToast" class="toast" role="alert">
+                    <div class="toast-header"><strong class="me-auto">Timing Toast</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">Toast transition measured.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Section 4: Memory Leak Detection                             -->
+        <!-- Monitor component instance count and detect leaks            -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>4. Memory Leak Detection</h2>
+            <p>Create and destroy components to monitor for memory leaks.</p>
+
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-primary" id="createInstances">Create 10 Modals</button>
+                <button class="btn btn-danger" id="destroyInstances">Destroy All Modals</button>
+                <button class="btn btn-info" id="checkMemory">Check Memory</button>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6>Modal Instances</h6>
+                            <h3 id="instanceCount">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6>DOM Nodes</h6>
+                            <h3 id="domNodeCount">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6>Event Listeners (est.)</h6>
+                            <h3 id="listenerCount">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3" id="leakWarning"></div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Section 5: FPS Monitor                                       -->
+        <!-- Real-time frame rate monitoring during animations            -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>5. FPS Monitor</h2>
+            <p>Monitor frame rate during animations to detect jank.</p>
+
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-success" id="startFPS">Start Monitoring</button>
+                <button class="btn btn-danger" id="stopFPS">Stop Monitoring</button>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>FPS</span>
+                        <span class="badge" id="fpsBadge">--</span>
+                    </div>
+                    <div class="progress" style="height:30px;">
+                        <div class="progress-bar" id="fpsBar" style="width:0%;">--</div>
+                    </div>
+                    <div class="mt-3">
+                        <canvas id="fpsChart" height="100" style="width:100%; border:1px solid #dee2e6; border-radius:4px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <button class="btn btn-warning" id="triggerAnimation">Trigger Heavy Animation</button>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Section 6: Resource Timing                                   -->
+        <!-- Track Bootstrap CSS/JS load times from the network           -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>6. Resource Timing</h2>
+            <p>Network load times for Bootstrap CSS and JS resources.</p>
+
+            <div class="card">
+                <div class="card-body">
+                    <table class="table table-sm mb-0" id="resourceTable">
+                        <thead><tr><th>Resource</th><th>Duration</th><th>Size</th><th>Type</th></tr></thead>
+                        <tbody id="resourceBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ============================================================
+        // Section 1: Performance Metrics
+        // Use the Performance API to gather page load metrics
+        // ============================================================
+        function updatePerfMetrics() {
+            const nav = performance.getEntriesByType('navigation')[0];
+            if (nav) {
+                document.getElementById('metricDCL').textContent = Math.round(nav.domContentLoadedEventEnd) + 'ms';
+                document.getElementById('metricLoad').textContent = Math.round(nav.loadEventEnd) + 'ms';
+            }
+            document.getElementById('metricDOM').textContent = document.querySelectorAll('*').length;
+
+            if (performance.memory) {
+                document.getElementById('metricHeap').textContent =
+                    Math.round(performance.memory.usedJSHeapSize / 1048576) + 'MB';
+            } else {
+                document.getElementById('metricHeap').textContent = 'N/A';
+            }
+        }
+
+        // Update after page fully loads
+        window.addEventListener('load', function () {
+            setTimeout(updatePerfMetrics, 100);
+        });
+
+        // ============================================================
+        // Section 2: Component Init Benchmark
+        // Measure time to create/dispose Bootstrap components
+        // ============================================================
+        function microBenchmark(fn, iterations) {
+            const start = performance.now();
+            for (let i = 0; i < iterations; i++) {
+                fn();
+            }
+            return performance.now() - start;
+        }
+
+        document.getElementById('benchSingle').addEventListener('click', function () {
+            const el = document.createElement('div');
+            el.className = 'tooltip d-none';
+            document.body.appendChild(el);
+
+            const time = microBenchmark(function () {
+                const t = new bootstrap.Tooltip(el, { title: 'test' });
+                t.dispose();
+            }, 1000);
+
+            el.remove();
+            document.getElementById('benchResults').innerHTML =
+                `<strong>1000x Tooltip create+dispose:</strong> ${time.toFixed(2)}ms total, ${(time / 1000).toFixed(3)}ms per operation`;
+        });
+
+        document.getElementById('benchBulk').addEventListener('click', function () {
+            const els = [];
+            for (let i = 0; i < 100; i++) {
+                const el = document.createElement('button');
+                el.className = 'd-none';
+                el.setAttribute('data-bs-toggle', 'tooltip');
+                el.setAttribute('title', 'Tooltip ' + i);
+                document.body.appendChild(el);
+                els.push(el);
+            }
+
+            const time = performance.now();
+            const instances = els.map(function (el) {
+                return new bootstrap.Tooltip(el);
+            });
+            const elapsed = performance.now() - time;
+
+            // Cleanup
+            instances.forEach(function (t) { t.dispose(); });
+            els.forEach(function (el) { el.remove(); });
+
+            document.getElementById('benchResults').innerHTML =
+                `<strong>100 Tooltip init:</strong> ${elapsed.toFixed(2)}ms total, ${(elapsed / 100).toFixed(2)}ms per tooltip`;
+        });
+
+        document.getElementById('benchDestruction').addEventListener('click', function () {
+            // Create 100 tooltips first
+            const els = [];
+            const instances = [];
+            for (let i = 0; i < 100; i++) {
+                const el = document.createElement('button');
+                el.className = 'd-none';
+                el.setAttribute('title', 'Tooltip ' + i);
+                document.body.appendChild(el);
+                els.push(el);
+                instances.push(new bootstrap.Tooltip(el));
+            }
+
+            // Benchmark disposal
+            const time = performance.now();
+            instances.forEach(function (t) { t.dispose(); });
+            els.forEach(function (el) { el.remove(); });
+            const elapsed = performance.now() - time;
+
+            document.getElementById('benchResults').innerHTML =
+                `<strong>100 Tooltip dispose:</strong> ${elapsed.toFixed(2)}ms total, ${(elapsed / 100).toFixed(2)}ms per disposal`;
+        });
+
+        // ============================================================
+        // Section 3: Transition Timing
+        // Measure show/hide transition durations
+        // ============================================================
+        function logTiming(component, action, duration) {
+            const results = document.getElementById('timingResults');
+            const div = document.createElement('div');
+            div.className = 'mb-1';
+            const cls = duration < 200 ? 'success' : duration < 500 ? 'warning' : 'danger';
+            div.innerHTML = `<span class="badge bg-${cls}">${duration.toFixed(1)}ms</span> ${component} ${action}`;
+            results.prepend(div);
+        }
+
+        // Modal timing
+        const timingModal = document.getElementById('timingModal');
+        let modalShowStart = 0;
+        timingModal.addEventListener('show.bs.modal', function () { modalShowStart = performance.now(); });
+        timingModal.addEventListener('shown.bs.modal', function () {
+            logTiming('Modal', 'show', performance.now() - modalShowStart);
+        });
+        timingModal.addEventListener('hide.bs.modal', function () { modalShowStart = performance.now(); });
+        timingModal.addEventListener('hidden.bs.modal', function () {
+            logTiming('Modal', 'hide', performance.now() - modalShowStart);
+        });
+
+        // Collapse timing
+        const timingCollapse = document.getElementById('timingCollapse');
+        let collapseStart = 0;
+        timingCollapse.addEventListener('show.bs.collapse', function () { collapseStart = performance.now(); });
+        timingCollapse.addEventListener('shown.bs.collapse', function () {
+            logTiming('Collapse', 'show', performance.now() - collapseStart);
+        });
+        timingCollapse.addEventListener('hide.bs.collapse', function () { collapseStart = performance.now(); });
+        timingCollapse.addEventListener('hidden.bs.collapse', function () {
+            logTiming('Collapse', 'hide', performance.now() - collapseStart);
+        });
+
+        // Toast timing
+        document.getElementById('timingToastBtn').addEventListener('click', function () {
+            const el = document.getElementById('timingToast');
+            const toast = bootstrap.Toast.getOrCreateInstance(el, { delay: 3000 });
+            let toastStart = 0;
+
+            el.addEventListener('show.bs.toast', function handler() { toastStart = performance.now(); el.removeEventListener('show.bs.toast', handler); });
+            el.addEventListener('shown.bs.toast', function handler() { logTiming('Toast', 'show', performance.now() - toastStart); el.removeEventListener('shown.bs.toast', handler); });
+            el.addEventListener('hide.bs.toast', function handler() { toastStart = performance.now(); el.removeEventListener('hide.bs.toast', handler); });
+            el.addEventListener('hidden.bs.toast', function handler() { logTiming('Toast', 'hide', performance.now() - toastStart); el.removeEventListener('hidden.bs.toast', handler); });
+
+            toast.show();
+        });
+
+        // ============================================================
+        // Section 4: Memory Leak Detection
+        // Track instances and DOM nodes
+        // ============================================================
+        const managedModals = [];
+
+        document.getElementById('createInstances').addEventListener('click', function () {
+            for (let i = 0; i < 10; i++) {
+                const el = document.createElement('div');
+                el.className = 'modal fade';
+                el.id = 'leakModal_' + Date.now() + '_' + i;
+                el.innerHTML = '<div class="modal-dialog"><div class="modal-content"><div class="modal-body">Leak test modal</div></div></div>';
+                document.body.appendChild(el);
+                managedModals.push({ el: el, instance: new bootstrap.Modal(el) });
+            }
+            updateLeakInfo();
+        });
+
+        document.getElementById('destroyInstances').addEventListener('click', function () {
+            managedModals.forEach(function (m) {
+                m.instance.dispose();
+                m.el.remove();
+            });
+            managedModals.length = 0;
+            updateLeakInfo();
+        });
+
+        document.getElementById('checkMemory').addEventListener('click', function () {
+            updateLeakInfo();
+            updatePerfMetrics();
+        });
+
+        function updateLeakInfo() {
+            document.getElementById('instanceCount').textContent = managedModals.length;
+            document.getElementById('domNodeCount').textContent = document.querySelectorAll('.modal').length;
+
+            // Rough estimate of event listeners (Chrome-specific)
+            const warning = document.getElementById('leakWarning');
+            if (managedModals.length > 20) {
+                warning.innerHTML = '<div class="alert alert-warning">Warning: ' + managedModals.length + ' modal instances. Consider disposing unused instances.</div>';
+            } else {
+                warning.innerHTML = '';
+            }
+        }
+
+        // ============================================================
+        // Section 5: FPS Monitor
+        // ============================================================
+        let fpsActive = false;
+        let fpsRAF;
+        let lastFrameTime = 0;
+        let frameCount = 0;
+        let fpsHistory = [];
+
+        function measureFPS() {
+            if (!fpsActive) return;
+            frameCount++;
+            const now = performance.now();
+
+            if (now - lastFrameTime >= 1000) {
+                const fps = frameCount;
+                frameCount = 0;
+                lastFrameTime = now;
+
+                fpsHistory.push(fps);
+                if (fpsHistory.length > 60) fpsHistory.shift();
+
+                const badge = document.getElementById('fpsBadge');
+                const bar = document.getElementById('fpsBar');
+                badge.textContent = fps + ' FPS';
+                bar.style.width = Math.min(fps / 60 * 100, 100) + '%';
+                bar.textContent = fps;
+                bar.className = fps >= 55 ? 'progress-bar bg-success' : fps >= 30 ? 'progress-bar bg-warning' : 'progress-bar bg-danger';
+
+                // Draw chart
+                drawFPSChart();
+            }
+
+            fpsRAF = requestAnimationFrame(measureFPS);
+        }
+
+        function drawFPSChart() {
+            const canvas = document.getElementById('fpsChart');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width = canvas.offsetWidth;
+            const h = canvas.height = 100;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Grid lines
+            ctx.strokeStyle = '#eee';
+            ctx.beginPath();
+            for (let i = 0; i < 4; i++) {
+                ctx.moveTo(0, (h / 4) * i);
+                ctx.lineTo(w, (h / 4) * i);
+            }
+            ctx.stroke();
+
+            // FPS line
+            if (fpsHistory.length < 2) return;
+            ctx.strokeStyle = '#0d6efd';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const step = w / 60;
+            fpsHistory.forEach(function (fps, i) {
+                const x = i * step;
+                const y = h - (fps / 60) * h;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // 60 FPS reference line
+            ctx.strokeStyle = '#198754';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(0, h - (60 / 60) * h);
+            ctx.lineTo(w, h - (60 / 60) * h);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        document.getElementById('startFPS').addEventListener('click', function () {
+            if (fpsActive) return;
+            fpsActive = true;
+            lastFrameTime = performance.now();
+            frameCount = 0;
+            fpsHistory = [];
+            measureFPS();
+        });
+
+        document.getElementById('stopFPS').addEventListener('click', function () {
+            fpsActive = false;
+            if (fpsRAF) cancelAnimationFrame(fpsRAF);
+        });
+
+        // Heavy animation to test FPS impact
+        document.getElementById('triggerAnimation').addEventListener('click', function () {
+            const container = document.createElement('div');
+            container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+            document.body.appendChild(container);
+
+            for (let i = 0; i < 500; i++) {
+                const dot = document.createElement('div');
+                dot.style.cssText = `position:absolute;width:8px;height:8px;border-radius:50%;background:hsl(${Math.random()*360},70%,50%);left:${Math.random()*100}%;top:${Math.random()*100}%;transition:transform 2s;`;
+                container.appendChild(dot);
+                requestAnimationFrame(function () {
+                    dot.style.transform = `translate(${(Math.random()-0.5)*200}px, ${(Math.random()-0.5)*200}px)`;
+                });
+            }
+
+            setTimeout(function () { container.remove(); }, 2500);
+        });
+
+        // ============================================================
+        // Section 6: Resource Timing
+        // ============================================================
+        function loadResourceTiming() {
+            const entries = performance.getEntriesByType('resource');
+            const tbody = document.getElementById('resourceBody');
+            tbody.innerHTML = '';
+
+            entries.forEach(function (entry) {
+                if (entry.name.includes('bootstrap')) {
+                    const row = document.createElement('tr');
+                    const size = entry.transferSize ? (entry.transferSize / 1024).toFixed(1) + 'KB' : 'cached';
+                    const type = entry.name.endsWith('.css') ? 'CSS' : 'JS';
+                    row.innerHTML = `<td><small>${entry.name.split('/').pop()}</small></td><td>${Math.round(entry.duration)}ms</td><td>${size}</td><td><span class="badge bg-${type === 'CSS' ? 'info' : 'warning text-dark'}">${type}</span></td>`;
+                    tbody.appendChild(row);
+                }
+            });
+        }
+
+        window.addEventListener('load', function () {
+            setTimeout(loadResourceTiming, 500);
+        });
+    </script>
+</body>
+</html>

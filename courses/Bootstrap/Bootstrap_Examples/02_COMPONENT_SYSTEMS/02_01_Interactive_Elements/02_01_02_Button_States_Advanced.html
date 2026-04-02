@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ========================================== -->
+    <!-- 02_01_02: Button States Advanced            -->
+    <!-- Active, disabled, loading, toggle states    -->
+    <!-- ========================================== -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02_01_02 - Button States Advanced</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ========================================== */
+        /* Custom CSS for advanced button states      */
+        /* These extend Bootstrap's built-in states   */
+        /* ========================================== */
+
+        /* Loading spinner animation for buttons */
+        .btn-loading .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+
+        /* Shimmer effect for skeleton loading state */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .btn-shimmer {
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* Pulse animation for attention-grabbing buttons */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .btn-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Progress bar inside button */
+        .btn-progress {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-progress::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(255,255,255,0.5);
+            transition: width 0.3s ease;
+        }
+
+        .btn-progress[data-progress="25"]::after { width: 25%; }
+        .btn-progress[data-progress="50"]::after { width: 50%; }
+        .btn-progress[data-progress="75"]::after { width: 75%; }
+        .btn-progress[data-progress="100"]::after { width: 100%; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold text-primary mb-4">Button States Advanced</h1>
+        <p class="lead text-muted mb-5">
+            Master active, disabled, loading, and toggle states for interactive buttons.
+        </p>
+
+        <!-- ========================================== -->
+        <!-- SECTION 1: ACTIVE STATE                    -->
+        <!-- The .active class makes a button appear    -->
+        <!-- pressed. For <button>, also set            -->
+        <!-- aria-pressed="true". For <a>, the class    -->
+        <!-- alone suffices.                            -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Active State</h2>
+            <div class="card p-4">
+                <!-- Active state: button appears pressed/down -->
+                <button type="button" class="btn btn-primary active me-2" aria-pressed="true">Active Primary</button>
+                <button type="button" class="btn btn-success active me-2" aria-pressed="true">Active Success</button>
+                <button type="button" class="btn btn-outline-danger active me-2" aria-pressed="true">Active Outline</button>
+
+                <!-- Active state on anchor elements -->
+                <a href="#" class="btn btn-secondary active me-2" aria-pressed="true">Active Link</a>
+
+                <!-- Comparison: non-active versions -->
+                <hr class="my-3">
+                <p class="text-muted small">For comparison, non-active versions:</p>
+                <button type="button" class="btn btn-primary me-2">Normal Primary</button>
+                <button type="button" class="btn btn-outline-danger me-2">Normal Outline</button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 2: DISABLED STATE                  -->
+        <!-- Two methods:                               -->
+        <!-- 1. HTML disabled attribute (true disable)  -->
+        <!-- 2. .disabled class (visual only for <a>)   -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Disabled State</h2>
+            <div class="card p-4">
+                <!-- Method 1: disabled attribute - prevents all interaction -->
+                <h6 class="text-muted">Using disabled attribute (button element)</h6>
+                <button type="button" class="btn btn-primary me-2" disabled>Disabled Primary</button>
+                <button type="button" class="btn btn-success me-2" disabled>Disabled Success</button>
+                <button type="button" class="btn btn-outline-danger me-2" disabled>Disabled Outline</button>
+
+                <hr class="my-3">
+
+                <!-- Method 2: .disabled class - visual only, does NOT prevent JS interaction -->
+                <!-- For <a> elements, also add tabindex="-1" to remove from tab order -->
+                <h6 class="text-muted">Using .disabled class (anchor element)</h6>
+                <a class="btn btn-primary disabled me-2" tabindex="-1" role="button" aria-disabled="true">Disabled Link</a>
+                <a class="btn btn-outline-success disabled me-2" tabindex="-1" role="button" aria-disabled="true">Disabled Outline Link</a>
+
+                <hr class="my-3">
+
+                <!-- Disabled within button groups -->
+                <h6 class="text-muted">Disabled in button group</h6>
+                <div class="btn-group" role="group" aria-label="Group with disabled button">
+                    <button type="button" class="btn btn-primary">Active</button>
+                    <button type="button" class="btn btn-primary" disabled>Disabled</button>
+                    <button type="button" class="btn btn-primary">Active</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 3: LOADING STATE                   -->
+        <!-- A common UX pattern: disable button and   -->
+        <!-- show spinner during async operations.      -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Loading State</h2>
+            <div class="card p-4">
+                <!-- Loading button with spinner -->
+                <button class="btn btn-primary btn-loading me-2" type="button" disabled id="btnLoadDemo">
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    Loading...
+                </button>
+
+                <!-- Loading with different spinner style -->
+                <button class="btn btn-success btn-loading me-2" type="button" disabled>
+                    <span class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true"></span>
+                    Processing...
+                </button>
+
+                <!-- Click to toggle loading state demo -->
+                <button class="btn btn-outline-primary me-2" type="button" id="btnToggleLoad" onclick="toggleLoading()">
+                    Click to Toggle Loading
+                </button>
+
+                <!-- Loading with text change -->
+                <button class="btn btn-warning" type="button" id="btnSubmit" onclick="simulateSubmit()">
+                    <span class="btn-text">Submit Form</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 4: TOGGLE STATE                    -->
+        <!-- Toggle buttons switch between active and  -->
+        <!-- inactive. Use data-bs-toggle="button" for -->
+        <!-- single toggle or btn-check for radio/     -->
+        <!-- checkbox-based toggles.                   -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Toggle State</h2>
+            <div class="card p-4">
+                <!-- Single toggle button using data-bs-toggle -->
+                <h6 class="text-muted">Single Toggle (data-bs-toggle)</h6>
+                <button type="button" class="btn btn-primary mb-3" data-bs-toggle="button" autocomplete="off">
+                    Toggle Button
+                </button>
+
+                <!-- Checkbox toggle (independent selections) -->
+                <h6 class="text-muted">Checkbox Toggle (btn-check)</h6>
+                <div class="mb-3">
+                    <input type="checkbox" class="btn-check" id="toggleCheck1" autocomplete="off">
+                    <label class="btn btn-outline-primary me-1" for="toggleCheck1">Bold</label>
+
+                    <input type="checkbox" class="btn-check" id="toggleCheck2" autocomplete="off">
+                    <label class="btn btn-outline-primary me-1" for="toggleCheck2">Italic</label>
+
+                    <input type="checkbox" class="btn-check" id="toggleCheck3" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="toggleCheck3">Underline</label>
+                </div>
+
+                <!-- Radio toggle (single selection) -->
+                <h6 class="text-muted">Radio Toggle (mutually exclusive)</h6>
+                <div>
+                    <input type="radio" class="btn-check" name="alignment" id="alignLeft" autocomplete="off" checked>
+                    <label class="btn btn-outline-secondary me-1" for="alignLeft">Left</label>
+
+                    <input type="radio" class="btn-check" name="alignment" id="alignCenter" autocomplete="off">
+                    <label class="btn btn-outline-secondary me-1" for="alignCenter">Center</label>
+
+                    <input type="radio" class="btn-check" name="alignment" id="alignRight" autocomplete="off">
+                    <label class="btn btn-outline-secondary" for="alignRight">Right</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 5: FOCUS AND HOVER STATES          -->
+        <!-- Bootstrap handles :focus and :hover via    -->
+        <!-- CSS. Custom states shown here for          -->
+        <!-- enhanced interaction feedback.             -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Focus and Hover Visual States</h2>
+            <div class="card p-4">
+                <!-- Default focus ring: visible on keyboard navigation -->
+                <button type="button" class="btn btn-primary me-2">Default Focus Ring</button>
+
+                <!-- Focus-visible only: custom ring on keyboard focus -->
+                <button type="button" class="btn btn-primary me-2" id="customFocusBtn">
+                    Custom Focus Style
+                </button>
+
+                <!-- Pulse animation for call-to-action -->
+                <button type="button" class="btn btn-danger btn-pulse">
+                    Attention! (Pulsing)
+                </button>
+
+                <p class="text-muted small mt-3">
+                    Tab through buttons to see focus ring behavior. Bootstrap's <code>:focus-visible</code> handling
+                    shows rings only on keyboard navigation, not mouse clicks.
+                </p>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 6: PROGRESS STATE                  -->
+        <!-- Buttons with embedded progress indicators  -->
+        <!-- for file uploads or multi-step actions.    -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Progress State</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-primary btn-progress me-2" data-progress="25">25%</button>
+                <button type="button" class="btn btn-primary btn-progress me-2" data-progress="50">50%</button>
+                <button type="button" class="btn btn-primary btn-progress me-2" data-progress="75">75%</button>
+                <button type="button" class="btn btn-success btn-progress me-2" data-progress="100">Complete</button>
+
+                <!-- Interactive progress demo -->
+                <div class="mt-3">
+                    <button type="button" class="btn btn-info btn-progress" id="btnProgress" data-progress="0"
+                            onclick="incrementProgress()">
+                        Click to Progress
+                    </button>
+                    <span class="ms-2 text-muted" id="progressLabel">0%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 7: STATE COMBINATIONS              -->
+        <!-- Real-world patterns combining multiple     -->
+        <!-- states for complex interactions.           -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Real-World State Combinations</h2>
+            <div class="card p-4">
+                <!-- Save button with loading -> success transition -->
+                <h6 class="text-muted">Form Save Flow</h6>
+                <button type="button" class="btn btn-primary me-2" id="btnSaveFlow" onclick="saveFlow()">
+                    Save Changes
+                </button>
+
+                <!-- Favorite toggle with count -->
+                <h6 class="text-muted mt-3">Favorite Toggle</h6>
+                <button type="button" class="btn btn-outline-danger" id="btnFavorite" onclick="toggleFavorite()"
+                        aria-pressed="false">
+                    <span class="fav-icon">&#9825;</span>
+                    <span class="fav-count">42</span> Likes
+                </button>
+
+                <!-- Multi-step action button -->
+                <h6 class="text-muted mt-3">Multi-Step Wizard Button</h6>
+                <button type="button" class="btn btn-primary" id="btnWizard" onclick="wizardNext()">
+                    Next Step &rarr;
+                </button>
+                <span class="ms-2 badge bg-secondary" id="wizardBadge">Step 1 of 3</span>
+            </div>
+        </section>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        /* ========================================== */
+        /* JavaScript for interactive state demos     */
+        /* ========================================== */
+
+        /* Toggle loading state on a button */
+        function toggleLoading() {
+            const btn = document.getElementById('btnToggleLoad');
+            const isLoading = btn.classList.contains('btn-loading');
+
+            if (!isLoading) {
+                /* Apply loading state: add spinner, disable button */
+                btn.disabled = true;
+                btn.classList.add('btn-loading');
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Loading...';
+            } else {
+                /* Remove loading state: restore original text */
+                btn.disabled = false;
+                btn.classList.remove('btn-loading');
+                btn.innerHTML = 'Click to Toggle Loading';
+            }
+        }
+
+        /* Simulate form submission with state transitions */
+        function simulateSubmit() {
+            const btn = document.getElementById('btnSubmit');
+            const textEl = btn.querySelector('.btn-text');
+
+            /* Phase 1: Show loading */
+            btn.disabled = true;
+            btn.classList.remove('btn-warning');
+            btn.classList.add('btn-secondary');
+            textEl.textContent = 'Submitting...';
+
+            /* Phase 2: After 2s, show success */
+            setTimeout(() => {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-success');
+                textEl.textContent = 'Submitted!';
+            }, 2000);
+
+            /* Phase 3: After 4s, reset */
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-warning');
+                textEl.textContent = 'Submit Form';
+            }, 4000);
+        }
+
+        /* Increment progress bar on button */
+        let currentProgress = 0;
+        function incrementProgress() {
+            currentProgress = Math.min(currentProgress + 25, 100);
+            const btn = document.getElementById('btnProgress');
+            btn.setAttribute('data-progress', currentProgress);
+            document.getElementById('progressLabel').textContent = currentProgress + '%';
+
+            if (currentProgress === 100) {
+                btn.classList.remove('btn-info');
+                btn.classList.add('btn-success');
+                btn.textContent = 'Complete!';
+                /* Reset after 2 seconds */
+                setTimeout(() => {
+                    currentProgress = 0;
+                    btn.setAttribute('data-progress', 0);
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-info');
+                    btn.textContent = 'Click to Progress';
+                    document.getElementById('progressLabel').textContent = '0%';
+                }, 2000);
+            }
+        }
+
+        /* Save flow: idle -> loading -> success -> idle */
+        function saveFlow() {
+            const btn = document.getElementById('btnSaveFlow');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            setTimeout(() => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-success');
+                btn.textContent = 'Saved!';
+
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-primary');
+                    btn.textContent = 'Save Changes';
+                }, 2000);
+            }, 1500);
+        }
+
+        /* Toggle favorite with count */
+        function toggleFavorite() {
+            const btn = document.getElementById('btnFavorite');
+            const icon = btn.querySelector('.fav-icon');
+            const count = btn.querySelector('.fav-count');
+            const isPressed = btn.getAttribute('aria-pressed') === 'true';
+
+            if (isPressed) {
+                /* Unfavorite */
+                btn.setAttribute('aria-pressed', 'false');
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-outline-danger');
+                icon.innerHTML = '&#9825;'; /* empty heart */
+                count.textContent = parseInt(count.textContent) - 1;
+            } else {
+                /* Favorite */
+                btn.setAttribute('aria-pressed', 'true');
+                btn.classList.remove('btn-outline-danger');
+                btn.classList.add('btn-danger');
+                icon.innerHTML = '&#9829;'; /* filled heart */
+                count.textContent = parseInt(count.textContent) + 1;
+            }
+        }
+
+        /* Multi-step wizard button */
+        let wizardStep = 1;
+        function wizardNext() {
+            const btn = document.getElementById('btnWizard');
+            const badge = document.getElementById('wizardBadge');
+
+            wizardStep++;
+            if (wizardStep > 3) wizardStep = 1;
+
+            badge.textContent = 'Step ' + wizardStep + ' of 3';
+
+            if (wizardStep === 3) {
+                btn.textContent = 'Finish';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-success');
+            } else {
+                btn.textContent = 'Next Step \u2192';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-primary');
+            }
+        }
+    </script>
+</body>
+</html>

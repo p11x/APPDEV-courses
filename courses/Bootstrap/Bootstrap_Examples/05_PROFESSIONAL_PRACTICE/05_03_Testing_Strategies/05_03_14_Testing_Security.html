@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>05_03_14 - Security Testing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .threat-card { border-left: 4px solid; }
+        .severity-critical { background: #dc3545; color: white; }
+        .severity-high { background: #fd7e14; color: white; }
+        .severity-medium { background: #ffc107; color: #212529; }
+        .severity-low { background: #198754; color: white; }
+        .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 1.2rem; font-family: monospace; font-size: 0.85rem; }
+        .code-block .kw { color: #cba6f7; } .code-block .str { color: #a6e3a1; } .code-block .cmt { color: #6c7086; } .code-block .fn { color: #89b4fa; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">&#128274; Security Testing</a>
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="nav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#owasp">OWASP</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#vulnerabilities">Vulnerabilities</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#tools">Tools</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#practices">Best Practices</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-dark text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">Security &amp; Penetration Testing</h1>
+            <p class="lead">Identifying vulnerabilities, OWASP compliance, and security testing strategies</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- OWASP Top 10 -->
+        <section id="owasp" class="mb-5">
+            <h2 class="border-bottom pb-2">OWASP Top 10 (2021)</h2>
+            <p class="text-muted">The Open Web Application Security Project's list of the most critical web application security risks.</p>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Vulnerability</th>
+                            <th>Bootstrap Impact</th>
+                            <th>Test Method</th>
+                            <th>Severity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>A01</td>
+                            <td><strong>Broken Access Control</strong></td>
+                            <td>Unauthorized component access, hidden element bypass</td>
+                            <td>Role-based testing, URL manipulation</td>
+                            <td><span class="badge severity-critical">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td>A02</td>
+                            <td><strong>Cryptographic Failures</strong></td>
+                            <td>Insecure data transmission, weak hashing</td>
+                            <td>SSL/TLS verification, header analysis</td>
+                            <td><span class="badge severity-critical">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td>A03</td>
+                            <td><strong>Injection</strong></td>
+                            <td>XSS via Bootstrap tooltip/popover content, SQL injection</td>
+                            <td>Input sanitization tests, XSS payloads</td>
+                            <td><span class="badge severity-critical">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td>A04</td>
+                            <td><strong>Insecure Design</strong></td>
+                            <td>Missing CSRF tokens, insecure form design</td>
+                            <td>Architecture review, threat modeling</td>
+                            <td><span class="badge severity-high">High</span></td>
+                        </tr>
+                        <tr>
+                            <td>A05</td>
+                            <td><strong>Security Misconfiguration</strong></td>
+                            <td>Exposed debug endpoints, default credentials</td>
+                            <td>Configuration audit, header check</td>
+                            <td><span class="badge severity-high">High</span></td>
+                        </tr>
+                        <tr>
+                            <td>A06</td>
+                            <td><strong>Vulnerable Components</strong></td>
+                            <td>Outdated Bootstrap/jQuery, known CVEs</td>
+                            <td>npm audit, Snyk scan, SCA tools</td>
+                            <td><span class="badge severity-medium">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td>A07</td>
+                            <td><strong>Auth Failures</strong></td>
+                            <td>Weak session management, brute force</td>
+                            <td>Login flow testing, session analysis</td>
+                            <td><span class="badge severity-high">High</span></td>
+                        </tr>
+                        <tr>
+                            <td>A08</td>
+                            <td><strong>Data Integrity Failures</strong></td>
+                            <td>Unsigned updates, insecure deserialization</td>
+                            <td>SRI verification, CI/CD pipeline checks</td>
+                            <td><span class="badge severity-medium">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td>A09</td>
+                            <td><strong>Logging Failures</strong></td>
+                            <td>Missing security event logging</td>
+                            <td>Log review, alert testing</td>
+                            <td><span class="badge severity-medium">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td>A10</td>
+                            <td><strong>SSRF</strong></td>
+                            <td>Server-side request forgery via URL inputs</td>
+                            <td>URL validation tests, allowlist checks</td>
+                            <td><span class="badge severity-high">High</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Common Vulnerabilities -->
+        <section id="vulnerabilities" class="mb-5">
+            <h2 class="border-bottom pb-2">Common Frontend Vulnerabilities</h2>
+
+            <div class="row g-4">
+                <!-- XSS -->
+                <div class="col-lg-6">
+                    <div class="card threat-card h-100" style="border-left-color: #dc3545;">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">Cross-Site Scripting (XSS)</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Injecting malicious scripts into web pages viewed by other users.</p>
+                            <h6>Test Payloads:</h6>
+                            <pre class="code-block">
+<span class="cmt">// Reflected XSS test</span>
+<span class="str">&lt;script&gt;alert('XSS')&lt;/script&gt;</span>
+<span class="str">&lt;img src=x onerror=alert('XSS')&gt;</span>
+<span class="str">&lt;svg onload=alert('XSS')&gt;</span>
+
+<span class="cmt">// DOM-based XSS test</span>
+<span class="str">javascript:alert(document.cookie)</span>
+
+<span class="cmt">// Bootstrap-specific: tooltip content</span>
+<span class="fn">sanitize</span>: <span class="kw">true</span>,  <span class="cmt">// Always enable</span>
+<span class="fn">allowList</span>: {}    <span class="cmt">// Restrict HTML tags</span></pre>
+                            <h6 class="mt-3">Prevention:</h6>
+                            <ul class="small">
+                                <li>Use <code>textContent</code> instead of <code>innerHTML</code></li>
+                                <li>Enable Bootstrap's sanitizer</li>
+                                <li>Implement Content Security Policy</li>
+                                <li>Use DOMPurify for rich content</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CSRF -->
+                <div class="col-lg-6">
+                    <div class="card threat-card h-100" style="border-left-color: #fd7e14;">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Cross-Site Request Forgery (CSRF)</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Tricking users into performing unintended actions on authenticated sites.</p>
+                            <h6>Test Scenario:</h6>
+                            <pre class="code-block">
+<span class="cmt">// CSRF attack simulation</span>
+<span class="cmt">// Malicious page contains:</span>
+<span class="str">&lt;form action="https://target.com/transfer"
+  method="POST"&gt;
+  &lt;input name="amount" value="1000"&gt;
+  &lt;input name="to" value="attacker"&gt;
+&lt;/form&gt;
+&lt;script&gt;document.forms[0].submit()&lt;/script&gt;</span></pre>
+                            <h6 class="mt-3">Prevention:</h6>
+                            <ul class="small">
+                                <li>Include CSRF tokens in all forms</li>
+                                <li>Use <code>SameSite</code> cookie attribute</li>
+                                <li>Validate <code>Origin</code> header</li>
+                                <li>Require re-authentication for sensitive actions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clickjacking -->
+                <div class="col-lg-6">
+                    <div class="card threat-card h-100" style="border-left-color: #0d6efd;">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Clickjacking</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Embedding a site in an invisible iframe to trick users into clicking hidden elements.</p>
+                            <h6>Test:</h6>
+                            <pre class="code-block">
+<span class="cmt">// Test if site can be iframed</span>
+<span class="str">&lt;iframe src="https://target.com"
+  style="opacity:0;position:absolute"&gt;
+&lt;/iframe&gt;</span></pre>
+                            <h6 class="mt-3">Prevention:</h6>
+                            <ul class="small">
+                                <li>Set <code>X-Frame-Options: DENY</code></li>
+                                <li>Use CSP <code>frame-ancestors 'none'</code></li>
+                                <li>Bootstrap modals use <code>aria-hidden</code> correctly</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dependency Vulnerabilities -->
+                <div class="col-lg-6">
+                    <div class="card threat-card h-100" style="border-left-color: #198754;">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Dependency Vulnerabilities</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small">Using packages with known security vulnerabilities.</p>
+                            <h6>Audit Commands:</h6>
+                            <pre class="code-block">
+<span class="cmt"># NPM security audit</span>
+npm audit
+npm audit fix
+npm audit --json > audit.json
+
+<span class="cmt"># Snyk vulnerability scan</span>
+npx snyk test
+npx snyk monitor
+
+<span class="cmt"># Check for outdated packages</span>
+npm outdated</pre>
+                            <h6 class="mt-3">Prevention:</h6>
+                            <ul class="small">
+                                <li>Run <code>npm audit</code> in CI pipeline</li>
+                                <li>Use Snyk or Dependabot for alerts</li>
+                                <li>Pin dependency versions</li>
+                                <li>Review changelogs before updating</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Tools -->
+        <section id="tools" class="mb-5">
+            <h2 class="border-bottom pb-2">Security Testing Tools</h2>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="fs-1">&#128270;</div>
+                            <h5>OWASP ZAP</h5>
+                            <p class="small">Free automated penetration testing tool. Finds XSS, SQL injection, and other vulnerabilities.</p>
+                            <span class="badge bg-danger">DAST</span>
+                            <span class="badge bg-primary">Free</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="fs-1">&#128736;</div>
+                            <h5>Snyk</h5>
+                            <p class="small">Developer-first security platform. Scans dependencies, code, containers, and IaC.</p>
+                            <span class="badge bg-success">SCA</span>
+                            <span class="badge bg-info">CI/CD</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="fs-1">&#128302;</div>
+                            <h5>Burp Suite</h5>
+                            <p class="small">Professional web security testing toolkit with proxy, scanner, and intruder modules.</p>
+                            <span class="badge bg-warning text-dark">Pentest</span>
+                            <span class="badge bg-secondary">Pro</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security scan results -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Sample Security Scan Results</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Vulnerability</th>
+                                    <th>Package</th>
+                                    <th>Severity</th>
+                                    <th>Fixed In</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Prototype Pollution</td>
+                                    <td><code>lodash@4.17.20</code></td>
+                                    <td><span class="badge severity-high">High</span></td>
+                                    <td><code>4.17.21</code></td>
+                                    <td><span class="badge bg-success">Fixed</span></td>
+                                </tr>
+                                <tr>
+                                    <td>ReDoS</td>
+                                    <td><code>trim@0.0.1</code></td>
+                                    <td><span class="badge severity-medium">Medium</span></td>
+                                    <td><code>0.0.3</code></td>
+                                    <td><span class="badge bg-success">Fixed</span></td>
+                                </tr>
+                                <tr>
+                                    <td>XSS in innerHTML</td>
+                                    <td><code>bootstrap@5.2.0</code></td>
+                                    <td><span class="badge severity-medium">Medium</span></td>
+                                    <td><code>5.3.0</code></td>
+                                    <td><span class="badge bg-success">Fixed</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Information Exposure</td>
+                                    <td><code>debug@2.6.9</code></td>
+                                    <td><span class="badge severity-low">Low</span></td>
+                                    <td><code>4.3.4</code></td>
+                                    <td><span class="badge bg-warning text-dark">Review</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Best Practices -->
+        <section id="practices" class="mb-5">
+            <h2 class="border-bottom pb-2">Security Testing Best Practices</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Automated Security Checks</div>
+                        <div class="card-body">
+                            <pre class="code-block mb-0">
+<span class="cmt"># GitHub Actions security workflow</span>
+<span class="kw">name</span>: Security Scan
+<span class="kw">on</span>: [push, pull_request]
+
+<span class="kw">jobs</span>:
+  <span class="fn">security</span>:
+    <span class="kw">runs-on</span>: ubuntu-latest
+    <span class="kw">steps</span>:
+      - <span class="kw">uses</span>: <span class="str">actions/checkout@v4</span>
+      - <span class="kw">run</span>: npm audit --audit-level=high
+      - <span class="kw">uses</span>: <span class="str">snyk/actions/node@master</span>
+        <span class="kw">env</span>:
+          <span class="fn">SNYK_TOKEN</span>: ${{ secrets.SNYK_TOKEN }}
+      - <span class="kw">uses</span>: <span class="str">github/codeql-action/init@v2</span>
+      - <span class="kw">uses</span>: <span class="str">github/codeql-action/analyze@v2</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Security Headers Checklist</div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <code>Content-Security-Policy</code>
+                                <span class="badge bg-success">Required</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <code>X-Frame-Options: DENY</code>
+                                <span class="badge bg-success">Required</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <code>X-Content-Type-Options: nosniff</code>
+                                <span class="badge bg-success">Required</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <code>Strict-Transport-Security</code>
+                                <span class="badge bg-success">Required</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <code>Referrer-Policy: strict-origin</code>
+                                <span class="badge bg-info">Recommended</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <code>Permissions-Policy</code>
+                                <span class="badge bg-info">Recommended</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bootstrap-specific security -->
+            <div class="card mt-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Bootstrap-Specific Security</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Sanitizer Configuration</h6>
+                            <pre class="code-block">
+<span class="cmt">// Always enable sanitizer for tooltips</span>
+<span class="kw">const</span> tooltip = <span class="kw">new</span> <span class="fn">bootstrap.Tooltip</span>(
+  element, {
+    <span class="fn">sanitize</span>: <span class="kw">true</span>,
+    <span class="fn">allowList</span>: {
+      <span class="str">'b'</span>: [],
+      <span class="str">'i'</span>: [],
+      <span class="str">'strong'</span>: []
+    }
+  }
+);</pre>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>SRI for CDN Resources</h6>
+                            <pre class="code-block">
+<span class="cmt">// Subresource Integrity</span>
+<span class="str">&lt;link
+  href="https://cdn.jsdelivr.net/npm/
+    bootstrap@5.3.3/dist/css/
+    bootstrap.min.css"
+  integrity="sha384-..."
+  crossorigin="anonymous"&gt;</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">05_03_14 - Security &amp; Penetration Testing &copy; 2024 Bootstrap Course</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

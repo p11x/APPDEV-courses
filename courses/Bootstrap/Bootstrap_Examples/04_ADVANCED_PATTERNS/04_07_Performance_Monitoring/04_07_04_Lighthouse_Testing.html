@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_07_04_Lighthouse_Testing.html
+     Lighthouse Testing Results Dashboard with Bootstrap 5
+     
+     Google Lighthouse audits pages for performance, accessibility,
+     best practices, SEO, and PWA compliance. This dashboard
+     displays Lighthouse scores and detailed audit results.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lighthouse Testing - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Circular score gauge styling */
+        .score-gauge {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 auto;
+            position: relative;
+        }
+        .score-gauge::after {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            border-radius: 50%;
+            background: white;
+            z-index: 0;
+        }
+        .score-gauge span {
+            position: relative;
+            z-index: 1;
+        }
+        /* Score color variants */
+        .score-good { background: conic-gradient(#198754 0deg, #198754 360deg); color: #198754; }
+        .score-average { background: conic-gradient(#ffc107 0deg, #ffc107 360deg); color: #ffc107; }
+        .score-poor { background: conic-gradient(#dc3545 0deg, #dc3545 360deg); color: #dc3545; }
+        /* Audit row impact indicator */
+        .impact-high { border-left: 3px solid #dc3545; }
+        .impact-medium { border-left: 3px solid #ffc107; }
+        .impact-low { border-left: 3px solid #198754; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+        <div class="container">
+            <a class="navbar-brand" href="#">Lighthouse Testing</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#lhNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="lhNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Results</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">History</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">CI/CD</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+
+        <!-- Page header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-5 fw-bold">Lighthouse Results</h1>
+                <p class="text-muted lead">
+                    Automated Lighthouse audit scores and improvement opportunities.
+                </p>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             TEST CONFIGURATION
+             Dropdowns to select URL and device mode for Lighthouse run
+             ============================================================ -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Test URL</label>
+                <select class="form-select">
+                    <option selected>https://example.com/</option>
+                    <option>https://example.com/products</option>
+                    <option>https://example.com/checkout</option>
+                    <option>https://example.com/blog</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Device</label>
+                <select class="form-select">
+                    <option selected>Mobile</option>
+                    <option>Desktop</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Throttling</label>
+                <select class="form-select">
+                    <option selected>Simulated Fast 4G</option>
+                    <option>Simulated Slow 4G</option>
+                    <option>Simulated 3G</option>
+                    <option>Applied Fast 4G</option>
+                    <option>No Throttling</option>
+                </select>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-12">
+                <button class="btn btn-danger" onclick="runLighthouse()">
+                    Run Lighthouse Audit
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             GAUGE SCORES
+             Five circular gauges showing scores for each Lighthouse category
+             ============================================================ -->
+        <div class="row g-4 mb-5">
+            <!-- Performance score -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card shadow-sm text-center py-4">
+                    <div class="score-gauge score-good">
+                        <span>92</span>
+                    </div>
+                    <h6 class="mt-3 mb-0">Performance</h6>
+                    <small class="text-success">Good</small>
+                </div>
+            </div>
+            <!-- Accessibility score -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card shadow-sm text-center py-4">
+                    <div class="score-gauge score-good">
+                        <span>98</span>
+                    </div>
+                    <h6 class="mt-3 mb-0">Accessibility</h6>
+                    <small class="text-success">Good</small>
+                </div>
+            </div>
+            <!-- Best Practices score -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card shadow-sm text-center py-4">
+                    <div class="score-gauge score-average">
+                        <span>78</span>
+                    </div>
+                    <h6 class="mt-3 mb-0">Best Practices</h6>
+                    <small class="text-warning">Needs Work</small>
+                </div>
+            </div>
+            <!-- SEO score -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card shadow-sm text-center py-4">
+                    <div class="score-gauge score-good">
+                        <span>100</span>
+                    </div>
+                    <h6 class="mt-3 mb-0">SEO</h6>
+                    <small class="text-success">Good</small>
+                </div>
+            </div>
+            <!-- PWA score -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card shadow-sm text-center py-4">
+                    <div class="score-gauge score-poor">
+                        <span>45</span>
+                    </div>
+                    <h6 class="mt-3 mb-0">PWA</h6>
+                    <small class="text-danger">Poor</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             PERFORMANCE METRICS DETAIL
+             Specific performance metrics from the Lighthouse run
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Performance Metrics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- FCP -->
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>First Contentful Paint</span>
+                                    <span class="fw-bold text-success">1.2s</span>
+                                </div>
+                                <div class="progress mt-1" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: 40%"></div>
+                                </div>
+                            </div>
+                            <!-- Speed Index -->
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>Speed Index</span>
+                                    <span class="fw-bold text-success">1.8s</span>
+                                </div>
+                                <div class="progress mt-1" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: 55%"></div>
+                                </div>
+                            </div>
+                            <!-- LCP -->
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>Largest Contentful Paint</span>
+                                    <span class="fw-bold text-success">2.1s</span>
+                                </div>
+                                <div class="progress mt-1" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: 65%"></div>
+                                </div>
+                            </div>
+                            <!-- TTI -->
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>Time to Interactive</span>
+                                    <span class="fw-bold text-warning">3.2s</span>
+                                </div>
+                                <div class="progress mt-1" style="height: 6px;">
+                                    <div class="progress-bar bg-warning" style="width: 75%"></div>
+                                </div>
+                            </div>
+                            <!-- TBT -->
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>Total Blocking Time</span>
+                                    <span class="fw-bold text-success">180ms</span>
+                                </div>
+                                <div class="progress mt-1" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: 35%"></div>
+                                </div>
+                            </div>
+                            <!-- CLS -->
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>Cumulative Layout Shift</span>
+                                    <span class="fw-bold text-success">0.05</span>
+                                </div>
+                                <div class="progress mt-1" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: 20%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             OPPORTUNITIES LIST
+             Lighthouse-suggested improvements sorted by potential impact
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Opportunities & Diagnostics</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <!-- High impact opportunity -->
+                        <div class="list-group-item impact-high">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">Eliminate render-blocking resources</h6>
+                                    <p class="mb-1 text-muted small">
+                                        Resources are blocking the first paint. Consider delivering
+                                        critical JS/CSS inline and deferring all non-critical JS/styles.
+                                    </p>
+                                    <span class="badge bg-danger">High Impact</span>
+                                </div>
+                                <span class="text-success fw-bold">-0.8s</span>
+                            </div>
+                        </div>
+                        <!-- Medium impact opportunity -->
+                        <div class="list-group-item impact-medium">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">Serve images in next-gen formats</h6>
+                                    <p class="mb-1 text-muted small">
+                                        Image formats like WebP and AVIF often provide better
+                                        compression than PNG or JPEG.
+                                    </p>
+                                    <span class="badge bg-warning text-dark">Medium Impact</span>
+                                </div>
+                                <span class="text-success fw-bold">-120 KB</span>
+                            </div>
+                        </div>
+                        <!-- Medium impact opportunity -->
+                        <div class="list-group-item impact-medium">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">Reduce unused JavaScript</h6>
+                                    <p class="mb-1 text-muted small">
+                                        Remove unused JavaScript to reduce bytes consumed by
+                                        network activity and script parse time.
+                                    </p>
+                                    <span class="badge bg-warning text-dark">Medium Impact</span>
+                                </div>
+                                <span class="text-success fw-bold">-85 KB</span>
+                            </div>
+                        </div>
+                        <!-- Low impact opportunity -->
+                        <div class="list-group-item impact-low">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">Preconnect to required origins</h6>
+                                    <p class="mb-1 text-muted small">
+                                        Consider adding preconnect or dns-prefetch hints to
+                                        establish early connections to important third-party origins.
+                                    </p>
+                                    <span class="badge bg-success">Low Impact</span>
+                                </div>
+                                <span class="text-success fw-bold">-0.1s</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SCORE HISTORY TABLE
+             Trend of Lighthouse scores over multiple runs
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Score History</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>URL</th>
+                                    <th>Perf</th>
+                                    <th>A11y</th>
+                                    <th>Best</th>
+                                    <th>SEO</th>
+                                    <th>PWA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Apr 2, 2026</td>
+                                    <td><code>/</code></td>
+                                    <td><span class="badge bg-success">92</span></td>
+                                    <td><span class="badge bg-success">98</span></td>
+                                    <td><span class="badge bg-warning text-dark">78</span></td>
+                                    <td><span class="badge bg-success">100</span></td>
+                                    <td><span class="badge bg-danger">45</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Apr 1, 2026</td>
+                                    <td><code>/</code></td>
+                                    <td><span class="badge bg-warning text-dark">78</span></td>
+                                    <td><span class="badge bg-success">95</span></td>
+                                    <td><span class="badge bg-success">85</span></td>
+                                    <td><span class="badge bg-success">100</span></td>
+                                    <td><span class="badge bg-danger">42</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Mar 30, 2026</td>
+                                    <td><code>/</code></td>
+                                    <td><span class="badge bg-danger">55</span></td>
+                                    <td><span class="badge bg-success">92</span></td>
+                                    <td><span class="badge bg-success">80</span></td>
+                                    <td><span class="badge bg-success">98</span></td>
+                                    <td><span class="badge bg-danger">38</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 Lighthouse Testing Dashboard</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Lighthouse runner simulation -->
+    <script>
+        // Simulate running a Lighthouse audit
+        function runLighthouse() {
+            // Show loading state on button
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Running audit...';
+
+            // Simulate audit duration (in production, this triggers CI/CD or Lighthouse API)
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.textContent = 'Run Lighthouse Audit';
+                alert('Lighthouse audit complete! Scores have been updated.');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         03_01_13 - Grid Cross Browser Advanced
+         ============================================
+         Handling cross-browser CSS Grid issues: legacy
+         prefixes, fallback strategies, feature detection,
+         and browser-specific bugs.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_13 - Grid Cross Browser Advanced</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ============================================
+           @supports FEATURE DETECTION
+           Use @supports to provide fallbacks for
+           browsers that don't support specific CSS
+           Grid features.
+        ================================================ */
+        .feature-detect-grid {
+            /* Fallback: flexbox layout */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .feature-detect-grid > * {
+            flex: 1 1 300px;
+        }
+
+        /* Progressive enhancement: use Grid if supported */
+        @supports (display: grid) {
+            .feature-detect-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+            }
+
+            .feature-detect-grid > * {
+                flex: unset;
+            }
+        }
+
+        .fd-item {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #dee2e6;
+        }
+
+        /* ============================================
+           LEGACY GRID PREFIXES
+           Older browsers required -ms- and -webkit-
+           prefixes for CSS Grid (IE 10/11 used an
+           older, incompatible grid spec)
+        ================================================ */
+        .legacy-grid {
+            /* Modern browsers */
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .legacy-item {
+            background: #cfe2ff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* ============================================
+           IE 11 FALLBACK
+           IE 11 supports an older grid spec with
+           -ms- prefix. This is a complete fallback
+           using flexbox since IE grid is incompatible.
+        ================================================ */
+        .ie-safe-grid {
+            /* Flexbox fallback for IE11 */
+            display: flex;
+            flex-wrap: wrap;
+            margin: -7.5px;
+        }
+
+        .ie-safe-grid > * {
+            flex: 0 0 calc(33.333% - 15px);
+            margin: 7.5px;
+        }
+
+        /* Modern browsers: override with Grid */
+        @supports (display: grid) {
+            .ie-safe-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin: 0;
+            }
+
+            .ie-safe-grid > * {
+                flex: unset;
+                margin: 0;
+            }
+        }
+
+        .ie-item {
+            background: #d1e7dd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* ============================================
+           GAP FALLBACK
+           The gap property is well-supported now,
+           but older browsers needed margin fallbacks
+        ================================================ */
+        .gap-fallback-grid {
+            /* Fallback: margins */
+            display: flex;
+            flex-wrap: wrap;
+            margin: -10px;
+        }
+
+        .gap-fallback-grid > * {
+            flex: 0 0 calc(50% - 20px);
+            margin: 10px;
+        }
+
+        @supports (gap: 15px) and (display: grid) {
+            .gap-fallback-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                margin: 0;
+            }
+
+            .gap-fallback-grid > * {
+                flex: unset;
+                margin: 0;
+            }
+        }
+
+        .gap-item {
+            background: #fff3cd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #ffecb5;
+        }
+
+        /* ============================================
+           AUTO-FIT/AUTO-FILL FALLBACK
+           auto-fit and auto-fill aren't supported in
+           some older browsers. Provide fixed column
+           fallback.
+        ================================================ */
+        .autofit-grid {
+            /* Fallback: 2 fixed columns */
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @supports (grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))) {
+            .autofit-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        .autofit-item {
+            background: #f8d7da;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #f5c2c7;
+        }
+
+        /* ============================================
+           SUBGRID FALLBACK
+           Subgrid is the newest grid feature.
+           Provide a fallback with matching columns.
+        ================================================ */
+        .subgrid-fb-parent {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .subgrid-fb-child {
+            grid-column: 1 / -1;
+            /* Fallback: own grid with same columns */
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        /* Use subgrid if supported */
+        @supports (grid-template-columns: subgrid) {
+            .subgrid-fb-child {
+                grid-template-columns: subgrid;
+            }
+        }
+
+        .subgrid-fb-cell {
+            background: #e2d9f3;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        /* ============================================
+           KNOWN BROWSER BUGS & WORKAROUNDS
+        ================================================ */
+
+        /* Safari < 14.1: gap doesn't work with flexbox
+           Workaround: use margins instead of gap */
+        .safari-gap-fix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            /* Safari-specific: gap works fine in Grid, was only broken in Flexbox */
+        }
+
+        .safari-item {
+            background: #cfe2ff;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        /* Firefox: percentage-based gap relative to container
+           Chrome: percentage-based gap relative to track size
+           Workaround: use fixed units (px, rem) instead of % */
+        .firefox-gap-fix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* Use rem instead of % to avoid Firefox/Chrome inconsistency */
+            gap: 1rem;
+        }
+
+        .ff-item {
+            background: #d1ecf1;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        /* ============================================
+           VENDOR PREFIX REFERENCE GRID
+        ================================================ */
+        .prefix-ref {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .prefix-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            border-left: 4px solid #6c757d;
+        }
+
+        .prefix-card code {
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .feature-detect-grid,
+            .ie-safe-grid,
+            .gap-fallback-grid,
+            .subgrid-fb-parent,
+            .subgrid-fb-child,
+            .safari-gap-fix,
+            .firefox-gap-fix,
+            .prefix-ref {
+                grid-template-columns: 1fr;
+            }
+            .ie-safe-grid > *,
+            .gap-fallback-grid > * {
+                flex: 0 0 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">03_01_13 - Grid Cross Browser Advanced</h1>
+
+        <!-- ============================================
+             SECTION 1: @supports Feature Detection
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. @supports Feature Detection</h2>
+            <div class="alert alert-info">
+                Use <code>@supports (display: grid)</code> to provide a flexbox fallback for
+                browsers without Grid support, then progressively enhance to Grid.
+            </div>
+
+            <div class="feature-detect-grid">
+                <div class="fd-item">Grid if supported,<br>Flexbox fallback</div>
+                <div class="fd-item">Feature detection<br>via @supports</div>
+                <div class="fd-item">Progressive<br>enhancement</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 2: IE11 Safe Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. IE11-Safe Grid (Flexbox Fallback)</h2>
+            <div class="alert alert-warning">
+                IE11 supports an old, incompatible grid spec. The safest approach is to use
+                flexbox as the fallback and override with <code>@supports</code> for modern browsers.
+            </div>
+
+            <div class="ie-safe-grid">
+                <div class="ie-item">Flexbox fallback</div>
+                <div class="ie-item">@supports override</div>
+                <div class="ie-item">IE11 compatible</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 3: Gap Fallback
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Gap Property Fallback</h2>
+            <div class="alert alert-info">
+                The <code>gap</code> property is now well-supported, but for very old browsers,
+                a margin-based fallback ensures spacing is maintained.
+            </div>
+
+            <div class="gap-fallback-grid">
+                <div class="gap-item">Gap fallback via margins</div>
+                <div class="gap-item">@supports (gap: 15px)</div>
+                <div class="gap-item">Progressive enhancement</div>
+                <div class="gap-item">No visual breakage</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 4: auto-fit/auto-fill Fallback
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. auto-fit/auto-fill Fallback</h2>
+            <div class="alert alert-info">
+                <code>auto-fit</code> and <code>auto-fill</code> with <code>minmax()</code>
+                may not be supported in older browsers. Fall back to fixed column counts.
+            </div>
+
+            <div class="autofit-grid">
+                <div class="autofit-item">Auto-fit 1</div>
+                <div class="autofit-item">Auto-fit 2</div>
+                <div class="autofit-item">Auto-fit 3</div>
+                <div class="autofit-item">Auto-fit 4</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 5: Subgrid Fallback
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Subgrid Fallback</h2>
+            <div class="alert alert-info">
+                For browsers without subgrid, repeat the parent's column definition in the child.
+                <code>@supports (grid-template-columns: subgrid)</code> enables the real subgrid.
+            </div>
+
+            <div class="subgrid-fb-parent">
+                <div class="subgrid-fb-cell" style="background: #0d6efd; color: white;">Header 1</div>
+                <div class="subgrid-fb-cell" style="background: #0d6efd; color: white;">Header 2</div>
+                <div class="subgrid-fb-cell" style="background: #0d6efd; color: white;">Header 3</div>
+
+                <div class="subgrid-fb-child">
+                    <div class="subgrid-fb-cell">Aligned A</div>
+                    <div class="subgrid-fb-cell">Aligned B</div>
+                    <div class="subgrid-fb-cell">Aligned C</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 6: Known Browser Bugs
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Known Browser Bugs & Workarounds</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Browser</th>
+                            <th>Bug</th>
+                            <th>Workaround</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Safari &lt; 14.1</td>
+                            <td>gap doesn't work with flexbox</td>
+                            <td>Use CSS Grid (gap works) or margins for flexbox</td>
+                        </tr>
+                        <tr>
+                            <td>Firefox</td>
+                            <td>Percentage gap calculated differently</td>
+                            <td>Use fixed units (px, rem) instead of %</td>
+                        </tr>
+                        <tr>
+                            <td>Chrome &lt; 57</td>
+                            <td>grid-gap not supported</td>
+                            <td>Use gap (unprefixed) or margins</td>
+                        </tr>
+                        <tr>
+                            <td>Safari &lt; 10.1</td>
+                            <td>auto-placement bug with implicit tracks</td>
+                            <td>Explicitly define grid-template-rows</td>
+                        </tr>
+                        <tr>
+                            <td>Edge Legacy</td>
+                            <td>grid-template-areas with dense flow</td>
+                            <td>Avoid dense flow with named areas</td>
+                        </tr>
+                        <tr>
+                            <td>IE 11</td>
+                            <td>Entirely different grid spec</td>
+                            <td>Use flexbox fallback, not -ms-grid</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 7: Vendor Prefix Reference
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Vendor Prefix Reference</h2>
+            <div class="alert alert-info">
+                Modern browsers no longer require prefixes for CSS Grid. However, for completeness:
+            </div>
+
+            <div class="prefix-ref">
+                <div class="prefix-card">
+                    <strong>display</strong><br>
+                    <code>display: -ms-grid;</code> (IE 10/11)<br>
+                    <code>display: grid;</code> (modern)
+                </div>
+                <div class="prefix-card">
+                    <strong>gap</strong><br>
+                    <code>grid-gap: 10px;</code> (old syntax)<br>
+                    <code>gap: 10px;</code> (modern)
+                </div>
+                <div class="prefix-card">
+                    <strong>grid-template-columns</strong><br>
+                    No prefix needed.<br>
+                    Fully supported since 2017.
+                </div>
+                <div class="prefix-card">
+                    <strong>align/justify</strong><br>
+                    <code>-ms-grid-row-align</code> (IE)<br>
+                    <code>align-items</code> (modern)
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 8: Browser Support Matrix
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. CSS Grid Browser Support Matrix</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Feature</th>
+                            <th>Chrome</th>
+                            <th>Firefox</th>
+                            <th>Safari</th>
+                            <th>Edge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CSS Grid (basic)</td>
+                            <td>57+ (2017)</td>
+                            <td>52+ (2017)</td>
+                            <td>10.1+ (2017)</td>
+                            <td>16+ (2017)</td>
+                        </tr>
+                        <tr>
+                            <td>gap (grid)</td>
+                            <td>57+</td>
+                            <td>52+</td>
+                            <td>10.1+</td>
+                            <td>16+</td>
+                        </tr>
+                        <tr>
+                            <td>gap (flexbox)</td>
+                            <td>84+ (2020)</td>
+                            <td>63+ (2018)</td>
+                            <td>14.1+ (2021)</td>
+                            <td>84+ (2020)</td>
+                        </tr>
+                        <tr>
+                            <td>Subgrid</td>
+                            <td>117+ (2023)</td>
+                            <td>71+ (2019)</td>
+                            <td>16+ (2022)</td>
+                            <td>117+ (2023)</td>
+                        </tr>
+                        <tr>
+                            <td>auto-fit/fill</td>
+                            <td>57+</td>
+                            <td>52+</td>
+                            <td>10.1+</td>
+                            <td>16+</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

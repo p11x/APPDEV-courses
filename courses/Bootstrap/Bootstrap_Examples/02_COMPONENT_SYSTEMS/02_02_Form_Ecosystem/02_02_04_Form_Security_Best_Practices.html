@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<!-- Form security best practices: CSRF protection, input sanitization, autocomplete -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Security Best Practices - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-section { margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 0.5rem; }
+        .security-badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; }
+        .security-good { background: #d1e7dd; color: #0f5132; }
+        .security-bad { background: #f8d7da; color: #842029; }
+        .password-meter { height: 4px; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Form Security Best Practices</h1>
+                <p class="lead text-muted">CSRF protection, input sanitization, autocomplete attributes, and secure form patterns.</p>
+                <hr>
+            </div>
+        </div>
+
+        <!-- SECTION 1: CSRF Protection -->
+        <!-- Cross-Site Request Forgery protection prevents unauthorized form submissions -->
+        <section class="demo-section" id="csrf">
+            <h2 class="h4 mb-3">1. CSRF Protection</h2>
+            <p class="text-muted">CSRF tokens verify that form submissions originate from your own site, not from malicious third-party pages.</p>
+
+            <!-- CSRF token in hidden input (server-generated) -->
+            <form method="POST" action="/submit">
+                <!-- Hidden CSRF token field - value would be generated server-side -->
+                <!-- Each token is unique per session and validated on submission -->
+                <input type="hidden" name="_csrf" value="abc123token456xyz">
+
+                <!-- SameSite cookie attribute explanation -->
+                <div class="alert alert-info mb-3">
+                    <strong>CSRF Protection Layers:</strong>
+                    <ol class="mb-0 mt-2">
+                        <!-- Hidden token validates form origin -->
+                        <li><strong>CSRF Token:</strong> Hidden field with unique token (above)</li>
+                        <!-- SameSite cookie prevents cross-site sending -->
+                        <li><strong>SameSite Cookies:</strong> Set <code>SameSite=Strict</code> or <code>SameSite=Lax</code></li>
+                        <!-- Origin header checking -->
+                        <li><strong>Origin/Referer Check:</strong> Verify request came from your domain</li>
+                        <!-- Double-submit cookie pattern -->
+                        <li><strong>Double Submit:</strong> Token in cookie AND form field, must match</li>
+                    </ol>
+                </div>
+
+                <div class="mb-3">
+                    <label for="csrfName" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="csrfName" name="name">
+                </div>
+                <div class="mb-3">
+                    <label for="csrfEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="csrfEmail" name="email">
+                </div>
+                <button class="btn btn-primary" type="submit">Submit (includes CSRF token)</button>
+            </form>
+        </section>
+
+        <!-- SECTION 2: Autocomplete Attributes -->
+        <!-- Proper autocomplete helps password managers and improves security -->
+        <section class="demo-section" id="autocomplete">
+            <h2 class="h4 mb-3">2. Autocomplete Attributes</h2>
+            <p class="text-muted">Proper <code>autocomplete</code> values help password managers fill forms securely and improve UX.</p>
+
+            <form>
+                <h5 class="mt-3">Personal Information</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="acName" class="form-label">Full Name</label>
+                        <!-- autocomplete="name" tells browser this is a name field -->
+                        <input type="text" class="form-control" id="acName" autocomplete="name">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="acEmail" class="form-label">Email</label>
+                        <!-- autocomplete="email" for email addresses -->
+                        <input type="email" class="form-control" id="acEmail" autocomplete="email">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="acTel" class="form-label">Phone</label>
+                        <!-- autocomplete="tel" for telephone numbers -->
+                        <input type="tel" class="form-control" id="acTel" autocomplete="tel">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="acBday" class="form-label">Birthday</label>
+                        <!-- autocomplete="bday" for birth date -->
+                        <input type="date" class="form-control" id="acBday" autocomplete="bday">
+                    </div>
+                </div>
+
+                <h5 class="mt-3">Address</h5>
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="acStreet" class="form-label">Street Address</label>
+                        <!-- autocomplete="street-address" for full street address -->
+                        <input type="text" class="form-control" id="acStreet" autocomplete="street-address">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="acCity" class="form-label">City</label>
+                        <input type="text" class="form-control" id="acCity" autocomplete="address-level2">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="acState" class="form-label">State</label>
+                        <input type="text" class="form-control" id="acState" autocomplete="address-level1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="acZip" class="form-label">Zip Code</label>
+                        <input type="text" class="form-control" id="acZip" autocomplete="postal-code">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="acCountry" class="form-label">Country</label>
+                        <select class="form-select" id="acCountry" autocomplete="country">
+                            <option value="">Choose...</option>
+                            <option value="US">United States</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="CA">Canada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h5 class="mt-3">Login Credentials</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="acUsername" class="form-label">Username</label>
+                        <!-- autocomplete="username" for username fields -->
+                        <input type="text" class="form-control" id="acUsername" autocomplete="username">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="acNewPass" class="form-label">New Password</label>
+                        <!-- autocomplete="new-password" for new password creation -->
+                        <input type="password" class="form-control" id="acNewPass" autocomplete="new-password">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="acCurrentPass" class="form-label">Current Password</label>
+                        <!-- autocomplete="current-password" for existing password -->
+                        <input type="password" class="form-control" id="acCurrentPass" autocomplete="current-password">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="acOneTime" class="form-label">One-Time Code</label>
+                        <!-- autocomplete="one-time-code" for OTP/2FA codes -->
+                        <input type="text" class="form-control" id="acOneTime" autocomplete="one-time-code" inputmode="numeric" maxlength="6">
+                    </div>
+                </div>
+
+                <h5 class="mt-3">Payment</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="acCardName" class="form-label">Name on Card</label>
+                        <!-- cc-name for cardholder name -->
+                        <input type="text" class="form-control" id="acCardName" autocomplete="cc-name">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="acCardNum" class="form-label">Card Number</label>
+                        <!-- cc-number for credit card number -->
+                        <input type="text" class="form-control" id="acCardNum" autocomplete="cc-number" inputmode="numeric">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="acExpMonth" class="form-label">Exp Month</label>
+                        <input type="text" class="form-control" id="acExpMonth" autocomplete="cc-exp-month" inputmode="numeric">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="acExpYear" class="form-label">Exp Year</label>
+                        <input type="text" class="form-control" id="acExpYear" autocomplete="cc-exp-year" inputmode="numeric">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="acCVC" class="form-label">CVC</label>
+                        <!-- autocomplete="cc-csc" for card security code -->
+                        <input type="text" class="form-control" id="acCVC" autocomplete="cc-csc" inputmode="numeric">
+                    </div>
+                </div>
+
+                <h5 class="mt-3">Disabling Autocomplete</h5>
+                <div class="mb-3">
+                    <label for="acOff" class="form-label">Sensitive Data (autocomplete=off)</label>
+                    <!-- autocomplete="off" disables browser autofill (may not work in all browsers) -->
+                    <input type="text" class="form-control" id="acOff" autocomplete="off" placeholder="Browser won't suggest values">
+                    <div class="form-text">Note: Modern browsers may ignore autocomplete="off" for password fields.</div>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 3: Input Sanitization -->
+        <!-- Sanitize user input to prevent XSS and injection attacks -->
+        <section class="demo-section" id="sanitization">
+            <h2 class="h4 mb-3">3. Input Sanitization Patterns</h2>
+            <p class="text-muted">Always sanitize input on both client and server side. Client-side validation is for UX; server-side is for security.</p>
+
+            <form id="sanitizeForm">
+                <div class="mb-3">
+                    <label for="sanText" class="form-label">Text Input (HTML stripped)</label>
+                    <input type="text" class="form-control" id="sanText" placeholder="Try typing <script>alert('xss')</script>">
+                    <div class="form-text">HTML tags are stripped client-side as demo (server must also sanitize).</div>
+                    <div class="mt-1" id="sanTextResult"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="sanSQL" class="form-label">Username (no special chars)</label>
+                    <!-- pattern restricts allowed characters -->
+                    <input type="text" class="form-control" id="sanSQL" pattern="[a-zA-Z0-9_]+" placeholder="Alphanumeric and underscore only">
+                    <div class="form-text">Prevents SQL injection by restricting characters. Always use parameterized queries server-side.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="sanNumber" class="form-label">Numeric Only</label>
+                    <input type="text" class="form-control" id="sanNumber" inputmode="numeric" placeholder="Only digits allowed">
+                    <div class="form-text">Strips non-numeric characters on input.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="sanEmail" class="form-label">Email (strict validation)</label>
+                    <input type="email" class="form-control" id="sanEmail" placeholder="name@example.com">
+                    <div class="form-text">type="email" provides format validation. Server must still validate.</div>
+                </div>
+
+                <button class="btn btn-primary" type="submit">Test Sanitization</button>
+            </form>
+
+            <div class="alert alert-warning mt-3">
+                <strong>Security Rule:</strong> NEVER trust client-side validation alone. Always validate and sanitize on the server.
+                Client-side improves UX; server-side provides security.
+            </div>
+        </section>
+
+        <!-- SECTION 4: Password Security -->
+        <!-- Secure password input patterns -->
+        <section class="demo-section" id="password-security">
+            <h2 class="h4 mb-3">4. Password Security</h2>
+
+            <form>
+                <!-- Password with visibility toggle -->
+                <div class="mb-3">
+                    <label for="passToggle" class="form-label">Password with Toggle</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="passToggle" autocomplete="current-password">
+                        <!-- Toggle button to show/hide password -->
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassBtn" aria-label="Show password">
+                            <span id="toggleIcon">👁️</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Password with strength meter -->
+                <div class="mb-3">
+                    <label for="passStrength" class="form-label">New Password with Strength Meter</label>
+                    <input type="password" class="form-control" id="passStrength" autocomplete="new-password">
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress-bar password-meter" id="passStrengthBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted" id="passStrengthText">Enter a password</small>
+                        <small class="text-muted" id="passEntropy">0 bits entropy</small>
+                    </div>
+                </div>
+
+                <!-- Confirm password with match validation -->
+                <div class="mb-3">
+                    <label for="passConfirm" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="passConfirm" autocomplete="new-password">
+                    <div class="valid-feedback">Passwords match</div>
+                    <div class="invalid-feedback">Passwords do not match</div>
+                </div>
+
+                <!-- Password requirements checklist -->
+                <div class="mb-3">
+                    <label class="form-label">Password Requirements</label>
+                    <ul class="list-unstyled" id="passRequirements">
+                        <li id="reqLength" class="text-muted">❌ At least 12 characters</li>
+                        <li id="reqUpper" class="text-muted">❌ At least 1 uppercase letter</li>
+                        <li id="reqLower" class="text-muted">❌ At least 1 lowercase letter</li>
+                        <li id="reqNumber" class="text-muted">❌ At least 1 number</li>
+                        <li id="reqSpecial" class="text-muted">❌ At least 1 special character</li>
+                    </ul>
+                </div>
+
+                <!-- NEVER put passwords in URL (use POST method) -->
+                <div class="alert alert-danger">
+                    <strong>Never:</strong> Use GET method for passwords (they appear in URLs and server logs).
+                    Always use <code>&lt;form method="POST"&gt;</code> for sensitive data.
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 5: Secure Form Attributes -->
+        <!-- HTML attributes that enhance form security -->
+        <section class="demo-section" id="secure-attributes">
+            <h2 class="h4 mb-3">5. Secure Form Attributes</h2>
+
+            <!-- method="POST" prevents data appearing in URLs -->
+            <form method="POST" action="/secure-endpoint"
+                  <!-- enctype for file uploads (prevents URL encoding) -->
+                  enctype="multipart/form-data"
+                  <!-- accept-charset limits character encoding -->
+                  accept-charset="UTF-8"
+                  <!-- spellcheck="false" for sensitive fields like passwords -->
+                  >
+                <div class="mb-3">
+                    <label for="saPassword" class="form-label">Password (spellcheck=false)</label>
+                    <!-- spellcheck="false" prevents browser from spell-checking sensitive input -->
+                    <input type="password" class="form-control" id="saPassword" spellcheck="false" autocomplete="current-password">
+                    <div class="form-text">spellcheck="false" prevents password from being sent to spell-check services.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="saCredit" class="form-label">Credit Card (inputmode + no spellcheck)</label>
+                    <!-- inputmode="numeric" shows numeric keyboard on mobile -->
+                    <!-- spellcheck="false" and autocomplete for credit card security -->
+                    <input type="text" class="form-control" id="saCredit" inputmode="numeric" spellcheck="false" autocomplete="cc-number" maxlength="19">
+                    <div class="form-text">inputmode="numeric" shows number pad. spellcheck="false" prevents data leakage.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="saFile" class="form-label">Secure File Upload</label>
+                    <!-- accept restricts file types to prevent malicious uploads -->
+                    <input class="form-control" type="file" id="saFile" accept=".jpg,.jpeg,.png,.pdf">
+                    <div class="form-text">accept attribute restricts file types. Server must also validate file type and content.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="saTextarea" class="form-label">Comment (maxlength enforced)</label>
+                    <!-- maxlength prevents buffer overflow attacks -->
+                    <textarea class="form-control" id="saTextarea" rows="3" maxlength="500" placeholder="Max 500 characters"></textarea>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 6: Rate Limiting Pattern -->
+        <!-- Client-side rate limiting to prevent abuse -->
+        <section class="demo-section" id="rate-limiting">
+            <h2 class="h4 mb-3">6. Rate Limiting Pattern</h2>
+            <p class="text-muted">Prevent brute force and spam with client-side rate limiting (server should also enforce).</p>
+
+            <form id="rateLimitForm">
+                <div class="mb-3">
+                    <label for="rlEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="rlEmail" required>
+                </div>
+                <button class="btn btn-primary" type="submit" id="rlSubmit">Submit</button>
+                <div class="mt-2" id="rlStatus"></div>
+                <div class="form-text mt-2">This demo allows only 3 submissions per 10 seconds.</div>
+            </form>
+        </section>
+
+        <!-- SECTION 7: Content Security Policy for Forms -->
+        <!-- CSP headers prevent XSS in form handling -->
+        <section class="demo-section" id="csp">
+            <h2 class="h4 mb-3">7. Content Security Policy</h2>
+
+            <div class="alert alert-info">
+                <h5>Recommended CSP Headers for Forms:</h5>
+                <pre class="mb-0 mt-2"><code>Content-Security-Policy:
+  default-src 'self';
+  form-action 'self';
+  script-src 'self' 'nonce-{random}';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data:;</code></pre>
+            </div>
+
+            <ul class="list-group">
+                <li class="list-group-item"><strong>form-action 'self':</strong> Prevents form from submitting to external domains</li>
+                <li class="list-group-item"><strong>script-src 'nonce':</strong> Only allows scripts with matching nonce (prevents injected scripts)</li>
+                <li class="list-group-item"><strong>default-src 'self':</strong> Blocks loading resources from unauthorized domains</li>
+                <li class="list-group-item"><strong>upgrade-insecure-requests:</strong> Automatically upgrades HTTP to HTTPS</li>
+            </ul>
+        </section>
+
+        <!-- SECTION 8: honeypot Anti-Spam -->
+        <!-- Hidden field to catch bots -->
+        <section class="demo-section" id="honeypot">
+            <h2 class="h4 mb-3">8. Honeypot Anti-Spam</h2>
+            <p class="text-muted">A hidden field that humans leave empty but bots fill out. Server rejects submissions with filled honeypot.</p>
+
+            <form id="honeypotForm">
+                <div class="mb-3">
+                    <label for="hpName" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="hpName" required>
+                </div>
+                <div class="mb-3">
+                    <label for="hpEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="hpEmail" required>
+                </div>
+                <!-- HONEYPOT FIELD: hidden from humans via CSS, visible to bots parsing HTML -->
+                <!-- Uses inline style instead of class to avoid detection by sophisticated bots -->
+                <div style="position:absolute;left:-9999px;top:-9999px;opacity:0;height:0;overflow:hidden;" aria-hidden="true">
+                    <label for="hpWebsite">Website</label>
+                    <!-- tabindex="-1" removes from keyboard navigation -->
+                    <input type="text" id="hpWebsite" name="website" tabindex="-1" autocomplete="off">
+                </div>
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================
+        // Password visibility toggle
+        // ============================================
+        const togglePassBtn = document.getElementById('togglePassBtn');
+        const passToggle = document.getElementById('passToggle');
+        const toggleIcon = document.getElementById('toggleIcon');
+
+        togglePassBtn.addEventListener('click', function() {
+            // Toggle between password and text input types
+            const isPassword = passToggle.type === 'password';
+            passToggle.type = isPassword ? 'text' : 'password';
+            toggleIcon.textContent = isPassword ? '🙈' : '👁️';
+            // Update aria-label for screen readers
+            this.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+        });
+
+        // ============================================
+        // Password strength meter with entropy calculation
+        // ============================================
+        const passStrength = document.getElementById('passStrength');
+        const passStrengthBar = document.getElementById('passStrengthBar');
+        const passStrengthText = document.getElementById('passStrengthText');
+        const passEntropy = document.getElementById('passEntropy');
+
+        passStrength.addEventListener('input', function() {
+            const val = this.value;
+            let score = 0;
+
+            // Check each requirement
+            const hasLength = val.length >= 12;
+            const hasUpper = /[A-Z]/.test(val);
+            const hasLower = /[a-z]/.test(val);
+            const hasNumber = /[0-9]/.test(val);
+            const hasSpecial = /[^a-zA-Z0-9]/.test(val);
+
+            // Update requirement list items
+            updateReq('reqLength', hasLength);
+            updateReq('reqUpper', hasUpper);
+            updateReq('reqLower', hasLower);
+            updateReq('reqNumber', hasNumber);
+            updateReq('reqSpecial', hasSpecial);
+
+            // Calculate score
+            if (hasLength) score += 20;
+            if (hasUpper) score += 20;
+            if (hasLower) score += 20;
+            if (hasNumber) score += 20;
+            if (hasSpecial) score += 20;
+
+            // Calculate entropy (simplified)
+            let charsetSize = 0;
+            if (hasLower) charsetSize += 26;
+            if (hasUpper) charsetSize += 26;
+            if (hasNumber) charsetSize += 10;
+            if (hasSpecial) charsetSize += 32;
+            const entropy = charsetSize > 0 ? Math.floor(val.length * Math.log2(charsetSize)) : 0;
+            passEntropy.textContent = entropy + ' bits entropy';
+
+            // Update progress bar
+            passStrengthBar.style.width = score + '%';
+            passStrengthBar.className = 'progress-bar ' + (
+                score < 40 ? 'bg-danger' :
+                score < 60 ? 'bg-warning' :
+                score < 80 ? 'bg-info' : 'bg-success'
+            );
+
+            passStrengthText.textContent =
+                score === 0 ? 'Enter a password' :
+                score < 40 ? 'Weak' :
+                score < 60 ? 'Fair' :
+                score < 80 ? 'Good' : 'Strong';
+        });
+
+        function updateReq(id, met) {
+            const el = document.getElementById(id);
+            if (met) {
+                el.className = 'text-success';
+                el.textContent = '✅ ' + el.textContent.substring(2);
+            } else {
+                el.className = 'text-muted';
+                if (el.textContent.startsWith('✅')) {
+                    el.textContent = '❌ ' + el.textContent.substring(2);
+                }
+            }
+        }
+
+        // Confirm password matching
+        const passConfirm = document.getElementById('passConfirm');
+        passConfirm.addEventListener('input', function() {
+            if (this.value === passStrength.value && this.value.length > 0) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else if (this.value.length > 0) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            }
+        });
+
+        // ============================================
+        // Input sanitization demo
+        // ============================================
+        const sanText = document.getElementById('sanText');
+        const sanTextResult = document.getElementById('sanTextResult');
+
+        sanText.addEventListener('input', function() {
+            // Strip HTML tags using DOMPurify-like approach
+            // textContent automatically escapes HTML
+            const temp = document.createElement('div');
+            temp.textContent = this.value;
+            const sanitized = temp.innerHTML;
+            sanTextResult.innerHTML = '<small class="text-muted">Sanitized: ' + sanitized + '</small>';
+        });
+
+        // Numeric-only input
+        const sanNumber = document.getElementById('sanNumber');
+        sanNumber.addEventListener('input', function() {
+            // Replace all non-digit characters
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // ============================================
+        // Rate limiting demo
+        // ============================================
+        let submissionCount = 0;
+        let lastResetTime = Date.now();
+        const maxSubmissions = 3;
+        const resetInterval = 10000; // 10 seconds
+
+        const rateLimitForm = document.getElementById('rateLimitForm');
+        const rlSubmit = document.getElementById('rlSubmit');
+        const rlStatus = document.getElementById('rlStatus');
+
+        rateLimitForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const now = Date.now();
+            // Reset counter after interval
+            if (now - lastResetTime > resetInterval) {
+                submissionCount = 0;
+                lastResetTime = now;
+            }
+
+            submissionCount++;
+
+            if (submissionCount > maxSubmissions) {
+                // Rate limited
+                rlSubmit.disabled = true;
+                rlStatus.innerHTML = '<div class="alert alert-danger mt-2">Rate limit exceeded. Try again in a few seconds.</div>';
+
+                // Re-enable after reset interval
+                setTimeout(function() {
+                    submissionCount = 0;
+                    lastResetTime = Date.now();
+                    rlSubmit.disabled = false;
+                    rlStatus.innerHTML = '<div class="alert alert-success mt-2">Rate limit reset. You can submit again.</div>';
+                }, resetInterval);
+            } else {
+                rlStatus.innerHTML = '<div class="alert alert-success mt-2">Submitted! (' + submissionCount + '/' + maxSubmissions + ' attempts)</div>';
+            }
+        });
+
+        // ============================================
+        // Honeypot form
+        // ============================================
+        const honeypotForm = document.getElementById('honeypotForm');
+        honeypotForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const honeypotValue = document.getElementById('hpWebsite').value;
+
+            if (honeypotValue) {
+                // Bot detected - honeypot field was filled
+                console.log('Bot detected! Honeypot filled.');
+                alert('Submission blocked (bot detection).');
+            } else {
+                // Human submission - honeypot is empty
+                alert('Form submitted successfully! (No bot detected)');
+            }
+        });
+    </script>
+</body>
+</html>

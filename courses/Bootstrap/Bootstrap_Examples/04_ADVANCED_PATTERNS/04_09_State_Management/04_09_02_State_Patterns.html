@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_09_02_State_Patterns.html
+     State Design Patterns with Bootstrap Components
+     
+     Covers:
+     - State Machine pattern (finite automata)
+     - Observer pattern (reactive subscriptions)
+     - Pub/Sub pattern (event-driven decoupled messaging)
+     - Command pattern (undoable state actions)
+     - Memento pattern (state snapshots)
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_09_02 - State Design Patterns</title>
+    <!-- Bootstrap 5.3.3 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Event bus log styling */
+        .event-log { max-height: 180px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; }
+        /* State node visualization */
+        .state-node { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid #dee2e6; transition: all 0.3s; }
+        .state-node.active-state { border-color: #0d6efd; background-color: #cfe2ff; transform: scale(1.1); }
+        /* Arrow between states */
+        .state-arrow { font-size: 1.5rem; color: #6c757d; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Main container for all pattern demos -->
+    <div class="container py-5">
+        <!-- Page header -->
+        <h1 class="mb-2">04_09_02 - State Design Patterns</h1>
+        <p class="text-muted mb-4">Classic design patterns applied to Bootstrap component state management.</p>
+
+        <!-- ============================================================
+             SECTION 1: State Machine Pattern
+             Visual finite state machine with defined transitions.
+             States are nodes; transitions are edges.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">1. State Machine Pattern</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">A finite state machine with defined states and valid transitions. Only certain transitions are allowed from each state.</p>
+
+                <!-- Visual state diagram using Bootstrap grid -->
+                <div class="d-flex justify-content-center align-items-center mb-4 flex-wrap gap-2">
+                    <!-- State nodes -->
+                    <div class="state-node active-state" id="fsm-draft">Draft</div>
+                    <span class="state-arrow">&rarr;</span>
+                    <div class="state-node" id="fsm-review">Review</div>
+                    <span class="state-arrow">&rarr;</span>
+                    <div class="state-node" id="fsm-approved">Approved</div>
+                    <span class="state-arrow">&rarr;</span>
+                    <div class="state-node" id="fsm-published">Published</div>
+                </div>
+
+                <!-- Transition controls -->
+                <div class="text-center mb-3">
+                    <button class="btn btn-outline-primary btn-sm me-1" onclick="fsmGo('submit')">Submit</button>
+                    <button class="btn btn-outline-warning btn-sm me-1" onclick="fsmGo('requestChanges')">Request Changes</button>
+                    <button class="btn btn-outline-success btn-sm me-1" onclick="fsmGo('approve')">Approve</button>
+                    <button class="btn btn-outline-info btn-sm me-1" onclick="fsmGo('publish')">Publish</button>
+                    <button class="btn btn-outline-danger btn-sm" onclick="fsmGo('archive')">Archive</button>
+                </div>
+
+                <!-- Status display -->
+                <div class="alert alert-secondary text-center" id="fsmStatus">
+                    Current state: <strong>Draft</strong>
+                </div>
+
+                <!-- Transition rules reference -->
+                <details class="mt-2">
+                    <summary class="text-muted">View Transition Rules</summary>
+                    <pre class="bg-dark text-light p-2 rounded mt-2" style="font-size:0.8rem;">Draft → Submit → Review
+Review → Approve → Approved
+Review → Request Changes → Draft
+Approved → Publish → Published
+Any → Archive → Archived</pre>
+                </details>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 2: Observer Pattern
+             Multiple observers react to state changes on a subject.
+             The subject notifies all observers when state changes.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">2. Observer Pattern</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">A <em>subject</em> maintains a list of <em>observers</em> and notifies them automatically on state change.</p>
+
+                <!-- Subject: the form inputs that produce state -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Subject: Temperature (&deg;C)</label>
+                        <input type="range" class="form-range" id="obsTemp" min="-20" max="50" value="20"
+                               oninput="obsSubject.setState({ temp: parseInt(this.value) })">
+                        <span id="obsTempVal" class="badge bg-info">20&deg;C</span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Subject: Humidity (%)</label>
+                        <input type="range" class="form-range" id="obsHumid" min="0" max="100" value="50"
+                               oninput="obsSubject.setState({ humidity: parseInt(this.value) })">
+                        <span id="obsHumidVal" class="badge bg-info">50%</span>
+                    </div>
+                </div>
+
+                <!-- Observer panels that react to subject changes -->
+                <div class="row">
+                    <!-- Observer 1: Color indicator -->
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header">Observer 1: Comfort</div>
+                            <div class="card-body text-center" id="obsComfort">
+                                <span class="badge bg-secondary fs-5">Waiting...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Observer 2: Alert panel -->
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header">Observer 2: Alerts</div>
+                            <div class="card-body" id="obsAlerts">
+                                <span class="text-muted">No alerts</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Observer 3: Chart (simulated with progress bars) -->
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header">Observer 3: Visual</div>
+                            <div class="card-body" id="obsVisual">
+                                <label class="small">Temperature</label>
+                                <div class="progress mb-2"><div class="progress-bar" id="obsTempBar" style="width:50%"></div></div>
+                                <label class="small">Humidity</label>
+                                <div class="progress"><div class="progress-bar bg-info" id="obsHumidBar" style="width:50%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 3: Pub/Sub Pattern (Publish-Subscribe)
+             Decoupled messaging via a central event bus.
+             Publishers emit events; subscribers listen for them.
+             Neither knows about the other.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">3. Pub/Sub (Publish-Subscribe) Pattern</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Decoupled messaging: publishers emit events to a central bus; subscribers listen. Neither knows the other.</p>
+
+                <!-- Publisher controls -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Publishers</h6>
+                        <button class="btn btn-sm btn-primary me-1 mb-1" onclick="pubsubBus.publish('user:login', { user: 'Alice' })">User Login</button>
+                        <button class="btn btn-sm btn-warning me-1 mb-1" onclick="pubsubBus.publish('user:logout', { user: 'Alice' })">User Logout</button>
+                        <button class="btn btn-sm btn-info me-1 mb-1" onclick="pubsubBus.publish('cart:add', { item: 'Widget', price: 9.99 })">Add to Cart</button>
+                        <button class="btn btn-sm btn-success me-1 mb-1" onclick="pubsubBus.publish('order:placed', { orderId: Date.now() })">Place Order</button>
+                        <button class="btn btn-sm btn-danger mb-1" onclick="pubsubBus.publish('error:network', { msg: 'Timeout' })">Trigger Error</button>
+                    </div>
+                    <!-- Subscriber panels -->
+                    <div class="col-md-6">
+                        <h6>Subscribers</h6>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="subAuth" checked onchange="toggleSubscriber('auth')">
+                            <label class="form-check-label">Auth Logger</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="subCart" checked onchange="toggleSubscriber('cart')">
+                            <label class="form-check-label">Cart Logger</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="subError" checked onchange="toggleSubscriber('error')">
+                            <label class="form-check-label">Error Logger</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event bus log -->
+                <h6>Event Bus Log</h6>
+                <div class="event-log bg-dark text-light p-2 rounded" id="pubsubLog">
+                    <div class="text-success">[EventBus] Initialized</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 4: Command Pattern
+             Encapsulate state changes as command objects.
+             Enables undo/redo by storing command history.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">4. Command Pattern (Undo/Redo)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">State changes as command objects. Store history for undo/redo.</p>
+
+                <!-- Canvas-like area where commands operate -->
+                <div class="border rounded p-3 mb-3 bg-white" style="min-height:100px;" id="cmdCanvas">
+                    <span class="text-muted" id="cmdPlaceholder">Canvas is empty. Add items below.</span>
+                    <div id="cmdItems" class="d-flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- Command controls -->
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <button class="btn btn-primary btn-sm" onclick="cmdAddItem()">Add Item</button>
+                    <button class="btn btn-warning btn-sm" onclick="cmdChangeColor()">Change Color</button>
+                    <button class="btn btn-info btn-sm" onclick="cmdResize()">Resize</button>
+                    <span class="mx-2">|</span>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="cmdUndo()" id="cmdUndoBtn" disabled>Undo</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="cmdRedo()" id="cmdRedoBtn" disabled>Redo</button>
+                    <span class="badge bg-dark" id="cmdHistoryBadge">History: 0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 5: Memento Pattern
+             Save and restore state snapshots. Like a checkpoint system.
+             ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">5. Memento Pattern (Snapshots)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Save state snapshots (mementos) and restore them later. Like a checkpoint system.</p>
+
+                <!-- Editable form whose state can be snapshotted -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" id="memTitle" value="Untitled">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Priority</label>
+                        <select class="form-select" id="memPriority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Progress</label>
+                        <input type="range" class="form-range" id="memProgress" min="0" max="100" value="50">
+                        <span id="memProgressVal">50%</span>
+                    </div>
+                </div>
+
+                <!-- Memento controls -->
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button class="btn btn-success btn-sm" onclick="memSave()">Save Snapshot</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="memClear()">Clear Snapshots</button>
+                </div>
+
+                <!-- Saved snapshots list -->
+                <h6>Saved Snapshots</h6>
+                <div id="memSnapshots" class="list-group">
+                    <div class="list-group-item text-muted">No snapshots saved yet.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ========================================================
+        // SECTION 1: Finite State Machine Implementation
+        // ========================================================
+
+        /** FSM state definitions with allowed transitions */
+        const fsmStates = {
+            draft:     { submit: 'review' },
+            review:    { approve: 'approved', requestChanges: 'draft' },
+            approved:  { publish: 'published' },
+            published: {},
+            archived:  {}
+        };
+
+        /** Every state can transition to archived */
+        Object.keys(fsmStates).forEach(s => {
+            if (s !== 'archived') fsmStates[s].archive = 'archived';
+        });
+
+        /** Current FSM state */
+        let fsmCurrent = 'draft';
+
+        /**
+         * Attempts an FSM transition
+         * @param {string} action - Transition action
+         */
+        function fsmGo(action) {
+            const transitions = fsmStates[fsmCurrent];
+            if (!transitions[action]) {
+                document.getElementById('fsmStatus').innerHTML =
+                    `<span class="text-danger">Invalid: ${fsmCurrent} &mdash;${action}&mdash;&gt; ?</span>`;
+                return;
+            }
+            const next = transitions[action];
+            // Update visual: remove active from current, add to next
+            document.querySelectorAll('.state-node').forEach(n => n.classList.remove('active-state'));
+            const nextEl = document.getElementById('fsm-' + next);
+            if (nextEl) nextEl.classList.add('active-state');
+            fsmCurrent = next;
+            document.getElementById('fsmStatus').innerHTML =
+                `Current state: <strong>${next.charAt(0).toUpperCase() + next.slice(1)}</strong>`;
+        }
+
+        // ========================================================
+        // SECTION 2: Observer Pattern Implementation
+        // ========================================================
+
+        /**
+         * Subject class — holds state and notifies observers
+         */
+        class Subject {
+            constructor() {
+                this.state = { temp: 20, humidity: 50 };
+                this.observers = []; // List of observer callbacks
+            }
+
+            /** Register an observer callback */
+            subscribe(fn) { this.observers.push(fn); }
+
+            /** Remove an observer */
+            unsubscribe(fn) { this.observers = this.observers.filter(o => o !== fn); }
+
+            /** Update state and notify all observers */
+            setState(partial) {
+                Object.assign(this.state, partial);
+                this.notify();
+            }
+
+            /** Call each observer with the current state */
+            notify() {
+                this.observers.forEach(fn => fn(this.state));
+            }
+        }
+
+        /** Create the subject instance */
+        const obsSubject = new Subject();
+
+        /** Observer 1: Comfort level based on temp and humidity */
+        obsSubject.subscribe(({ temp, humidity }) => {
+            const comfort = document.getElementById('obsComfort');
+            // Calculate comfort score (simplified)
+            const score = 100 - Math.abs(temp - 22) * 2 - Math.abs(humidity - 50);
+            if (score > 70) comfort.innerHTML = '<span class="badge bg-success fs-5">Comfortable</span>';
+            else if (score > 40) comfort.innerHTML = '<span class="badge bg-warning fs-5">Moderate</span>';
+            else comfort.innerHTML = '<span class="badge bg-danger fs-5">Uncomfortable</span>';
+        });
+
+        /** Observer 2: Alerts based on thresholds */
+        obsSubject.subscribe(({ temp, humidity }) => {
+            const alerts = document.getElementById('obsAlerts');
+            let html = '';
+            if (temp > 35) html += '<div class="alert alert-danger py-1 px-2 mb-1">High temperature!</div>';
+            if (temp < 0) html += '<div class="alert alert-info py-1 px-2 mb-1">Freezing!</div>';
+            if (humidity > 80) html += '<div class="alert alert-warning py-1 px-2 mb-1">High humidity</div>';
+            if (humidity < 20) html += '<div class="alert alert-warning py-1 px-2 mb-1">Very dry</div>';
+            alerts.innerHTML = html || '<span class="text-muted">No alerts</span>';
+        });
+
+        /** Observer 3: Visual bars */
+        obsSubject.subscribe(({ temp, humidity }) => {
+            const tempPct = ((temp + 20) / 70) * 100; // -20 to 50 range → 0-100%
+            const humidPct = humidity;
+            document.getElementById('obsTempBar').style.width = tempPct + '%';
+            document.getElementById('obsHumidBar').style.width = humidPct + '%';
+            document.getElementById('obsTempVal').textContent = temp + '°C';
+            document.getElementById('obsHumidVal').textContent = humidity + '%';
+        });
+
+        // ========================================================
+        // SECTION 3: Pub/Sub (Event Bus) Implementation
+        // ========================================================
+
+        /**
+         * EventBus class — decoupled pub/sub messaging
+         */
+        class EventBus {
+            constructor() {
+                this.channels = {}; // Map of event name → subscriber callbacks
+            }
+
+            /**
+             * Subscribe to an event
+             * @param {string} event - Event name
+             * @param {Function} fn - Callback
+             * @returns {Function} Unsubscribe function
+             */
+            subscribe(event, fn) {
+                if (!this.channels[event]) this.channels[event] = [];
+                this.channels[event].push(fn);
+                // Return an unsubscribe function for convenience
+                return () => {
+                    this.channels[event] = this.channels[event].filter(f => f !== fn);
+                };
+            }
+
+            /**
+             * Publish an event with data
+             * @param {string} event - Event name
+             * @param {*} data - Event payload
+             */
+            publish(event, data) {
+                // Log the event
+                this.log(`PUBLISH: ${event}`, JSON.stringify(data));
+                // Notify all subscribers for this event
+                if (this.channels[event]) {
+                    this.channels[event].forEach(fn => fn(data));
+                }
+            }
+
+            /**
+             * Adds an entry to the event log UI
+             */
+            log(topic, detail) {
+                const log = document.getElementById('pubsubLog');
+                const entry = document.createElement('div');
+                entry.innerHTML = `<span class="text-info">[${new Date().toLocaleTimeString()}]</span> <span class="text-warning">${topic}</span> ${detail}`;
+                log.appendChild(entry);
+                log.scrollTop = log.scrollHeight;
+            }
+        }
+
+        /** Create the global event bus */
+        const pubsubBus = new EventBus();
+
+        /** Auth subscriber — listens to user events */
+        let unsubAuth = pubsubBus.subscribe('user:login', (data) => {
+            pubsubBus.log('AUTH-SUB', `User "${data.user}" logged in`);
+        });
+        pubsubBus.subscribe('user:logout', (data) => {
+            pubsubBus.log('AUTH-SUB', `User "${data.user}" logged out`);
+        });
+
+        /** Cart subscriber — listens to cart and order events */
+        let unsubCart = pubsubBus.subscribe('cart:add', (data) => {
+            pubsubBus.log('CART-SUB', `Added "${data.item}" ($${data.price})`);
+        });
+        pubsubBus.subscribe('order:placed', (data) => {
+            pubsubBus.log('CART-SUB', `Order ${data.orderId} placed`);
+        });
+
+        /** Error subscriber — listens to error events */
+        let unsubError = pubsubBus.subscribe('error:network', (data) => {
+            pubsubBus.log('ERROR-SUB', `Network error: ${data.msg}`);
+        });
+
+        /** Toggle subscriber on/off (simulates unsub/resub) */
+        function toggleSubscriber(type) {
+            pubsubBus.log('SYSTEM', `Subscriber "${type}" toggled`);
+        }
+
+        // ========================================================
+        // SECTION 4: Command Pattern Implementation
+        // ========================================================
+
+        /** Command history stack */
+        let cmdHistory = [];
+        /** Redo stack for undone commands */
+        let cmdRedoStack = [];
+        /** Item counter for unique IDs */
+        let cmdItemCount = 0;
+        /** Available colors for items */
+        const cmdColors = ['primary', 'success', 'danger', 'warning', 'info', 'secondary'];
+        /** Available sizes */
+        const cmdSizes = ['sm', '', 'lg'];
+
+        /**
+         * Execute a command and push to history
+         * @param {Object} cmd - { execute(), undo(), description }
+         */
+        function cmdExecute(cmd) {
+            cmd.execute();
+            cmdHistory.push(cmd);
+            cmdRedoStack = []; // Clear redo on new action
+            cmdUpdateUI();
+        }
+
+        /** Add a new item to the canvas */
+        function cmdAddItem() {
+            cmdItemCount++;
+            const id = cmdItemCount;
+            const color = cmdColors[Math.floor(Math.random() * cmdColors.length)];
+            const size = cmdSizes[Math.floor(Math.random() * cmdSizes.length)];
+
+            cmdExecute({
+                description: `Add item ${id}`,
+                execute() {
+                    const item = document.createElement('span');
+                    item.id = 'cmd-item-' + id;
+                    item.className = `badge bg-${color} fs-${size === 'lg' ? '5' : size === 'sm' ? '7' : '6'}`;
+                    item.textContent = 'Item ' + id;
+                    document.getElementById('cmdItems').appendChild(item);
+                    document.getElementById('cmdPlaceholder').style.display = 'none';
+                },
+                undo() {
+                    const el = document.getElementById('cmd-item-' + id);
+                    if (el) el.remove();
+                    if (document.getElementById('cmdItems').children.length === 0) {
+                        document.getElementById('cmdPlaceholder').style.display = '';
+                    }
+                }
+            });
+        }
+
+        /** Change color of last item */
+        function cmdChangeColor() {
+            const items = document.getElementById('cmdItems').children;
+            if (items.length === 0) return;
+            const item = items[items.length - 1];
+            const oldClass = item.className;
+            const newColor = cmdColors[Math.floor(Math.random() * cmdColors.length)];
+            const sizeMatch = oldClass.match(/fs-(\d)/);
+            const sizeClass = sizeMatch ? `fs-${sizeMatch[1]}` : 'fs-6';
+
+            cmdExecute({
+                description: `Change color of ${item.textContent}`,
+                execute() {
+                    item.className = `badge bg-${newColor} ${sizeClass}`;
+                },
+                undo() {
+                    item.className = oldClass;
+                }
+            });
+        }
+
+        /** Resize last item */
+        function cmdResize() {
+            const items = document.getElementById('cmdItems').children;
+            if (items.length === 0) return;
+            const item = items[items.length - 1];
+            const oldClass = item.className;
+
+            cmdExecute({
+                description: `Resize ${item.textContent}`,
+                execute() {
+                    const colorMatch = oldClass.match(/bg-(\w+)/);
+                    const color = colorMatch ? colorMatch[1] : 'primary';
+                    const sizes = ['fs-7', 'fs-6', 'fs-5'];
+                    const currentSizeIdx = sizes.findIndex(s => oldClass.includes(s));
+                    const nextSize = sizes[(currentSizeIdx + 1) % sizes.length];
+                    item.className = `badge bg-${color} ${nextSize}`;
+                },
+                undo() {
+                    item.className = oldClass;
+                }
+            });
+        }
+
+        /** Undo the last command */
+        function cmdUndo() {
+            if (cmdHistory.length === 0) return;
+            const cmd = cmdHistory.pop();
+            cmd.undo();
+            cmdRedoStack.push(cmd);
+            cmdUpdateUI();
+        }
+
+        /** Redo the last undone command */
+        function cmdRedo() {
+            if (cmdRedoStack.length === 0) return;
+            const cmd = cmdRedoStack.pop();
+            cmd.execute();
+            cmdHistory.push(cmd);
+            cmdUpdateUI();
+        }
+
+        /** Update command UI state (buttons, badge) */
+        function cmdUpdateUI() {
+            document.getElementById('cmdUndoBtn').disabled = cmdHistory.length === 0;
+            document.getElementById('cmdRedoBtn').disabled = cmdRedoStack.length === 0;
+            document.getElementById('cmdHistoryBadge').textContent = `History: ${cmdHistory.length}`;
+        }
+
+        // ========================================================
+        // SECTION 5: Memento Pattern Implementation
+        // ========================================================
+
+        /** Array of saved mementos (snapshots) */
+        let mementos = [];
+
+        /**
+         * Captures current form state as a memento snapshot
+         */
+        function memSave() {
+            const snapshot = {
+                id: Date.now(),
+                timestamp: new Date().toLocaleTimeString(),
+                title: document.getElementById('memTitle').value,
+                priority: document.getElementById('memPriority').value,
+                progress: document.getElementById('memProgress').value
+            };
+            mementos.push(snapshot);
+            memRenderList();
+        }
+
+        /**
+         * Restores a saved memento
+         * @param {number} id - Memento ID to restore
+         */
+        function memRestore(id) {
+            const snapshot = mementos.find(m => m.id === id);
+            if (!snapshot) return;
+            document.getElementById('memTitle').value = snapshot.title;
+            document.getElementById('memPriority').value = snapshot.priority;
+            document.getElementById('memProgress').value = snapshot.progress;
+            document.getElementById('memProgressVal').textContent = snapshot.progress + '%';
+        }
+
+        /** Deletes a saved memento */
+        function memDelete(id) {
+            mementos = mementos.filter(m => m.id !== id);
+            memRenderList();
+        }
+
+        /** Clears all mementos */
+        function memClear() {
+            mementos = [];
+            memRenderList();
+        }
+
+        /** Renders the memento list */
+        function memRenderList() {
+            const container = document.getElementById('memSnapshots');
+            if (mementos.length === 0) {
+                container.innerHTML = '<div class="list-group-item text-muted">No snapshots saved yet.</div>';
+                return;
+            }
+            container.innerHTML = mementos.map(m => `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${m.title}</strong> (${m.priority}) — ${m.progress}%
+                        <small class="text-muted ms-2">${m.timestamp}</small>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="memRestore(${m.id})">Restore</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="memDelete(${m.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /** Update progress display on range input */
+        document.getElementById('memProgress').addEventListener('input', function() {
+            document.getElementById('memProgressVal').textContent = this.value + '%';
+        });
+    </script>
+</body>
+</html>

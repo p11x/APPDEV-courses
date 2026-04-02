@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_04_08: Nuxt Bootstrap Integration                          -->
+<!-- Demonstrates Nuxt.js Bootstrap patterns: SSR, auto-imports,   -->
+<!-- modules, composables, Nuxt UI, and server routes              -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuxt Bootstrap Integration</title>
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- ============================================================= -->
+    <!-- Nuxt Bootstrap Integration Reference                          -->
+    <!-- Nuxt is Vue's full-stack framework with SSR, file routing,    -->
+    <!-- auto-imports, and module ecosystem                            -->
+    <!-- ============================================================= -->
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold" style="color: #00dc82;">Nuxt 3 + Bootstrap 5</h1>
+            <p class="lead text-muted">SSR, Auto-Imports, Composables, Modules, and Server Routes</p>
+        </div>
+
+        <div class="alert" style="background: #00dc82; color: #000;" role="alert">
+            <strong>Nuxt Pattern:</strong> Auto-imports components, composables, and utilities. SSR by default with hybrid rendering modes.
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Nuxt Project Structure                                       -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-white" style="background: #00dc82;">
+                <h5 class="mb-0">Nuxt 3 Project Structure</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>nuxt-project/
+├── nuxt.config.ts          // Nuxt configuration, modules, CSS
+├── app.vue                 // Root application component
+├── components/             // Auto-imported components (no import needed!)
+│   ├── AppNavbar.vue
+│   ├── AppFooter.vue
+│   ├── AlertBox.vue
+│   └── UserCard.vue
+├── composables/            // Auto-imported composables
+│   ├── useAuth.ts
+│   ├── useTheme.ts
+│   └── useBootstrap.ts
+├── layouts/                // Layout templates
+│   ├── default.vue         // Default layout (wraps all pages)
+│   └── admin.vue           // Admin layout
+├── pages/                  // File-based routing
+│   ├── index.vue           // -> /
+│   ├── about.vue           // -> /about
+│   └── users/
+│       ├── index.vue       // -> /users
+│       └── [id].vue        // -> /users/:id (dynamic route)
+├── plugins/                // Client/server plugins
+├── middleware/             // Route middleware (auth guards)
+├── server/
+│   ├── api/
+│   │   └── users.ts        // Server API routes
+│   └── middleware/
+├── public/                 // Static assets
+└── assets/
+    └── css/
+        └── main.css        // Bootstrap overrides</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Nuxt Config with Bootstrap                                   -->
+        <!-- nuxt.config.ts centralizes all configuration                 -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Nuxt Configuration (nuxt.config.ts)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>// nuxt.config.ts
+export default defineNuxtConfig({
+  // Global CSS imports - Bootstrap available everywhere
+  css: [
+    'bootstrap/dist/css/bootstrap.min.css',
+    '~/assets/css/main.css', // Your Bootstrap overrides
+  ],
+
+  // Modules extend Nuxt functionality
+  modules: [
+    '@nuxtjs/google-fonts',    // Optimized font loading
+    '@pinia/nuxt',             // State management (Pinia)
+    '@nuxt/image',             // Image optimization
+  ],
+
+  // App configuration
+  app: {
+    head: {
+      title: 'Nuxt Bootstrap App',
+      meta: [
+        { name: 'description', content: 'Nuxt 3 with Bootstrap 5' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      ],
+      // Bootstrap JS loaded via head for SSR compatibility
+      script: [
+        {
+          src: 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js',
+          defer: true,
+        },
+      ],
+    },
+  },
+
+  // Rendering configuration
+  routeRules: {
+    '/': { prerender: true },           // SSG at build time
+    '/dashboard/**': { ssr: true },     // SSR on each request
+    '/admin/**': { ssr: false },        // SPA (client-only)
+  },
+
+  // Development configuration
+  devtools: { enabled: true },
+  compatibilityDate: '2024-01-01',
+});</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Nuxt Auto-Imported Components                                -->
+        <!-- Components in components/ are auto-imported, no import needed -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Auto-Imported Components</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- components/UserCard.vue - Auto-imported, PascalCase name from filename --&gt;
+&lt;template&gt;
+  &lt;div class="card h-100 shadow-sm"&gt;
+    &lt;div class="card-body"&gt;
+      &lt;h5 class="card-title"&gt;{{ user.name }}&lt;/h5&gt;
+      &lt;p class="card-text text-muted"&gt;{{ user.email }}&lt;/p&gt;
+      &lt;NuxtLink :to="`/users/${user.id}`" class="btn btn-primary btn-sm"&gt;
+        View Profile
+      &lt;/NuxtLink&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script setup lang="ts"&gt;
+// defineProps is auto-imported by Nuxt
+const props = defineProps&lt;{
+  user: { id: number; name: string; email: string }
+}&gt;();
+&lt;/script&gt;
+
+&lt;!-- components/AlertBox.vue --&gt;
+&lt;template&gt;
+  &lt;div class="alert" :class="`alert-${type}`" role="alert"&gt;
+    &lt;strong v-if="title"&gt;{{ title }}&lt;/strong&gt;
+    {{ message }}
+    &lt;button v-if="dismissible" type="button" class="btn-close"
+            @click="$emit('dismiss')"&gt;&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script setup lang="ts"&gt;
+defineProps&lt;{
+  type: 'primary' | 'success' | 'danger' | 'warning' | 'info'
+  message: string
+  title?: string
+  dismissible?: boolean
+}&gt;();
+
+defineEmits(['dismiss']);
+&lt;/script&gt;
+
+&lt;!-- pages/index.vue - Using auto-imported components --&gt;
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;!-- Components auto-imported: just use PascalCase name --&gt;
+    &lt;AlertBox type="success" message="Welcome!" title="Hello" /&gt;
+
+    &lt;!-- NuxtLink replaces router-link, also auto-imported --&gt;
+    &lt;NuxtLink to="/users" class="btn btn-primary"&gt;View Users&lt;/NuxtLink&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Nuxt Composables                                             -->
+        <!-- Composables in composables/ are auto-imported                -->
+        <!-- Encapsulate reusable reactive logic                          -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Composables (Auto-Imported)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>// composables/useAuth.ts - Authentication composable
+export function useAuth() {
+  const user = useState&lt;User | null&gt;('auth_user', () => null);
+  const isAuthenticated = computed(() => !!user.value);
+
+  async function login(email: string, password: string) {
+    // $fetch is Nuxt's built-in fetch (works on server and client)
+    const data = await $fetch&lt;{ user: User; token: string }&gt;('/api/auth/login', {
+      method: 'POST',
+      body: { email, password },
+    });
+    user.value = data.user;
+    // useCookie is auto-imported
+    const token = useCookie('auth_token');
+    token.value = data.token;
+  }
+
+  async function logout() {
+    user.value = null;
+    const token = useCookie('auth_token');
+    token.value = null;
+    navigateTo('/login'); // navigateTo is auto-imported
+  }
+
+  return { user, isAuthenticated, login, logout };
+}
+
+// composables/useBootstrap.ts - Bootstrap utilities
+export function useBootstrap() {
+  // useState is SSR-safe reactive state (shared across components)
+  const toasts = useState&lt;Toast[]&gt;('toasts', () => []);
+
+  function showToast(message: string, type: string = 'success') {
+    const toast = { id: Date.now(), message, type };
+    toasts.value.push(toast);
+    setTimeout(() => {
+      toasts.value = toasts.value.filter(t => t.id !== toast.id);
+    }, 5000);
+  }
+
+  function showModal(modalId: string) {
+    if (import.meta.client) {
+      const modal = new (window as any).bootstrap.Modal(
+        document.getElementById(modalId)
+      );
+      modal.show();
+    }
+  }
+
+  return { toasts, showToast, showModal };
+}
+
+// Using composables in pages (auto-imported!)
+// pages/dashboard.vue
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;div v-if="isAuthenticated"&gt;
+      &lt;p&gt;Welcome, {{ user.name }}&lt;/p&gt;
+      &lt;button class="btn btn-danger" @click="logout"&gt;Logout&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+// No imports needed - Nuxt auto-imports composables!
+const { user, isAuthenticated, logout } = useAuth();
+const { showToast } = useBootstrap();
+&lt;/script&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Nuxt Server API Routes                                       -->
+        <!-- server/api/ provides backend endpoints within Nuxt           -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Server API Routes</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>// server/api/users/index.ts - REST API endpoint
+export default defineEventHandler(async (event) => {
+  // getQuery auto-imported for query parameters
+  const query = getQuery(event);
+
+  // Direct database access in server route
+  const users = await db.user.findMany({
+    where: query.search ? { name: { contains: query.search } } : {},
+  });
+
+  return users;
+});
+
+// server/api/users/[id].ts - Dynamic API route
+export default defineEventHandler(async (event) => {
+  // getRouterParam auto-imported
+  const id = getRouterParam(event, 'id');
+
+  // Method-based handling
+  if (event.method === 'GET') {
+    return await db.user.findUnique({ where: { id: Number(id) } });
+  }
+
+  if (event.method === 'PUT') {
+    const body = await readBody(event); // Parse request body
+    return await db.user.update({ where: { id: Number(id) }, data: body });
+  }
+
+  if (event.method === 'DELETE') {
+    return await db.user.delete({ where: { id: Number(id) } });
+  }
+});
+
+// Consuming API in a page
+&lt;script setup&gt;
+// useFetch is SSR-compatible data fetching
+const { data: users, pending, error } = await useFetch('/api/users', {
+  query: { search: 'john' },
+});
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div v-if="pending" class="text-center"&gt;
+    &lt;div class="spinner-border text-success"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div v-else-if="error" class="alert alert-danger"&gt;
+    {{ error.message }}
+  &lt;/div&gt;
+  &lt;div v-else class="row"&gt;
+    &lt;div v-for="user in users" :key="user.id" class="col-md-4 mb-3"&gt;
+      &lt;UserCard :user="user" /&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Nuxt Middleware & Layouts                                    -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Middleware & Layouts</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>// middleware/auth.ts - Route guard middleware
+export default defineNuxtRouteMiddleware((to, from) => {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated.value &amp;&amp; to.path.startsWith('/admin')) {
+    return navigateTo('/login', { redirectCode: 302 });
+  }
+});
+
+// layouts/default.vue - Default Bootstrap layout
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;AppNavbar /&gt;
+    &lt;main class="container py-4"&gt;
+      &lt;slot /&gt; &lt;!-- Page content renders here --&gt;
+    &lt;/main&gt;
+    &lt;AppFooter /&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+// layouts/admin.vue - Admin layout with sidebar
+&lt;template&gt;
+  &lt;div class="d-flex"&gt;
+    &lt;nav class="bg-dark text-white p-3" style="width: 250px; min-height: 100vh;"&gt;
+      &lt;h5&gt;Admin Panel&lt;/h5&gt;
+      &lt;ul class="nav flex-column"&gt;
+        &lt;li class="nav-item"&gt;
+          &lt;NuxtLink to="/admin" class="nav-link text-white"&gt;Dashboard&lt;/NuxtLink&gt;
+        &lt;/li&gt;
+        &lt;li class="nav-item"&gt;
+          &lt;NuxtLink to="/admin/users" class="nav-link text-white"&gt;Users&lt;/NuxtLink&gt;
+        &lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+    &lt;main class="flex-grow-1 p-4"&gt;
+      &lt;slot /&gt;
+    &lt;/main&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+// Using layouts in pages
+// pages/admin/index.vue
+definePageMeta({ layout: 'admin' });</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Nuxt + Bootstrap Reference                                   -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Nuxt + Bootstrap Best Practices</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr><th>Feature</th><th>Nuxt API</th><th>Bootstrap Usage</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Routing</td><td>pages/ directory</td><td>NuxtLink + Bootstrap nav</td></tr>
+                        <tr><td>Data Fetch</td><td>useFetch / useAsyncData</td><td>Spinner while pending</td></tr>
+                        <tr><td>State</td><td>useState / Pinia</td><td>Reactive Bootstrap classes</td></tr>
+                        <tr><td>SEO</td><td>useHead / useSeoMeta</td><td>Dynamic page titles</td></tr>
+                        <tr><td>Middleware</td><td>middleware/ directory</td><td>Auth guards, redirects</td></tr>
+                        <tr><td>API Routes</td><td>server/api/ directory</td><td>Server-side CRUD endpoints</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

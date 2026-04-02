@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 05_06_10_Security_Practices.html                              -->
+<!-- XSS Prevention, CSP, Input Sanitization                      -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Practices - XSS Prevention, CSP &amp; Sanitization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .sp-danger-zone {
+            background: repeating-linear-gradient(45deg, #f8d7da, #f8d7da 10px, #f5c2c7 10px, #f5c2c7 20px);
+            padding: 1rem;
+            border-radius: 0.375rem;
+        }
+        .sp-code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+        .sp-code .good { color: #4ec9b0; }
+        .sp-code .bad { color: #f44747; }
+        .sp-code .cmt { color: #6a9955; }
+        .sp-code .str { color: #ce9178; }
+        .sp-code .kw { color: #569cd6; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">&#128274; Security Practices</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#spNav" aria-controls="spNav"
+                    aria-expanded="false" aria-label="Toggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="spNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#xss">XSS</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#csp">CSP</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#sanitization">Sanitization</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#bootstrap-sec">Bootstrap Security</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-danger text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold">&#128737; Security Practices</h1>
+            <p class="lead">XSS prevention, Content Security Policy, input sanitization, and Bootstrap-specific security.</p>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- XSS PREVENTION                                               -->
+    <!-- ============================================================ -->
+    <section id="xss" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">1. Cross-Site Scripting (XSS) Prevention</h2>
+
+            <div class="alert alert-danger">
+                <h5 class="alert-heading">&#9888; What is XSS?</h5>
+                <p class="mb-0">Attackers inject malicious scripts into your pages via user input. This can steal cookies, redirect users, or deface content.</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card border-danger h-100">
+                        <div class="card-header bg-danger text-white"><h5 class="mb-0">&#10008; Vulnerable Patterns</h5></div>
+                        <div class="card-body">
+                            <div class="sp-code"><span class="bad">// NEVER: innerHTML with user input</span>
+element.innerHTML = userInput;
+
+<span class="bad">// NEVER: document.write</span>
+document.write(userInput);
+
+<span class="bad">// NEVER: eval with user input</span>
+eval(userInput);
+
+<span class="bad">// NEVER: href with javascript:</span>
+`&lt;a href="<span class="bad">javascript:${userInput}</span>"&gt;`
+
+<span class="bad">// NEVER: jQuery .html() with user data</span>
+$('#output').html(userInput);
+
+<span class="bad">// NEVER: Unquoted attribute values</span>
+`&lt;div class=<span class="bad">${userInput}</span>&gt;`</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card border-success h-100">
+                        <div class="card-header bg-success text-white"><h5 class="mb-0">&#10004; Safe Patterns</h5></div>
+                        <div class="card-body">
+                            <div class="sp-code"><span class="good">// DO: textContent (auto-escapes)</span>
+element.textContent = userInput;
+
+<span class="good">// DO: createElement + textContent</span>
+<span class="kw">const</span> p = document.createElement('p');
+p.textContent = userInput;
+container.appendChild(p);
+
+<span class="good">// DO: Bootstrap's built-in sanitizer</span>
+<span class="cmt">// Bootstrap tooltips/popovers sanitize</span>
+<span class="cmt">// HTML by default</span>
+
+<span class="good">// DO: Use textContent for dynamic content</span>
+document.getElementById('name')
+  .textContent = userName;
+
+<span class="good">// DO: DOMPurify for rich content</span>
+element.innerHTML = DOMPurify
+  .sanitize(richUserInput);</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live demo -->
+            <div class="mt-4 p-4 bg-light rounded">
+                <h5>Live XSS Prevention Demo</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Enter text (try: <code>&lt;script&gt;alert('xss')&lt;/script&gt;</code>)</label>
+                        <input type="text" class="form-control" id="xssInput" placeholder="Type something...">
+                        <div class="mt-2">
+                            <button class="btn btn-danger me-2" onclick="unsafeRender()">Unsafe (innerHTML)</button>
+                            <button class="btn btn-success" onclick="safeRender()">Safe (textContent)</button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Output:</label>
+                        <div id="xssOutput" class="border rounded p-3 bg-white" style="min-height:80px">
+                            <span class="text-muted">Output appears here...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CONTENT SECURITY POLICY                                      -->
+    <!-- ============================================================ -->
+    <section id="csp" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">2. Content Security Policy (CSP)</h2>
+            <p class="text-muted mb-4">CSP tells the browser which resources are allowed to load, blocking XSS and data injection attacks.</p>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Recommended CSP for Bootstrap</h5></div>
+                        <div class="card-body">
+                            <div class="sp-code"><span class="cmt">&lt;!-- Via meta tag --&gt;</span>
+&lt;meta http-equiv="Content-Security-Policy"
+  content="
+    <span class="kw">default-src</span> <span class="str">'self'</span>;
+    <span class="kw">script-src</span> <span class="str">'self'</span>
+      https://cdn.jsdelivr.net;
+    <span class="kw">style-src</span> <span class="str">'self'</span>
+      https://cdn.jsdelivr.net
+      <span class="str">'unsafe-inline'</span>;
+    <span class="kw">img-src</span> <span class="str">'self'</span>
+      https://placehold.co
+      data:;
+    <span class="kw">font-src</span> <span class="str">'self'</span>
+      https://cdn.jsdelivr.net;
+    <span class="kw">connect-src</span> <span class="str">'self'</span>;
+    <span class="kw">frame-ancestors</span> <span class="str">'none'</span>;
+    <span class="kw">base-uri</span> <span class="str">'self'</span>;
+    <span class="kw">form-action</span> <span class="str">'self'</span>;
+  "&gt;</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">CSP Directives Explained</h5></div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <thead><tr><th>Directive</th><th>Purpose</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>default-src</code></td><td>Fallback for all resource types</td></tr>
+                                    <tr><td><code>script-src</code></td><td>Allowed JS sources (CDN for Bootstrap)</td></tr>
+                                    <tr><td><code>style-src</code></td><td>Allowed CSS sources</td></tr>
+                                    <tr><td><code>img-src</code></td><td>Allowed image sources</td></tr>
+                                    <tr><td><code>font-src</code></td><td>Allowed font sources</td></tr>
+                                    <tr><td><code>connect-src</code></td><td>Allowed fetch/AJAX endpoints</td></tr>
+                                    <tr><td><code>frame-ancestors</code></td><td>Prevents clickjacking</td></tr>
+                                    <tr><td><code>base-uri</code></td><td>Prevents base tag injection</td></tr>
+                                    <tr><td><code>form-action</code></td><td>Restricts form submission targets</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning mt-4">
+                <h5 class="alert-heading">&#9888; Note on 'unsafe-inline'</h5>
+                <p class="mb-0">Bootstrap uses inline styles for some components (e.g., modal positioning). If you can avoid inline styles in your own code, you can use <code>'unsafe-inline'</code> only for <code>style-src</code> while keeping <code>script-src</code> strict.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- INPUT SANITIZATION                                           -->
+    <!-- ============================================================ -->
+    <section id="sanitization" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">3. Input Sanitization</h2>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">DOMPurify - Client-Side Sanitizer</h5></div>
+                        <div class="card-body">
+                            <p>The gold standard for sanitizing HTML in the browser:</p>
+                            <pre class="sp-code"><span class="cmt">// Install: npm install dompurify</span>
+<span class="kw">import</span> DOMPurify <span class="kw">from</span> <span class="str">'dompurify'</span>;
+
+<span class="cmt">// Sanitize user HTML</span>
+<span class="kw">const</span> clean = DOMPurify.sanitize(
+  userHTML,
+  {
+    ALLOWED_TAGS: [
+      <span class="str">'b'</span>, <span class="str">'i'</span>, <span class="str">'em'</span>, <span class="str">'strong'</span>,
+      <span class="str">'a'</span>, <span class="str">'p'</span>, <span class="str">'br'</span>
+    ],
+    ALLOWED_ATTR: [<span class="str">'href'</span>, <span class="str">'title'</span>]
+  }
+);
+
+<span class="cmt">// Use sanitized HTML safely</span>
+output.innerHTML = clean;</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Bootstrap's Built-in Sanitizer</h5></div>
+                        <div class="card-body">
+                            <p>Bootstrap 5 sanitizes tooltip/popover content by default:</p>
+                            <pre class="sp-code"><span class="cmt">// Bootstrap's DefaultAllowList</span>
+<span class="kw">const</span> ALO = bootstrap.Tooltip
+  .Default.allowList;
+
+<span class="cmt">// Default allowed tags:</span>
+<span class="cmt">// a, abbr, b, br, code, em,</span>
+<span class="cmt">// i, strong, small, span, sub, sup</span>
+
+<span class="cmt">// Customize the allowlist:</span>
+ALO.table = [];
+ALO.thead = [];
+ALO.tbody = [];
+ALO.tr = [];
+ALO.td = [];
+ALO.th = [];
+
+<span class="cmt">// Or disable sanitization (NOT recommended):</span>
+<span class="kw">new</span> bootstrap.Tooltip(el, {
+  sanitize: <span class="bad">false</span>  <span class="cmt">// Danger!</span>
+});</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- BOOTSTRAP-SPECIFIC SECURITY                                  -->
+    <!-- ============================================================ -->
+    <section id="bootstrap-sec" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">4. Bootstrap-Specific Security</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card border-warning h-100">
+                        <div class="card-header bg-warning"><h5 class="mb-0">&#9888; Tooltip/Popover XSS</h5></div>
+                        <div class="card-body">
+                            <p>Custom HTML in tooltips can be an XSS vector if not sanitized:</p>
+                            <div class="sp-danger-zone p-3 mb-3">
+                                <strong>Dangerous:</strong>
+                                <code>title: userControlledString</code>
+                            </div>
+                            <p><strong>Safe approach:</strong> Use <code>data-bs-title</code> attribute (auto-escaped) or ensure content is sanitized before passing to Bootstrap JS.</p>
+                            <!-- Safe tooltip demo -->
+                            <button type="button" class="btn btn-primary"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-title="This is safe!">
+                                Safe Tooltip (hover me)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-info h-100">
+                        <div class="card-header bg-info"><h5 class="mb-0">&#128274; Modal &amp; Offcanvas Security</h5></div>
+                        <div class="card-body">
+                            <ul>
+                                <li>Always use <code>data-bs-backdrop="static"</code> for critical confirmations</li>
+                                <li>Validate form inputs inside modals server-side</li>
+                                <li>Don't load modal content from URL parameters without sanitization</li>
+                                <li>Use <code>data-bs-focus="true"</code> (default) to maintain focus trap</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security checklist -->
+            <div class="mt-4 p-4 border rounded bg-white">
+                <h5>Security Checklist for Bootstrap Projects</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox"><label class="form-check-label">CSP header configured</label></div>
+                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox"><label class="form-check-label">All user input sanitized (DOMPurify)</label></div>
+                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox"><label class="form-check-label">No innerHTML with user data</label></div>
+                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox"><label class="form-check-label">Bootstrap sanitizer not disabled</label></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox"><label class="form-check-label">HTTPS enforced</label></div>
+                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox"><label class="form-check-label">CDN integrity hashes used (SRI)</label></div>
+                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox"><label class="form-check-label">No eval() or Function() with user input</label></div>
+                        <div class="form-check mb-2"><input class="form-check-input" type="checkbox"><label class="form-check-label">Server-side validation mirrors client</label></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Security Practices. Professional Practice Series.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize tooltips
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+            new bootstrap.Tooltip(el);
+        });
+
+        // XSS Demo functions
+        function unsafeRender() {
+            const input = document.getElementById('xssInput').value;
+            // DANGEROUS: innerHTML can execute scripts
+            document.getElementById('xssOutput').innerHTML =
+                '<strong>Unsafe output:</strong> ' + input;
+        }
+        function safeRender() {
+            const input = document.getElementById('xssInput').value;
+            // SAFE: textContent auto-escapes HTML
+            const output = document.getElementById('xssOutput');
+            output.textContent = '';
+            const label = document.createElement('strong');
+            label.textContent = 'Safe output: ';
+            const text = document.createElement('span');
+            text.textContent = input;
+            output.appendChild(label);
+            output.appendChild(text);
+        }
+    </script>
+</body>
+</html>

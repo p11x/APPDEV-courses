@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 - Float Cross-Browser Compatibility</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-border {
+            border: 3px dashed #dc3545;
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .float-box {
+            padding: 1.5rem;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            border: 2px solid #fff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+
+    <!-- ========================================== -->
+    <!-- PAGE HEADER                                 -->
+    <!-- ========================================== -->
+    <h1 class="display-4 fw-bold text-primary mb-3">Float Cross-Browser Compatibility</h1>
+    <p class="lead text-muted mb-5">
+        CSS floats have been supported since CSS1 (1996), making them one of the most
+        universally compatible layout mechanisms. This page covers browser-specific quirks,
+        edge cases, and testing strategies.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: BROWSER SUPPORT TABLE            -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-4 mb-3">1. Browser Support Matrix</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr><th>Browser</th><th>Version</th><th>Float Support</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Chrome</td><td>All versions</td><td class="text-success">Full</td><td>Baseline since v1</td></tr>
+            <tr><td>Firefox</td><td>All versions</td><td class="text-success">Full</td><td>Baseline since v1</td></tr>
+            <tr><td>Safari</td><td>All versions</td><td class="text-success">Full</td><td>Baseline since v1</td></tr>
+            <tr><td>Edge</td><td>All versions</td><td class="text-success">Full</td><td>Chromium-based: full support</td></tr>
+            <tr><td>IE 11</td><td>11</td><td class="text-warning">Mostly</td><td>3px bug, double-margin bug</td></tr>
+            <tr><td>IE 10</td><td>10</td><td class="text-warning">Mostly</td><td>Known float bugs</td></tr>
+            <tr><td>IE 9</td><td>9</td><td class="text-warning">Mostly</td><td>Layout engine quirks</td></tr>
+            <tr><td>Samsung Internet</td><td>All</td><td class="text-success">Full</td><td>Chromium-based</td></tr>
+            <tr><td>Safari iOS</td><td>All</td><td class="text-success">Full</td><td>WebKit engine</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: DOUBLE MARGIN BUG (IE)           -->
+    <!-- IE6 doubled margins on floated elements.   -->
+    <!-- Bootstrap's clearfix handles this.         -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">2. IE Double-Margin Bug (Historical)</h2>
+    <div class="alert alert-info">
+        <strong>Historical note:</strong> IE6 doubled the margin on the side of a float
+        (e.g., <code>margin-left</code> on a <code>float: left</code> element). The fix was
+        <code>display: inline</code> on the floated element. Modern browsers do not have this bug.
+    </div>
+    <div class="demo-border">
+        <div class="clearfix">
+            <div class="float-start float-box bg-primary me-4" style="width: 180px;">
+                float-start<br>margin-right: 1.5rem
+            </div>
+            <p>
+                This float has a right margin. In modern browsers (Chrome, Firefox, Safari, Edge),
+                the margin renders correctly at the specified value. The double-margin bug is
+                relevant only for IE6 and is handled by Bootstrap's CSS.
+            </p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: 3-PIXEL TEXT-JOG BUG (IE)        -->
+    <!-- IE added 3px gap between float and text.   -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">3. IE 3-Pixel Text-Jog Bug (Historical)</h2>
+    <div class="alert alert-info">
+        <strong>Historical note:</strong> In IE6, a 3px gap appeared between a floated element
+        and the adjacent text when certain conditions were met. This is irrelevant for modern
+        browsers but worth knowing for legacy support.
+    </div>
+    <div class="demo-border">
+        <div class="clearfix">
+            <div class="float-start float-box bg-success me-0" style="width: 180px;">
+                No margin
+            </div>
+            <p>
+                In modern browsers, text hugs the float edge with no unexpected gap.
+                In old IE, a 3px jog would appear. Current Bootstrap targets modern browsers
+                and does not include IE-specific hacks.
+            </p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: CLEARFIX CROSS-BROWSER           -->
+    <!-- Bootstrap's clearfix works everywhere.     -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">4. Clearfix Cross-Browser Reliability</h2>
+    <p>
+        Bootstrap's <code>clearfix</code> uses <code>::after</code> with <code>display: block</code>
+        and <code>clear: both</code>, which is supported in all browsers including IE8+.
+    </p>
+    <div class="bg-white border rounded p-4 mb-4">
+        <pre class="mb-0"><code>/* Bootstrap's clearfix — works in all modern browsers */
+.clearfix::after {
+  display: block;
+  clear: both;
+  content: "";
+}
+
+/* IE8 fallback uses :after (single colon) */
+/* Bootstrap 5 no longer supports IE8, so ::after is sufficient */</code></pre>
+    </div>
+    <div class="demo-border">
+        <div class="clearfix">
+            <div class="float-start float-box bg-primary me-2" style="width: 150px;">Left</div>
+            <div class="float-end float-box bg-secondary" style="width: 150px;">Right</div>
+            <p class="mt-2">
+                The <code>clearfix</code> class reliably contains floats in Chrome, Firefox,
+                Safari, Edge, and IE11. No browser-specific code is needed.
+            </p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 5: RTL (RIGHT-TO-LEFT) SUPPORT      -->
+    <!-- float-start/end are logical properties in  -->
+    <!-- Bootstrap 5, respecting text direction.    -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">5. RTL (Right-to-Left) Support</h2>
+    <p>
+        Bootstrap 5 uses <code>float-start</code> and <code>float-end</code> as logical names.
+        In RTL mode, <code>float-start</code> maps to <code>float: right</code>.
+    </p>
+    <div class="demo-border" dir="ltr">
+        <p class="mb-2 fw-semibold">LTR (Left-to-Right):</p>
+        <div class="clearfix">
+            <div class="float-start float-box bg-primary me-2" style="width: 150px;">
+                float-start (left)
+            </div>
+            <p>Text wraps on the right side in LTR layouts.</p>
+        </div>
+    </div>
+    <div class="demo-border" dir="rtl">
+        <p class="mb-2 fw-semibold" dir="ltr">RTL (Right-to-Left):</p>
+        <div class="clearfix">
+            <div class="float-start float-box bg-success ms-2" style="width: 150px;">
+                float-start (right in RTL)
+            </div>
+            <p dir="ltr">In RTL, float-start maps to the right side. Text wraps on the left.</p>
+        </div>
+    </div>
+    <div class="alert alert-info">
+        Bootstrap's logical naming (<code>start</code>/<code>end</code>) ensures float utilities
+        work correctly in both LTR and RTL layouts without code changes.
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 6: PRINT STYLES                     -->
+    <!-- Floats may behave differently in print.    -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">6. Print Media Behavior</h2>
+    <p>
+        Browsers generally respect floats in print, but page breaks inside floated content
+        can cause unexpected results. Use <code>@media print</code> to control float behavior.
+    </p>
+    <div class="bg-white border rounded p-4 mb-4">
+        <pre class="mb-0"><code>/* Reset floats for print if needed */
+@media print {
+  .float-start, .float-end {
+    float: none !important;
+  }
+  /* Or keep floats but ensure page-break-inside: avoid */
+  .float-box {
+    page-break-inside: avoid;
+  }
+}</code></pre>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 7: TESTING STRATEGIES               -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">7. Cross-Browser Testing Strategies</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr><th>Tool</th><th>Purpose</th><th>Cost</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>BrowserStack</td><td>Real device testing across browsers</td><td>Paid</td></tr>
+            <tr><td>Sauce Labs</td><td>Cross-browser automated testing</td><td>Paid</td></tr>
+            <tr><td>LambdaTest</td><td>Real-time cross-browser testing</td><td>Free tier</td></tr>
+            <tr><td>Chrome DevTools</td><td>Device simulation + rendering tab</td><td>Free</td></tr>
+            <tr><td>Firefox DevTools</td><td>Layout inspector shows float flow</td><td>Free</td></tr>
+            <tr><td>Safari DevTools</td><td>macOS/iOS rendering verification</td><td>Free</td></tr>
+            <tr><td>Can I Use</td><td>Feature support lookup</td><td>Free</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ========================================== -->
+    <!-- SECTION 8: KNOWN QUIRKS TABLE               -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">Known Quirks Summary</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr><th>Issue</th><th>Affected</th><th>Fix</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Double margin on float side</td><td>IE6</td><td><code>display: inline</code></td></tr>
+            <tr><td>3px text jog</td><td>IE6</td><td>Various hacks (not needed now)</td></tr>
+            <tr><td>Guillotine bug</td><td>IE6</td><td>clearfix</td></tr>
+            <tr><td>Float drop</td><td>All</td><td>Reduce float widths or use <code>box-sizing: border-box</code></td></tr>
+            <tr><td>Margin collapse with floats</td><td>All</td><td>clearfix or BFC</td></tr>
+            <tr><td>Flex child ignoring float</td><td>All modern</td><td>Float inside flex items is ignored; use flex alignment</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

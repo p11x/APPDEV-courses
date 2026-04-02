@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_11_Animation_Maintenance.html                            -->
+<!-- Maintaining Animations with Bootstrap 5                        -->
+<!-- Covers: naming conventions, documentation, design tokens,      -->
+<!--         modular animation CSS, versioning, refactoring,         -->
+<!--         deprecation patterns, team collaboration               -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_01_11 - Animation Maintenance</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* DESIGN TOKENS — CSS Custom Properties                        */
+        /* Centralizing animation values as CSS variables makes them    */
+        /* easy to update across the entire project.                    */
+        /* ============================================================= */
+        :root {
+            /* Duration tokens */
+            --anim-duration-instant: 0.05s;
+            --anim-duration-fast: 0.15s;
+            --anim-duration-normal: 0.3s;
+            --anim-duration-slow: 0.5s;
+            --anim-duration-slower: 0.8s;
+
+            /* Easing tokens */
+            --anim-ease-default: cubic-bezier(0.25, 0.1, 0.25, 1);
+            --anim-ease-in: cubic-bezier(0.42, 0, 1, 1);
+            --anim-ease-out: cubic-bezier(0, 0, 0.58, 1);
+            --anim-ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+            --anim-ease-bounce: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+
+            /* Delay tokens */
+            --anim-delay-stagger: 0.05s;
+
+            /* Z-index for animated layers */
+            --z-tooltip: 1070;
+            --z-modal: 1050;
+            --z-toast: 1090;
+        }
+
+        /* ============================================================= */
+        /* NAMING CONVENTION                                             */
+        /* Pattern: .anim-{type}-{direction}-{variant}                   */
+        /* Examples:                                                     */
+        /*   .anim-fade-in          — basic fade from invisible          */
+        /*   .anim-fade-in-up       — fade while moving up               */
+        /*   .anim-slide-in-left    — slide from left edge               */
+        /*   .anim-scale-in         — scale from smaller to normal       */
+        /*   .anim-spin             — continuous rotation                 */
+        /*   .anim-pulse-on-hover   — pulse effect on hover              */
+        /* ============================================================= */
+
+        /* --------------------------------------------------------- */
+        /* @keyframes — Named consistently with BEM-like pattern     */
+        /* --------------------------------------------------------- */
+        @keyframes anim-fade-in { from { opacity:0; } to { opacity:1; } }
+        @keyframes anim-fade-in-up { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes anim-slide-in-left { from { opacity:0; transform:translateX(-40px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes anim-slide-in-right { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes anim-scale-in { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+        @keyframes anim-spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+        @keyframes anim-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+        /* --------------------------------------------------------- */
+        /* ANIMATION UTILITY CLASSES                                  */
+        /* These are the building blocks — reusable across components */
+        /* --------------------------------------------------------- */
+        .anim-fade-in {
+            animation: anim-fade-in var(--anim-duration-normal) var(--anim-ease-default) forwards;
+        }
+        .anim-fade-in-up {
+            animation: anim-fade-in-up var(--anim-duration-slow) var(--anim-ease-out) forwards;
+            opacity: 0;
+        }
+        .anim-slide-in-left {
+            animation: anim-slide-in-left var(--anim-duration-slow) var(--anim-ease-out) forwards;
+            opacity: 0;
+        }
+        .anim-slide-in-right {
+            animation: anim-slide-in-right var(--anim-duration-slow) var(--anim-ease-out) forwards;
+            opacity: 0;
+        }
+        .anim-scale-in {
+            animation: anim-scale-in var(--anim-duration-normal) var(--anim-ease-bounce) forwards;
+            opacity: 0;
+        }
+        .anim-spin {
+            animation: anim-spin 1s linear infinite;
+        }
+
+        /* --------------------------------------------------------- */
+        /* DELAY UTILITIES                                           */
+        /* Using CSS custom properties for consistent staggering     */
+        /* --------------------------------------------------------- */
+        .anim-delay-1 { animation-delay: calc(var(--anim-delay-stagger) * 1); }
+        .anim-delay-2 { animation-delay: calc(var(--anim-delay-stagger) * 2); }
+        .anim-delay-3 { animation-delay: calc(var(--anim-delay-stagger) * 3); }
+        .anim-delay-4 { animation-delay: calc(var(--anim-delay-stagger) * 4); }
+        .anim-delay-5 { animation-delay: calc(var(--anim-delay-stagger) * 5); }
+        .anim-delay-6 { animation-delay: calc(var(--anim-delay-stagger) * 6); }
+
+        /* --------------------------------------------------------- */
+        /* DURATION UTILITIES                                        */
+        /* Override default duration via utility classes              */
+        /* --------------------------------------------------------- */
+        .anim-dur-fast   { animation-duration: var(--anim-duration-fast); }
+        .anim-dur-normal { animation-duration: var(--anim-duration-normal); }
+        .anim-dur-slow   { animation-duration: var(--anim-duration-slow); }
+        .anim-dur-slower { animation-duration: var(--anim-duration-slower); }
+
+        /* --------------------------------------------------------- */
+        /* EASING UTILITIES                                          */
+        /* --------------------------------------------------------- */
+        .anim-ease-default   { animation-timing-function: var(--anim-ease-default); }
+        .anim-ease-in        { animation-timing-function: var(--anim-ease-in); }
+        .anim-ease-out       { animation-timing-function: var(--anim-ease-out); }
+        .anim-ease-bounce    { animation-timing-function: var(--anim-ease-bounce); }
+
+        /* --------------------------------------------------------- */
+        /* DEPRECATED PATTERN EXAMPLE                                */
+        /* Shows how to deprecate old animation classes gracefully    */
+        /* --------------------------------------------------------- */
+        .fade-in-old {
+            /* @deprecated 2.0.0 — Use .anim-fade-in instead */
+            animation: anim-fade-in var(--anim-duration-normal) var(--anim-ease-default) forwards;
+        }
+
+        /* --------------------------------------------------------- */
+        /* TRANSITION UTILITIES (complementary to animations)         */
+        /* --------------------------------------------------------- */
+        .trans-all {
+            transition: all var(--anim-duration-normal) var(--anim-ease-default);
+        }
+        .trans-transform {
+            transition: transform var(--anim-duration-normal) var(--anim-ease-default);
+        }
+        .trans-opacity {
+            transition: opacity var(--anim-duration-normal) var(--anim-ease-default);
+        }
+
+        /* Hover utilities using transitions */
+        .hover-lift {
+            transition: transform var(--anim-duration-fast) var(--anim-ease-out),
+                        box-shadow var(--anim-duration-fast) var(--anim-ease-out);
+        }
+        .hover-lift:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+        }
+
+        .hover-scale {
+            transition: transform var(--anim-duration-fast) var(--anim-ease-out);
+        }
+        .hover-scale:hover {
+            transform: scale(1.04);
+        }
+
+        /* --------------------------------------------------------- */
+        /* DOCUMENTATION TABLE STYLES                                */
+        /* --------------------------------------------------------- */
+        .token-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">Animation Maintenance</h1>
+                <p class="lead text-muted">
+                    Naming conventions, design tokens, modular architecture, and team practices for maintainable animations.
+                </p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: DESIGN TOKENS                                      -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Design Tokens (CSS Custom Properties)</h2>
+            <p class="text-muted">
+                All animation values are defined as CSS custom properties in <code>:root</code>.
+                Change once, update everywhere.
+            </p>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped small">
+                    <thead class="table-dark">
+                        <tr><th>Token</th><th>Value</th><th>Usage</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>--anim-duration-instant</code></td><td>0.05s</td><td>Micro-interactions, focus rings</td></tr>
+                        <tr><td><code>--anim-duration-fast</code></td><td>0.15s</td><td>Hover feedback, button states</td></tr>
+                        <tr><td><code>--anim-duration-normal</code></td><td>0.3s</td><td>Standard transitions</td></tr>
+                        <tr><td><code>--anim-duration-slow</code></td><td>0.5s</td><td>Page-level animations</td></tr>
+                        <tr><td><code>--anim-duration-slower</code></td><td>0.8s</td><td>Dramatic entrances</td></tr>
+                        <tr><td><code>--anim-ease-default</code></td><td>cubic-bezier(0.25,0.1,0.25,1)</td><td>General purpose</td></tr>
+                        <tr><td><code>--anim-ease-bounce</code></td><td>cubic-bezier(0.68,-0.55,0.27,1.55)</td><td>Playful elements</td></tr>
+                        <tr><td><code>--anim-delay-stagger</code></td><td>0.05s</td><td>Staggered list increments</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: NAMING CONVENTION DEMO                             -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Naming Convention in Action</h2>
+            <p class="text-muted">
+                Pattern: <code>.anim-{type}-{direction}-{variant}</code>
+            </p>
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="card anim-fade-in-up anim-delay-1 hover-lift">
+                        <div class="card-body text-center">
+                            <h6>anim-fade-in-up</h6>
+                            <small class="text-muted">Delay: 1</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card anim-slide-in-left anim-delay-2 hover-lift">
+                        <div class="card-body text-center">
+                            <h6>anim-slide-in-left</h6>
+                            <small class="text-muted">Delay: 2</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card anim-slide-in-right anim-delay-3 hover-lift">
+                        <div class="card-body text-center">
+                            <h6>anim-slide-in-right</h6>
+                            <small class="text-muted">Delay: 3</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card anim-scale-in anim-delay-4 hover-lift">
+                        <div class="card-body text-center">
+                            <h6>anim-scale-in</h6>
+                            <small class="text-muted">Delay: 4</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: UTILITY COMPOSITION                                -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Composable Utility Classes</h2>
+            <p class="text-muted">
+                Combine base animation class with delay, duration, and easing utilities.
+            </p>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6>Example Combinations</h6>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <div class="bg-primary text-white p-3 rounded text-center anim-fade-in-up anim-delay-1 anim-dur-fast">
+                                <code>.anim-fade-in-up .anim-delay-1 .anim-dur-fast</code>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-success text-white p-3 rounded text-center anim-fade-in-up anim-delay-3 anim-dur-slow anim-ease-bounce">
+                                <code>.anim-fade-in-up .anim-delay-3 .anim-dur-slow .anim-ease-bounce</code>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-warning text-dark p-3 rounded text-center anim-scale-in anim-delay-5 anim-dur-slower">
+                                <code>.anim-scale-in .anim-delay-5 .anim-dur-slower</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: DEPRECATION PATTERN                                -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Deprecation Strategy</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h6 class="text-warning">Deprecation Steps</h6>
+                            <ol class="small mb-0">
+                                <li>Add <code>@deprecated</code> comment to old class</li>
+                                <li>Add new class alongside old one</li>
+                                <li>Document migration in changelog</li>
+                                <li>Run codemod to find all usages</li>
+                                <li>Remove old class in next major version</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>CSS Deprecation Comment</h6>
+                            <div class="code-block small">
+/**
+ * @deprecated 2.0.0
+ * Use .anim-fade-in instead.
+ * Will be removed in 3.0.0
+ */
+.fade-in-old {
+    animation: anim-fade-in
+        var(--anim-duration-normal)
+        var(--anim-ease-default) forwards;
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: FILE STRUCTURE                                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Recommended File Structure</h2>
+            <div class="code-block">
+styles/
+├── _tokens.css          /* Design tokens: durations, easings, delays */
+├── _keyframes.css       /* All @keyframes definitions */
+├── _animations.css      /* Animation utility classes */
+├── _transitions.css     /* Transition utility classes */
+├── _reduced-motion.css  /* prefers-reduced-motion overrides */
+└── main.css             /* Imports all partials */
+
+/* _animations.css */
+.anim-fade-in { ... }
+.anim-fade-in-up { ... }
+.anim-slide-in-left { ... }
+
+/* main.css */
+@import '_tokens.css';
+@import '_keyframes.css';
+@import '_animations.css';
+@import '_transitions.css';
+@import '_reduced-motion.css';
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: VERSIONING                                         -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Animation Library Versioning</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped small">
+                    <thead class="table-dark">
+                        <tr><th>Version</th><th>Change</th><th>Type</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1.0.0</td><td>Initial animation system</td><td>Major</td></tr>
+                        <tr><td>1.1.0</td><td>Added <code>.anim-scale-in</code></td><td>Minor</td></tr>
+                        <tr><td>1.1.1</td><td>Fixed Safari timing bug</td><td>Patch</td></tr>
+                        <tr><td>1.2.0</td><td>Added delay utilities</td><td>Minor</td></tr>
+                        <tr><td>2.0.0</td><td>Renamed <code>.fade-in</code> → <code>.anim-fade-in</code></td><td>Major (breaking)</td></tr>
+                        <tr><td>2.1.0</td><td>Added design tokens</td><td>Minor</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 7: TEAM PRACTICES                                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Team Collaboration Practices</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6>Code Review Checklist</h6>
+                            <ul class="small mb-0">
+                                <li>Uses design tokens, not hardcoded values</li>
+                                <li>Follows naming convention</li>
+                                <li>Includes prefers-reduced-motion</li>
+                                <li>Only animates transform/opacity</li>
+                                <li>No transition: all</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6>Documentation</h6>
+                            <ul class="small mb-0">
+                                <li>JSDoc comments on all utilities</li>
+                                <li>Storybook stories for each animation</li>
+                                <li>Visual regression test baselines</li>
+                                <li>Changelog entries</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6>Tools</h6>
+                            <ul class="small mb-0">
+                                <li>Stylelint for CSS linting</li>
+                                <li>Autoprefixer for vendor prefixes</li>
+                                <li>PostCSS for CSS transforms</li>
+                                <li>Storybook for visual testing</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

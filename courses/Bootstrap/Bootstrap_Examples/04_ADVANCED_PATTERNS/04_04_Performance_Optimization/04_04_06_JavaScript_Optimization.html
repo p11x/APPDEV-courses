@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_06_JavaScript_Optimization.html
+     Topic: JavaScript Optimization for Bootstrap Applications
+     
+     Covers script loading strategies, event delegation, DOM
+     manipulation efficiency, debouncing, and reducing main-thread
+     blocking time in Bootstrap-powered pages.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>JavaScript Optimization - Bootstrap 5</title>
+
+    <style>
+        .hero-js { background: linear-gradient(135deg, #ffc107 0%, #ff6f00 100%); color: #212529; padding: 4rem 0; }
+        .code-dark { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.82rem; overflow-x: auto; }
+        .perf-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">JS Optimization</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#loading">Loading</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#delegation">Delegation</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#dom">DOM</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#demo">Demo</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-js text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">JavaScript Optimization</h1>
+            <p class="lead mt-2">Reduce main-thread blocking and deliver faster interactivity.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: SCRIPT LOADING STRATEGIES
+         Comparison of defer, async, and module approaches.
+         ============================================================ -->
+    <section id="loading" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Script Loading Strategies</h2>
+
+            <div class="row g-4">
+                <!-- Blocking (bad) -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-danger h-100">
+                        <div class="card-header bg-danger text-white"><h6 class="mb-0">Blocking (Avoid)</h6></div>
+                        <div class="card-body">
+                            <div class="code-dark mb-2">
+&lt;script<br>
+&nbsp;&nbsp;src="app.js"&gt;<br>
+&lt;/script&gt;
+                            </div>
+                            <p class="small">Blocks HTML parsing. Page appears frozen during download.</p>
+                            <span class="perf-badge bg-danger text-white">Worst</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- defer -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-success h-100">
+                        <div class="card-header bg-success text-white"><h6 class="mb-0">defer (Recommended)</h6></div>
+                        <div class="card-body">
+                            <div class="code-dark mb-2">
+&lt;script<br>
+&nbsp;&nbsp;src="app.js"<br>
+&nbsp;&nbsp;defer&gt;<br>
+&lt;/script&gt;
+                            </div>
+                            <p class="small">Downloads in parallel, executes after DOM parsed. Preserves order.</p>
+                            <span class="perf-badge bg-success text-white">Best</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- async -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-warning h-100">
+                        <div class="card-header bg-warning text-dark"><h6 class="mb-0">async (Conditional)</h6></div>
+                        <div class="card-body">
+                            <div class="code-dark mb-2">
+&lt;script<br>
+&nbsp;&nbsp;src="analytics.js"<br>
+&nbsp;&nbsp;async&gt;<br>
+&lt;/script&gt;
+                            </div>
+                            <p class="small">Downloads in parallel, executes immediately when ready. No order guarantee.</p>
+                            <span class="perf-badge bg-warning text-dark">Good</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- type="module" -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card border-info h-100">
+                        <div class="card-header bg-info text-white"><h6 class="mb-0">type="module"</h6></div>
+                        <div class="card-body">
+                            <div class="code-dark mb-2">
+&lt;script<br>
+&nbsp;&nbsp;type="module"<br>
+&nbsp;&nbsp;src="app.mjs"&gt;<br>
+&lt;/script&gt;
+                            </div>
+                            <p class="small">Deferred by default. Supports imports for tree shaking.</p>
+                            <span class="perf-badge bg-info text-white">Modern</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: EVENT DELEGATION
+         Using event delegation to reduce event listener count.
+         ============================================================ -->
+    <section id="delegation" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Event Delegation</h2>
+            <p class="text-muted mb-4">
+                Instead of attaching listeners to every button, attach one listener to a parent element and use event bubbling.
+            </p>
+
+            <div class="row g-4">
+                <!-- Without delegation (bad) -->
+                <div class="col-md-6">
+                    <div class="card border-danger h-100">
+                        <div class="card-header bg-danger text-white">Without Delegation</div>
+                        <div class="card-body">
+                            <div class="code-dark mb-3">
+// 100 buttons = 100 listeners<br>
+document.querySelectorAll('.btn')<br>
+&nbsp;&nbsp;.forEach(btn => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;btn.addEventListener('click',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handleClick);<br>
+&nbsp;&nbsp;});<br>
+// Memory: O(n) listeners
+                            </div>
+                            <p class="small">Each button gets its own listener. More memory, slower initialization.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- With delegation (good) -->
+                <div class="col-md-6">
+                    <div class="card border-success h-100">
+                        <div class="card-header bg-success text-white">With Delegation</div>
+                        <div class="card-body">
+                            <div class="code-dark mb-3">
+// 100 buttons = 1 listener<br>
+document.getElementById('container')<br>
+&nbsp;&nbsp;.addEventListener('click', e => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (e.target.matches('.btn')) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handleClick(e);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;});<br>
+// Memory: O(1) listeners
+                            </div>
+                            <p class="small">Single listener on parent. Handles dynamically added elements too.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live delegation demo -->
+            <div class="card mt-4">
+                <div class="card-header"><h5 class="mb-0">Live Delegation Demo</h5></div>
+                <div class="card-body">
+                    <p class="text-muted small">Click any badge below. All use a single event listener via delegation.</p>
+                    <div id="delegationContainer" class="d-flex flex-wrap gap-2">
+                        <!-- Badges generated by JS -->
+                    </div>
+                    <div class="mt-3">
+                        <span class="perf-badge bg-success text-white">1 listener for all badges</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: DOM MANIPULATION BEST PRACTICES
+         Techniques for efficient DOM updates.
+         ============================================================ -->
+    <section id="dom" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Efficient DOM Manipulation</h2>
+
+            <div class="accordion" id="domAccordion">
+                <!-- Batch updates -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#domBatch" aria-expanded="true" aria-controls="domBatch">
+                            Batch DOM Updates with DocumentFragment
+                        </button>
+                    </h3>
+                    <div id="domBatch" class="accordion-collapse collapse show" data-bs-parent="#domAccordion">
+                        <div class="accordion-body">
+                            <p>Build DOM nodes in a <code>DocumentFragment</code> (off-DOM), then append once. This triggers only one reflow.</p>
+                            <div class="code-dark">
+// Efficient: single reflow<br>
+const fragment = document.createDocumentFragment();<br>
+for (let i = 0; i < 1000; i++) {<br>
+&nbsp;&nbsp;const li = document.createElement('li');<br>
+&nbsp;&nbsp;li.textContent = `Item ${i}`;<br>
+&nbsp;&nbsp;fragment.appendChild(li);<br>
+}<br>
+list.appendChild(fragment); <span class="text-success">// 1 reflow</span><br><br>
+// Inefficient: 1000 reflows<br>
+for (let i = 0; i < 1000; i++) {<br>
+&nbsp;&nbsp;list.innerHTML += `&lt;li&gt;Item ${i}&lt;/li&gt;`; <span class="text-danger">// reflow each time</span><br>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Debounce & Throttle -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#domDebounce" aria-expanded="false" aria-controls="domDebounce">
+                            Debounce &amp; Throttle for Rapid Events
+                        </button>
+                    </h3>
+                    <div id="domDebounce" class="accordion-collapse collapse" data-bs-parent="#domAccordion">
+                        <div class="accordion-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Debounce (wait until pause)</h6>
+                                    <div class="code-dark">
+function debounce(fn, delay) {<br>
+&nbsp;&nbsp;let timer;<br>
+&nbsp;&nbsp;return (...args) => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;clearTimeout(timer);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;timer = setTimeout(() =><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fn(...args), delay);<br>
+&nbsp;&nbsp;};<br>
+}<br><br>
+input.addEventListener('input',<br>
+&nbsp;&nbsp;debounce(search, 300));
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Throttle (max once per interval)</h6>
+                                    <div class="code-dark">
+function throttle(fn, limit) {<br>
+&nbsp;&nbsp;let last = 0;<br>
+&nbsp;&nbsp;return (...args) => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;const now = Date.now();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (now - last >= limit) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;last = now;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fn(...args);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;};<br>
+}<br><br>
+window.addEventListener('scroll',<br>
+&nbsp;&nbsp;throttle(onScroll, 100));
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- requestIdleCallback -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#domIdle" aria-expanded="false" aria-controls="domIdle">
+                            requestIdleCallback for Non-Critical Work
+                        </button>
+                    </h3>
+                    <div id="domIdle" class="accordion-collapse collapse" data-bs-parent="#domAccordion">
+                        <div class="accordion-body">
+                            <p>Schedule non-essential tasks during browser idle time to avoid blocking user interactions.</p>
+                            <div class="code-dark">
+// Run analytics during idle time<br>
+requestIdleCallback(() => {<br>
+&nbsp;&nbsp;trackUserBehavior();<br>
+&nbsp;&nbsp;warmCache();<br>
+});<br><br>
+// Fallback for browsers without support<br>
+if (!('requestIdleCallback' in window)) {<br>
+&nbsp;&nbsp;setTimeout(fn, 1);<br>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: INTERACTIVE THROTTLE/DEBOUNCE DEMO
+         ============================================================ -->
+    <section id="demo" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Live Debounce Demo</h2>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">No Debounce</label>
+                    <input type="text" class="form-control" id="inputRaw" placeholder="Type here...">
+                    <div class="mt-2 small">Events fired: <span id="rawCount" class="badge bg-danger">0</span></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Debounced (300ms)</label>
+                    <input type="text" class="form-control" id="inputDebounced" placeholder="Type here...">
+                    <div class="mt-2 small">Events fired: <span id="debouncedCount" class="badge bg-success">0</span></div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Throttled (300ms)</label>
+                    <input type="text" class="form-control" id="inputThrottled" placeholder="Type here...">
+                    <div class="mt-2 small">Events fired: <span id="throttledCount" class="badge bg-info">0</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">JavaScript Optimization &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+
+    <script>
+        // ============================================================
+        // EVENT DELEGATION DEMO
+        // Generate badges and handle clicks with a single listener
+        // ============================================================
+        const delegationContainer = document.getElementById('delegationContainer');
+        const colors = ['primary','secondary','success','danger','warning','info','dark'];
+
+        // Generate badge elements
+        for (let i = 1; i <= 30; i++) {
+            const badge = document.createElement('span');
+            badge.className = `badge bg-${colors[i % colors.length]} p-2`;
+            badge.textContent = `Badge ${i}`;
+            badge.dataset.id = i;
+            delegationContainer.appendChild(badge);
+        }
+
+        // Single delegated event listener
+        delegationContainer.addEventListener('click', (e) => {
+            if (e.target.matches('.badge')) {
+                e.target.classList.toggle('bg-light');
+                e.target.classList.toggle('text-dark');
+            }
+        });
+
+        // ============================================================
+        // DEBOUNCE & THROTTLE DEMO
+        // ============================================================
+        let rawCount = 0, debouncedCount = 0, throttledCount = 0;
+
+        function debounce(fn, delay) {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn(...args), delay);
+            };
+        }
+
+        function throttle(fn, limit) {
+            let last = 0;
+            return (...args) => {
+                const now = Date.now();
+                if (now - last >= limit) {
+                    last = now;
+                    fn(...args);
+                }
+            };
+        }
+
+        document.getElementById('inputRaw').addEventListener('input', () => {
+            rawCount++;
+            document.getElementById('rawCount').textContent = rawCount;
+        });
+
+        document.getElementById('inputDebounced').addEventListener('input', debounce(() => {
+            debouncedCount++;
+            document.getElementById('debouncedCount').textContent = debouncedCount;
+        }, 300));
+
+        document.getElementById('inputThrottled').addEventListener('input', throttle(() => {
+            throttledCount++;
+            document.getElementById('throttledCount').textContent = throttledCount;
+        }, 300));
+    </script>
+</body>
+</html>

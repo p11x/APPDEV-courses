@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 01_03_14 - Grid Print Layout                                   -->
+<!-- Demonstrates Bootstrap grid print-specific classes,           -->
+<!-- @media print rules, and techniques for optimizing             -->
+<!-- grid layouts for printed output.                              -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Print Layout - Bootstrap 5</title>
+
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================ */
+        /* PRINT MEDIA QUERY STYLES                                     */
+        /* Applied only when printing (Ctrl+P / window.print())         */
+        /* ============================================================ */
+        @media print {
+            /* ======================================================== */
+            /* BASE PRINT RESETS                                        */
+            /* ======================================================== */
+
+            /* Remove background colors to save ink */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Ensure body takes full page width */
+            body {
+                font-size: 12pt;
+                line-height: 1.4;
+                color: #000 !important;
+                background: #fff !important;
+            }
+
+            /* ======================================================== */
+            /* PRINT GRID MODIFICATIONS                                  */
+            /* Make grid more suitable for paper output                  */
+            /* ======================================================== */
+
+            /* Force all columns to full width on print */
+            /* Remove this rule if you want to preserve grid layout */
+            /*
+            .row > [class*="col-"] {
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+            }
+            */
+
+            /* Convert 4-column grid to 2-column for print */
+            .print-two-col > [class*="col-md-3"] {
+                flex: 0 0 50% !important;
+                max-width: 50% !important;
+            }
+
+            /* ======================================================== */
+            /* PAGE BREAK CONTROL                                        */
+            /* ======================================================== */
+
+            /* Avoid page breaks inside cards and important sections */
+            .card, .no-break-inside {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+
+            /* Force page break before specific sections */
+            .page-break-before {
+                break-before: page !important;
+                page-break-before: always !important;
+            }
+
+            /* Avoid page break after elements */
+            .no-break-after {
+                break-after: avoid !important;
+                page-break-after: avoid !important;
+            }
+
+            /* ======================================================== */
+            /* VISIBILITY CONTROLS FOR PRINT                             */
+            /* ======================================================== */
+
+            /* Hide elements only in print */
+            .d-print-none {
+                display: none !important;
+            }
+
+            /* Show elements only in print */
+            .d-print-block {
+                display: block !important;
+            }
+
+            /* Make visible elements print as inline */
+            .d-print-inline {
+                display: inline !important;
+            }
+
+            /* ======================================================== */
+            /* LINK HANDLING IN PRINT                                     */
+            /* ======================================================== */
+
+            /* Show URL after links for printed reference */
+            a[href^="http"]::after {
+                content: " (" attr(href) ")";
+                font-size: 10pt;
+                color: #666 !important;
+            }
+
+            /* Don't add URLs to Bootstrap nav links */
+            .navbar a::after,
+            .nav a::after,
+            .btn::after {
+                content: "" !important;
+            }
+
+            /* ======================================================== */
+            /* PRINT SPACING AND MARGINS                                  */
+            /* ======================================================== */
+
+            /* Reduce margins for print to save space */
+            .container {
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+
+            /* Remove box shadows in print (waste of ink) */
+            .card, .shadow, .shadow-sm, .shadow-lg {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+
+            /* ======================================================== */
+            /* PRINT TYPOGRAPHY                                          */
+            /* ======================================================== */
+
+            /* Ensure readable font sizes in print */
+            h1 { font-size: 24pt !important; }
+            h2 { font-size: 18pt !important; }
+            h3 { font-size: 14pt !important; }
+            p, li { font-size: 11pt !important; }
+        }
+
+        /* ============================================================ */
+        /* SCREEN-ONLY STYLES                                            */
+        /* ============================================================ */
+        .grid-item {
+            padding: 1rem;
+            background-color: #e7f1ff;
+            border: 1px solid #86b7fe;
+            border-radius: 0.375rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .print-info {
+            padding: 1rem;
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-divider {
+            margin: 2rem 0;
+            padding: 1rem 0;
+            border-top: 2px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- ============================================================ -->
+        <!-- PAGE HEADER WITH PRINT BUTTON                                 -->
+        <!-- ============================================================ -->
+        <h1 class="mb-3">Grid Print Layout</h1>
+        <p class="lead text-muted">
+            Bootstrap grid print optimization, @media print rules, and page break control.
+        </p>
+
+        <!-- Print button - hidden in print output via d-print-none -->
+        <div class="mb-4 d-print-none">
+            <!-- window.print() triggers the browser print dialog -->
+            <button class="btn btn-primary" onclick="window.print()">
+                Print This Page
+            </button>
+            <small class="text-muted ms-2">
+                (Ctrl+P) - See how the grid adapts for print
+            </small>
+        </div>
+
+        <!-- Screen-only notice -->
+        <div class="alert alert-info d-print-none" role="alert">
+            <strong>Print Tip:</strong> Click "Print This Page" or press Ctrl+P
+            to see how the grid adapts for printed output. The print styles
+            are defined in the @media print block above.
+        </div>
+
+        <!-- Print-only header (visible only when printing) -->
+        <!-- Hidden on screen via Bootstrap d-none, shown in print via d-print-block -->
+        <div class="d-none d-print-block mb-3">
+            <h2>Print Document Header</h2>
+            <p>This content only appears in the printed version of the page.</p>
+            <hr>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: PRESERVED GRID IN PRINT                           -->
+        <!-- Bootstrap grid columns remain in print by default            -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">1. Grid Preservation in Print</h2>
+            <p class="text-muted mb-3">
+                Bootstrap's grid columns are preserved in print output.
+                The flexbox layout carries over to printed pages.
+            </p>
+
+            <!-- 3-column grid preserved in print -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Column 1</h5>
+                            <p class="card-text">
+                                This column will appear side by side in print,
+                                maintaining the grid layout.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Column 2</h5>
+                            <p class="card-text">
+                                Grid proportions are kept in print.
+                                col-md-4 = 33% width on paper.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Column 3</h5>
+                            <p class="card-text">
+                                All three columns render side by side
+                                on printed output.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: PRINT-SPECIFIC COLUMN CLASSES                     -->
+        <!-- Bootstrap provides .d-print-* classes                        -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">2. Print Visibility Classes</h2>
+            <p class="text-muted mb-3">
+                Bootstrap provides print-specific display classes similar to
+                responsive breakpoint classes: d-print-none, d-print-inline, etc.
+            </p>
+
+            <div class="row">
+                <!-- Hidden on screen, visible in print -->
+                <div class="col-md-4 mb-3 d-none d-md-block">
+                    <div class="grid-item">
+                        <strong>Visible on Screen Only</strong>
+                        <br><small>d-none d-md-block</small>
+                        <br><small class="text-muted">Hidden in print</small>
+                    </div>
+                </div>
+
+                <!-- Visible on screen AND in print -->
+                <div class="col-md-4 mb-3">
+                    <div class="grid-item">
+                        <strong>Always Visible</strong>
+                        <br><small>No print restriction</small>
+                        <br><small class="text-muted">Shows in print & screen</small>
+                    </div>
+                </div>
+
+                <!-- Different content in print vs screen -->
+                <div class="col-md-4 mb-3">
+                    <div class="grid-item">
+                        <span class="d-print-none">
+                            <strong>Screen Content</strong>
+                            <br><small>Interactive version</small>
+                        </span>
+                        <span class="d-none d-print-inline">
+                            <strong>Print Content</strong>
+                            <br>Static version for paper
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Print visibility class reference table -->
+            <table class="table table-bordered table-sm mt-3">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Class</th>
+                        <th>Screen</th>
+                        <th>Print</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>d-print-none</code></td>
+                        <td>Visible</td>
+                        <td>Hidden</td>
+                        <td>Buttons, nav, interactive elements</td>
+                    </tr>
+                    <tr>
+                        <td><code>d-print-block</code></td>
+                        <td>As set</td>
+                        <td>Block</td>
+                        <td>Print-only content blocks</td>
+                    </tr>
+                    <tr>
+                        <td><code>d-print-inline</code></td>
+                        <td>As set</td>
+                        <td>Inline</td>
+                        <td>Print-only inline text</td>
+                    </tr>
+                    <tr>
+                        <td><code>d-print-flex</code></td>
+                        <td>As set</td>
+                        <td>Flex</td>
+                        <td>Print-only flex containers</td>
+                    </tr>
+                    <tr>
+                        <td><code>d-print-grid</code></td>
+                        <td>As set</td>
+                        <td>Grid</td>
+                        <td>Print-only grid containers</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: PAGE BREAK CONTROL WITH GRID                      -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">3. Page Break Control in Grid</h2>
+            <p class="text-muted mb-3">
+                Control where page breaks occur when printing grid layouts.
+                Use break-inside, break-before, and break-after CSS properties.
+            </p>
+
+            <!-- Cards that should not break across pages -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <!-- no-break-inside class prevents page break within card -->
+                    <div class="card no-break-inside border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <strong>Card A - No Break Inside</strong>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                This card has <code>break-inside: avoid</code>.
+                                When printing, this entire card will stay on one page.
+                                If it doesn't fit, it moves to the next page entirely.
+                            </p>
+                            <ul>
+                                <li>Important item 1</li>
+                                <li>Important item 2</li>
+                                <li>Important item 3</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer">
+                            <small>class="card no-break-inside"</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card no-break-inside border-success">
+                        <div class="card-header bg-success text-white">
+                            <strong>Card B - No Break Inside</strong>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                Also protected from breaking across pages.
+                                The entire card and its content stay together.
+                            </p>
+                            <p>
+                                This is important for readability when printing
+                                cards, tables, or grouped content.
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <small>class="card no-break-inside"</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cards that allow breaks (default behavior) -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning">
+                            <strong>Card C - Allows Break</strong>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                This card has no break restriction.
+                                It can be split across pages if needed.
+                            </p>
+                            <p>
+                                This is the default CSS behavior.
+                                Content may span multiple pages.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <strong>Card D - Page Break Before</strong>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                This section has a <code>page-break-before: always</code>
+                                class applied. It will always start on a new page in print.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: PRINT-OPTIMIZED LAYOUT EXAMPLE                    -->
+        <!-- ============================================================ -->
+        <section class="section-divider page-break-before">
+            <h2 class="mb-3">4. Print-Optimized Layout</h2>
+            <p class="text-muted mb-3">
+                This section starts on a new page when printing (page-break-before).
+            </p>
+
+            <!-- Print-friendly data table layout -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card no-break-inside">
+                        <div class="card-header">
+                            <strong>Data Table - Print Optimized</strong>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Product</th>
+                                        <th>Category</th>
+                                        <th>Price</th>
+                                        <th>Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>001</td><td>Laptop Pro</td><td>Electronics</td><td>$1,299</td><td>45</td></tr>
+                                    <tr><td>002</td><td>Wireless Mouse</td><td>Accessories</td><td>$29</td><td>230</td></tr>
+                                    <tr><td>003</td><td>USB-C Hub</td><td>Accessories</td><td>$59</td><td>120</td></tr>
+                                    <tr><td>004</td><td>Monitor 27"</td><td>Electronics</td><td>$449</td><td>67</td></tr>
+                                    <tr><td>005</td><td>Keyboard</td><td>Accessories</td><td>$89</td><td>180</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Print-optimized multi-column content -->
+            <div class="row mt-4">
+                <div class="col-md-6 mb-3">
+                    <div class="card no-break-inside">
+                        <div class="card-body">
+                            <h5>Summary Section</h5>
+                            <p>
+                                In print, this content maintains its two-column layout.
+                                The table above will not break across pages.
+                            </p>
+                            <table class="table table-sm">
+                                <tr><td>Subtotal</td><td class="text-end">$1,925</td></tr>
+                                <tr><td>Tax (8%)</td><td class="text-end">$154</td></tr>
+                                <tr><td><strong>Total</strong></td><td class="text-end"><strong>$2,079</strong></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card no-break-inside">
+                        <div class="card-body">
+                            <h5>Notes Section</h5>
+                            <p>
+                                Print styles ensure readability with appropriate font sizes,
+                                removed shadows, and black text on white background.
+                            </p>
+                            <ul>
+                                <li>All prices in USD</li>
+                                <li>Free shipping over $50</li>
+                                <li>30-day return policy</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: PRINT CSS BEST PRACTICES                         -->
+        <!-- ============================================================ -->
+        <section class="section-divider">
+            <h2 class="mb-3">5. Print CSS Best Practices</h2>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Save Ink</h5>
+                            <ul class="small">
+                                <li>Remove backgrounds</li>
+                                <li>Remove box shadows</li>
+                                <li>Use black text</li>
+                                <li>Remove decorative elements</li>
+                                <li>Hide interactive UI</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Improve Readability</h5>
+                            <ul class="small">
+                                <li>Use 11-12pt font size</li>
+                                <li>Show link URLs</li>
+                                <li>Use serif fonts</li>
+                                <li>Increase line height</li>
+                                <li>Avoid tiny text</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Page Management</h5>
+                            <ul class="small">
+                                <li>Use break-inside: avoid</li>
+                                <li>Add page breaks for sections</li>
+                                <li>Set page margins</li>
+                                <li>Use @page for size/orientation</li>
+                                <li>Number pages if possible</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- @page rule example -->
+            <div class="print-info mt-3 d-print-none">
+                <strong>@page Rule Example:</strong><br>
+                <code>@page { size: A4 portrait; margin: 2cm; }</code><br>
+                <small>Sets paper size, orientation, and margins for printed pages.</small>
+            </div>
+        </section>
+
+        <footer class="mt-4 mb-5 pt-3 border-top">
+            <p class="text-muted text-center">
+                <small>
+                    Grid Print Layout - Bootstrap 5.3.3<br>
+                    Use Ctrl+P to preview print layout. Test with real printers for accurate results.
+                </small>
+            </p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

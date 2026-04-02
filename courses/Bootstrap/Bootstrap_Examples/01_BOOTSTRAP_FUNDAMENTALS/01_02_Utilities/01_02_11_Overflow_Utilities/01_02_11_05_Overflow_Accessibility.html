@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--
+        Overflow Accessibility - 01_02_11_05
+        =====================================
+        Accessibility considerations when using overflow utilities.
+        Covers WCAG guidelines, screen reader behavior, keyboard navigation,
+        and best practices for making overflow content accessible.
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overflow Accessibility - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .scroll-region { height: 200px; border: 2px solid #6c757d; }
+        .focus-demo { height: 150px; }
+    </style>
+</head>
+<body>
+    <div class="bg-dark text-white text-center py-5">
+        <div class="container">
+            <h1 class="display-4">Overflow Accessibility</h1>
+            <p class="lead">WCAG Compliance & Screen Reader Best Practices</p>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <!-- WCAG Guidelines -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h4 class="alert-heading">WCAG 2.1 Guidelines for Overflow</h4>
+                    <ul class="mb-0">
+                        <li><strong>1.4.10 Reflow:</strong> Content must reflow at 400% zoom without horizontal scrolling (except for data tables, code, etc.)</li>
+                        <li><strong>2.1.1 Keyboard:</strong> All scrollable content must be keyboard accessible</li>
+                        <li><strong>2.4.7 Focus Visible:</strong> Focus indicators must be visible within scrollable regions</li>
+                        <li><strong>1.4.12 Text Spacing:</strong> Content must remain readable with adjusted text spacing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keyboard Accessible Scroll -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h3>Keyboard Accessible Scrolling</h3>
+                <p>Scrollable regions must be focusable and navigable with keyboard (Tab, Arrow keys, Page Up/Down).</p>
+                <!-- 
+                    tabindex="0" makes the div focusable via keyboard.
+                    role="region" identifies this as a landmark.
+                    aria-label provides a description for screen readers.
+                -->
+                <div class="scroll-region overflow-auto p-3" 
+                     tabindex="0" 
+                     role="region" 
+                     aria-label="Scrollable content area - use arrow keys to navigate">
+                    <h5>Keyboard Navigable Content</h5>
+                    <p>Tab to this container, then use arrow keys to scroll.</p>
+                    <p>This content is accessible via keyboard navigation.</p>
+                    <p>Screen readers will announce the region label.</p>
+                    <p>Users can scroll with Up/Down arrow keys.</p>
+                    <p>Page Up and Page Down also work for faster scrolling.</p>
+                    <p>Home and End keys jump to top and bottom.</p>
+                    <p>Ensure all scrollable content follows these patterns.</p>
+                </div>
+                <div class="bg-light p-2 rounded mt-2">
+                    <code>tabindex="0" role="region" aria-label="..."</code>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <h3>Scrollable with Visible Focus</h3>
+                <p>Focus indicators must be clearly visible for keyboard users.</p>
+                <!-- 
+                    Custom focus styles ensure visibility for keyboard users.
+                    The :focus pseudo-class styles are critical for accessibility.
+                -->
+                <div class="scroll-region overflow-auto p-3 focus-demo" 
+                     tabindex="0" 
+                     role="region"
+                     aria-label="Content with enhanced focus indicators"
+                     style="outline: none;"
+                     onfocus="this.style.boxShadow='0 0 0 4px rgba(13,110,253,0.5)'"
+                     onblur="this.style.boxShadow='none'">
+                    <h5>Enhanced Focus Visibility</h5>
+                    <p>Click outside this box, then Tab back to it.</p>
+                    <p>A blue glow appears when focused - this is critical for accessibility.</p>
+                    <p>Without visible focus, keyboard users cannot navigate effectively.</p>
+                    <p>Always ensure focus states are clearly visible.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Content Warning -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="mb-3">overflow-hidden: Screen Reader Behavior</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-danger">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">Incorrect: Hidden Important Content</h5>
+                            </div>
+                            <!-- overflow-hidden with important content = bad accessibility -->
+                            <div class="card-body overflow-hidden" style="height: 100px;">
+                                <p>This is visible text.</p>
+                                <p>But this important information is clipped.</p>
+                                <p><strong>Screen readers may still read clipped text</strong>, creating confusion.</p>
+                                <p>Users hear content they cannot see.</p>
+                            </div>
+                            <div class="card-footer text-danger">
+                                <small>Clipped content confuses screen reader users!</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Correct: Use aria-hidden for Decorative</h5>
+                            </div>
+                            <!-- 
+                                aria-hidden="true" tells screen readers to ignore
+                                clipped decorative content entirely.
+                            -->
+                            <div class="card-body overflow-hidden" style="height: 100px;">
+                                <p>This is the main visible content.</p>
+                                <!-- Decorative overflow hidden from screen readers -->
+                                <div aria-hidden="true">
+                                    <p>This decorative gradient background is clipped.</p>
+                                    <p>aria-hidden prevents screen reader confusion.</p>
+                                </div>
+                            </div>
+                            <div class="card-footer text-success">
+                                <small>Decorative content properly hidden from assistive tech</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Region Labeling -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="mb-3">Proper ARIA Labeling for Scroll Regions</h3>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Using aria-label</div>
+                    <!-- Simple aria-label for scroll region identification -->
+                    <div class="card-body overflow-auto" 
+                         style="height: 150px;" 
+                         role="region" 
+                         aria-label="Terms and conditions - scroll to read">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Using aria-labelledby</div>
+                    <!-- 
+                        aria-labelledby references an element's ID for the label.
+                        Useful when the label text is already visible on the page.
+                    -->
+                    <h5 id="tableLabel" class="card-title px-3 pt-3 mb-0">Employee Directory</h5>
+                    <div class="card-body overflow-auto" 
+                         style="height: 150px;" 
+                         role="region" 
+                         aria-labelledby="tableLabel">
+                        <table class="table table-sm">
+                            <tr><td>Alice Johnson</td><td>Engineering</td></tr>
+                            <tr><td>Bob Smith</td><td>Marketing</td></tr>
+                            <tr><td>Carol White</td><td>Sales</td></tr>
+                            <tr><td>David Brown</td><td>HR</td></tr>
+                            <tr><td>Eve Davis</td><td>Finance</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Using aria-describedby</div>
+                    <!-- 
+                        aria-describedby provides additional context about the region.
+                        Screen readers announce this after the element's label.
+                    -->
+                    <div class="card-body overflow-auto" 
+                         style="height: 150px;" 
+                         role="region" 
+                         aria-label="Chat messages"
+                         aria-describedby="chatHelp">
+                        <p><strong>Alice:</strong> Hi there!</p>
+                        <p><strong>Bob:</strong> Hello! How are you?</p>
+                        <p><strong>Alice:</strong> Doing well, thanks!</p>
+                    </div>
+                    <!-- Hidden description for screen readers -->
+                    <div id="chatHelp" class="card-footer small text-muted">
+                        Use arrow keys to scroll through messages
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Focus Management -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="mb-3">Focus Management in Scrollable Modals</h3>
+                <!-- Button to trigger modal -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scrollModal">
+                    Open Scrollable Modal
+                </button>
+                <!-- 
+                    Modal with scrollable body. Bootstrap handles focus trapping
+                    automatically, ensuring keyboard users stay within the modal.
+                -->
+                <div class="modal fade" id="scrollModal" tabindex="-1" aria-labelledby="scrollModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="scrollModalLabel">Accessible Scrollable Modal</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <!-- 
+                                modal-body with overflow-y-auto for long content.
+                                Bootstrap's modal handles focus trapping automatically.
+                            -->
+                            <div class="modal-body overflow-y-auto" style="max-height: 300px;">
+                                <p>This modal body is scrollable. Keyboard navigation works correctly.</p>
+                                <p>Focus is trapped within the modal when open.</p>
+                                <p>Tab cycles through focusable elements in the modal.</p>
+                                <p>Escape key closes the modal.</p>
+                                <p>Long content scrolls within the modal boundary.</p>
+                                <p>Screen readers announce the modal title and role.</p>
+                                <p>Focus returns to the trigger button when closed.</p>
+                                <p>All of this is handled by Bootstrap's modal component.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Best Practices Summary -->
+        <div class="row">
+            <div class="col-12">
+                <h3 class="mb-3">Accessibility Best Practices Summary</h3>
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Practice</th>
+                            <th>Why</th>
+                            <th>Implementation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Add tabindex to scroll regions</td>
+                            <td>Enables keyboard focus</td>
+                            <td><code>tabindex="0"</code></td>
+                        </tr>
+                        <tr>
+                            <td>Label scroll regions</td>
+                            <td>Screen readers identify purpose</td>
+                            <td><code>role="region" aria-label="..."</code></td>
+                        </tr>
+                        <tr>
+                            <td>Visible focus indicators</td>
+                            <td>Keyboard users see current focus</td>
+                            <td>Custom <code>:focus</code> styles</td>
+                        </tr>
+                        <tr>
+                            <td>Use aria-hidden for decorative overflow</td>
+                            <td>Prevents screen reader confusion</td>
+                            <td><code>aria-hidden="true"</code></td>
+                        </tr>
+                        <tr>
+                            <td>Avoid overflow-hidden on important content</td>
+                            <td>Hidden content may be inaccessible</td>
+                            <td>Use overflow-auto instead</td>
+                        </tr>
+                        <tr>
+                            <td>Test with keyboard only</td>
+                            <td>Verify all content is reachable</td>
+                            <td>Tab through entire page</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3">
+        <p class="mb-0">Overflow Accessibility - Bootstrap 5</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

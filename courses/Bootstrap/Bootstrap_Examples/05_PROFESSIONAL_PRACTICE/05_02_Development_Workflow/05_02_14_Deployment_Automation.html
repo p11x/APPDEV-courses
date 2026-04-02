@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     05_02_14_Deployment_Automation.html
+     Topic: GitHub Actions, Netlify, Vercel Deployment
+     ============================================================
+     Automated deployment (CI/CD) builds, tests, and deploys
+     code on every push. This covers GitHub Actions, Netlify,
+     and Vercel deployment pipelines for Bootstrap projects.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Automation - Bootstrap Development Workflow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .config-block {
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.82rem;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.5;
+        }
+        .pipeline-step {
+            background: var(--bs-light);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Deployment</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="#github-actions">GitHub Actions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#netlify">Netlify</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#vercel">Vercel</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#pipeline">Full Pipeline</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Deployment Automation</h1>
+            <p class="lead">GitHub Actions, Netlify, and Vercel CI/CD pipelines for Bootstrap 5 projects.</p>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#" class="text-white-50">Workflow</a></li>
+                    <li class="breadcrumb-item active text-white">Deployment</li>
+                </ol>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- SECTION 1: GITHUB ACTIONS -->
+        <section id="github-actions" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">1. GitHub Actions</h2>
+            
+            <!-- Pipeline flow visualization -->
+            <div class="row g-3 mb-4">
+                <div class="col">
+                    <div class="pipeline-step">
+                        <strong>Checkout</strong><br>
+                        <small class="text-muted">Get code</small>
+                    </div>
+                </div>
+                <div class="col-auto d-flex align-items-center fs-4">&rarr;</div>
+                <div class="col">
+                    <div class="pipeline-step">
+                        <strong>Setup Node</strong><br>
+                        <small class="text-muted">Install runtime</small>
+                    </div>
+                </div>
+                <div class="col-auto d-flex align-items-center fs-4">&rarr;</div>
+                <div class="col">
+                    <div class="pipeline-step">
+                        <strong>npm ci</strong><br>
+                        <small class="text-muted">Install deps</small>
+                    </div>
+                </div>
+                <div class="col-auto d-flex align-items-center fs-4">&rarr;</div>
+                <div class="col">
+                    <div class="pipeline-step">
+                        <strong>Lint/Test</strong><br>
+                        <small class="text-muted">Quality check</small>
+                    </div>
+                </div>
+                <div class="col-auto d-flex align-items-center fs-4">&rarr;</div>
+                <div class="col">
+                    <div class="pipeline-step">
+                        <strong>Build</strong><br>
+                        <small class="text-muted">Compile assets</small>
+                    </div>
+                </div>
+                <div class="col-auto d-flex align-items-center fs-4">&rarr;</div>
+                <div class="col">
+                    <div class="pipeline-step">
+                        <strong>Deploy</strong><br>
+                        <small class="text-muted">Ship to CDN</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Basic Build & Deploy</h5>
+                    <div class="config-block">
+<span class="comment"># .github/workflows/deploy.yml</span>
+name: Build and Deploy
+
+<span class="comment"># Trigger on push to main branch</span>
+on:
+  push:
+    branches: [main]
+
+<span class="comment"># Only one deploy at a time</span>
+concurrency:
+  group: <span class="string">"pages"</span>
+  cancel-in-progress: <span class="keyword">false</span>
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      <span class="comment"># 1. Get the code</span>
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      <span class="comment"># 2. Set up Node.js</span>
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      
+      <span class="comment"># 3. Install dependencies (from lock file)</span>
+      - name: Install dependencies
+        run: npm ci
+      
+      <span class="comment"># 4. Run linting</span>
+      - name: Lint
+        run: npm run lint
+      
+      <span class="comment"># 5. Build for production</span>
+      - name: Build
+        run: npm run build
+      
+      <span class="comment"># 6. Deploy to GitHub Pages</span>
+      - name: Deploy to Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Environment Configuration</h5>
+                    <div class="config-block">
+<span class="comment"># .github/workflows/deploy-with-env.yml</span>
+name: Deploy with Environment
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    <span class="comment"># Environment secrets and variables</span>
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      
+      - run: npm ci
+      - run: npm run build
+        env:
+          <span class="comment"># Pass environment variables to build</span>
+          VITE_API_URL: ${{ vars.API_URL }}
+          VITE_APP_VERSION: ${{ github.sha }}
+      
+      - name: Deploy
+        id: deploy
+        run: |
+          echo <span class="string">"Deploying version ${{ github.sha }}"</span>
+          <span class="comment"># Deploy commands here</span></div>
+
+                    <h5 class="mt-4 mb-3">Caching for Speed</h5>
+                    <div class="config-block">
+<span class="comment"># Cache node_modules between runs</span>
+- uses: actions/setup-node@v4
+  with:
+    node-version: 20
+    cache: <span class="string">'npm'</span>  <span class="comment"># Automatically caches ~/.npm</span>
+
+<span class="comment"># Or manual cache</span>
+- uses: actions/cache@v4
+  with:
+    path: node_modules
+    key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+    restore-keys: |
+      ${{ runner.os }}-node-</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 2: NETLIFY -->
+        <section id="netlify" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">2. Netlify Deployment</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">netlify.toml Configuration</h5>
+                    <div class="config-block">
+<span class="comment"># netlify.toml</span>
+
+<span class="comment"># Build settings</span>
+[build]
+  base = <span class="string">"/"</span>
+  publish = <span class="string">"dist"</span>
+  command = <span class="string">"npm run build"</span>
+
+<span class="comment"># Production context</span>
+[build.environment]
+  NODE_VERSION = <span class="string">"20"</span>
+  NPM_VERSION = <span class="string">"10"</span>
+
+<span class="comment"># Deploy previews (PRs)</span>
+[context.deploy-preview]
+  command = <span class="string">"npm run build"</span>
+
+<span class="comment"># Branch deploys</span>
+[context.branch-deploy]
+  command = <span class="string">"npm run build"</span>
+
+<span class="comment"># Redirects for SPA routing</span>
+[[redirects]]
+  from = <span class="string">"/*"</span>
+  to = <span class="string">"/index.html"</span>
+  status = 200
+
+<span class="comment"># Headers for security and caching</span>
+[[headers]]
+  for = <span class="string">"/*"</span>
+  [headers.values]
+    X-Frame-Options = <span class="string">"DENY"</span>
+    X-Content-Type-Options = <span class="string">"nosniff"</span>
+    Referrer-Policy = <span class="string">"strict-origin-when-cross-origin"</span>
+
+[[headers]]
+  for = <span class="string">"/*.css"</span>
+  [headers.values]
+    Cache-Control = <span class="string">"public, max-age=31536000, immutable"</span>
+
+[[headers]]
+  for = <span class="string">"/*.js"</span>
+  [headers.values]
+    Cache-Control = <span class="string">"public, max-age=31536000, immutable"</span></div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Netlify CLI Deploy</h5>
+                    <div class="config-block">
+<span class="comment"># Install Netlify CLI</span>
+npm install -g netlify-cli
+
+<span class="comment"># Login</span>
+netlify login
+
+<span class="comment"># Initialize site</span>
+netlify init
+
+<span class="comment"># Deploy to preview</span>
+netlify deploy
+
+<span class="comment"># Deploy to production</span>
+netlify deploy --prod
+
+<span class="comment"># package.json scripts</span>
+{
+  <span class="string">"scripts"</span>: {
+    <span class="string">"deploy:preview"</span>: <span class="string">"npm run build && netlify deploy"</span>,
+    <span class="string">"deploy:prod"</span>: <span class="string">"npm run build && netlify deploy --prod"</span>
+  }
+}</div>
+                    
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">Netlify Features</h6>
+                        <ul class="mb-0 small">
+                            <li>Automatic deploys from Git push</li>
+                            <li>Deploy previews for PRs</li>
+                            <li>Split testing (A/B)</li>
+                            <li>Forms handling</li>
+                            <li>Edge functions</li>
+                            <li>Free SSL certificates</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 3: VERCEL -->
+        <section id="vercel" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">3. Vercel Deployment</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">vercel.json Configuration</h5>
+                    <div class="config-block">
+{
+  <span class="string">"buildCommand"</span>: <span class="string">"npm run build"</span>,
+  <span class="string">"outputDirectory"</span>: <span class="string">"dist"</span>,
+  <span class="string">"framework"</span>: <span class="string">"vite"</span>,
+  
+  <span class="comment">// Security headers</span>
+  <span class="string">"headers"</span>: [
+    {
+      <span class="string">"source"</span>: <span class="string">"/(.*)"</span>,
+      <span class="string">"headers"</span>: [
+        { <span class="string">"key"</span>: <span class="string">"X-Frame-Options"</span>, <span class="string">"value"</span>: <span class="string">"DENY"</span> },
+        { <span class="string">"key"</span>: <span class="string">"X-Content-Type-Options"</span>, <span class="string">"value"</span>: <span class="string">"nosniff"</span> }
+      ]
+    }
+  ],
+  
+  <span class="comment">// Redirects</span>
+  <span class="string">"redirects"</span>: [
+    { <span class="string">"source"</span>: <span class="string">"/old-page"</span>, <span class="string">"destination"</span>: <span class="string">"/new-page"</span>, <span class="string">"permanent"</span>: <span class="keyword">true</span> }
+  ],
+  
+  <span class="comment">// Rewrites for SPA</span>
+  <span class="string">"rewrites"</span>: [
+    { <span class="string">"source"</span>: <span class="string">"/((?!api/).*)"</span>, <span class="string">"destination"</span>: <span class="string">"/index.html"</span> }
+  ]
+}</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Vercel CLI</h5>
+                    <div class="config-block">
+<span class="comment"># Install Vercel CLI</span>
+npm install -g vercel
+
+<span class="comment"># Login</span>
+vercel login
+
+<span class="comment"># Deploy preview</span>
+vercel
+
+<span class="comment"># Deploy production</span>
+vercel --prod
+
+<span class="comment"># Pull environment variables</span>
+vercel env pull .env.local</div>
+                    
+                    <h5 class="mt-4 mb-3">GitHub Integration</h5>
+                    <div class="config-block">
+<span class="comment"># .github/workflows/vercel.yml</span>
+name: Vercel Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: <span class="string">'--prod'</span></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECTION 4: FULL PIPELINE -->
+        <section id="pipeline" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">4. Complete CI/CD Pipeline</h2>
+            
+            <div class="config-block">
+<span class="comment"># .github/workflows/ci-cd.yml</span>
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  <span class="comment"># Job 1: Lint and format check</span>
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+
+  <span class="comment"># Job 2: Run tests</span>
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      - run: npm ci
+      - run: npm run test:coverage
+
+  <span class="comment"># Job 3: Security audit</span>
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      - run: npm ci
+      - run: npm audit --audit-level=high
+
+  <span class="comment"># Job 4: Build</span>
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, test, security]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: <span class="string">'npm'</span>
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  <span class="comment"># Job 5: Deploy (only on main branch)</span>
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == <span class="string">'refs/heads/main'</span>
+    environment:
+      name: production
+      url: https://your-site.com
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Deploy
+        run: |
+          echo <span class="string">"Deploying to production..."</span>
+          <span class="comment"># Deploy commands (Netlify, Vercel, etc.)</span></div>
+
+            <div class="alert alert-success mt-4">
+                <h6 class="alert-heading">Deployment Best Practices</h6>
+                <ul class="mb-0">
+                    <li>Always use <code>npm ci</code> in CI (not <code>npm install</code>)</li>
+                    <li>Cache node_modules between pipeline runs</li>
+                    <li>Run lint/test/security before build</li>
+                    <li>Deploy only from main branch</li>
+                    <li>Use environment protection rules</li>
+                    <li>Set up deploy previews for PRs</li>
+                    <li>Use immutable deployment artifacts</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="text-muted mb-0">Bootstrap 5.3.3 Development Workflow - Module 05_02_14</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

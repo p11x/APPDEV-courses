@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================ -->
+    <!-- 02_06_04 - IMAGES PERFORMANCE OPTIMIZATION                    -->
+    <!-- Covers: Lazy loading, srcset, WebP, image sizing             -->
+    <!-- ============================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Images Performance Optimization - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .example-section { border-bottom: 2px solid #dee2e6; padding-bottom: 2rem; margin-bottom: 2rem; }
+        pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+        pre code { background: none; color: inherit; }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid bg-info text-white py-4 mb-5">
+        <div class="container">
+            <h1 class="display-4">Images: Performance Optimization</h1>
+            <p class="lead">Lazy loading, srcset, WebP format, responsive sizing, and CLS prevention</p>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: NATIVE LAZY LOADING                           -->
+        <!-- The loading="lazy" attribute defers off-screen image     -->
+        <!-- loading until the user scrolls near them.                -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">1. Native Lazy Loading</h2>
+            <p>The <code>loading="lazy"</code> attribute tells the browser to defer loading off-screen images.</p>
+
+            <pre><code>&lt;!-- Native lazy loading - simplest approach --&gt;
+&lt;img src="photo.jpg" loading="lazy" alt="Description"&gt;
+
+&lt;!-- Eager (default) for above-the-fold images --&gt;
+&lt;img src="hero.jpg" loading="eager" alt="Hero image"&gt;</code></pre>
+
+            <div class="alert alert-info">
+                <strong>Tip:</strong> Always use <code>loading="eager"</code> (or omit) for above-the-fold images like hero banners. Use <code>loading="lazy"</code> for images below the fold.
+            </div>
+
+            <h5>Demo: Scroll to trigger lazy loading</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <img src="https://picsum.photos/seed/lazyA/400/300" loading="lazy" class="img-fluid rounded" alt="Lazy loaded image A" width="400" height="300">
+                </div>
+                <div class="col-md-4">
+                    <img src="https://picsum.photos/seed/lazyB/400/300" loading="lazy" class="img-fluid rounded" alt="Lazy loaded image B" width="400" height="300">
+                </div>
+                <div class="col-md-4">
+                    <img src="https://picsum.photos/seed/lazyC/400/300" loading="lazy" class="img-fluid rounded" alt="Lazy loaded image C" width="400" height="300">
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: SRCSET AND SIZES                               -->
+        <!-- srcset provides multiple image resolutions. The browser   -->
+        <!-- picks the best one based on viewport and DPR.             -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">2. Responsive Images with srcset</h2>
+            <p>Provide multiple image sizes so the browser loads only what it needs.</p>
+
+            <pre><code>&lt;!-- srcset with width descriptors --&gt;
+&lt;img src="photo-400.jpg"
+     srcset="photo-400.jpg 400w,
+             photo-800.jpg 800w,
+             photo-1200.jpg 1200w"
+     sizes="(max-width: 576px) 100vw,
+            (max-width: 992px) 50vw,
+            33vw"
+     alt="Responsive image"&gt;
+
+&lt;!-- srcset with pixel density descriptors --&gt;
+&lt;img src="photo-1x.jpg"
+     srcset="photo-1x.jpg 1x,
+             photo-2x.jpg 2x,
+             photo-3x.jpg 3x"
+     alt="Retina-ready image"&gt;</code></pre>
+
+            <h5>Art Direction with &lt;picture&gt;</h5>
+            <pre><code>&lt;!-- Different image for different viewports --&gt;
+&lt;picture&gt;
+  &lt;source media="(min-width: 992px)" srcset="wide-desktop.jpg"&gt;
+  &lt;source media="(min-width: 576px)" srcset="tablet.jpg"&gt;
+  &lt;img src="mobile.jpg" alt="Art-directed responsive image"&gt;
+&lt;/picture&gt;</code></pre>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: WEBP FORMAT                                    -->
+        <!-- WebP offers 25-35% smaller file sizes than JPEG at        -->
+        <!-- equivalent quality. Use <picture> for fallback.           -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">3. Modern Image Formats (WebP, AVIF)</h2>
+            <p>Use <code>&lt;picture&gt;</code> to serve modern formats with fallbacks.</p>
+
+            <pre><code>&lt;!-- WebP with JPEG fallback --&gt;
+&lt;picture&gt;
+  &lt;source srcset="photo.avif" type="image/avif"&gt;
+  &lt;source srcset="photo.webp" type="image/webp"&gt;
+  &lt;img src="photo.jpg" alt="Image with format fallback"&gt;
+&lt;/picture&gt;
+
+&lt;!-- File size comparison (typical): --&gt;
+&lt;!-- JPEG:  200 KB --&gt;
+&lt;!-- WebP:  140 KB (30% smaller) --&gt;
+&lt;!-- AVIF:  100 KB (50% smaller) --&gt;</code></pre>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <picture>
+                                <source srcset="https://picsum.photos/seed/webp1/400/300" type="image/webp">
+                                <img src="https://picsum.photos/seed/webp1/400/300" class="img-fluid rounded" alt="WebP format demo" loading="lazy">
+                            </picture>
+                            <p class="mt-2 mb-0 small">With WebP source (browser picks best)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <picture>
+                                <source media="(min-width: 768px)" srcset="https://picsum.photos/seed/art1/400/300">
+                                <source media="(min-width: 576px)" srcset="https://picsum.photos/seed/art2/300/200">
+                                <img src="https://picsum.photos/seed/art3/200/150" class="img-fluid rounded" alt="Art direction demo" loading="lazy">
+                            </picture>
+                            <p class="mt-2 mb-0 small">Art direction with different crops per viewport</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: CLS PREVENTION                                 -->
+        <!-- Cumulative Layout Shift (CLS) occurs when images load     -->
+        <!-- without reserved space. Always set width and height.      -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">4. Preventing Layout Shift (CLS)</h2>
+            <p>Always set explicit <code>width</code> and <code>height</code> attributes on images.</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">Bad - Causes Layout Shift</div>
+                        <div class="card-body">
+                            <pre class="mb-0"><code>&lt;!-- No dimensions = layout shift --&gt;
+&lt;img src="photo.jpg" alt="..."&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">Good - No Layout Shift</div>
+                        <div class="card-body">
+                            <pre class="mb-0"><code>&lt;!-- Browser reserves space immediately --&gt;
+&lt;img src="photo.jpg"
+     width="800" height="600"
+     style="max-width:100%; height:auto;"
+     alt="..."&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <strong>Bootstrap handles this:</strong> <code>.img-fluid</code> applies <code>max-width:100%</code> and <code>height:auto</code>, which respects the aspect ratio from your width/height attributes.
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 5: IMAGE OPTIMIZATION CHECKLIST                   -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">5. Image Optimization Checklist</h2>
+            <div class="card">
+                <div class="card-body">
+                    <h5>Format</h5>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Use WebP or AVIF with fallback</label></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">SVG for icons and illustrations</label></div>
+
+                    <h5 class="mt-3">Sizing</h5>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Set explicit width and height attributes</label></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Use srcset for responsive sizes</label></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Don't load images larger than displayed</label></div>
+
+                    <h5 class="mt-3">Loading</h5>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Lazy load below-the-fold images</label></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Eager load above-the-fold images</label></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Use fetchpriority="high" for hero images</label></div>
+
+                    <h5 class="mt-3">Compression</h5>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Compress images (80-85% quality for photos)</label></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Remove EXIF metadata</label></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 6: PRIORITY HINTS                                 -->
+        <!-- fetchpriority="high" tells the browser to prioritize      -->
+        <!-- loading of critical images.                               -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">6. Fetch Priority Hints</h2>
+            <p>Use <code>fetchpriority="high"</code> for critical above-the-fold images.</p>
+
+            <pre><code>&lt;!-- High priority for hero/LCP image --&gt;
+&lt;img src="hero.jpg"
+     fetchpriority="high"
+     alt="Hero banner image"&gt;
+
+&lt;!-- Low priority for non-critical images --&gt;
+&lt;img src="sidebar-ad.jpg"
+     fetchpriority="low"
+     loading="lazy"
+     alt="Advertisement"&gt;</code></pre>
+        </section>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

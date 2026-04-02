@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_03_11_CSS_Scroll_Driven_Animations.html                      -->
+<!-- Scroll-driven animations: animation-timeline                   -->
+<!-- Bootstrap 5.3.3 + CSS Scroll-Driven Animations                 -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06_03_11 - CSS Scroll-Driven Animations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* SCROLL-DRIVEN ANIMATIONS FUNDAMENTALS                         */
+        /* animation-timeline links an animation to scroll position:    */
+        /*   - scroll(): tracks the nearest scrollable ancestor         */
+        /*   - view(): tracks an element's visibility in the viewport   */
+        /* animation-range controls which scroll % triggers the anim.   */
+        /*                                                               */
+        /* This enables pure-CSS scroll effects without JavaScript.     */
+        /* ============================================================= */
+
+        /* ============================================================= */
+        /* SCROLL()-BASED ANIMATION                                      */
+        /* Tracks the scroll position of the nearest scroll container.  */
+        /* The animation progresses as the user scrolls.                */
+        /* ============================================================= */
+
+        /* Progress bar that fills as user scrolls */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(108, 92, 231, 0.2);
+            z-index: 9999;
+        }
+
+        .scroll-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform-origin: left;
+            /* Animation keyframes */
+            animation: progress-fill linear both;
+            /* Link animation to root scroll */
+            animation-timeline: scroll();
+        }
+
+        @keyframes progress-fill {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+        }
+
+        /* ============================================================= */
+        /* VIEW()-BASED ANIMATION                                        */
+        /* Tracks an element's position within the scrollport.          */
+        /* animation-range: entry/cover/contain/exit control phases.    */
+        /* ============================================================= */
+
+        /* Fade in as element enters viewport */
+        .view-fade-in {
+            /* Animation definition */
+            animation: fade-in-up linear both;
+            /* Link to element's viewport visibility */
+            animation-timeline: view();
+            /* Start animation when element enters, end when 50% covered */
+            animation-range: entry 0% entry 50%;
+        }
+
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scale up as element scrolls into view */
+        .view-scale {
+            animation: scale-up linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 40%;
+        }
+
+        @keyframes scale-up {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Rotate as element passes through viewport */
+        .view-rotate {
+            animation: rotate-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 50%;
+        }
+
+        @keyframes rotate-in {
+            from {
+                opacity: 0;
+                transform: rotate(-180deg) scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: rotate(0deg) scale(1);
+            }
+        }
+
+        /* Slide from left */
+        .view-slide-left {
+            animation: slide-from-left linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 30%;
+        }
+
+        @keyframes slide-from-left {
+            from {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Slide from right */
+        .view-slide-right {
+            animation: slide-from-right linear both;
+            animation-timeline: view();
+            animation-range: entry 0% cover 30%;
+        }
+
+        @keyframes slide-from-right {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ============================================================= */
+        /* PARALLAX EFFECT                                               */
+        /* Elements move at different rates based on scroll position.   */
+        /* ============================================================= */
+
+        .parallax-bg {
+            animation: parallax-move linear both;
+            animation-timeline: scroll();
+            animation-range: 0vh 100vh;
+        }
+
+        @keyframes parallax-move {
+            from { transform: translateY(0); }
+            to { transform: translateY(-100px); }
+        }
+
+        .parallax-fg {
+            animation: parallax-move-reverse linear both;
+            animation-timeline: scroll();
+            animation-range: 0vh 100vh;
+        }
+
+        @keyframes parallax-move-reverse {
+            from { transform: translateY(0); }
+            to { transform: translateY(50px); }
+        }
+
+        /* ============================================================= */
+        /* STICKY INDICATOR                                              */
+        /* An element that changes appearance when its section is in    */
+        /* view based on animation-range.                               */
+        /* ============================================================= */
+
+        .scroll-indicator {
+            animation: indicator-activate linear both;
+            animation-timeline: view();
+            animation-range: entry 50% exit 50%;
+        }
+
+        @keyframes indicator-activate {
+            0% { background: #e9ecef; color: #6c6c6c; }
+            50% { background: #6c5ce7; color: white; }
+            100% { background: #e9ecef; color: #6c6c6c; }
+        }
+
+        /* ============================================================= */
+        /* VISUAL STYLES                                                 */
+        /* ============================================================= */
+
+        .scroll-section {
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            border-radius: 16px;
+            margin-block-end: 40px;
+        }
+
+        .demo-card {
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dee2e6;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Scroll progress bar (fixed at top) -->
+    <div class="scroll-progress">
+        <div class="scroll-progress-bar"></div>
+    </div>
+
+    <div class="container py-5">
+
+        <!-- Page header -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">CSS Scroll-Driven Animations</h1>
+                <p class="lead text-muted">animation-timeline: scroll() and view()</p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: SCROLL PROGRESS BAR                                -->
+        <!-- A fixed progress bar that fills as the user scrolls. Uses   -->
+        <!-- animation-timeline: scroll() with scaleX transform.         -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">1. Scroll Progress Bar</h2>
+            <p class="text-muted mb-3">
+                <code>animation-timeline: scroll()</code> links a scaleX animation to page scroll.
+                Look at the top of the page for the progress indicator.
+            </p>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: VIEW-TRIGGERED FADE-IN                              -->
+        <!-- Elements animate when they enter the viewport using view().  -->
+        <!-- animation-range: entry determines the trigger zone.          -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">2. View-Triggered Animations</h2>
+            <p class="text-muted mb-3">
+                Scroll down to see elements animate as they enter the viewport.
+            </p>
+
+            <div class="row">
+                <!-- Fade in from bottom -->
+                <div class="col-md-4 mb-4">
+                    <div class="demo-card view-fade-in" style="background:linear-gradient(135deg,#667eea,#764ba2); color:white;">
+                        <h4>Fade In Up</h4>
+                        <p class="mb-0 opacity-75">entry 0% to entry 50%</p>
+                    </div>
+                </div>
+
+                <!-- Scale up -->
+                <div class="col-md-4 mb-4">
+                    <div class="demo-card view-scale" style="background:linear-gradient(135deg,#00b894,#00cec9); color:white;">
+                        <h4>Scale Up</h4>
+                        <p class="mb-0 opacity-75">entry 0% to cover 40%</p>
+                    </div>
+                </div>
+
+                <!-- Rotate in -->
+                <div class="col-md-4 mb-4">
+                    <div class="demo-card view-rotate" style="background:linear-gradient(135deg,#e17055,#d63031); color:white;">
+                        <h4>Rotate In</h4>
+                        <p class="mb-0 opacity-75">entry 0% to cover 50%</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: SLIDE ANIMATIONS                                   -->
+        <!-- Elements slide in from left or right as they enter view.     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">3. Slide Animations</h2>
+
+            <!-- Slide from left -->
+            <div class="demo-card view-slide-left mb-4" style="background:linear-gradient(135deg,#fdcb6e,#f39c12); color:white; max-width:500px;">
+                <h4>Slides from Left</h4>
+                <p class="mb-0 opacity-75">animation-range: entry 0% cover 30%</p>
+            </div>
+
+            <!-- Slide from right -->
+            <div class="demo-card view-slide-right ms-auto mb-4" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7); color:white; max-width:500px;">
+                <h4>Slides from Right</h4>
+                <p class="mb-0 opacity-75">animation-range: entry 0% cover 30%</p>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: ANIMATION-RANGE PHASES                             -->
+        <!-- Explains entry, cover, contain, and exit phases.             -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">4. Animation Range Reference</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Phase</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>entry</code></td>
+                            <td>Element starts entering</td>
+                            <td>Element fully entered</td>
+                            <td>Animate during entrance</td>
+                        </tr>
+                        <tr>
+                            <td><code>cover</code></td>
+                            <td>Element starts entering</td>
+                            <td>Element starts leaving</td>
+                            <td>Animate while visible</td>
+                        </tr>
+                        <tr>
+                            <td><code>contain</code></td>
+                            <td>Element fully visible</td>
+                            <td>Element starts to leave</td>
+                            <td>Animate while fully in view</td>
+                        </tr>
+                        <tr>
+                            <td><code>exit</code></td>
+                            <td>Element starts leaving</td>
+                            <td>Element fully left</td>
+                            <td>Animate during exit</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: PARALLAX SCROLLING                                 -->
+        <!-- Different layers move at different speeds based on scroll.   -->
+        <!-- Pure CSS parallax using animation-timeline: scroll().        -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">5. CSS Parallax</h2>
+            <p class="text-muted mb-3">
+                Layers move at different speeds using <code>animation-timeline: scroll()</code>.
+            </p>
+
+            <div style="position:relative; height:300px; overflow:hidden; border-radius:16px; background:linear-gradient(135deg,#dfe6e9,#b2bec3);">
+                <!-- Background layer (moves slower) -->
+                <div class="parallax-bg" style="position:absolute; top:20px; left:50px; width:100px; height:100px; background:#6c5ce7; border-radius:50%; opacity:0.3;"></div>
+                <div class="parallax-bg" style="position:absolute; top:80px; right:80px; width:60px; height:60px; background:#fd79a8; border-radius:50%; opacity:0.3;"></div>
+
+                <!-- Foreground layer (moves faster) -->
+                <div class="parallax-fg" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:1;">
+                    <div style="background:white; padding:32px; border-radius:16px; box-shadow:0 8px 30px rgba(0,0,0,0.15); text-align:center;">
+                        <h3>Parallax Content</h3>
+                        <p class="text-muted mb-0">Foreground moves opposite to background</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Spacer for scroll testing -->
+        <div style="height: 200px;"></div>
+
+    </div><!-- /.container -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

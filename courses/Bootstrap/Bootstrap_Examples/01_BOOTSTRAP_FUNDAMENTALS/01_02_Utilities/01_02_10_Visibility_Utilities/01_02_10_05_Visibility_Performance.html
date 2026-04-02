@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 01_02_10_05_Visibility_Performance.html                        -->
+<!-- Bootstrap 5 Visibility Utilities - Performance                 -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <!-- Required meta tags for responsive design -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 Visibility - Performance</title>
+    <!-- Bootstrap 5 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-5">
+
+        <h1 class="mb-4">Visibility Utilities - Performance</h1>
+        <p class="lead">Understanding the performance implications of different visibility approaches.</p>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: display:none vs visibility:hidden Performance     -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">1. display:none vs visibility:hidden Performance</h2>
+
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Property</th>
+                        <th>Class</th>
+                        <th>Layout</th>
+                        <th>Paint</th>
+                        <th>Reflow Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>display: none</code></td>
+                        <td><code>.d-none</code></td>
+                        <td>Removed from flow</td>
+                        <td>Not painted</td>
+                        <td class="table-warning">Higher (triggers reflow)</td>
+                    </tr>
+                    <tr>
+                        <td><code>visibility: hidden</code></td>
+                        <td><code>.invisible</code></td>
+                        <td>Preserves space</td>
+                        <td>Not painted</td>
+                        <td class="table-success">Lower (no reflow)</td>
+                    </tr>
+                    <tr>
+                        <td><code>opacity: 0</code></td>
+                        <td>(custom)</td>
+                        <td>Preserves space</td>
+                        <td>Painted (transparent)</td>
+                        <td class="table-success">GPU accelerated</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>Key insight:</strong> Toggling <code>.d-none</code> triggers a reflow (layout recalculation) because it changes the document flow. Toggling <code>.invisible</code> only affects painting, which is cheaper.
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: Reflow Demonstration                              -->
+        <!-- Visual demo of reflow when using d-none                     -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">2. Reflow Demonstration</h2>
+        <p>Watch how surrounding elements shift when toggling <code>.d-none</code> vs <code>.invisible</code>.</p>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <h4>Toggling .d-none (reflow)</h4>
+                <div id="dnoneContainer">
+                    <div class="bg-primary text-white p-2 rounded mb-2 text-center">Box 1</div>
+                    <div class="bg-danger text-white p-2 rounded mb-2 text-center" id="dnoneBox">Box 2 (toggle me)</div>
+                    <div class="bg-primary text-white p-2 rounded mb-2 text-center">Box 3</div>
+                    <div class="bg-primary text-white p-2 rounded text-center">Box 4</div>
+                </div>
+                <button class="btn btn-sm btn-outline-primary mt-2" id="toggleDnone">Toggle .d-none</button>
+            </div>
+            <div class="col-md-6">
+                <h4>Toggling .invisible (no reflow)</h4>
+                <div>
+                    <div class="bg-success text-white p-2 rounded mb-2 text-center">Box 1</div>
+                    <div class="bg-warning text-dark p-2 rounded mb-2 text-center" id="invisibleBox">Box 2 (toggle me)</div>
+                    <div class="bg-success text-white p-2 rounded mb-2 text-center">Box 3</div>
+                    <div class="bg-success text-white p-2 rounded text-center">Box 4</div>
+                </div>
+                <button class="btn btn-sm btn-outline-success mt-2" id="toggleInvisible">Toggle .invisible</button>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: CSS Containment for Visibility                    -->
+        <!-- Using containment to limit reflow scope                      -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">3. CSS Containment</h2>
+        <p>Use <code>contain</code> CSS property to limit the scope of reflows caused by visibility changes.</p>
+
+        <pre class="bg-dark text-success p-3 rounded"><code>/* Contain layout and paint operations */
+.togglable-section {
+    contain: layout style paint;
+}
+
+/* Now toggling display:none inside this container */
+/* Only triggers reflow within the container, not the whole page */</code></pre>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: Lazy Loading with Visibility                      -->
+        <!-- Defer rendering of hidden content                            -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">4. Lazy Loading Hidden Content</h2>
+        <p>Don't render complex hidden content until it becomes visible.</p>
+
+        <button class="btn btn-primary mb-3" data-bs-toggle="collapse" data-bs-target="#lazyContent">
+            Show Heavy Content
+        </button>
+
+        <div class="collapse" id="lazyContent">
+            <!-- Content loaded only when shown -->
+            <div class="card">
+                <div class="card-body" id="lazyBody">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: Batch DOM Updates                                 -->
+        <!-- Minimize reflows when toggling multiple elements             -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">5. Batch Visibility Changes</h2>
+        <p>When toggling multiple elements, batch the changes to minimize reflows.</p>
+
+        <div class="row g-3 mb-3" id="batchDemo">
+            <div class="col-4"><div class="bg-primary text-white p-3 rounded text-center item">Item 1</div></div>
+            <div class="col-4"><div class="bg-primary text-white p-3 rounded text-center item">Item 2</div></div>
+            <div class="col-4"><div class="bg-primary text-white p-3 rounded text-center item">Item 3</div></div>
+            <div class="col-4"><div class="bg-primary text-white p-3 rounded text-center item">Item 4</div></div>
+            <div class="col-4"><div class="bg-primary text-white p-3 rounded text-center item">Item 5</div></div>
+            <div class="col-4"><div class="bg-primary text-white p-3 rounded text-center item">Item 6</div></div>
+        </div>
+
+        <button class="btn btn-outline-primary me-2" id="batchToggle">Toggle All (Batched)</button>
+        <button class="btn btn-outline-secondary" id="batchReset">Reset</button>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: Performance Comparison Table                      -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">6. Performance Comparison</h2>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Approach</th>
+                        <th>Trigger Reflow</th>
+                        <th>Trigger Repaint</th>
+                        <th>Rendered</th>
+                        <th>Best For</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>.d-none</code></td>
+                        <td class="table-danger">Yes</td>
+                        <td class="table-danger">Yes</td>
+                        <td>No</td>
+                        <td>Completely removing content</td>
+                    </tr>
+                    <tr>
+                        <td><code>.invisible</code></td>
+                        <td class="table-success">No</td>
+                        <td class="table-warning">Yes</td>
+                        <td>Space reserved</td>
+                        <td>Preventing layout shift</td>
+                    </tr>
+                    <tr>
+                        <td><code>opacity: 0</code></td>
+                        <td class="table-success">No</td>
+                        <td class="table-success">GPU</td>
+                        <td>Yes (transparent)</td>
+                        <td>Fade animations</td>
+                    </tr>
+                    <tr>
+                        <td><code>clip-path</code></td>
+                        <td class="table-success">No</td>
+                        <td class="table-warning">Minimal</td>
+                        <td>Clipped</td>
+                        <td>Complex reveal animations</td>
+                    </tr>
+                    <tr>
+                        <td><code>content-visibility</code></td>
+                        <td class="table-success">Deferred</td>
+                        <td class="table-success">Deferred</td>
+                        <td>Deferred</td>
+                        <td>Off-screen content</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 7: Best Practices Summary                            -->
+        <!-- ============================================================ -->
+        <h2 class="mt-5">7. Performance Best Practices</h2>
+
+        <div class="accordion" id="perfAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#bp1">
+                        Use .invisible for frequent toggles
+                    </button>
+                </h2>
+                <div id="bp1" class="accordion-collapse collapse show" data-bs-parent="#perfAccordion">
+                    <div class="accordion-body">
+                        When an element is toggled frequently (e.g., tooltips, hover states), use <code>.invisible</code> instead of <code>.d-none</code> to avoid layout thrashing.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bp2">
+                        Batch DOM updates
+                    </button>
+                </h2>
+                <div id="bp2" class="accordion-collapse collapse" data-bs-parent="#perfAccordion">
+                    <div class="accordion-body">
+                        When toggling multiple elements, apply all class changes in a single JavaScript frame. Use <code>requestAnimationFrame</code> if needed.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bp3">
+                        Use CSS containment
+                    </button>
+                </h2>
+                <div id="bp3" class="accordion-collapse collapse" data-bs-parent="#perfAccordion">
+                    <div class="accordion-body">
+                        Apply <code>contain: layout</code> to containers whose children's visibility changes frequently. This limits reflow scope.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bp4">
+                        Avoid visibility toggles during scroll
+                    </button>
+                </h2>
+                <div id="bp4" class="accordion-collapse collapse" data-bs-parent="#perfAccordion">
+                    <div class="accordion-body">
+                        Don't toggle <code>.d-none</code> on scroll events. Use <code>IntersectionObserver</code> instead for lazy loading and scroll-based visibility.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle from CDN (includes Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle d-none demo
+        document.getElementById('toggleDnone').addEventListener('click', function() {
+            document.getElementById('dnoneBox').classList.toggle('d-none');
+        });
+
+        // Toggle invisible demo
+        document.getElementById('toggleInvisible').addEventListener('click', function() {
+            document.getElementById('invisibleBox').classList.toggle('invisible');
+        });
+
+        // Lazy content loading
+        document.querySelector('[data-bs-target="#lazyContent"]').addEventListener('click', function() {
+            setTimeout(function() {
+                document.getElementById('lazyBody').innerHTML = `
+                    <h5>Heavy Content Loaded</h5>
+                    <p>This content was loaded only when the section was expanded, avoiding unnecessary rendering for hidden content.</p>
+                    <p>Images, charts, and other heavy resources should follow this pattern.</p>
+                `;
+            }, 1000);
+        });
+
+        // Batch toggle demo
+        document.getElementById('batchToggle').addEventListener('click', function() {
+            // Batch: all changes in one frame
+            const items = document.querySelectorAll('#batchDemo .item');
+            items.forEach(function(item) {
+                item.classList.toggle('d-none');
+            });
+        });
+
+        document.getElementById('batchReset').addEventListener('click', function() {
+            const items = document.querySelectorAll('#batchDemo .item');
+            items.forEach(function(item) {
+                item.classList.remove('d-none');
+            });
+        });
+    </script>
+</body>
+</html>

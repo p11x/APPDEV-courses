@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     05_02_01_SCSS_Compilation.html
+     Topic: SCSS Compilation Pipeline, Sass Variables, Mixins,
+            Partials with Practical Demos
+     ============================================================
+     SCSS (Sassy CSS) extends CSS with variables, nesting,
+     mixins, functions, and partials. Bootstrap itself is
+     written in SCSS, and understanding the compilation
+     pipeline is essential for customizing Bootstrap at scale.
+     
+     COMPILATION PIPELINE OVERVIEW:
+     1. Source .scss files (partials, variables, mixins)
+     2. Sass compiler processes imports, nesting, functions
+     3. Output: plain .css file
+     4. PostCSS (optional): autoprefixer, minification
+     5. Browser-ready CSS
+     
+     TOOLS FOR SCSS COMPILATION:
+     - sass (official Dart Sass compiler)
+     - node-sass (deprecated, legacy)
+     - Webpack with sass-loader
+     - Vite with built-in Sass support
+     - Parcel with automatic Sass detection
+     ============================================================ -->
+<html lang="en">
+<head>
+    <!-- Standard HTML5 meta charset for encoding -->
+    <meta charset="UTF-8">
+    
+    <!-- Viewport meta tag ensures proper responsive behavior -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Page title describing the topic -->
+    <title>SCSS Compilation Pipeline - Bootstrap Development Workflow</title>
+    
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <!-- In a real project, you would compile Bootstrap's SCSS source -->
+    <!-- with your custom overrides instead of using the CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- ============================================================
+         SCSS ARCHITECTURE EXPLAINED
+         ============================================================
+         A typical Bootstrap SCSS project structure:
+         
+         scss/
+         ├── abstracts/
+         │   ├── _variables.scss    # Custom variable overrides
+         │   ├── _mixins.scss       # Custom mixins
+         │   └── _functions.scss    # Custom Sass functions
+         ├── base/
+         │   ├── _reset.scss        # CSS reset/normalize
+         │   └── _typography.scss   # Base typography styles
+         ├── components/
+         │   ├── _buttons.scss      # Button component styles
+         │   ├── _cards.scss        # Card component styles
+         │   └── _navbar.scss       # Navbar component styles
+         ├── layout/
+         │   ├── _header.scss       # Header layout
+         │   ├── _footer.scss       # Footer layout
+         │   └── _grid.scss         # Grid customizations
+         ├── vendor/
+         │   └── _bootstrap.scss    # Bootstrap import
+         └── main.scss              # Main entry point
+         
+         PARTIALS (files starting with _):
+         - Underscore prefix tells Sass these are partials
+         - They should NOT be compiled directly
+         - They are imported into main.scss
+         - Keeps codebase modular and organized
+         ============================================================ -->
+    
+    <style>
+        /* ============================================================
+           DEMO STYLES - Simulating compiled SCSS output
+           ============================================================
+           In a real workflow, these styles would be generated
+           from .scss source files by the Sass compiler.
+           ============================================================ */
+        
+        /* SCSS Variable Simulation - In real SCSS: $primary-dark: darken($primary, 15%); */
+        :root {
+            /* These custom properties simulate Sass variables */
+            --custom-primary-dark: #0a58ca;
+            --custom-spacing-unit: 1rem;
+            --custom-border-radius-lg: 1rem;
+            --custom-shadow-lg: 0 1rem 3rem rgba(0,0,0,.175);
+        }
+        
+        /* Simulating a mixin output - box-shadow with hover transition */
+        .mixin-demo-card {
+            box-shadow: var(--custom-shadow-lg);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: var(--custom-border-radius-lg);
+        }
+        .mixin-demo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 2rem 4rem rgba(0,0,0,.2);
+        }
+        
+        /* Nested rule simulation - In SCSS this would use & parent selector */
+        .scss-demo-block {
+            padding: 1.5rem;
+            border-left: 4px solid var(--bs-primary);
+            background-color: var(--bs-light);
+        }
+        .scss-demo-block__title {
+            font-weight: 700;
+            color: var(--custom-primary-dark);
+        }
+        .scss-demo-block__content {
+            font-size: 0.9rem;
+            color: var(--bs-secondary);
+        }
+        
+        /* Code display styling */
+        .code-block {
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.6;
+        }
+        
+        /* Sass syntax highlighting colors */
+        .code-block .comment { color: #6c7086; }
+        .code-block .keyword { color: #cba6f7; }
+        .code-block .variable { color: #f38ba8; }
+        .code-block .string { color: #a6e3a1; }
+        .code-block .function { color: #89b4fa; }
+        .code-block .selector { color: #f9e2af; }
+        
+        /* Pipeline step visualization */
+        .pipeline-step {
+            position: relative;
+            padding-left: 3rem;
+        }
+        .pipeline-step::before {
+            content: attr(data-step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2rem;
+            height: 2rem;
+            background-color: var(--bs-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+        .pipeline-step::after {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: 2rem;
+            width: 2px;
+            height: calc(100% + 1rem);
+            background-color: var(--bs-primary);
+            opacity: 0.3;
+        }
+        .pipeline-step:last-child::after {
+            display: none;
+        }
+        
+        /* Partial import visualization */
+        .partial-file {
+            border: 2px dashed var(--bs-info);
+            background-color: rgba(13, 202, 240, 0.05);
+        }
+        .main-file {
+            border: 2px solid var(--bs-success);
+            background-color: rgba(25, 135, 84, 0.05);
+        }
+        
+        /* Variable override demo */
+        .variable-override-demo {
+            --demo-primary: #6f42c1;
+            --demo-secondary: #fd7e14;
+        }
+        .variable-override-demo .btn-custom-primary {
+            background-color: var(--demo-primary);
+            border-color: var(--demo-primary);
+            color: white;
+        }
+        .variable-override-demo .btn-custom-secondary {
+            background-color: var(--demo-secondary);
+            border-color: var(--demo-secondary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================
+         NAVIGATION BAR
+         Bootstrap 5 responsive navbar with brand and nav links
+         ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <!-- Brand/logo text -->
+            <a class="navbar-brand" href="#">SCSS Compilation</a>
+            
+            <!-- Hamburger toggle for mobile collapse -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                    data-bs-target="#navbarNav" aria-controls="navbarNav" 
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Collapsible nav content -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#pipeline">Pipeline</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#variables">Variables</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#mixins">Mixins</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#partials">Partials</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#demo">Demo</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+         HERO SECTION
+         ============================================================ -->
+    <header class="bg-primary text-white py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <!-- Main heading -->
+                    <h1 class="display-4 fw-bold">SCSS Compilation Pipeline</h1>
+                    <!-- Subheading with description -->
+                    <p class="lead mb-4">
+                        Master Sass variables, mixins, partials, and the compilation workflow
+                        that powers Bootstrap customization and scalable CSS architecture.
+                    </p>
+                    <!-- Breadcrumb navigation -->
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="#" class="text-white-50">Workflow</a></li>
+                            <li class="breadcrumb-item active text-white" aria-current="page">SCSS Compilation</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <!-- Badge showing topic category -->
+                    <span class="badge bg-light text-dark fs-6 px-3 py-2">Module 05_02</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         MAIN CONTENT
+         ============================================================ -->
+    <main class="container my-5">
+        
+        <!-- ============================================================
+             SECTION 1: COMPILATION PIPELINE
+             ============================================================
+             The SCSS compilation pipeline transforms .scss source
+             files into browser-compatible CSS through several stages.
+             ============================================================ -->
+        <section id="pipeline" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">1. Compilation Pipeline</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <!-- Pipeline steps explanation -->
+                    <div class="mb-4">
+                        <div class="pipeline-step mb-4 pb-3">
+                            <h5>Source SCSS Files</h5>
+                            <p class="text-muted mb-0">
+                                Write modular .scss files with variables, nesting, mixins.
+                                Use partials (_filename.scss) for reusable modules.
+                            </p>
+                        </div>
+                        <div class="pipeline-step mb-4 pb-3">
+                            <h5>Sass Compiler</h5>
+                            <p class="text-muted mb-0">
+                                Dart Sass processes imports, resolves variables, expands
+                                mixins, flattens nesting, and evaluates functions.
+                            </p>
+                        </div>
+                        <div class="pipeline-step mb-4 pb-3">
+                            <h5>PostCSS Processing</h5>
+                            <p class="text-muted mb-0">
+                                Autoprefixer adds vendor prefixes, cssnano minifies output,
+                                additional transforms can be applied.
+                            </p>
+                        </div>
+                        <div class="pipeline-step mb-4 pb-3">
+                            <h5>CSS Output</h5>
+                            <p class="text-muted mb-0">
+                                Final .css file ready for browsers. Source maps link
+                                back to original .scss for debugging.
+                            </p>
+                        </div>
+                        <div class="pipeline-step">
+                            <h5>Browser Delivery</h5>
+                            <p class="text-muted mb-0">
+                                Optimized CSS served to browsers, potentially split
+                                for critical CSS inlining.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <!-- CLI compilation commands -->
+                    <h5 class="mb-3">CLI Compilation Commands</h5>
+                    <div class="code-block mb-3">
+<span class="comment">// Install Dart Sass (recommended)</span>
+<span class="function">npm</span> install sass --save-dev
+
+<span class="comment">// Watch mode - recompiles on file changes</span>
+<span class="function">npx</span> sass scss/main.scss css/style.css --watch
+
+<span class="comment">// Compile with source maps</span>
+<span class="function">npx</span> sass scss/main.scss css/style.css --source-map
+
+<span class="comment">// Compressed output for production</span>
+<span class="function">npx</span> sass scss/main.scss css/style.css --style compressed
+
+<span class="comment">// Compile entire directory</span>
+<span class="function">npx</span> sass scss/:css/ --watch</div>
+                    
+                    <!-- npm scripts example -->
+                    <h5 class="mb-3">package.json Scripts</h5>
+                    <div class="code-block">
+<span class="comment">// package.json</span>
+{
+  <span class="string">"scripts"</span>: {
+    <span class="string">"sass:watch"</span>: <span class="string">"sass scss/main.scss css/style.css --watch"</span>,
+    <span class="string">"sass:build"</span>: <span class="string">"sass scss/main.scss css/style.css --style compressed"</span>,
+    <span class="string">"build:css"</span>: <span class="string">"npm run sass:build && postcss css/style.css -o css/style.min.css"</span>
+  }
+}</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 2: SASS VARIABLES
+             ============================================================
+             Sass variables store reusable values. Bootstrap defines
+             hundreds of variables that control every aspect of the
+             framework. Overriding them before @import gives you
+             full control of Bootstrap's appearance.
+             ============================================================ -->
+        <section id="variables" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">2. Sass Variables</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <!-- Variable definition examples -->
+                    <h5 class="mb-3">Defining Variables</h5>
+                    <div class="code-block mb-3">
+<span class="comment">// _variables.scss</span>
+
+<span class="comment">// Color variables</span>
+<span class="variable">$primary</span>:       <span class="string">#0d6efd</span>;
+<span class="variable">$secondary</span>:     <span class="string">#6c757d</span>;
+<span class="variable">$success</span>:       <span class="string">#198754</span>;
+<span class="variable">$danger</span>:        <span class="string">#dc3545</span>;
+
+<span class="comment">// Spacing scale</span>
+<span class="variable">$spacer</span>:        <span class="string">1rem</span>;
+<span class="variable">$spacers</span>: (
+  0: <span class="string">0</span>,
+  1: <span class="function">calc</span>(<span class="variable">$spacer</span> * <span class="string">0.25</span>),
+  2: <span class="function">calc</span>(<span class="variable">$spacer</span> * <span class="string">0.5</span>),
+  3: <span class="variable">$spacer</span>,
+  4: <span class="function">calc</span>(<span class="variable">$spacer</span> * <span class="string">1.5</span>),
+  5: <span class="function">calc</span>(<span class="variable">$spacer</span> * <span class="string">3</span>)
+);
+
+<span class="comment">// Typography</span>
+<span class="variable">$font-family-sans-serif</span>: <span class="string">'Inter', sans-serif</span>;
+<span class="variable">$font-size-base</span>:        <span class="string">1rem</span>;
+<span class="variable">$line-height-base</span>:      <span class="string">1.5</span>;
+
+<span class="comment">// Breakpoints</span>
+<span class="variable">$grid-breakpoints</span>: (
+  xs: <span class="string">0</span>,
+  sm: <span class="string">576px</span>,
+  md: <span class="string">768px</span>,
+  lg: <span class="string">992px</span>,
+  xl: <span class="string">1200px</span>,
+  xxl: <span class="string">1400px</span>
+);</div>
+                    
+                    <!-- Variable override pattern -->
+                    <h5 class="mb-3">Overriding Bootstrap Variables</h5>
+                    <div class="code-block">
+<span class="comment">// main.scss - ORDER MATTERS!</span>
+<span class="comment">// Variables must be defined BEFORE Bootstrap is imported</span>
+
+<span class="comment">// 1. Override Bootstrap defaults FIRST</span>
+<span class="variable">$primary</span>:       <span class="string">#6f42c1</span>;
+<span class="variable">$border-radius</span>: <span class="string">0.75rem</span>;
+<span class="variable">$enable-shadows</span>: <span class="keyword">true</span>;
+
+<span class="comment">// 2. Then import Bootstrap</span>
+<span class="keyword">@import</span> <span class="string">'../node_modules/bootstrap/scss/bootstrap'</span>;
+
+<span class="comment">// 3. Add custom styles AFTER Bootstrap</span>
+<span class="selector">.custom-component</span> {
+  <span class="comment">// Use Bootstrap's variable</span>
+  padding: <span class="function">map-get</span>(<span class="variable">$spacers</span>, 3);
+}</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <!-- Variable override visual demo -->
+                    <h5 class="mb-3">Visual: Variable Overrides</h5>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">Default Bootstrap Variables</h6>
+                            <div class="d-flex gap-2 mb-3">
+                                <button class="btn btn-primary">Primary</button>
+                                <button class="btn btn-secondary">Secondary</button>
+                                <button class="btn btn-success">Success</button>
+                            </div>
+                            <code class="text-muted">$primary: #0d6efd</code>
+                        </div>
+                    </div>
+                    
+                    <div class="card variable-override-demo mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">Overridden Variables</h6>
+                            <div class="d-flex gap-2 mb-3">
+                                <button class="btn btn-custom-primary">Custom Primary</button>
+                                <button class="btn btn-custom-secondary">Custom Secondary</button>
+                            </div>
+                            <code class="text-muted">$primary: #6f42c1 (purple override)</code>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Bootstrap variable categories -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">Key Bootstrap Variable Categories</h6>
+                        <ul class="mb-0">
+                            <li><strong>Colors:</strong> $primary, $theme-colors</li>
+                            <li><strong>Spacing:</strong> $spacer, $spacers</li>
+                            <li><strong>Typography:</strong> $font-family-*, $font-size-*</li>
+                            <li><strong>Borders:</strong> $border-width, $border-radius</li>
+                            <li><strong>Grid:</strong> $grid-breakpoints, $grid-columns</li>
+                            <li><strong>Components:</strong> $btn-*, $card-*, $modal-*</li>
+                            <li><strong>Features:</strong> $enable-*</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Sass data types -->
+                    <h5 class="mb-3">Sass Data Types</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Example</th>
+                                    <th>Use Case</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>String</td>
+                                    <td><code>'Inter'</code></td>
+                                    <td>Font names, URLs</td>
+                                </tr>
+                                <tr>
+                                    <td>Number</td>
+                                    <td><code>1.5rem</code></td>
+                                    <td>Sizes, spacing</td>
+                                </tr>
+                                <tr>
+                                    <td>Color</td>
+                                    <td><code>#0d6efd</code></td>
+                                    <td>Theme colors</td>
+                                </tr>
+                                <tr>
+                                    <td>List</td>
+                                    <td><code>1px solid red</code></td>
+                                    <td>Shorthand values</td>
+                                </tr>
+                                <tr>
+                                    <td>Map</td>
+                                    <td><code>(sm: 576px, md: 768px)</code></td>
+                                    <td>Breakpoints, themes</td>
+                                </tr>
+                                <tr>
+                                    <td>Boolean</td>
+                                    <td><code>true / false</code></td>
+                                    <td>Feature flags</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 3: SASS MIXINS
+             ============================================================
+             Mixins are reusable blocks of styles that accept parameters.
+             Bootstrap uses mixins extensively for responsive breakpoints,
+             component styling, and utility generation.
+             ============================================================ -->
+        <section id="mixins" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">3. Sass Mixins</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <!-- Mixin definition syntax -->
+                    <h5 class="mb-3">Defining Mixins</h5>
+                    <div class="code-block mb-3">
+<span class="comment">// _mixins.scss</span>
+
+<span class="comment">// Simple mixin - no parameters</span>
+<span class="keyword">@mixin</span> <span class="function">flex-center</span> {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+<span class="comment">// Mixin with parameters</span>
+<span class="keyword">@mixin</span> <span class="function">box-shadow</span>(<span class="variable">$x</span>: 0, <span class="variable">$y</span>: 0, <span class="variable">$blur</span>: 4px, <span class="variable">$color</span>: rgba(0,0,0,.1)) {
+  box-shadow: <span class="variable">$x</span> <span class="variable">$y</span> <span class="variable">$blur</span> <span class="variable">$color</span>;
+}
+
+<span class="comment">// Mixin with optional parameters</span>
+<span class="keyword">@mixin</span> <span class="function">transition</span>(<span class="variable">$property</span>: all, <span class="variable">$duration</span>: 0.3s, <span class="variable">$timing</span>: ease) {
+  transition: <span class="variable">$property</span> <span class="variable">$duration</span> <span class="variable">$timing</span>;
+}
+
+<span class="comment">// Mixin with content block</span>
+<span class="keyword">@mixin</span> <span class="function">hover-active</span> {
+  &amp;:hover,
+  &amp;:active {
+    <span class="keyword">@content</span>;
+  }
+}
+
+<span class="comment">// Responsive breakpoint mixin</span>
+<span class="keyword">@mixin</span> <span class="function">media-up</span>(<span class="variable">$breakpoint</span>) {
+  <span class="variable">$min</span>: <span class="function">map-get</span>(<span class="variable">$grid-breakpoints</span>, <span class="variable">$breakpoint</span>);
+  <span class="keyword">@media</span> (min-width: <span class="variable">$min</span>) {
+    <span class="keyword">@content</span>;
+  }
+}</div>
+                    
+                    <!-- Using mixins -->
+                    <h5 class="mb-3">Using Mixins</h5>
+                    <div class="code-block">
+<span class="comment">// Using @include to apply mixins</span>
+
+<span class="selector">.card-custom</span> {
+  <span class="comment">// Include simple mixin</span>
+  <span class="keyword">@include</span> <span class="function">flex-center</span>;
+  
+  <span class="comment">// Include mixin with parameters</span>
+  <span class="keyword">@include</span> <span class="function">box-shadow</span>(0, 2px, 8px, rgba(0,0,0,.15));
+  
+  <span class="comment">// Include mixin with defaults</span>
+  <span class="keyword">@include</span> <span class="function">transition</span>();
+  
+  <span class="comment">// Include mixin with content block</span>
+  <span class="keyword">@include</span> <span class="function">hover-active</span> {
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
+  
+  <span class="comment">// Include responsive mixin</span>
+  <span class="keyword">@include</span> <span class="function">media-up</span>(md) {
+    padding: 2rem;
+  }
+}</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <!-- Visual demo of mixin results -->
+                    <h5 class="mb-3">Visual: Mixin Results</h5>
+                    
+                    <!-- flex-center demo -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title"><code>@include flex-center</code></h6>
+                            <div class="d-flex align-items-center justify-content-center bg-light p-4 rounded">
+                                <span class="badge bg-primary me-2">Centered</span>
+                                <span class="badge bg-secondary">Content</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- box-shadow demo -->
+                    <div class="card mb-3 mixin-demo-card">
+                        <div class="card-body">
+                            <h6 class="card-title"><code>@include box-shadow</code></h6>
+                            <p class="card-text text-muted">
+                                Hover to see the transition mixin in action.
+                                This card uses shadow and transition mixins.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Bootstrap's built-in mixins -->
+                    <h5 class="mb-3">Bootstrap's Key Mixins</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Mixin</th>
+                                    <th>Purpose</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>media-breakpoint-up()</code></td>
+                                    <td>Responsive breakpoint queries</td>
+                                </tr>
+                                <tr>
+                                    <td><code>border-radius()</code></td>
+                                    <td>Consistent border radius</td>
+                                </tr>
+                                <tr>
+                                    <td><code>box-shadow()</code></td>
+                                    <td>Shadow levels</td>
+                                </tr>
+                                <tr>
+                                    <td><code>transition()</code></td>
+                                    <td>Smooth transitions</td>
+                                </tr>
+                                <tr>
+                                    <td><code>make-container()</code></td>
+                                    <td>Container element styles</td>
+                                </tr>
+                                <tr>
+                                    <td><code>make-row()</code></td>
+                                    <td>Row element styles</td>
+                                </tr>
+                                <tr>
+                                    <td><code>make-col()</code></td>
+                                    <td>Column sizing</td>
+                                </tr>
+                                <tr>
+                                    <td><code>hover()</code></td>
+                                    <td>:hover state styles</td>
+                                </tr>
+                                <tr>
+                                    <td><code>clearfix()</code></td>
+                                    <td>Clear floats</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Argument list mixin -->
+                    <h5 class="mb-3 mt-4">Variable Arguments</h5>
+                    <div class="code-block">
+<span class="comment">// Passing a list of arguments</span>
+<span class="keyword">@mixin</span> <span class="function">box-shadow</span>(<span class="variable">$shadows...</span>) {
+  box-shadow: <span class="variable">$shadows</span>;
+}
+
+<span class="comment">// Calling with multiple shadows</span>
+<span class="selector">.elevated</span> {
+  <span class="keyword">@include</span> <span class="function">box-shadow</span>(
+    0 2px 4px rgba(0,0,0,.1),
+    0 8px 16px rgba(0,0,0,.1)
+  );
+}</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 4: PARTIALS
+             ============================================================
+             Partials are SCSS files prefixed with underscore (_).
+             They are meant to be imported, not compiled directly.
+             This modular approach keeps the codebase organized.
+             ============================================================ -->
+        <section id="partials" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">4. Sass Partials</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <!-- Partial file structure -->
+                    <h5 class="mb-3">File Structure</h5>
+                    <div class="card partial-file mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title text-info">_variables.scss (Partial)</h6>
+                            <div class="code-block">
+<span class="comment">// Defines variables only</span>
+<span class="variable">$primary</span>: <span class="string">#6f42c1</span>;
+<span class="variable">$spacer</span>: <span class="string">1rem</span>;</div>
+                        </div>
+                    </div>
+                    <div class="card partial-file mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title text-info">_mixins.scss (Partial)</h6>
+                            <div class="code-block">
+<span class="comment">// Defines mixins only</span>
+<span class="keyword">@mixin</span> <span class="function">flex-center</span> { ... }
+<span class="keyword">@mixin</span> <span class="function">transition</span>() { ... }</div>
+                        </div>
+                    </div>
+                    <div class="card partial-file mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title text-info">_buttons.scss (Partial)</h6>
+                            <div class="code-block">
+<span class="comment">// Button component styles</span>
+<span class="selector">.btn-custom</span> {
+  <span class="keyword">@include</span> <span class="function">transition</span>();
+  padding: <span class="function">map-get</span>(<span class="variable">$spacers</span>, 2);
+}</div>
+                        </div>
+                    </div>
+                    <div class="card main-file">
+                        <div class="card-body">
+                            <h6 class="card-title text-success">main.scss (Entry Point)</h6>
+                            <div class="code-block">
+<span class="comment">// Import all partials - order matters!</span>
+<span class="keyword">@import</span> <span class="string">'variables'</span>;
+<span class="keyword">@import</span> <span class="string">'mixins'</span>;
+<span class="keyword">@import</span> <span class="string">'buttons'</span>;
+<span class="keyword">@import</span> <span class="string">'cards'</span>;
+<span class="keyword">@import</span> <span class="string">'navbar'</span>;</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <!-- Import rules and best practices -->
+                    <h5 class="mb-3">Import Rules</h5>
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">@import vs @use</h6>
+                        <p class="mb-2">
+                            <strong>@import</strong> is being deprecated in favor of
+                            <strong>@use</strong> and <strong>@forward</strong>.
+                        </p>
+                        <div class="code-block mb-0">
+<span class="comment">// OLD (deprecated)</span>
+<span class="keyword">@import</span> <span class="string">'variables'</span>;
+<span class="keyword">@import</span> <span class="string">'mixins'</span>;
+
+<span class="comment">// NEW (recommended)</span>
+<span class="keyword">@use</span> <span class="string">'variables'</span> as *;
+<span class="keyword">@use</span> <span class="string">'mixins'</span> as *;
+
+<span class="comment">// With namespace</span>
+<span class="keyword">@use</span> <span class="string">'variables'</span> as vars;
+<span class="selector">.element</span> {
+  color: vars.<span class="variable">$primary</span>;
+}
+
+<span class="comment">// Forward partials from index file</span>
+<span class="comment">// _index.scss</span>
+<span class="keyword">@forward</span> <span class="string">'variables'</span>;
+<span class="keyword">@forward</span> <span class="string">'mixins'</span>;</div>
+                    </div>
+                    
+                    <!-- Best practices -->
+                    <h5 class="mb-3">Best Practices</h5>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex">
+                            <span class="badge bg-success me-2">DO</span>
+                            Use underscores for partial filenames
+                        </li>
+                        <li class="list-group-item d-flex">
+                            <span class="badge bg-success me-2">DO</span>
+                            Keep partials focused (variables, mixins, one component)
+                        </li>
+                        <li class="list-group-item d-flex">
+                            <span class="badge bg-success me-2">DO</span>
+                            Import variables/mixins before components
+                        </li>
+                        <li class="list-group-item d-flex">
+                            <span class="badge bg-success me-2">DO</span>
+                            Use @use/@forward for new projects
+                        </li>
+                        <li class="list-group-item d-flex">
+                            <span class="badge bg-danger me-2">DON'T</span>
+                            Compile partials directly (no underscore = compiled)
+                        </li>
+                        <li class="list-group-item d-flex">
+                            <span class="badge bg-danger me-2">DON'T</span>
+                            Create circular dependencies
+                        </li>
+                    </ul>
+                    
+                    <!-- Bootstrap's partial structure -->
+                    <h5 class="mb-3">Bootstrap's Partials</h5>
+                    <div class="code-block">
+bootstrap/scss/
+├── _variables.scss       <span class="comment">// All Sass variables</span>
+├── _variables-dark.scss  <span class="comment">// Dark mode variables</span>
+├── _maps.scss            <span class="comment">// Sass maps for colors</span>
+├── _mixins.scss          <span class="comment">// All mixins</span>
+├── _functions.scss       <span class="comment">// Sass functions</span>
+├── _root.scss            <span class="comment">// :root CSS variables</span>
+├── _reboot.scss          <span class="comment">// CSS reset</span>
+├── _type.scss            <span class="comment">// Typography</span>
+├── _buttons.scss         <span class="comment">// Button component</span>
+├── _forms.scss           <span class="comment">// Form components</span>
+├── _modal.scss           <span class="comment">// Modal component</span>
+├── _nav.scss             <span class="comment">// Nav component</span>
+├── _navbar.scss          <span class="comment">// Navbar component</span>
+├── bootstrap.scss        <span class="comment">// Main entry point</span>
+└── bootstrap-grid.scss   <span class="comment">// Grid-only entry</span></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 5: PRACTICAL DEMO
+             ============================================================
+             A complete example showing the full SCSS workflow
+             in a realistic Bootstrap customization scenario.
+             ============================================================ -->
+        <section id="demo" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">5. Practical Demo</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <!-- Complete workflow example -->
+                    <h5 class="mb-3">Complete Custom Theme Workflow</h5>
+                    <div class="code-block">
+<span class="comment">// ===========================================
+// main.scss - Entry point for custom theme
+// ===========================================</span>
+
+<span class="comment">// 1. Abstracts: Variables and mixins</span>
+<span class="keyword">@use</span> <span class="string">'abstracts/variables'</span> as *;
+<span class="keyword">@use</span> <span class="string">'abstracts/mixins'</span> as *;
+
+<span class="comment">// 2. Vendor: Bootstrap with overrides</span>
+<span class="keyword">@use</span> <span class="string">'vendor/bootstrap'</span> as *;
+
+<span class="comment">// 3. Base styles</span>
+<span class="keyword">@use</span> <span class="string">'base/typography'</span>;
+<span class="keyword">@use</span> <span class="string">'base/utilities'</span>;
+
+<span class="comment">// 4. Layout</span>
+<span class="keyword">@use</span> <span class="string">'layout/header'</span>;
+<span class="keyword">@use</span> <span class="string">'layout/footer'</span>;
+
+<span class="comment">// 5. Components</span>
+<span class="keyword">@use</span> <span class="string">'components/buttons'</span>;
+<span class="keyword">@use</span> <span class="string">'components/cards'</span>;
+
+<span class="comment">// ===========================================
+// abstracts/_variables.scss
+// ===========================================</span>
+<span class="variable">$primary</span>:       <span class="string">#2563eb</span>;
+<span class="variable">$secondary</span>:     <span class="string">#475569</span>;
+<span class="variable">$success</span>:       <span class="string">#16a34a</span>;
+<span class="variable">$danger</span>:        <span class="string">#dc2626</span>;
+<span class="variable">$border-radius</span>: <span class="string">0.5rem</span>;
+<span class="variable">$enable-rounded</span>: <span class="keyword">true</span>;
+<span class="variable">$enable-shadows</span>: <span class="keyword">true</span>;
+
+<span class="comment">// ===========================================
+// abstracts/_mixins.scss
+// ===========================================</span>
+<span class="keyword">@mixin</span> <span class="function">card-variant</span>(<span class="variable">$bg</span>, <span class="variable">$border</span>) {
+  background-color: <span class="variable">$bg</span>;
+  border-color: <span class="variable">$border</span>;
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  }
+}</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <!-- Working component demo -->
+                    <h5 class="mb-3">Rendered Output</h5>
+                    
+                    <!-- Demo card using custom classes -->
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <strong>Custom Theme Card</strong>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">Styled with SCSS Variables</h5>
+                            <p class="card-text">
+                                This card demonstrates the output of a well-organized
+                                SCSS compilation pipeline with Bootstrap customization.
+                            </p>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary">Primary</button>
+                                <button class="btn btn-outline-secondary">Secondary</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- npm scripts for this workflow -->
+                    <h5 class="mb-3">Project npm Scripts</h5>
+                    <div class="code-block">
+{
+  <span class="string">"name"</span>: <span class="string">"my-bootstrap-theme"</span>,
+  <span class="string">"scripts"</span>: {
+    <span class="string">"sass"</span>: <span class="string">"sass scss/main.scss dist/css/style.css"</span>,
+    <span class="string">"sass:watch"</span>: <span class="string">"sass scss/main.scss dist/css/style.css --watch"</span>,
+    <span class="string">"sass:prod"</span>: <span class="string">"sass scss/main.scss dist/css/style.css --style compressed"</span>,
+    <span class="string">"build"</span>: <span class="string">"npm run sass:prod && npm run postcss"</span>,
+    <span class="string">"postcss"</span>: <span class="string">"postcss dist/css/style.css -o dist/css/style.min.css"</span>
+  },
+  <span class="string">"devDependencies"</span>: {
+    <span class="string">"sass"</span>: <span class="string">"^1.69.0"</span>,
+    <span class="string">"bootstrap"</span>: <span class="string">"^5.3.3"</span>,
+    <span class="string">"postcss"</span>: <span class="string">"^8.4.31"</span>,
+    <span class="string">"autoprefixer"</span>: <span class="string">"^10.4.16"</span>,
+    <span class="string">"cssnano"</span>: <span class="string">"^6.0.1"</span>
+  }
+}</div>
+                    
+                    <!-- Summary alert -->
+                    <div class="alert alert-success">
+                        <h6 class="alert-heading">Key Takeaways</h6>
+                        <ul class="mb-0">
+                            <li>Override Bootstrap variables BEFORE importing</li>
+                            <li>Use partials for modular architecture</li>
+                            <li>Use @use instead of @import in new projects</li>
+                            <li>Compile with Dart Sass (not node-sass)</li>
+                            <li>Add source maps for development</li>
+                            <li>Minify for production builds</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>SCSS Compilation Pipeline</h5>
+                    <p class="text-muted">
+                        Bootstrap 5.3.3 Development Workflow - Module 05_02_01
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted mb-0">
+                        Sass Documentation: <a href="https://sass-lang.com/documentation" class="text-info">sass-lang.com</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3.3 JavaScript Bundle (includes Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

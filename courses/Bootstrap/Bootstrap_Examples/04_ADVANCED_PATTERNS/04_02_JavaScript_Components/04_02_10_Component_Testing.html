@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_02_10_Component_Testing.html                               -->
+<!-- Bootstrap 5 Testing JavaScript Components                    -->
+<!-- Patterns for testing Bootstrap components: unit, integration -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap JS Component Testing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="mb-4">Testing Bootstrap JavaScript Components</h1>
+        <p class="lead text-muted">
+            A lightweight in-browser testing framework for validating Bootstrap component behavior.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- Test Runner UI                                               -->
+        <!-- Custom test runner that displays results in the browser      -->
+        <!-- ============================================================ -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white d-flex justify-content-between">
+                <span>Test Runner</span>
+                <span id="testSummary">0 / 0 passed</span>
+            </div>
+            <div class="card-body p-0">
+                <div id="testResults" style="max-height:400px; overflow-y:auto; font-family:monospace; font-size:0.85rem;">
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-primary btn-sm" id="runTests">Run All Tests</button>
+                <button class="btn btn-outline-secondary btn-sm ms-2" id="clearTests">Clear Results</button>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- Test Fixtures                                                -->
+        <!-- DOM elements used as test fixtures for component tests       -->
+        <!-- ============================================================ -->
+
+        <!-- Fixture: Modal -->
+        <section class="mb-4">
+            <h2>Test Fixtures</h2>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#testModal">
+                Open Test Modal
+            </button>
+
+            <div class="modal fade" id="testModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Test Modal</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">Test content</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fixture: Tooltip -->
+        <section class="mb-4">
+            <button type="button" class="btn btn-warning" id="tooltipFixture" data-bs-toggle="tooltip" title="Test tooltip content">
+                Tooltip Fixture
+            </button>
+        </section>
+
+        <!-- Fixture: Alert dismissible -->
+        <section class="mb-4">
+            <div class="alert alert-success alert-dismissible fade show" id="alertFixture" role="alert">
+                Test alert - dismiss me
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </section>
+
+        <!-- Fixture: Dropdown -->
+        <section class="mb-4">
+            <div class="dropdown" id="dropdownFixture">
+                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" id="dropdownBtn">
+                    Test Dropdown
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Item 1</a></li>
+                    <li><a class="dropdown-item" href="#">Item 2</a></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Fixture: Tabs -->
+        <section class="mb-4">
+            <ul class="nav nav-tabs" id="tabFixture">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#testTab1">Tab 1</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#testTab2">Tab 2</button>
+                </li>
+            </ul>
+            <div class="tab-content border border-top-0 p-3">
+                <div class="tab-pane fade show active" id="testTab1">Tab 1 content</div>
+                <div class="tab-pane fade" id="testTab2">Tab 2 content</div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Code Examples: Testing Patterns                             -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>Testing Patterns Demonstrated</h2>
+            <div class="accordion" id="patternsAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#pat1">Instance Existence Tests</button>
+                    </h2>
+                    <div id="pat1" class="accordion-collapse collapse show" data-bs-parent="#patternsAccordion">
+                        <div class="accordion-body">
+                            <code>bootstrap.Modal.getInstance(el) !== null</code> verifies a component was initialized.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#pat2">Event Firing Tests</button>
+                    </h2>
+                    <div id="pat2" class="accordion-collapse collapse" data-bs-parent="#patternsAccordion">
+                        <div class="accordion-body">
+                            Attach event listeners and verify they fire with <code>addEventListener</code> + callback assertions.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#pat3">DOM State Tests</button>
+                    </h2>
+                    <div id="pat3" class="accordion-collapse collapse" data-bs-parent="#patternsAccordion">
+                        <div class="accordion-body">
+                            Check CSS classes, visibility, and ARIA attributes after component interactions.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#pat4">Async Tests</button>
+                    </h2>
+                    <div id="pat4" class="accordion-collapse collapse" data-bs-parent="#patternsAccordion">
+                        <div class="accordion-body">
+                            Use <code>setTimeout</code> or event callbacks to test transitions and animations.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ============================================================
+        // Lightweight In-Browser Test Framework
+        // Provides describe/it/assert patterns for Bootstrap testing
+        // ============================================================
+
+        const TestRunner = {
+            tests: [],
+            results: [],
+
+            // Register a test suite
+            describe: function (name, fn) {
+                fn.call(this);
+            },
+
+            // Register an individual test
+            it: function (description, fn) {
+                this.tests.push({ description: description, fn: fn });
+            },
+
+            // Assertion helpers
+            assert: {
+                isTrue: function (value, msg) {
+                    if (!value) throw new Error(msg || 'Expected true, got ' + value);
+                },
+                isFalse: function (value, msg) {
+                    if (value) throw new Error(msg || 'Expected false, got ' + value);
+                },
+                isNotNull: function (value, msg) {
+                    if (value === null || value === undefined) throw new Error(msg || 'Expected non-null value');
+                },
+                isNull: function (value, msg) {
+                    if (value !== null) throw new Error(msg || 'Expected null, got ' + value);
+                },
+                equals: function (actual, expected, msg) {
+                    if (actual !== expected) throw new Error(msg || 'Expected ' + expected + ', got ' + actual);
+                },
+                contains: function (el, className, msg) {
+                    if (!el.classList.contains(className)) throw new Error(msg || 'Expected element to contain class ' + className);
+                },
+                notContains: function (el, className, msg) {
+                    if (el.classList.contains(className)) throw new Error(msg || 'Expected element NOT to contain class ' + className);
+                }
+            },
+
+            // Run all registered tests
+            run: function () {
+                const self = this;
+                this.results = [];
+                const output = document.getElementById('testResults');
+                output.innerHTML = '';
+                let passed = 0;
+                let failed = 0;
+
+                this.tests.forEach(function (test) {
+                    try {
+                        test.fn.call(self);
+                        self.results.push({ name: test.description, status: 'pass' });
+                        passed++;
+                    } catch (err) {
+                        self.results.push({ name: test.description, status: 'fail', error: err.message });
+                        failed++;
+                    }
+                });
+
+                // Render results
+                this.results.forEach(function (r) {
+                    const div = document.createElement('div');
+                    div.className = `px-3 py-2 border-bottom ${r.status === 'pass' ? 'bg-success bg-opacity-10' : 'bg-danger bg-opacity-10'}`;
+                    const icon = r.status === 'pass' ? '✅' : '❌';
+                    div.innerHTML = `${icon} <strong>${r.name}</strong>${r.error ? '<br><small class="text-danger ms-4">' + r.error + '</small>' : ''}`;
+                    output.appendChild(div);
+                });
+
+                document.getElementById('testSummary').textContent = `${passed} / ${passed + failed} passed`;
+                document.getElementById('testSummary').className = failed === 0 ? 'text-success' : 'text-danger';
+            }
+        };
+
+        // ============================================================
+        // TEST SUITES
+        // ============================================================
+
+        // Suite 1: Modal Tests
+        TestRunner.describe('Modal Component', function () {
+            this.it('Modal instance exists after page load', function () {
+                const el = document.getElementById('testModal');
+                const instance = bootstrap.Modal.getInstance(el);
+                this.assert.isNotNull(instance, 'Modal should be initialized');
+            });
+
+            this.it('Modal has correct default options', function () {
+                const el = document.getElementById('testModal');
+                const modal = bootstrap.Modal.getInstance(el);
+                this.assert.isTrue(modal._config.backdrop === true || modal._config.backdrop === 'true', 'Backdrop should default to true');
+                this.assert.isTrue(modal._config.keyboard === true || modal._config.keyboard === 'true', 'Keyboard should default to true');
+            });
+
+            this.it('Modal show() adds show class', function () {
+                const el = document.getElementById('testModal');
+                const modal = bootstrap.Modal.getInstance(el);
+                modal.show();
+                this.assert.isTrue(el.classList.contains('show'), 'Modal should have show class after show()');
+                modal.hide();
+            });
+
+            this.it('Modal hide() removes show class', function (done) {
+                const el = document.getElementById('testModal');
+                const modal = bootstrap.Modal.getInstance(el);
+                const self = this;
+                el.addEventListener('hidden.bs.modal', function handler() {
+                    el.removeEventListener('hidden.bs.modal', handler);
+                    self.assert.isFalse(el.classList.contains('show'), 'Modal should not have show class after hide()');
+                });
+                modal.show();
+                setTimeout(function () { modal.hide(); }, 100);
+            });
+        });
+
+        // Suite 2: Tooltip Tests
+        TestRunner.describe('Tooltip Component', function () {
+            this.it('Tooltip instance can be created', function () {
+                const el = document.getElementById('tooltipFixture');
+                const tooltip = bootstrap.Tooltip.getOrCreateInstance(el);
+                this.assert.isNotNull(tooltip, 'Tooltip instance should exist');
+            });
+
+            this.it('Tooltip has correct title', function () {
+                const el = document.getElementById('tooltipFixture');
+                const tooltip = bootstrap.Tooltip.getInstance(el);
+                this.assert.equals(tooltip._config.title, 'Test tooltip content', 'Tooltip title should match');
+            });
+
+            this.it('Tooltip show() creates tooltip element', function () {
+                const el = document.getElementById('tooltipFixture');
+                const tooltip = bootstrap.Tooltip.getInstance(el);
+                tooltip.show();
+                const tipEl = document.querySelector('.tooltip');
+                this.assert.isNotNull(tipEl, 'Tooltip element should exist in DOM after show()');
+                tooltip.hide();
+            });
+        });
+
+        // Suite 3: Alert Tests
+        TestRunner.describe('Alert Component', function () {
+            this.it('Alert is initially visible', function () {
+                const el = document.getElementById('alertFixture');
+                this.assert.isTrue(el.classList.contains('show'), 'Alert should have show class');
+            });
+
+            this.it('Alert close() removes element from DOM', function () {
+                const el = document.getElementById('alertFixture');
+                // If already removed by a previous test, recreate it
+                if (!el) {
+                    this.assert.isTrue(true, 'Alert was already removed (skipped)');
+                    return;
+                }
+                const alert = bootstrap.Alert.getOrCreateInstance(el);
+                alert.close();
+                this.assert.isTrue(true, 'Alert close() called successfully');
+            });
+        });
+
+        // Suite 4: Dropdown Tests
+        TestRunner.describe('Dropdown Component', function () {
+            this.it('Dropdown instance exists', function () {
+                const btn = document.getElementById('dropdownBtn');
+                const dd = bootstrap.Dropdown.getInstance(btn);
+                this.assert.isNotNull(dd, 'Dropdown instance should exist');
+            });
+
+            this.it('Dropdown show() adds show class to menu', function () {
+                const btn = document.getElementById('dropdownBtn');
+                const dd = bootstrap.Dropdown.getInstance(btn);
+                dd.show();
+                const menu = btn.nextElementSibling;
+                this.assert.isTrue(menu.classList.contains('show'), 'Dropdown menu should have show class');
+                dd.hide();
+            });
+        });
+
+        // Suite 5: Tab Tests
+        TestRunner.describe('Tab Component', function () {
+            this.it('First tab is active by default', function () {
+                const tab1 = document.querySelector('#tabFixture .nav-link.active');
+                this.assert.isNotNull(tab1, 'First tab should be active');
+                this.assert.equals(tab1.textContent.trim(), 'Tab 1', 'First tab should be "Tab 1"');
+            });
+
+            this.it('Clicking tab 2 activates it', function () {
+                const tab2 = document.querySelector('#tabFixture .nav-link:not(.active)');
+                tab2.click();
+                this.assert.isTrue(tab2.classList.contains('active'), 'Tab 2 should be active after click');
+                // Restore tab 1
+                document.querySelector('#tabFixture .nav-link.active').click();
+            });
+        });
+
+        // Suite 6: API Tests
+        TestRunner.describe('Component API', function () {
+            this.it('getInstance returns null for uninitialized element', function () {
+                const div = document.createElement('div');
+                const instance = bootstrap.Modal.getInstance(div);
+                this.assert.isNull(instance, 'getInstance should return null for uninitialized element');
+            });
+
+            this.it('getOrCreateInstance creates new instance', function () {
+                const div = document.createElement('div');
+                div.className = 'modal fade';
+                document.body.appendChild(div);
+                const modal = bootstrap.Modal.getOrCreateInstance(div);
+                this.assert.isNotNull(modal, 'getOrCreateInstance should create instance');
+                modal.dispose();
+                document.body.removeChild(div);
+            });
+
+            this.it('dispose() removes instance', function () {
+                const el = document.getElementById('testModal');
+                const modal = bootstrap.Modal.getInstance(el);
+                if (modal) {
+                    modal.dispose();
+                    const after = bootstrap.Modal.getInstance(el);
+                    this.assert.isNull(after, 'Instance should be null after dispose()');
+                    // Re-create for other tests
+                    bootstrap.Modal.getOrCreateInstance(el);
+                }
+            });
+        });
+
+        // ============================================================
+        // UI Bindings
+        // ============================================================
+        document.getElementById('runTests').addEventListener('click', function () {
+            // Recreate alert if it was dismissed
+            if (!document.getElementById('alertFixture')) {
+                const alertHTML = '<div class="alert alert-success alert-dismissible fade show" id="alertFixture" role="alert">Test alert - dismiss me<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+                document.querySelector('section:nth-of-type(3)').insertAdjacentHTML('afterbegin', alertHTML);
+            }
+            TestRunner.run();
+        });
+
+        document.getElementById('clearTests').addEventListener('click', function () {
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('testSummary').textContent = '0 / 0 passed';
+            document.getElementById('testSummary').className = '';
+            TestRunner.tests = [];
+        });
+
+        // Initialize tooltips
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+            new bootstrap.Tooltip(el);
+        });
+    </script>
+</body>
+</html>

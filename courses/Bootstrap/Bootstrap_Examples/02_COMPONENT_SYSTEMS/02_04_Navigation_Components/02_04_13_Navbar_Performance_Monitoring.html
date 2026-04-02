@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================= -->
+    <!-- FILE: 02_04_13_Navbar_Performance_Monitoring.html              -->
+    <!-- TOPIC: Performance Tracking for Navigation                      -->
+    <!-- ============================================================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navbar Performance Monitoring - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-section { margin-bottom: 3rem; padding: 1.5rem; border: 1px solid #dee2e6; border-radius: 0.375rem; }
+        .demo-section h4 { margin-bottom: 1rem; border-bottom: 2px solid #0d6efd; padding-bottom: 0.5rem; }
+        .metric-card { text-align: center; padding: 1.5rem; }
+        .metric-value { font-size: 2rem; font-weight: bold; }
+        .metric-label { font-size: 0.875rem; color: #6c757d; }
+        .log-output { font-family: monospace; font-size: 0.8rem; max-height: 200px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; }
+        .log-entry { margin-bottom: 0.25rem; }
+        .log-time { color: #6a9955; }
+        .log-event { color: #569cd6; }
+        .log-value { color: #ce9178; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="monitoredNav" aria-label="Monitored navigation">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">MonitorNav</a>
+            <button class="navbar-toggler" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#monitorNav"
+                    aria-controls="monitorNav" aria-expanded="false" 
+                    aria-label="Toggle navigation" id="monitorToggler">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="monitorNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" id="monitorDropdown">Products</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Software</a></li>
+                            <li><a class="dropdown-item" href="#">Hardware</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <h1 class="mb-4">Navbar Performance Monitoring</h1>
+
+        <!-- ============================================================= -->
+        <!-- METRICS DASHBOARD                                               -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>13.1 Live Performance Metrics</h4>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="metric-card">
+                            <div class="metric-value text-primary" id="metricCollapseTime">--</div>
+                            <div class="metric-label">Collapse Toggle (ms)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="metric-card">
+                            <div class="metric-value text-success" id="metricDropdownTime">--</div>
+                            <div class="metric-label">Dropdown Open (ms)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="metric-card">
+                            <div class="metric-value text-warning" id="metricPaintTime">--</div>
+                            <div class="metric-label">First Paint (ms)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="metric-card">
+                            <div class="metric-value text-info" id="metricDOMNodes">--</div>
+                            <div class="metric-label">DOM Nodes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <button class="btn btn-primary btn-sm me-2" onclick="measureCollapse()">Toggle Collapse</button>
+                <button class="btn btn-success btn-sm me-2" onclick="measureDropdown()">Toggle Dropdown</button>
+                <button class="btn btn-secondary btn-sm" onclick="clearLog()">Clear Log</button>
+            </div>
+            
+            <div class="log-output" id="perfLog">
+                <div class="log-entry"><span class="log-time">[Ready]</span> <span class="log-event">Performance monitor initialized</span></div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: WEB VITALS FOR NAVIGATION                           -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>13.2 Core Web Vitals Impact</h4>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Good</th>
+                        <th>Needs Improvement</th>
+                        <th>Poor</th>
+                        <th>Navbar Impact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>LCP</strong> (Largest Contentful Paint)</td>
+                        <td class="text-success">&lt; 2.5s</td>
+                        <td class="text-warning">2.5s - 4s</td>
+                        <td class="text-danger">&gt; 4s</td>
+                        <td>Navbar CSS/JS blocking render</td>
+                    </tr>
+                    <tr>
+                        <td><strong>FID</strong> (First Input Delay)</td>
+                        <td class="text-success">&lt; 100ms</td>
+                        <td class="text-warning">100ms - 300ms</td>
+                        <td class="text-danger">&gt; 300ms</td>
+                        <td>Heavy JS blocking first interaction</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CLS</strong> (Cumulative Layout Shift)</td>
+                        <td class="text-success">&lt; 0.1</td>
+                        <td class="text-warning">0.1 - 0.25</td>
+                        <td class="text-danger">&gt; 0.25</td>
+                        <td>Navbar height changes on load</td>
+                    </tr>
+                    <tr>
+                        <td><strong>INP</strong> (Interaction to Next Paint)</td>
+                        <td class="text-success">&lt; 200ms</td>
+                        <td class="text-warning">200ms - 500ms</td>
+                        <td class="text-danger">&gt; 500ms</td>
+                        <td>Dropdown/animation responsiveness</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: PERFORMANCE OBSERVER CODE                           -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>13.3 Performance Observer Implementation</h4>
+            
+            <pre class="bg-light p-3"><code>/* ============================================================= */
+/* NAVIGATION PERFORMANCE MONITORING                                */
+/* Uses Performance Observer API to track navbar interactions       */
+/* ============================================================= */
+
+// 1. Track paint timing (FCP, LCP impact from navbar)
+const paintObserver = new PerformanceObserver((list) => {
+    for (const entry of list.getEntries()) {
+        console.log(`[Paint] ${entry.name}: ${entry.startTime.toFixed(1)}ms`);
+    }
+});
+paintObserver.observe({ type: 'paint', buffered: true });
+
+// 2. Track navbar interaction timing
+class NavbarPerformanceMonitor {
+    constructor(navbarSelector) {
+        this.navbar = document.querySelector(navbarSelector);
+        this.metrics = {
+            collapseToggleTimes: [],
+            dropdownOpenTimes: [],
+            linkClickTimes: []
+        };
+        this.setupListeners();
+    }
+    
+    setupListeners() {
+        // Monitor collapse toggle
+        this.navbar.addEventListener('show.bs.collapse', (e) => {
+            this._startTime = performance.now();
+        });
+        this.navbar.addEventListener('shown.bs.collapse', (e) => {
+            const duration = performance.now() - this._startTime;
+            this.metrics.collapseToggleTimes.push(duration);
+            this.report('collapse-toggle', duration);
+        });
+        
+        // Monitor dropdown open
+        this.navbar.addEventListener('show.bs.dropdown', (e) => {
+            this._dropdownStart = performance.now();
+        });
+        this.navbar.addEventListener('shown.bs.dropdown', (e) => {
+            const duration = performance.now() - this._dropdownStart;
+            this.metrics.dropdownOpenTimes.push(duration);
+            this.report('dropdown-open', duration);
+        });
+        
+        // Monitor link clicks (navigation timing)
+        this.navbar.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const clickTime = performance.now();
+                this.report('link-click', clickTime);
+            });
+        });
+    }
+    
+    report(event, value) {
+        // Send to analytics
+        if (window.gtag) {
+            gtag('event', 'navbar_performance', {
+                event_category: 'navigation',
+                event_label: event,
+                value: Math.round(value)
+            });
+        }
+        console.log(`[Navbar Perf] ${event}: ${value.toFixed(2)}ms`);
+    }
+    
+    getReport() {
+        const avg = arr => arr.length ? arr.reduce((a, b) => a + b) / arr.length : 0;
+        return {
+            avgCollapseTime: avg(this.metrics.collapseToggleTimes),
+            avgDropdownTime: avg(this.metrics.dropdownOpenTimes),
+            totalInteractions: this.metrics.collapseToggleTimes.length + 
+                              this.metrics.dropdownOpenTimes.length +
+                              this.metrics.linkClickTimes.length
+        };
+    }
+}
+
+// Initialize
+const navMonitor = new NavbarPerformanceMonitor('#monitoredNav');</code></pre>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: LAZY LOADING NAVIGATION                             -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>13.4 Lazy Loading Navigation Content</h4>
+            
+            <pre class="bg-light p-3"><code>/* ============================================================= */
+/* LAZY LOAD MEGA MENU CONTENT                                       */
+/* Only fetch mega menu HTML when user hovers/clicks the trigger   */
+/* Reduces initial page weight and speeds up Time to Interactive    */
+/* ============================================================= */
+
+class LazyMegaMenu {
+    constructor(triggerSelector, contentUrl) {
+        this.trigger = document.querySelector(triggerSelector);
+        this.contentUrl = contentUrl;
+        this.loaded = false;
+        this.setupTrigger();
+    }
+    
+    setupTrigger() {
+        // Load content on first interaction
+        const events = ['mouseenter', 'focus'];
+        events.forEach(event => {
+            this.trigger.addEventListener(event, () => this.loadContent(), { once: true });
+        });
+        // Also load on click (for touch devices)
+        this.trigger.addEventListener('click', () => this.loadContent(), { once: true });
+    }
+    
+    async loadContent() {
+        if (this.loaded) return;
+        
+        const start = performance.now();
+        
+        try {
+            const response = await fetch(this.contentUrl);
+            const html = await response.text();
+            
+            // Insert mega menu content
+            const dropdown = this.trigger.nextElementSibling;
+            dropdown.innerHTML = html;
+            
+            this.loaded = true;
+            
+            const loadTime = performance.now() - start;
+            console.log(`[Lazy Menu] Loaded in ${loadTime.toFixed(1)}ms`);
+            
+        } catch (error) {
+            console.error('[Lazy Menu] Failed to load:', error);
+        }
+    }
+}
+
+// Usage
+const megaMenu = new LazyMegaMenu('#productsTrigger', '/api/mega-menu.html');</code></pre>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* ============================================================= */
+        /* LIVE PERFORMANCE MONITORING SCRIPT                              */
+        /* ============================================================= */
+        
+        const perfLog = document.getElementById('perfLog');
+        
+        function addLog(message, type) {
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-event">${type}</span> <span class="log-value">${message}</span>`;
+            perfLog.appendChild(entry);
+            perfLog.scrollTop = perfLog.scrollHeight;
+        }
+        
+        function clearLog() {
+            perfLog.innerHTML = '<div class="log-entry"><span class="log-time">[Cleared]</span> <span class="log-event">Log cleared</span></div>';
+        }
+        
+        // Measure DOM nodes
+        function countDOMNodes() {
+            return document.querySelectorAll('*').length;
+        }
+        
+        // Measure paint timing
+        if (window.PerformanceObserver) {
+            try {
+                const paintObs = new PerformanceObserver(function(list) {
+                    list.getEntries().forEach(function(entry) {
+                        if (entry.name === 'first-contentful-paint') {
+                            document.getElementById('metricPaintTime').textContent = Math.round(entry.startTime);
+                            addLog(`FCP: ${entry.startTime.toFixed(1)}ms`, 'PAINT');
+                        }
+                    });
+                });
+                paintObs.observe({ type: 'paint', buffered: true });
+            } catch(e) {}
+        }
+        
+        // DOM node count
+        document.getElementById('metricDOMNodes').textContent = countDOMNodes();
+        
+        // Collapse toggle measurement
+        let collapseStart;
+        const collapseEl = document.getElementById('monitorNav');
+        
+        collapseEl.addEventListener('show.bs.collapse', function() {
+            collapseStart = performance.now();
+        });
+        collapseEl.addEventListener('shown.bs.collapse', function() {
+            const duration = (performance.now() - collapseStart).toFixed(1);
+            document.getElementById('metricCollapseTime').textContent = duration;
+            addLog(`Collapse opened in ${duration}ms`, 'COLLAPSE');
+        });
+        collapseEl.addEventListener('hide.bs.collapse', function() {
+            collapseStart = performance.now();
+        });
+        collapseEl.addEventListener('hidden.bs.collapse', function() {
+            const duration = (performance.now() - collapseStart).toFixed(1);
+            addLog(`Collapse closed in ${duration}ms`, 'COLLAPSE');
+        });
+        
+        // Dropdown measurement
+        let dropdownStart;
+        const dropdownEl = document.getElementById('monitorDropdown');
+        
+        if (dropdownEl) {
+            dropdownEl.addEventListener('show.bs.dropdown', function() {
+                dropdownStart = performance.now();
+            });
+            dropdownEl.addEventListener('shown.bs.dropdown', function() {
+                const duration = (performance.now() - dropdownStart).toFixed(1);
+                document.getElementById('metricDropdownTime').textContent = duration;
+                addLog(`Dropdown opened in ${duration}ms`, 'DROPDOWN');
+            });
+        }
+        
+        // Button handlers
+        function measureCollapse() {
+            const toggler = document.getElementById('monitorToggler');
+            toggler.click();
+        }
+        
+        function measureDropdown() {
+            const dropdown = document.getElementById('monitorDropdown');
+            if (dropdown) dropdown.click();
+        }
+        
+        // Resource timing for navbar assets
+        window.addEventListener('load', function() {
+            const resources = performance.getEntriesByType('resource');
+            const navResources = resources.filter(function(r) {
+                return r.name.includes('bootstrap');
+            });
+            navResources.forEach(function(r) {
+                addLog(`${r.name.split('/').pop()}: ${r.duration.toFixed(1)}ms (${(r.transferSize / 1024).toFixed(1)}KB)`, 'RESOURCE');
+            });
+        });
+    </script>
+</body>
+</html>

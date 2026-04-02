@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Advanced Validation Patterns - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>.demo-section { margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 0.5rem; }</style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Advanced Validation Patterns</h1>
+                <p class="lead text-muted">Complex validation: composite validators, rule engines, dynamic schemas.</p><hr>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Validator Chain -->
+        <section class="demo-section" id="validator-chain">
+            <h2 class="h4 mb-3">1. Validator Chain Pattern</h2>
+            <p class="text-muted">Chain multiple validators together for complex validation logic.</p>
+
+            <form id="chainForm" novalidate>
+                <div class="mb-3">
+                    <label for="vc-username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="vc-username">
+                    <div class="form-text" id="vc-username-feedback"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="vc-password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="vc-password">
+                    <div class="form-text" id="vc-password-feedback"></div>
+                    <div class="progress mt-1" style="height:4px;"><div class="progress-bar" id="vc-pass-bar" style="width:0%"></div></div>
+                </div>
+                <div class="mb-3">
+                    <label for="vc-url" class="form-label">Website URL</label>
+                    <input type="url" class="form-control" id="vc-url" placeholder="https://example.com">
+                    <div class="form-text" id="vc-url-feedback"></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Validate Chain</button>
+            </form>
+        </section>
+
+        <!-- SECTION 2: Rule Engine -->
+        <section class="demo-section" id="rule-engine">
+            <h2 class="h4 mb-3">2. JSON Rule Engine</h2>
+            <p class="text-muted">Define validation rules as JSON. Easy to update without changing code.</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Validation Rules (JSON)</label>
+                    <textarea class="form-control font-monospace" id="rulesJson" rows="12" style="font-size:0.8rem;">{
+  "email": { "required": true, "type": "email", "message": "Valid email required" },
+  "age": { "required": true, "min": 18, "max": 120, "message": "Age must be 18-120" },
+  "username": { "required": true, "minLength": 3, "maxLength": 16, "pattern": "^[a-zA-Z0-9_]+$", "message": "3-16 alphanumeric chars" },
+  "website": { "type": "url", "message": "Valid URL required" },
+  "bio": { "maxLength": 500, "message": "Max 500 characters" }
+}</textarea>
+                    <button class="btn btn-outline-primary btn-sm mt-2" id="loadRules">Reload Rules</button>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Test Form</label>
+                    <form id="ruleForm">
+                        <div class="mb-3">
+                            <label for="re-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="re-email" name="email">
+                            <div class="invalid-feedback" id="re-email-msg"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="re-age" class="form-label">Age</label>
+                            <input type="number" class="form-control" id="re-age" name="age">
+                            <div class="invalid-feedback" id="re-age-msg"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="re-username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="re-username" name="username">
+                            <div class="invalid-feedback" id="re-username-msg"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="re-bio" class="form-label">Bio</label>
+                            <textarea class="form-control" id="re-bio" name="bio" rows="2"></textarea>
+                            <div class="invalid-feedback" id="re-bio-msg"></div>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="validateRules">Validate Against Rules</button>
+                    </form>
+                    <div id="ruleResults" class="mt-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: Dependent Field Validation -->
+        <section class="demo-section" id="dependent">
+            <h2 class="h4 mb-3">3. Dependent Field Validation</h2>
+
+            <form id="depForm" novalidate>
+                <div class="mb-3">
+                    <label for="dep-type" class="form-label">Account Type</label>
+                    <select class="form-select" id="dep-type">
+                        <option value="personal">Personal</option>
+                        <option value="business">Business</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="dep-name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="dep-name" required>
+                    <div class="invalid-feedback">Name required.</div>
+                </div>
+                <div class="mb-3 d-none" id="dep-company-group">
+                    <label for="dep-company" class="form-label">Company Name</label>
+                    <input type="text" class="form-control" id="dep-company">
+                    <div class="invalid-feedback">Company name required for business accounts.</div>
+                </div>
+                <div class="mb-3 d-none" id="dep-tax-group">
+                    <label for="dep-tax" class="form-label">Tax ID</label>
+                    <input type="text" class="form-control" id="dep-tax" pattern="[0-9]{2}-[0-9]{7}">
+                    <div class="invalid-feedback">Format: XX-XXXXXXX</div>
+                </div>
+                <div class="mb-3">
+                    <label for="dep-country" class="form-label">Country</label>
+                    <select class="form-select" id="dep-country">
+                        <option value="US">United States</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="CA">Canada</option>
+                    </select>
+                </div>
+                <div class="mb-3 d-none" id="dep-zip-group">
+                    <label for="dep-zip" class="form-label">Zip Code</label>
+                    <input type="text" class="form-control" id="dep-zip" pattern="[0-9]{5}">
+                    <div class="invalid-feedback">US zip: 5 digits</div>
+                </div>
+                <div class="mb-3 d-none" id="dep-postcode-group">
+                    <label for="dep-postcode" class="form-label">Postcode</label>
+                    <input type="text" class="form-control" id="dep-postcode">
+                    <div class="invalid-feedback">Postcode required.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </section>
+
+        <!-- SECTION 4: Composite Validators -->
+        <section class="demo-section" id="composite">
+            <h2 class="h4 mb-3">4. Composite Validators</h2>
+            <p class="text-muted">Combine multiple validation rules with AND/OR logic.</p>
+
+            <form id="compositeForm">
+                <div class="mb-3">
+                    <label for="cv-field" class="form-label">Test Field</label>
+                    <input type="text" class="form-control" id="cv-field" placeholder="Try different values...">
+                    <div class="form-text" id="cv-feedback">Must be: not empty AND (email OR phone) AND min 5 chars</div>
+                </div>
+                <button type="button" class="btn btn-primary" id="cv-validate">Validate (Composite)</button>
+                <div class="mt-2" id="cv-result"></div>
+            </form>
+        </section>
+
+        <!-- SECTION 5: Real-Time Validation Summary -->
+        <section class="demo-section" id="summary">
+            <h2 class="h4 mb-3">5. Live Validation Summary</h2>
+
+            <form id="summaryForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="ls-name" class="form-label">Name <span id="ls-name-status"></span></label>
+                            <input type="text" class="form-control" id="ls-name" required minlength="2">
+                        </div>
+                        <div class="mb-3">
+                            <label for="ls-email" class="form-label">Email <span id="ls-email-status"></span></label>
+                            <input type="email" class="form-control" id="ls-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ls-pass" class="form-label">Password <span id="ls-pass-status"></span></label>
+                            <input type="password" class="form-control" id="ls-pass" required minlength="8">
+                        </div>
+                        <div class="mb-3">
+                            <label for="ls-age" class="form-label">Age <span id="ls-age-status"></span></label>
+                            <input type="number" class="form-control" id="ls-age" required min="18" max="120">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header"><strong>Validation Summary</strong></div>
+                            <div class="card-body" id="validationSummary">
+                                <p class="text-muted">Start filling the form...</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress" style="height:20px;">
+                                <div class="progress-bar" id="summaryProgress" style="width:0%">0%</div>
+                            </div>
+                            <small class="text-muted">Form completion</small>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================
+        // 1. Validator Chain
+        // ============================================
+        function createValidatorChain() {
+            const validators = [];
+            return {
+                add(fn) { validators.push(fn); return this; },
+                validate(value) {
+                    for (const fn of validators) {
+                        const result = fn(value);
+                        if (result !== true) return result;
+                    }
+                    return true;
+                }
+            };
+        }
+
+        const usernameChain = createValidatorChain()
+            .add(v => v.length > 0 || 'Username is required')
+            .add(v => v.length >= 3 || 'Min 3 characters')
+            .add(v => v.length <= 16 || 'Max 16 characters')
+            .add(v => /^[a-zA-Z0-9_]+$/.test(v) || 'Only letters, numbers, underscore')
+            .add(v => !['admin','root','test'].includes(v.toLowerCase()) || 'Username reserved');
+
+        const passwordChain = createValidatorChain()
+            .add(v => v.length >= 8 || 'Min 8 characters')
+            .add(v => /[A-Z]/.test(v) || 'Need uppercase letter')
+            .add(v => /[a-z]/.test(v) || 'Need lowercase letter')
+            .add(v => /[0-9]/.test(v) || 'Need a number')
+            .add(v => /[^a-zA-Z0-9]/.test(v) || 'Need special character');
+
+        const urlChain = createValidatorChain()
+            .add(v => v.length > 0 || true) // optional
+            .add(v => v.length === 0 || /^https?:\/\/.+/.test(v) || 'Must start with http:// or https://')
+            .add(v => v.length === 0 || /\.[a-z]{2,}/i.test(v) || 'Must have a valid domain');
+
+        document.getElementById('vc-username').addEventListener('input', function() {
+            const result = usernameChain.validate(this.value);
+            const fb = document.getElementById('vc-username-feedback');
+            if (result === true) {
+                this.classList.remove('is-invalid'); this.classList.add('is-valid');
+                fb.textContent = ''; fb.className = 'form-text text-success';
+            } else {
+                this.classList.remove('is-valid'); this.classList.add('is-invalid');
+                fb.textContent = result; fb.className = 'form-text text-danger';
+            }
+        });
+
+        document.getElementById('vc-password').addEventListener('input', function() {
+            const result = passwordChain.validate(this.value);
+            const fb = document.getElementById('vc-password-feedback');
+            const bar = document.getElementById('vc-pass-bar');
+            const checks = [this.value.length >= 8, /[A-Z]/.test(this.value), /[a-z]/.test(this.value), /[0-9]/.test(this.value), /[^a-zA-Z0-9]/.test(this.value)];
+            const score = checks.filter(Boolean).length * 20;
+            bar.style.width = score + '%';
+            bar.className = 'progress-bar ' + (score < 40 ? 'bg-danger' : score < 80 ? 'bg-warning' : 'bg-success');
+            if (result === true) {
+                this.classList.remove('is-invalid'); this.classList.add('is-valid');
+                fb.textContent = 'Strong password'; fb.className = 'form-text text-success';
+            } else {
+                this.classList.remove('is-valid');
+                fb.textContent = result; fb.className = 'form-text text-danger';
+            }
+        });
+
+        document.getElementById('vc-url').addEventListener('input', function() {
+            const result = urlChain.validate(this.value);
+            const fb = document.getElementById('vc-url-feedback');
+            if (result === true) {
+                this.classList.remove('is-invalid'); if (this.value) this.classList.add('is-valid');
+                fb.textContent = this.value ? 'Valid URL' : ''; fb.className = 'form-text text-success';
+            } else {
+                this.classList.remove('is-valid'); this.classList.add('is-invalid');
+                fb.textContent = result; fb.className = 'form-text text-danger';
+            }
+        });
+
+        // ============================================
+        // 2. Rule Engine
+        // ============================================
+        let rules = {};
+        function loadRulesFromJson() {
+            try {
+                rules = JSON.parse(document.getElementById('rulesJson').value);
+            } catch(e) {
+                alert('Invalid JSON: ' + e.message);
+            }
+        }
+        loadRulesFromJson();
+
+        document.getElementById('loadRules').addEventListener('click', loadRulesFromJson);
+
+        function validateByRules(data) {
+            const errors = {};
+            for (const [field, rule] of Object.entries(rules)) {
+                const value = data[field] || '';
+                if (rule.required && !value) { errors[field] = rule.message || field + ' is required'; continue; }
+                if (!value) continue;
+                if (rule.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { errors[field] = rule.message; continue; }
+                if (rule.type === 'url' && !/^https?:\/\/.+/.test(value)) { errors[field] = rule.message; continue; }
+                if (rule.minLength && value.length < rule.minLength) { errors[field] = rule.message; continue; }
+                if (rule.maxLength && value.length > rule.maxLength) { errors[field] = rule.message; continue; }
+                if (rule.min && parseFloat(value) < rule.min) { errors[field] = rule.message; continue; }
+                if (rule.max && parseFloat(value) > rule.max) { errors[field] = rule.message; continue; }
+                if (rule.pattern && !new RegExp(rule.pattern).test(value)) { errors[field] = rule.message; continue; }
+            }
+            return errors;
+        }
+
+        document.getElementById('validateRules').addEventListener('click', function() {
+            const data = {};
+            document.querySelectorAll('#ruleForm input, #ruleForm textarea').forEach(function(el) {
+                data[el.name] = el.value;
+                el.classList.remove('is-valid', 'is-invalid');
+            });
+            const errors = validateByRules(data);
+            let html = '';
+            for (const [field, msg] of Object.entries(errors)) {
+                const el = document.querySelector('[name="' + field + '"]');
+                if (el) el.classList.add('is-invalid');
+                document.getElementById('re-' + field + '-msg').textContent = msg;
+                html += '<div class="text-danger">❌ ' + field + ': ' + msg + '</div>';
+            }
+            document.querySelectorAll('#ruleForm input, #ruleForm textarea').forEach(function(el) {
+                if (!errors[el.name] && el.value) el.classList.add('is-valid');
+            });
+            if (!html) html = '<div class="text-success">✅ All fields valid!</div>';
+            document.getElementById('ruleResults').innerHTML = html;
+        });
+
+        // ============================================
+        // 3. Dependent Fields
+        // ============================================
+        document.getElementById('dep-type').addEventListener('change', function() {
+            const biz = this.value === 'business';
+            document.getElementById('dep-company-group').classList.toggle('d-none', !biz);
+            document.getElementById('dep-tax-group').classList.toggle('d-none', !biz);
+            document.getElementById('dep-company').required = biz;
+            document.getElementById('dep-tax').required = biz;
+        });
+
+        document.getElementById('dep-country').addEventListener('change', function() {
+            document.getElementById('dep-zip-group').classList.toggle('d-none', this.value !== 'US');
+            document.getElementById('dep-postcode-group').classList.toggle('d-none', this.value === 'US');
+            document.getElementById('dep-zip').required = this.value === 'US';
+            document.getElementById('dep-postcode').required = this.value !== 'US';
+        });
+
+        document.getElementById('depForm').addEventListener('submit', function(e) {
+            if (!this.checkValidity()) { e.preventDefault(); e.stopPropagation(); }
+            this.classList.add('was-validated');
+        });
+
+        // ============================================
+        // 4. Composite Validators
+        // ============================================
+        function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+        function isValidPhone(v) { return /^[\d\s\-()]{10,}$/.test(v); }
+
+        document.getElementById('cv-validate').addEventListener('click', function() {
+            const v = document.getElementById('cv-field').value;
+            const results = [];
+
+            results.push({ label: 'Not empty', pass: v.length > 0 });
+            results.push({ label: 'Min 5 chars', pass: v.length >= 5 });
+            results.push({ label: 'Is email', pass: isValidEmail(v) });
+            results.push({ label: 'Is phone', pass: isValidPhone(v) });
+            results.push({ label: 'Is email OR phone', pass: isValidEmail(v) || isValidPhone(v) });
+
+            const composite = v.length > 0 && v.length >= 5 && (isValidEmail(v) || isValidPhone(v));
+
+            let html = results.map(r => '<span class="' + (r.pass ? 'text-success' : 'text-danger') + '">' + (r.pass ? '✅' : '❌') + ' ' + r.label + '</span>').join('<br>');
+            html += '<br><strong class="' + (composite ? 'text-success' : 'text-danger') + '">' + (composite ? '✅ COMPOSITE: VALID' : '❌ COMPOSITE: INVALID') + '</strong>';
+            document.getElementById('cv-result').innerHTML = html;
+        });
+
+        // ============================================
+        // 5. Live Validation Summary
+        // ============================================
+        const summaryFields = [
+            { id: 'ls-name', label: 'Name', validate: v => v.length >= 2 },
+            { id: 'ls-email', label: 'Email', validate: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+            { id: 'ls-pass', label: 'Password', validate: v => v.length >= 8 },
+            { id: 'ls-age', label: 'Age', validate: v => parseInt(v) >= 18 && parseInt(v) <= 120 }
+        ];
+
+        function updateSummary() {
+            let valid = 0;
+            let html = '<ul class="list-unstyled mb-0">';
+            summaryFields.forEach(function(f) {
+                const el = document.getElementById(f.id);
+                const val = el.value;
+                const pass = f.validate(val);
+                const hasVal = val.length > 0;
+                if (pass) valid++;
+                const status = !hasVal ? '⚪' : pass ? '✅' : '❌';
+                document.getElementById(f.id + '-status').textContent = status;
+                html += '<li>' + status + ' ' + f.label + (hasVal && !pass ? ' <small class="text-danger">(invalid)</small>' : '') + '</li>';
+            });
+            html += '</ul>';
+            document.getElementById('validationSummary').innerHTML = html;
+
+            const pct = Math.round((valid / summaryFields.length) * 100);
+            const bar = document.getElementById('summaryProgress');
+            bar.style.width = pct + '%';
+            bar.textContent = pct + '%';
+            bar.className = 'progress-bar ' + (pct < 50 ? 'bg-danger' : pct < 100 ? 'bg-warning' : 'bg-success');
+        }
+
+        summaryFields.forEach(function(f) {
+            document.getElementById(f.id).addEventListener('input', updateSummary);
+        });
+
+        document.getElementById('summaryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            updateSummary();
+            const valid = summaryFields.every(f => f.validate(document.getElementById(f.id).value));
+            alert(valid ? 'Form valid!' : 'Please fix errors.');
+        });
+    </script>
+</body>
+</html>

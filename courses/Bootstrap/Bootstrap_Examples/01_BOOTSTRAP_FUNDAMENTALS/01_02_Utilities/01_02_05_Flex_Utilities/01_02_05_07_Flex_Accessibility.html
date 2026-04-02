@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 - Flex Accessibility</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .a11y-item {
+            padding: 1rem 1.5rem;
+            color: #fff;
+            border: 2px solid #fff;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 0.375rem;
+        }
+        .demo-border {
+            border: 3px dashed #dc3545;
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+
+    <!-- ========================================== -->
+    <!-- PAGE HEADER                                 -->
+    <!-- ========================================== -->
+    <h1 class="display-4 fw-bold text-primary mb-3">Flex Utilities &amp; Accessibility</h1>
+    <p class="lead text-muted mb-5">
+        When using flex utilities, accessibility must remain a priority. Screen readers,
+        keyboard navigation, and assistive technologies rely on the <strong>DOM order</strong>,
+        not the visual order. This page covers best practices for keeping flex layouts accessible.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: DOM ORDER VS VISUAL ORDER        -->
+    <!-- Screen readers follow DOM order. Visual    -->
+    <!-- reordering with flex can create confusion. -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-4 mb-3">1. DOM Order vs. Visual Order</h2>
+    <div class="alert alert-danger">
+        <strong>Critical:</strong> Screen readers and keyboard tab order follow the HTML DOM order,
+        <em>not</em> the visual order created by <code>flex-row-reverse</code>, <code>order-*</code>,
+        or other flex reordering utilities.
+    </div>
+    <div class="demo-border">
+        <div class="d-flex flex-row-reverse gap-2">
+            <div class="a11y-item bg-primary">1st in DOM (last visually)</div>
+            <div class="a11y-item bg-secondary">2nd in DOM</div>
+            <div class="a11y-item bg-success">3rd in DOM (first visually)</div>
+        </div>
+    </div>
+    <p>
+        A screen reader announces "1st in DOM" first, even though it appears last visually.
+        <strong>Always ensure DOM order matches the logical reading order.</strong>
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: SEMANTIC HTML WITH FLEX          -->
+    <!-- Use semantic elements (nav, main, aside)   -->
+    <!-- even when applying flex utilities.         -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">2. Use Semantic HTML Elements</h2>
+    <p>
+        Applying <code>d-flex</code> to <code>&lt;div&gt;</code> elements strips away semantic meaning.
+        Use semantic containers where possible.
+    </p>
+    <div class="demo-border">
+        <!-- Using semantic nav element with flex -->
+        <nav class="d-flex justify-content-between align-items-center p-3 bg-dark text-white rounded"
+             aria-label="Main navigation">
+            <span class="fw-bold">Site Name</span>
+            <div class="d-flex gap-3" role="menubar">
+                <a href="#" class="text-white text-decoration-none" role="menuitem">Home</a>
+                <a href="#" class="text-white text-decoration-none" role="menuitem">About</a>
+                <a href="#" class="text-white text-decoration-none" role="menuitem">Contact</a>
+            </div>
+        </nav>
+    </div>
+    <p class="text-muted">
+        The <code>&lt;nav&gt;</code> element with <code>aria-label</code> helps screen readers
+        identify this as a navigation landmark.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: ARIA LABELS & ROLES             -->
+    <!-- Add ARIA attributes to clarify the         -->
+    <!-- purpose of flex containers to AT users.    -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">3. ARIA Labels &amp; Roles</h2>
+    <p>
+        When flex containers create visual groupings, add ARIA attributes to convey structure.
+    </p>
+    <div class="demo-border">
+        <div class="d-flex gap-3" role="group" aria-label="Action buttons">
+            <button class="btn btn-success">Save</button>
+            <button class="btn btn-warning">Edit</button>
+            <button class="btn btn-danger">Delete</button>
+        </div>
+    </div>
+    <p class="text-muted">
+        <code>role="group"</code> with <code>aria-label</code> tells assistive technology that
+        these buttons form a logical group.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: FOCUS MANAGEMENT                 -->
+    <!-- Ensure focus order matches DOM order and   -->
+    <!-- is logical when using flex utilities.      -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">4. Keyboard Focus Order</h2>
+    <p>
+        Tab order follows DOM order. Never use <code>order-*</code> to rearrange focusable elements
+        if it breaks the logical tab sequence.
+    </p>
+    <div class="demo-border">
+        <p class="mb-2 fw-semibold">Correct: DOM order matches visual order</p>
+        <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-outline-primary">First Tab</button>
+            <button class="btn btn-outline-primary">Second Tab</button>
+            <button class="btn btn-outline-primary">Third Tab</button>
+        </div>
+        <p class="mb-2 fw-semibold text-danger">Incorrect: order-3, order-1, order-2 breaks tab flow</p>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger order-3">Tab 1 (DOM) → 3rd focus</button>
+            <button class="btn btn-outline-danger order-1">Tab 2 (DOM) → 1st focus</button>
+            <button class="btn btn-outline-danger order-2">Tab 3 (DOM) → 2nd focus</button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 5: RESPONSIVE VISIBILITY WITH FLEX  -->
+    <!-- When hiding items for mobile, use          -->
+    <!-- d-none/d-md-flex so AT doesn't lose them.  -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">5. Responsive Visibility</h2>
+    <p>
+        When using responsive flex display classes, be aware that <code>d-none</code> removes items
+        from the accessibility tree entirely. Use <code>visually-hidden</code> for items that should
+        remain accessible but hidden visually.
+    </p>
+    <div class="demo-border">
+        <div class="d-flex gap-3 align-items-center">
+            <span class="badge bg-primary">Always visible</span>
+            <span class="d-none d-md-inline badge bg-secondary">Hidden on mobile (d-none d-md-inline)</span>
+            <span class="visually-hidden">Hidden visually but read by screen readers</span>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 6: READING ORDER FOR FLEX-COLUMN    -->
+    <!-- Flex-column-reverse flips vertical order.  -->
+    <!-- Ensure content still makes sense linearly. -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">6. Vertical Order Concerns</h2>
+    <div class="alert alert-warning">
+        <code>flex-column-reverse</code> and <code>order-*</code> in column layouts can
+        make content read in a nonsensical order for screen reader users.
+    </div>
+    <div class="demo-border">
+        <div class="d-flex flex-column-reverse gap-2" style="max-width: 400px;">
+            <div class="a11y-item bg-primary">Conclusion (DOM 3 — appears on top)</div>
+            <div class="a11y-item bg-secondary">Evidence (DOM 2 — middle)</div>
+            <div class="a11y-item bg-success">Introduction (DOM 1 — appears on bottom)</div>
+        </div>
+    </div>
+    <p>
+        A screen reader reads "Introduction" first, then "Evidence", then "Conclusion" — which
+        may confuse users if the visual order suggests a different narrative flow.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 7: COLOR CONTRAST                  -->
+    <!-- When flex creates tag/chip lists, ensure   -->
+    <!-- text meets WCAG contrast requirements.     -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">7. Color Contrast in Flex Layouts</h2>
+    <p>
+        Flex layouts often contain badges, tags, and small text. Ensure sufficient color contrast
+        (minimum 4.5:1 for normal text, 3:1 for large text per WCAG AA).
+    </p>
+    <div class="demo-border">
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge bg-primary text-white fs-6 px-3 py-2">Good Contrast</span>
+            <span class="badge bg-success text-white fs-6 px-3 py-2">Good Contrast</span>
+            <span class="badge bg-warning text-dark fs-6 px-3 py-2">Good Contrast</span>
+            <span class="badge bg-danger text-white fs-6 px-3 py-2">Good Contrast</span>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 8: SKIP LINKS & LANDMARKS           -->
+    <!-- Provide skip navigation links for flex     -->
+    <!-- based layouts with many items.             -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">8. Skip Links &amp; Landmark Regions</h2>
+    <p>
+        For complex flex layouts, provide skip links and use ARIA landmarks so keyboard users
+        can jump to key sections.
+    </p>
+    <div class="demo-border">
+        <a href="#main-content" class="visually-hidden-focusable btn btn-primary mb-2">
+            Skip to main content
+        </a>
+        <div class="d-flex flex-column flex-md-row gap-3">
+            <aside class="p-3 bg-white border rounded" style="flex: 0 0 200px;"
+                   aria-label="Sidebar navigation">
+                <h6>Sidebar</h6>
+                <nav>
+                    <a href="#" class="d-block mb-1">Link 1</a>
+                    <a href="#" class="d-block mb-1">Link 2</a>
+                    <a href="#" class="d-block">Link 3</a>
+                </nav>
+            </aside>
+            <main id="main-content" class="p-3 bg-white border rounded flex-grow-1">
+                <h6>Main Content</h6>
+                <p class="mb-0">The skip link targets this <code>&lt;main&gt;</code> region.</p>
+            </main>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- BEST PRACTICES SUMMARY                      -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">Best Practices Summary</h2>
+    <ol class="list-group list-group-numbered mb-4">
+        <li class="list-group-item">Maintain DOM order that matches the logical reading sequence</li>
+        <li class="list-group-item">Use semantic HTML elements (<code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;aside&gt;</code>)</li>
+        <li class="list-group-item">Add <code>aria-label</code> and <code>role</code> attributes to flex groups</li>
+        <li class="list-group-item">Never use <code>order-*</code> or <code>flex-*-reverse</code> on focusable elements if it breaks tab flow</li>
+        <li class="list-group-item">Ensure text contrast meets WCAG AA standards (4.5:1 minimum)</li>
+        <li class="list-group-item">Provide skip links for complex flex layouts</li>
+        <li class="list-group-item">Use <code>visually-hidden</code> instead of <code>d-none</code> when content should remain accessible</li>
+    </ol>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

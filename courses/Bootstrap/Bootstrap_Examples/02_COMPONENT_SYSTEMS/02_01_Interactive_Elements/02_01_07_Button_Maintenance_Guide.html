@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ========================================== -->
+    <!-- 02_01_07: Button Maintenance Guide          -->
+    <!-- Maintainable patterns, documentation,       -->
+    <!-- naming conventions, code organization      -->
+    <!-- ========================================== -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02_01_07 - Button Maintenance Guide</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ========================================== */
+        /* MAINTAINABLE CSS ARCHITECTURE              */
+        /* Using BEM-like naming and CSS custom props */
+        /* ========================================== */
+
+        /* Component namespace: all custom button classes prefixed with .app-btn */
+        /* This prevents conflicts with Bootstrap updates */
+        :root {
+            /* Design tokens: single source of truth for button values */
+            --app-btn-radius: 0.375rem;
+            --app-btn-font-weight: 500;
+            --app-btn-transition: 0.15s ease-in-out;
+            --app-btn-padding-x-sm: 0.75rem;
+            --app-btn-padding-y-sm: 0.375rem;
+            --app-btn-padding-x-md: 1rem;
+            --app-btn-padding-y-md: 0.5rem;
+            --app-btn-padding-x-lg: 1.5rem;
+            --app-btn-padding-y-lg: 0.75rem;
+        }
+
+        /* Base component class */
+        .app-btn {
+            /* Uses design tokens for consistency */
+            border-radius: var(--app-btn-radius);
+            font-weight: var(--app-btn-font-weight);
+            transition: all var(--app-btn-transition);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Size modifiers using BEM convention: .app-btn--{size} */
+        .app-btn--sm { padding: var(--app-btn-padding-y-sm) var(--app-btn-padding-x-sm); font-size: 0.875rem; }
+        .app-btn--md { padding: var(--app-btn-padding-y-md) var(--app-btn-padding-x-md); font-size: 1rem; }
+        .app-btn--lg { padding: var(--app-btn-padding-y-lg) var(--app-btn-padding-x-lg); font-size: 1.125rem; }
+
+        /* Variant modifiers: .app-btn--{variant} */
+        .app-btn--primary { background: #0d6efd; color: #fff; border: 1px solid #0d6efd; }
+        .app-btn--primary:hover { background: #0b5ed7; border-color: #0a58ca; }
+        .app-btn--secondary { background: #6c757d; color: #fff; border: 1px solid #6c757d; }
+        .app-btn--secondary:hover { background: #5c636a; border-color: #565e64; }
+
+        /* State modifiers: .app-btn.is-{state} */
+        .app-btn.is-loading { pointer-events: none; opacity: 0.7; }
+        .app-btn.is-disabled { pointer-events: none; opacity: 0.5; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold text-primary mb-4">Button Maintenance Guide</h1>
+        <p class="lead text-muted mb-5">
+            Patterns for long-term maintainability, consistent naming, and clear documentation.
+        </p>
+
+        <!-- ========================================== -->
+        <!-- SECTION 1: COMPONENT INVENTORY             -->
+        <!-- A visual catalog of all button variants    -->
+        <!-- used in the application.                   -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Button Component Inventory</h2>
+            <div class="card p-4">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Component</th>
+                            <th>Class</th>
+                            <th>Usage</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Primary Action</td>
+                            <td><code>.btn .btn-primary</code></td>
+                            <td>Main form submit, confirm</td>
+                            <td><button class="btn btn-primary btn-sm">Save</button></td>
+                        </tr>
+                        <tr>
+                            <td>Secondary Action</td>
+                            <td><code>.btn .btn-secondary</code></td>
+                            <td>Cancel, back, dismiss</td>
+                            <td><button class="btn btn-secondary btn-sm">Cancel</button></td>
+                        </tr>
+                        <tr>
+                            <td>Danger Action</td>
+                            <td><code>.btn .btn-danger</code></td>
+                            <td>Delete, destructive</td>
+                            <td><button class="btn btn-danger btn-sm">Delete</button></td>
+                        </tr>
+                        <tr>
+                            <td>Outline Action</td>
+                            <td><code>.btn .btn-outline-*</code></td>
+                            <td>Less prominent actions</td>
+                            <td><button class="btn btn-outline-primary btn-sm">View</button></td>
+                        </tr>
+                        <tr>
+                            <td>Icon Button</td>
+                            <td><code>.btn .btn-icon</code></td>
+                            <td>Compact actions</td>
+                            <td><button class="btn btn-outline-secondary btn-sm" aria-label="Settings">&#9881;</button></td>
+                        </tr>
+                        <tr>
+                            <td>Link Button</td>
+                            <td><code>.btn .btn-link</code></td>
+                            <td>Navigation, tertiary</td>
+                            <td><button class="btn btn-link btn-sm">Learn more</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 2: NAMING CONVENTIONS             -->
+        <!-- Consistent naming patterns for buttons    -->
+        <!-- across the codebase.                      -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Naming Conventions</h2>
+            <div class="card p-4">
+                <h6>CSS Class Naming (BEM-like)</h6>
+                <pre class="bg-dark text-light p-3 rounded small"><code>/* Block: the component */
+.app-btn { }
+
+/* Element: child of block */
+.app-btn__icon { }
+.app-btn__label { }
+
+/* Modifier: variant of block */
+.app-btn--primary { }
+.app-btn--large { }
+.app-btn--loading { }
+
+/* State: temporary condition */
+.app-btn.is-active { }
+.app-btn.is-disabled { }
+.app-btn.is-loading { }</code></pre>
+
+                <h6 class="mt-3">data-* Attribute Naming</h6>
+                <pre class="bg-dark text-light p-3 rounded small"><code>/* Action: what the button does */
+data-action="submit-form"
+data-action="delete-item"
+
+/* Target: what it acts on */
+data-target="#myModal"
+data-target-item="user-123"
+
+/* Test ID: for automated testing */
+data-testid="btn-save-changes"
+data-testid="btn-cancel-modal"</code></pre>
+
+                <h6 class="mt-3">JavaScript Function Naming</h6>
+                <pre class="bg-dark text-light p-3 rounded small"><code>// Verb-noun pattern for handlers
+function handleSubmit() { }
+function handleDeleteClick() { }
+function handleToggleState() { }
+
+// "get" for data retrieval
+function getButtonState() { }
+
+// "set" for state mutation
+function setButtonLoading() { }
+function setButtonDisabled() { }</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 3: DESIGN TOKENS                  -->
+        <!-- Centralized design values for consistency -->
+        <!-- and easy updates.                         -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Design Token System</h2>
+            <div class="card p-4">
+                <p class="text-muted small">
+                    CSS custom properties as design tokens. Change values in one place,
+                    update everywhere automatically.
+                </p>
+
+                <!-- Buttons using design tokens -->
+                <div class="mb-3">
+                    <button class="app-btn app-btn--primary app-btn--sm me-2">Small</button>
+                    <button class="app-btn app-btn--primary app-btn--md me-2">Medium</button>
+                    <button class="app-btn app-btn--primary app-btn--lg">Large</button>
+                </div>
+                <div class="mb-3">
+                    <button class="app-btn app-btn--secondary app-btn--md">Secondary</button>
+                </div>
+
+                <!-- Token customization demo -->
+                <h6 class="mt-3">Live Token Override</h6>
+                <div class="mb-2">
+                    <label class="form-label small">Border Radius: <span id="radiusValue">0.375rem</span></label>
+                    <input type="range" class="form-range" min="0" max="2" step="0.1" value="0.375"
+                           style="max-width:300px;" oninput="updateRadius(this.value)">
+                </div>
+                <button class="app-btn app-btn--primary app-btn--md" id="tokenDemoBtn">Dynamic Token</button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 4: LIFECYCLE DOCUMENTATION        -->
+        <!-- Documenting button state transitions.     -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Button Lifecycle Documentation</h2>
+            <div class="card p-4">
+                <pre class="bg-dark text-light p-3 rounded small"><code>/**
+ * Button State Lifecycle
+ *
+ * [IDLE] --click--> [LOADING] --success--> [SUCCESS] --timeout(2s)--> [IDLE]
+ *                  [LOADING] --error--> [ERROR] --retry--> [LOADING]
+ *                  [LOADING] --timeout(30s)--> [TIMEOUT] --retry--> [LOADING]
+ *
+ * State transitions:
+ * - IDLE: Default state, interactive
+ * - LOADING: Disabled, spinner visible, aria-busy="true"
+ * - SUCCESS: Green background, checkmark, 2s auto-reset
+ * - ERROR: Red background, error icon, retry button
+ * - TIMEOUT: Yellow background, refresh prompt
+ */</code></pre>
+
+                <!-- Interactive lifecycle demo -->
+                <div class="mt-3">
+                    <button type="button" class="btn btn-primary" id="lifecycleBtn"
+                            onclick="runLifecycle()">
+                        Start Lifecycle Demo
+                    </button>
+                    <span class="ms-2 badge bg-secondary" id="lifecycleState">IDLE</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 5: DEPRECATION PATTERNS           -->
+        <!-- How to mark and migrate deprecated        -->
+        <!-- button patterns.                          -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Deprecation Patterns</h2>
+            <div class="card p-4">
+                <h6 class="text-warning">Deprecated Pattern (will be removed in v3.0)</h6>
+                <!-- Old pattern with data-deprecated attribute -->
+                <button type="button" class="btn btn-primary me-2" data-deprecated="true"
+                        data-deprecated-reason="Use data-bs-toggle instead of data-toggle"
+                        data-deprecated-since="v2.1">
+                    Old Toggle Pattern
+                </button>
+
+                <h6 class="text-success mt-3">Current Pattern</h6>
+                <button type="button" class="btn btn-primary me-2" data-bs-toggle="button">
+                    Current Toggle Pattern
+                </button>
+
+                <pre class="bg-dark text-light p-3 rounded small mt-3"><code>/**
+ * @deprecated since v2.1 - Use data-bs-toggle="button" instead
+ * @see {@link https://getbootstrap.com/docs/5.3/components/buttons/#toggle-states}
+ * Migration: Replace data-toggle with data-bs-toggle
+ * Removal planned: v3.0
+ */</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 6: FILE ORGANIZATION              -->
+        <!-- Recommended structure for button-related  -->
+        <!-- files in a project.                       -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Recommended File Organization</h2>
+            <div class="card p-4">
+                <pre class="bg-dark text-light p-3 rounded small"><code>src/
+  components/
+    buttons/
+      Button.tsx              # Base Button component
+      ButtonGroup.tsx         # Button Group wrapper
+      IconButton.tsx          # Icon-only button variant
+      SplitButton.tsx         # Split dropdown button
+      ToggleButton.tsx        # Toggle state button
+      index.ts                # Public exports
+      buttons.module.css      # Scoped styles
+      buttons.test.tsx        # Unit tests
+      buttons.stories.tsx     # Storybook stories
+      __snapshots__/          # Visual regression baselines
+
+  styles/
+    _tokens.scss              # Design tokens (colors, spacing)
+    _buttons.scss             # Global button overrides
+
+  types/
+    buttons.ts                # TypeScript interfaces
+    // ButtonVariant, ButtonSize, ButtonState, etc.</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 7: CHANGELOG PATTERN              -->
+        <!-- Documenting button component changes.     -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Component Changelog</h2>
+            <div class="card p-4">
+                <pre class="bg-dark text-light p-3 rounded small"><code>## Button Component Changelog
+
+### v2.3.0 (2024-01-15)
+- Added: Loading state with spinner animation
+- Added: aria-busy attribute during loading
+- Fixed: Focus ring not visible in high contrast mode
+
+### v2.2.0 (2023-11-01)
+- Added: Icon button variant with aria-label enforcement
+- Changed: Default border-radius to 0.375rem (Bootstrap 5.3)
+- Deprecated: data-toggle attribute (use data-bs-toggle)
+
+### v2.1.0 (2023-09-01)
+- Added: Button group keyboard navigation
+- Fixed: Disabled state cursor showing pointer
+- Changed: Transition duration from 0.2s to 0.15s</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 8: MIGRATION HELPER               -->
+        <!-- Interactive tool to check button patterns -->
+        <!-- against current best practices.           -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Pattern Checker</h2>
+            <div class="card p-4">
+                <p class="text-muted small">Paste button HTML to check against best practices:</p>
+                <textarea class="form-control mb-3" id="patternInput" rows="4" placeholder='<button class="btn btn-primary" onclick="doThing()">Click</button>'></textarea>
+                <button class="btn btn-primary" onclick="checkPattern()">Check Pattern</button>
+                <div id="patternResults" class="mt-3"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        /* Update design token demo */
+        function updateRadius(value) {
+            document.documentElement.style.setProperty('--app-btn-radius', value + 'rem');
+            document.getElementById('radiusValue').textContent = value + 'rem';
+        }
+
+        /* Lifecycle state machine demo */
+        function runLifecycle() {
+            const btn = document.getElementById('lifecycleBtn');
+            const state = document.getElementById('lifecycleState');
+
+            /* IDLE -> LOADING */
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading...';
+            state.textContent = 'LOADING';
+            state.className = 'ms-2 badge bg-warning';
+
+            setTimeout(() => {
+                /* LOADING -> SUCCESS */
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-success');
+                btn.innerHTML = '\u2713 Saved!';
+                state.textContent = 'SUCCESS';
+                state.className = 'ms-2 badge bg-success';
+
+                setTimeout(() => {
+                    /* SUCCESS -> IDLE (auto-reset) */
+                    btn.disabled = false;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-primary');
+                    btn.textContent = 'Start Lifecycle Demo';
+                    state.textContent = 'IDLE';
+                    state.className = 'ms-2 badge bg-secondary';
+                }, 2000);
+            }, 2000);
+        }
+
+        /* Pattern checker: validates HTML against best practices */
+        function checkPattern() {
+            const input = document.getElementById('patternInput').value;
+            const results = [];
+
+            /* Check: uses button element */
+            if (!/<button/i.test(input) && /div|span/i.test(input)) {
+                results.push({ type: 'error', msg: 'Use <button> instead of <div> or <span>' });
+            } else if (/<button/i.test(input)) {
+                results.push({ type: 'success', msg: 'Uses semantic <button> element' });
+            }
+
+            /* Check: inline onclick (CSP violation) */
+            if (/onclick=/i.test(input)) {
+                results.push({ type: 'warning', msg: 'Inline onclick violates strict CSP. Use addEventListener.' });
+            } else {
+                results.push({ type: 'success', msg: 'No inline event handlers' });
+            }
+
+            /* Check: has accessible name */
+            if (/<button[^>]*>\s*<\/button>/i.test(input) && !/aria-label/i.test(input)) {
+                results.push({ type: 'error', msg: 'Empty button without aria-label - screen readers cannot announce this' });
+            }
+
+            /* Check: data-testid for testing */
+            if (!/data-testid/i.test(input)) {
+                results.push({ type: 'info', msg: 'Consider adding data-testid for automated testing' });
+            } else {
+                results.push({ type: 'success', msg: 'Has data-testid attribute' });
+            }
+
+            /* Check: Bootstrap 5 data attributes */
+            if (/data-toggle/i.test(input)) {
+                results.push({ type: 'warning', msg: 'data-toggle is Bootstrap 4. Use data-bs-toggle for Bootstrap 5.' });
+            }
+
+            /* Render results */
+            const container = document.getElementById('patternResults');
+            container.innerHTML = results.map(r =>
+                '<div class="alert alert-' + (r.type === 'error' ? 'danger' : r.type === 'warning' ? 'warning' : r.type === 'success' ? 'success' : 'info') + ' py-2 mb-1">' +
+                (r.type === 'error' ? '\u2717' : r.type === 'warning' ? '\u26a0' : r.type === 'success' ? '\u2713' : '\u2139') +
+                ' ' + r.msg + '</div>'
+            ).join('');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         03_01_02 - Complex Grid Layouts
+         ============================================
+         Dashboard, magazine-style, and masonry-like
+         layouts using Bootstrap grid + CSS Grid hybrid.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_02 - Complex Grid Layouts</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ============================================
+           DASHBOARD GRID LAYOUT
+           A typical admin dashboard with header, sidebar,
+           KPI cards, chart area, and table sections
+        ================================================ */
+        .dashboard-grid {
+            display: grid;
+            /* Sidebar 250px fixed, main content fills remaining space */
+            grid-template-columns: 250px 1fr;
+            /* Header auto-height, content fills remaining viewport */
+            grid-template-rows: 60px 1fr;
+            grid-template-areas:
+                "sidebar header"
+                "sidebar content";
+            min-height: 100vh;
+            gap: 0;
+        }
+
+        /* Responsive: stack on small screens */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+                grid-template-areas:
+                    "header"
+                    "sidebar"
+                    "content";
+            }
+            .dashboard-sidebar {
+                /* Hide sidebar by default on mobile */
+                display: none;
+            }
+            .dashboard-sidebar.show {
+                display: block;
+            }
+        }
+
+        .dashboard-header {
+            grid-area: header;
+            background: #212529;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .dashboard-sidebar {
+            grid-area: sidebar;
+            background: #343a40;
+            color: white;
+            padding: 20px;
+        }
+
+        .dashboard-content {
+            grid-area: content;
+            background: #f8f9fa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* KPI Cards Grid - 4 cards across */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .kpi-card .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0d6efd;
+        }
+
+        .kpi-card .kpi-label {
+            color: #6c757d;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Chart + Table layout: 2/3 chart, 1/3 table */
+        .chart-table-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 992px) {
+            .chart-table-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ============================================
+           MAGAZINE LAYOUT
+           Editorial-style layout with featured articles,
+           sidebars, and image-heavy content
+        ================================================ */
+        .magazine-grid {
+            display: grid;
+            /* 12-column grid mimicking print magazine layout */
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: minmax(100px, auto);
+            gap: 15px;
+        }
+
+        /* Featured article spans 8 columns and 2 rows */
+        .mag-featured {
+            grid-column: 1 / 9;
+            grid-row: 1 / 3;
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        /* Sidebar articles */
+        .mag-sidebar-top {
+            grid-column: 9 / 13;
+            grid-row: 1 / 2;
+            background: #198754;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .mag-sidebar-bottom {
+            grid-column: 9 / 13;
+            grid-row: 2 / 3;
+            background: #dc3545;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        /* Bottom row: 3 equal articles */
+        .mag-article {
+            grid-column: span 4;
+            background: #ffc107;
+            color: #212529;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        /* Responsive magazine: stack on smaller screens */
+        @media (max-width: 768px) {
+            .mag-featured,
+            .mag-sidebar-top,
+            .mag-sidebar-bottom,
+            .mag-article {
+                grid-column: 1 / -1;
+                grid-row: auto;
+            }
+        }
+
+        /* ============================================
+           MASONRY-LIKE LAYOUT
+           Simulating CSS masonry using grid-row: span
+           to create varied-height items in a grid
+        ================================================ */
+        .masonry-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* Dense packing fills gaps left by taller items */
+            grid-auto-flow: dense;
+            gap: 15px;
+        }
+
+        .masonry-item {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #0d6efd;
+        }
+
+        /* Vary the row spans to create masonry effect */
+        .masonry-tall { grid-row: span 2; background: linear-gradient(180deg, #cfe2ff, #e9ecef); }
+        .masonry-short { grid-row: span 1; }
+        .masonry-wide { grid-column: span 2; background: linear-gradient(90deg, #d1e7dd, #e9ecef); }
+
+        @media (max-width: 768px) {
+            .masonry-grid {
+                grid-template-columns: 1fr;
+            }
+            .masonry-wide {
+                grid-column: span 1;
+            }
+        }
+
+        /* ============================================
+           HOMEPAGE HERO GRID
+           Large hero section with multiple overlapping
+           content blocks
+        ================================================ */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 300px;
+            gap: 20px;
+        }
+
+        .hero-card {
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            color: white;
+        }
+
+        .hero-primary {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        }
+
+        .hero-secondary {
+            background: linear-gradient(135deg, #6f42c1 0%, #d63384 100%);
+        }
+
+        @media (max-width: 768px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: 200px 200px;
+            }
+        }
+
+        /* ============================================
+           CARD GRID WITH VARYING SIZES
+           Pinterest-style grid with featured cards
+           spanning more space
+        ================================================ */
+        .varied-card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: 150px;
+            gap: 15px;
+        }
+
+        .varied-card {
+            background: #e9ecef;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            border: 2px solid #dee2e6;
+        }
+
+        .varied-card.featured {
+            grid-column: span 2;
+            grid-row: span 2;
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            color: white;
+            border: none;
+        }
+
+        @media (max-width: 992px) {
+            .varied-card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .varied-card-grid {
+                grid-template-columns: 1fr;
+            }
+            .varied-card.featured {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+        }
+
+        /* ============================================
+           STATS ROW - Bootstrap grid + CSS Grid hybrid
+        ================================================ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stat-box .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .stat-box .stat-label {
+            color: #6c757d;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        /* Sidebar navigation styling */
+        .sidebar-nav a {
+            display: block;
+            color: #adb5bd;
+            text-decoration: none;
+            padding: 8px 10px;
+            border-radius: 5px;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        /* Placeholder chart */
+        .chart-placeholder {
+            background: linear-gradient(180deg, #e7f1ff 0%, #fff 100%);
+            border: 2px dashed #b6d4fe;
+            border-radius: 10px;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0d6efd;
+            font-weight: 500;
+        }
+
+        /* Activity list */
+        .activity-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-0">
+
+        <!-- ============================================
+             LAYOUT 1: DASHBOARD LAYOUT
+             Full dashboard with sidebar, header, KPIs,
+             chart area, and activity feed
+        ================================================ -->
+        <section class="mb-5">
+            <div class="container mt-4">
+                <h1 class="mb-4">03_01_02 - Complex Grid Layouts</h1>
+                <h2 class="h4 mb-3">1. Dashboard Layout</h2>
+                <p class="text-muted mb-3">
+                    A complete admin dashboard using CSS Grid named areas for the main shell,
+                    with nested CSS Grid and Bootstrap components inside content areas.
+                </p>
+            </div>
+
+            <!-- Dashboard shell using CSS Grid areas -->
+            <div class="dashboard-grid" style="height: 500px; border-radius: 10px; overflow: hidden; margin: 0 15px;">
+                <!-- Sidebar navigation area -->
+                <div class="dashboard-sidebar">
+                    <h5 class="mb-3">Dashboard</h5>
+                    <nav class="sidebar-nav">
+                        <a href="#" class="active">Overview</a>
+                        <a href="#">Analytics</a>
+                        <a href="#">Reports</a>
+                        <a href="#">Users</a>
+                        <a href="#">Settings</a>
+                    </nav>
+                </div>
+
+                <!-- Top header bar -->
+                <div class="dashboard-header">
+                    <strong>Admin Panel</strong>
+                    <span class="ms-auto">Welcome, User</span>
+                </div>
+
+                <!-- Main content area with nested grids -->
+                <div class="dashboard-content">
+                    <!-- KPI stat cards row -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-value">12,458</div>
+                            <div class="kpi-label">Total Users</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" style="color: #198754;">$84,230</div>
+                            <div class="kpi-label">Revenue</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" style="color: #ffc107;">3,847</div>
+                            <div class="kpi-label">Orders</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" style="color: #dc3545;">98.2%</div>
+                            <div class="kpi-label">Uptime</div>
+                        </div>
+                    </div>
+
+                    <!-- Chart + Activity feed side by side -->
+                    <div class="chart-table-grid">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Revenue Chart</h5>
+                                <div class="chart-placeholder">[Chart Visualization]</div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Recent Activity</h5>
+                                <div class="activity-item"><small class="text-muted">2 min ago</small><br>User #4521 signed up</div>
+                                <div class="activity-item"><small class="text-muted">15 min ago</small><br>Order #8832 completed</div>
+                                <div class="activity-item"><small class="text-muted">1 hr ago</small><br>New report generated</div>
+                                <div class="activity-item"><small class="text-muted">3 hrs ago</small><br>System backup completed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container">
+            <!-- ============================================
+                 LAYOUT 2: MAGAZINE/EDITORIAL LAYOUT
+                 Print-inspired layout with featured stories
+                 and varying article sizes
+            ================================================ -->
+            <section class="mb-5">
+                <h2 class="h4 mb-3">2. Magazine / Editorial Layout</h2>
+                <p class="text-muted mb-3">
+                    A 12-column CSS Grid replicating print magazine layouts. The featured article
+                    spans 8 columns and 2 rows, with sidebar articles and bottom row articles.
+                </p>
+
+                <div class="magazine-grid">
+                    <!-- Featured article: large hero piece -->
+                    <div class="mag-featured">
+                        <h2>Featured: The Future of Web Development</h2>
+                        <p>An in-depth look at emerging technologies shaping the next decade of web development, from AI-assisted coding to edge computing.</p>
+                        <small>By Jane Smith | 10 min read</small>
+                    </div>
+
+                    <!-- Sidebar top article -->
+                    <div class="mag-sidebar-top">
+                        <h5>Tech Trends 2026</h5>
+                        <p class="small">Top 10 technologies to watch this year.</p>
+                    </div>
+
+                    <!-- Sidebar bottom article -->
+                    <div class="mag-sidebar-bottom">
+                        <h5>Interview: CTO Insights</h5>
+                        <p class="small">Leading CTOs share their strategies.</p>
+                    </div>
+
+                    <!-- Bottom row: 3 equal articles -->
+                    <div class="mag-article">
+                        <h5>CSS Grid Mastery</h5>
+                        <p class="small mb-0">Advanced techniques for complex layouts.</p>
+                    </div>
+                    <div class="mag-article">
+                        <h5>Performance Tips</h5>
+                        <p class="small mb-0">Optimize your grid rendering performance.</p>
+                    </div>
+                    <div class="mag-article">
+                        <h5>Accessibility First</h5>
+                        <p class="small mb-0">Building inclusive grid interfaces.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 LAYOUT 3: MASONRY-LIKE LAYOUT
+                 Using grid-row: span and auto-flow: dense
+                 to simulate Pinterest-style masonry
+            ================================================ -->
+            <section class="mb-5">
+                <h2 class="h4 mb-3">3. Masonry-like Layout (No JavaScript)</h2>
+                <p class="text-muted mb-3">
+                    Uses <code>grid-auto-flow: dense</code> combined with varying
+                    <code>grid-row: span</code> values to create a masonry packing effect
+                    without JavaScript.
+                </p>
+
+                <div class="masonry-grid">
+                    <div class="masonry-item masonry-tall">
+                        <h5>Tall Card 1</h5>
+                        <p>This card spans 2 rows. Dense packing fills gaps automatically.</p>
+                        <p>Additional content to demonstrate height.</p>
+                    </div>
+                    <div class="masonry-item masonry-short">
+                        <h5>Short Card 2</h5>
+                        <p>Standard 1-row card.</p>
+                    </div>
+                    <div class="masonry-item masonry-short">
+                        <h5>Short Card 3</h5>
+                        <p>Standard 1-row card.</p>
+                    </div>
+                    <div class="masonry-item masonry-wide">
+                        <h5>Wide Card 4 (spans 2 columns)</h5>
+                        <p>This card spans 2 columns for emphasis.</p>
+                    </div>
+                    <div class="masonry-item masonry-tall">
+                        <h5>Tall Card 5</h5>
+                        <p>Another tall card spanning 2 rows.</p>
+                        <p>More content here.</p>
+                    </div>
+                    <div class="masonry-item masonry-short">
+                        <h5>Short Card 6</h5>
+                        <p>Standard 1-row card.</p>
+                    </div>
+                    <div class="masonry-item masonry-short">
+                        <h5>Short Card 7</h5>
+                        <p>Standard 1-row card.</p>
+                    </div>
+                    <div class="masonry-item masonry-short">
+                        <h5>Short Card 8</h5>
+                        <p>Standard 1-row card.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 LAYOUT 4: HERO GRID
+                 Homepage hero section with two large cards
+            ================================================ -->
+            <section class="mb-5">
+                <h2 class="h4 mb-3">4. Hero Section Grid</h2>
+                <p class="text-muted mb-3">
+                    A split hero section using CSS Grid for equal-height cards with
+                    gradient backgrounds. Collapses to stacked on mobile.
+                </p>
+
+                <div class="hero-grid">
+                    <div class="hero-card hero-primary">
+                        <h2>Build Better Layouts</h2>
+                        <p>Master Bootstrap's grid system with advanced CSS Grid integration techniques.</p>
+                        <a href="#" class="btn btn-light mt-2" style="width: fit-content;">Get Started</a>
+                    </div>
+                    <div class="hero-card hero-secondary">
+                        <h2>Advanced Patterns</h2>
+                        <p>Explore dashboard, masonry, and editorial layout patterns.</p>
+                        <a href="#" class="btn btn-light mt-2" style="width: fit-content;">Learn More</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 LAYOUT 5: VARIED CARD GRID
+                 Pinterest-style with featured cards spanning
+                 multiple rows and columns
+            ================================================ -->
+            <section class="mb-5">
+                <h2 class="h4 mb-3">5. Varied-size Card Grid</h2>
+                <p class="text-muted mb-3">
+                    A grid where some cards are "featured" and span 2 columns and 2 rows,
+                    creating visual hierarchy. Uses Bootstrap cards inside CSS Grid.
+                </p>
+
+                <div class="varied-card-grid">
+                    <div class="varied-card featured">Featured 1</div>
+                    <div class="varied-card">Card A</div>
+                    <div class="varied-card">Card B</div>
+                    <div class="varied-card">Card C</div>
+                    <div class="varied-card">Card D</div>
+                    <div class="varied-card featured">Featured 2</div>
+                    <div class="varied-card">Card E</div>
+                    <div class="varied-card">Card F</div>
+                    <div class="varied-card">Card G</div>
+                    <div class="varied-card">Card H</div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 LAYOUT 6: STATS OVERVIEW
+                 Responsive stat boxes using auto-fit
+            ================================================ -->
+            <section class="mb-5">
+                <h2 class="h4 mb-3">6. Stats Overview Row</h2>
+                <p class="text-muted mb-3">
+                    Using <code>auto-fit</code> with <code>minmax()</code> for a stats row that
+                    automatically adjusts the number of columns.
+                </p>
+
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-number text-primary">1,245</div>
+                        <div class="stat-label">Page Views</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number text-success">892</div>
+                        <div class="stat-label">Conversions</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number text-warning">3.2%</div>
+                        <div class="stat-label">Bounce Rate</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number text-danger">45</div>
+                        <div class="stat-label">Errors</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number text-info">2.4s</div>
+                        <div class="stat-label">Avg Load</div>
+                    </div>
+                </div>
+            </section>
+
+        </div><!-- /.container -->
+    </div><!-- /.container-fluid -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

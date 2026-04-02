@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<!-- HTML5 document declaration -->
+<html lang="en">
+<!-- Root element with language attribute -->
+
+<head>
+    <!-- Character encoding -->
+    <meta charset="UTF-8">
+    <!-- Viewport meta for responsive design -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Page title -->
+    <title>Bootstrap 5 Position - Accessibility</title>
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles for accessibility demos -->
+    <style>
+        /* Visually hidden class - hides element visually but keeps it accessible to screen readers */
+        /* This is preferred over display:none for accessibility purposes */
+        .sr-only-custom {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Demo container */
+        .demo-container {
+            min-height: 150px;
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Main container -->
+    <div class="container my-5">
+        <!-- Page heading -->
+        <h1 class="mb-4">Position Utilities and Accessibility</h1>
+        <p class="lead">How to use position utilities while maintaining accessibility standards.</p>
+
+        <!-- ==================== SECTION 1: VISUALLY HIDDEN CONTENT ==================== -->
+        <!-- Screen reader only content using position -->
+        <section class="mb-5">
+            <h2>1. Visually Hidden Content</h2>
+            <!-- Alert explaining visually hidden pattern -->
+            <div class="alert alert-info">
+                <!-- Bootstrap's .visually-hidden class uses position:absolute to hide elements visually -->
+                <!-- The element is removed from visual display but remains in the DOM -->
+                <!-- Screen readers can still access and announce the content -->
+                <!-- Essential for providing context to non-visual users -->
+            </div>
+
+            <!-- Example: Icon button with hidden text label -->
+            <div class="demo-container">
+                <h3>Icon-Only Buttons</h3>
+                <!-- Button with only an icon - needs hidden text for accessibility -->
+                <!-- The span with visually-hidden provides context for screen readers -->
+                <button class="btn btn-primary me-2" aria-label="Search">
+                    <!-- Icon placeholder -->
+                    <span aria-hidden="true">&#128269;</span>
+                    <!-- Visually hidden text - accessible to screen readers only -->
+                    <span class="visually-hidden">Search</span>
+                </button>
+
+                <button class="btn btn-danger me-2" aria-label="Delete">
+                    <span aria-hidden="true">&#128465;</span>
+                    <span class="visually-hidden">Delete item</span>
+                </button>
+
+                <button class="btn btn-success" aria-label="Settings">
+                    <span aria-hidden="true">&#9881;</span>
+                    <span class="visually-hidden">Settings</span>
+                </button>
+
+                <!-- Explanation of what's happening -->
+                <p class="mt-3 text-muted">
+                    These buttons use <code>.visually-hidden</code> (which applies position:absolute) to provide
+                    text labels that screen readers can announce while keeping the visual design clean.
+                </p>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 2: FOCUS MANAGEMENT ==================== -->
+        <!-- How position utilities affect focus order -->
+        <section class="mb-5">
+            <h2>2. Focus Management and Position</h2>
+            <!-- Alert explaining focus and position -->
+            <div class="alert alert-warning">
+                <!-- IMPORTANT: position:absolute/fixed can break the natural tab order -->
+                <!-- Elements with absolute/fixed position may not follow the expected focus sequence -->
+                <!-- Always test keyboard navigation when using these position values -->
+                <!-- Use tabindex to restore proper focus order if needed -->
+            </div>
+
+            <div class="demo-container">
+                <h3>Tab Order with Positioned Elements</h3>
+                <!-- Normal flow elements -->
+                <div class="mb-3">
+                    <label class="form-label">First Name (Tab 1 - normal flow)</label>
+                    <input type="text" class="form-control" placeholder="First name">
+                </div>
+
+                <!-- Positioned element that may affect tab order -->
+                <div class="position-relative">
+                    <div class="mb-3">
+                        <label class="form-label">Last Name (Tab 2 - relative positioned)</label>
+                        <input type="text" class="form-control" placeholder="Last name">
+                    </div>
+
+                    <!-- Absolutely positioned element - tab order may be unexpected -->
+                    <!-- tabindex="3" explicitly sets focus order -->
+                    <div class="position-absolute bg-warning p-2 rounded" style="top: 0; right: 0; z-index: 10;">
+                        <input type="text" class="form-control form-control-sm" placeholder="Tab 3 (absolute)" tabindex="3">
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label class="form-label">Email (Tab 4 - normal flow)</label>
+                    <input type="email" class="form-control" placeholder="Email">
+                </div>
+
+                <p class="mt-3 text-muted">
+                    Press Tab to navigate. Notice how the absolutely positioned input (Tab 3) has an explicit
+                    tabindex to maintain logical focus order.
+                </p>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 3: SKIP LINKS ==================== -->
+        <!-- Skip navigation links using position -->
+        <section class="mb-5">
+            <h2>3. Skip Navigation Links</h2>
+            <!-- Alert explaining skip links -->
+            <div class="alert alert-info">
+                <!-- Skip links allow keyboard users to bypass repetitive navigation -->
+                <!-- Hidden off-screen with position:absolute, becomes visible on focus -->
+                <!-- Critical accessibility feature for keyboard-only users -->
+            </div>
+
+            <div class="demo-container">
+                <h3>Skip Link Example</h3>
+                <!-- Skip link that is positioned off-screen by default -->
+                <!-- When focused (via Tab), it becomes visible -->
+                <a href="#main-content" class="position-absolute bg-primary text-white p-2 rounded"
+                   style="top: -100px; left: 0; z-index: 9999;"
+                   onfocus="this.style.top='10px'"
+                   onblur="this.style.top='-100px'">
+                    Skip to main content
+                </a>
+
+                <!-- Simulated navigation -->
+                <nav class="navbar navbar-light bg-light mb-3 p-2 rounded">
+                    <span class="navbar-brand">Navigation</span>
+                    <span class="text-muted">Tab here first, then the skip link appears</span>
+                </nav>
+
+                <!-- Main content target -->
+                <div id="main-content" class="p-3 bg-light rounded">
+                    <h4>Main Content</h4>
+                    <p>This is where the skip link jumps to, bypassing the navigation.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 4: Z-INDEX AND SCREEN READER ORDER ==================== -->
+        <!-- How z-index affects visual order vs reading order -->
+        <section class="mb-5">
+            <h2>4. Visual Order vs Reading Order</h2>
+            <!-- Alert explaining the disconnect -->
+            <div class="alert alert-danger">
+                <!-- CRITICAL: Position utilities can create a disconnect between visual and DOM order -->
+                <!-- Screen readers follow DOM order, NOT visual order -->
+                <!-- If visual layout differs from DOM order, screen reader users may be confused -->
+                <!-- Always ensure the DOM order makes logical sense -->
+            </div>
+
+            <div class="demo-container position-relative" style="height: 200px;">
+                <h3>Visual vs DOM Order</h3>
+                <!-- These elements are visually positioned at different places -->
+                <!-- But screen readers will read them in DOM order (1, 2, 3) -->
+
+                <!-- DOM order 1, visually at bottom-right -->
+                <div class="position-absolute bottom-0 end-0 bg-primary text-white p-2 rounded">
+                    1. Bottom-Right (DOM first)
+                </div>
+
+                <!-- DOM order 2, visually at top-left -->
+                <div class="position-absolute top-0 start-0 bg-success text-white p-2 rounded" style="margin-top: 60px;">
+                    2. Top-Left (DOM second)
+                </div>
+
+                <!-- DOM order 3, visually at center -->
+                <div class="position-absolute top-50 start-50 translate-middle bg-danger text-white p-2 rounded">
+                    3. Center (DOM third)
+                </div>
+
+                <p class="mt-5 text-muted">
+                    Screen readers read: 1, 2, 3 (DOM order)<br>
+                    Visual layout shows: 2 (top), 3 (center), 1 (bottom)
+                </p>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 5: ARIA LIVE REGIONS WITH POSITION ==================== -->
+        <!-- Positioned live regions for announcements -->
+        <section class="mb-5">
+            <h2>5. Positioned ARIA Live Regions</h2>
+            <!-- Alert explaining live regions -->
+            <div class="alert alert-info">
+                <!-- ARIA live regions announce dynamic content changes to screen readers -->
+                <!-- Often positioned as fixed or absolute to stay visible -->
+                <!-- Toast notifications, alerts, and status messages use this pattern -->
+            </div>
+
+            <div class="demo-container">
+                <h3>Toast Notification (Accessible)</h3>
+                <!-- Fixed-position toast that's also an ARIA live region -->
+                <!-- role="alert" and aria-live="polite" ensure screen readers announce changes -->
+                <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header">
+                            <strong class="me-auto">Notification</strong>
+                            <button type="button" class="btn-close" aria-label="Close notification"></button>
+                        </div>
+                        <div class="toast-body">
+                            Your changes have been saved successfully.
+                        </div>
+                    </div>
+                </div>
+
+                <p class="mt-3 text-muted">
+                    This toast uses <code>role="alert"</code> and <code>aria-live="assertive"</code> so
+                    screen readers will announce it immediately when it appears.
+                </p>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 6: ACCESSIBILITY CHECKLIST ==================== -->
+        <!-- Summary checklist for accessible positioning -->
+        <section class="mb-5">
+            <h2>6. Accessibility Checklist for Position Utilities</h2>
+            <!-- Checklist alert -->
+            <div class="alert alert-success">
+                <!-- Best practices summary -->
+            </div>
+
+            <!-- Bootstrap list group for checklist -->
+            <ul class="list-group">
+                <li class="list-group-item d-flex align-items-center">
+                    <span class="badge bg-success me-3">Done</span>
+                    DOM order matches logical reading order (not just visual order)
+                </li>
+                <li class="list-group-item d-flex align-items-center">
+                    <span class="badge bg-success me-3">Done</span>
+                    Icon-only buttons have <code>.visually-hidden</code> text labels
+                </li>
+                <li class="list-group-item d-flex align-items-center">
+                    <span class="badge bg-success me-3">Done</span>
+                    Keyboard focus order is logical and follows visual flow
+                </li>
+                <li class="list-group-item d-flex align-items-center">
+                    <span class="badge bg-success me-3">Done</span>
+                    Skip navigation links are available for keyboard users
+                </li>
+                <li class="list-group-item d-flex align-items-center">
+                    <span class="badge bg-success me-3">Done</span>
+                    Fixed elements don't obscure focusable content
+                </li>
+                <li class="list-group-item d-flex align-items-center">
+                    <span class="badge bg-success me-3">Done</span>
+                    Live regions (alerts, toasts) use proper ARIA attributes
+                </li>
+                <li class="list-group-item d-flex align-items-center">
+                    <span class="badge bg-success me-3">Done</span>
+                    Z-index stacking doesn't hide interactive elements
+                </li>
+            </ul>
+        </section>
+
+    </div>
+    <!-- Bootstrap 5 JS bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

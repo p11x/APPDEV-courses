@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================= -->
+    <!-- FILE: 02_04_03_Navbar_Accessibility_Patterns.html              -->
+    <!-- TOPIC: ARIA Landmarks, Skip Links, Keyboard Navigation         -->
+    <!-- ============================================================= -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navbar Accessibility Patterns - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-section { margin-bottom: 3rem; padding: 1.5rem; border: 1px solid #dee2e6; border-radius: 0.375rem; }
+        .demo-section h4 { margin-bottom: 1rem; border-bottom: 2px solid #0d6efd; padding-bottom: 0.5rem; }
+        
+        /* ============================================================= */
+        /* SKIP LINK STYLES                                                */
+        /* Skip links are invisible until focused via keyboard Tab        */
+        /* They allow keyboard users to bypass repetitive navigation      */
+        /* ============================================================= */
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 0;
+            z-index: 9999;
+            padding: 1rem;
+            background: #0d6efd;
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: top 0.3s;
+        }
+        /* When skip link receives focus, move it into the visible viewport */
+        .skip-link:focus {
+            top: 0;
+        }
+        
+        /* Focus visible styles for enhanced keyboard navigation */
+        .navbar .nav-link:focus-visible {
+            outline: 3px solid #ffc107;
+            outline-offset: 2px;
+            border-radius: 2px;
+        }
+        
+        /* High contrast focus for dropdown items */
+        .dropdown-item:focus-visible {
+            outline: 3px solid #0d6efd;
+            outline-offset: -2px;
+            background-color: #e7f1ff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================= -->
+    <!-- SECTION 1: SKIP LINK                                            -->
+    <!-- A skip link allows keyboard users to bypass the navbar          -->
+    <!-- and jump directly to the main content area                      -->
+    <!-- ============================================================= -->
+    
+    <!--
+        SKIP LINK PATTERN:
+        - Must be the FIRST element in the <body>
+        - Hidden off-screen by default via CSS
+        - Becomes visible when focused (Tab key)
+        - Links to #main-content anchor
+        - Critical for WCAG 2.1 Level A compliance (2.4.1 Bypass Blocks)
+    -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- ============================================================= -->
+    <!-- SECTION 2: ARIA LANDMARK NAVBAR                                 -->
+    <!-- Using proper ARIA roles and attributes for screen readers       -->
+    <!-- ============================================================= -->
+    
+    <!--
+        ARIA LANDMARK ROLES:
+        - <nav> element automatically has role="navigation"
+        - aria-label distinguishes multiple nav elements on a page
+        - aria-current="page" marks the active page link
+        - aria-expanded indicates dropdown/collapse state
+        - aria-controls links button to controlled element
+        - aria-haspopup indicates button opens a menu
+    -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" 
+         aria-label="Main navigation">
+        <div class="container-fluid">
+            <!--
+                Brand link: 
+                - aria-label provides accessible name if using logo/image
+            -->
+            <a class="navbar-brand" href="#" aria-label="Company Home Page">
+                AccessibleNav
+            </a>
+            
+            <!--
+                Hamburger toggler with full ARIA support:
+                - type="button" required for <button> elements
+                - aria-controls references the collapse element ID
+                - aria-expanded auto-managed by Bootstrap JS
+                - aria-label describes the button purpose
+            -->
+            <button class="navbar-toggler" 
+                    type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#accessibleNav" 
+                    aria-controls="accessibleNav" 
+                    aria-expanded="false" 
+                    aria-label="Open main navigation menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="accessibleNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0" role="menubar">
+                    <!--
+                        Active link with aria-current="page":
+                        - Tells screen readers this is the current page
+                        - Values: "page", "step", "location", "date", "time", "true"
+                    -->
+                    <li class="nav-item" role="none">
+                        <a class="nav-link active" 
+                           aria-current="page" 
+                           href="#" 
+                           role="menuitem">Home</a>
+                    </li>
+                    <li class="nav-item" role="none">
+                        <a class="nav-link" href="#" role="menuitem">About</a>
+                    </li>
+                    
+                    <!--
+                        Accessible dropdown:
+                        - aria-haspopup="true" indicates it opens a menu
+                        - aria-expanded managed by Bootstrap
+                        - role="menu" on dropdown UL
+                        - role="menuitem" on dropdown links
+                    -->
+                    <li class="nav-item dropdown" role="none">
+                        <a class="nav-link dropdown-toggle" 
+                           href="#" 
+                           role="menuitem"
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false"
+                           aria-haspopup="true">
+                            Services
+                        </a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li role="none">
+                                <a class="dropdown-item" href="#" role="menuitem">Web Design</a>
+                            </li>
+                            <li role="none">
+                                <a class="dropdown-item" href="#" role="menuitem">Development</a>
+                            </li>
+                            <li role="none">
+                                <hr class="dropdown-divider" role="separator">
+                            </li>
+                            <li role="none">
+                                <a class="dropdown-item" href="#" role="menuitem">All Services</a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item" role="none">
+                        <a class="nav-link" href="#" role="menuitem">Contact</a>
+                    </li>
+                </ul>
+                
+                <!--
+                    Search form accessibility:
+                    - role="search" identifies this as a search landmark
+                    - aria-label on input provides accessible name
+                    - <label> can be visually hidden but must exist
+                -->
+                <form class="d-flex" role="search" aria-label="Site search">
+                    <label for="siteSearch" class="visually-hidden">Search the site</label>
+                    <input class="form-control me-2" 
+                           type="search" 
+                           id="siteSearch"
+                           placeholder="Search" 
+                           aria-label="Search the site">
+                    <button class="btn btn-outline-success" type="submit">
+                        Search
+                        <!-- Visually hidden text for screen readers -->
+                        <span class="visually-hidden">the site</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================= -->
+    <!-- MAIN CONTENT TARGET (for skip link)                             -->
+    <!-- id="main-content" is the target of the skip link               -->
+    <!-- ============================================================= -->
+    <main id="main-content" class="container my-4" tabindex="-1">
+        <h1>Navbar Accessibility Patterns</h1>
+        
+        <div class="demo-section">
+            <h4>3.1 Skip Link Implementation</h4>
+            <p>Press <kbd>Tab</kbd> to reveal the "Skip to main content" link at the top of the page.</p>
+            <ul>
+                <li>Skip links must be the <strong>first focusable element</strong> in the DOM</li>
+                <li>Hidden with <code>position: absolute; top: -100%</code> until focused</li>
+                <li>Target must use <code>tabindex="-1"</code> for programmatic focus</li>
+                <li>Required by WCAG 2.1 SC 2.4.1 (Bypass Blocks - Level A)</li>
+            </ul>
+            <pre class="bg-light p-3"><code>&lt;!-- HTML --&gt;
+&lt;a href="#main-content" class="skip-link"&gt;Skip to main content&lt;/a&gt;
+
+/* CSS */
+.skip-link { position: absolute; top: -100%; }
+.skip-link:focus { top: 0; }
+
+/* Target */
+&lt;main id="main-content" tabindex="-1"&gt;</code></pre>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: ARIA ATTRIBUTE REFERENCE                            -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>3.2 ARIA Attributes Reference</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Element</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>aria-label</code></td>
+                        <td><code>&lt;nav&gt;</code></td>
+                        <td>Provides accessible name when multiple nav elements exist</td>
+                    </tr>
+                    <tr>
+                        <td><code>aria-current="page"</code></td>
+                        <td><code>&lt;a&gt;</code></td>
+                        <td>Indicates the current page in navigation</td>
+                    </tr>
+                    <tr>
+                        <td><code>aria-expanded</code></td>
+                        <td><code>&lt;button&gt;</code></td>
+                        <td>Indicates open/closed state of collapsible content</td>
+                    </tr>
+                    <tr>
+                        <td><code>aria-controls</code></td>
+                        <td><code>&lt;button&gt;</code></td>
+                        <td>References the ID of the controlled element</td>
+                    </tr>
+                    <tr>
+                        <td><code>aria-haspopup</code></td>
+                        <td><code>&lt;a&gt;</code></td>
+                        <td>Indicates the element opens a popup menu</td>
+                    </tr>
+                    <tr>
+                        <td><code>aria-hidden</code></td>
+                        <td>SVG icons</td>
+                        <td>Hides decorative icons from screen readers</td>
+                    </tr>
+                    <tr>
+                        <td><code>.visually-hidden</code></td>
+                        <td><code>&lt;span&gt;</code></td>
+                        <td>Visually hides content but keeps it accessible to screen readers</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: MULTIPLE NAV LANDMARKS                               -->
+        <!-- When multiple <nav> elements exist, each needs aria-label      -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>3.3 Multiple Navigation Landmarks</h4>
+            
+            <!-- Secondary navigation with distinct aria-label -->
+            <nav class="navbar navbar-light bg-light mb-3" aria-label="Secondary navigation">
+                <div class="container-fluid">
+                    <ul class="nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Documentation</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">API Reference</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Community</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            
+            <!-- Breadcrumb navigation -->
+            <nav aria-label="Breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Products</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Current Product</li>
+                </ol>
+            </nav>
+            
+            <!-- Pagination navigation -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-disabled="true" tabindex="-1">Previous</a>
+                    </li>
+                    <li class="page-item"><a class="page-link" href="#" aria-label="Page 1">1</a></li>
+                    <li class="page-item active" aria-current="page">
+                        <a class="page-link" href="#" aria-label="Page 2, current page">2</a>
+                    </li>
+                    <li class="page-item"><a class="page-link" href="#" aria-label="Page 3">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: KEYBOARD NAVIGATION PATTERNS                        -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>3.4 Keyboard Navigation Patterns</h4>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Action</th>
+                        <th>Context</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><kbd>Tab</kbd></td>
+                        <td>Move focus to next focusable element</td>
+                        <td>All navigation elements</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Shift+Tab</kbd></td>
+                        <td>Move focus to previous element</td>
+                        <td>All navigation elements</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Enter</kbd> / <kbd>Space</kbd></td>
+                        <td>Activate link or toggle dropdown</td>
+                        <td>Links, buttons, dropdown toggles</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Escape</kbd></td>
+                        <td>Close dropdown or collapse</td>
+                        <td>Open dropdowns, collapse panels</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Arrow Down</kbd></td>
+                        <td>Move to next dropdown item</td>
+                        <td>Open dropdown menus</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Arrow Up</kbd></td>
+                        <td>Move to previous dropdown item</td>
+                        <td>Open dropdown menus</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: SCREEN READER TESTING CHECKLIST                     -->
+        <!-- ============================================================= -->
+        <div class="demo-section">
+            <h4>3.5 Accessibility Testing Checklist</h4>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="check1">
+                <label class="form-check-label" for="check1">All nav landmarks have unique aria-labels</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="check2">
+                <label class="form-check-label" for="check2">Active link uses aria-current="page"</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="check3">
+                <label class="form-check-label" for="check3">Toggle buttons have aria-expanded and aria-controls</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="check4">
+                <label class="form-check-label" for="check4">Skip link present and functional</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="check5">
+                <label class="form-check-label" for="check5">All interactive elements keyboard accessible</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="check6">
+                <label class="form-check-label" for="check6">Color contrast meets WCAG AA (4.5:1 for text)</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="check7">
+                <label class="form-check-label" for="check7">Focus indicators visible on all interactive elements</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="check8">
+                <label class="form-check-label" for="check8">Dropdown menus navigable with arrow keys</label>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

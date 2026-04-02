@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 05_06_04_Debugging_Tips.html                                  -->
+<!-- Chrome DevTools, CSS Debugging, JS Debugging Strategies       -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debugging Tips - Chrome DevTools &amp; CSS/JS Strategies</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* ============================================================ */
+        /* CSS DEBUGGING TECHNIQUES                                     */
+        /* ============================================================ */
+
+        /* DEBUG TECHNIQUE 1: Outline all elements to visualize layout */
+        /* Uncomment this to see every element's boundaries */
+        /* * { outline: 1px solid red !important; } */
+
+        /* DEBUG TECHNIQUE 2: Color-code different nesting levels */
+        /* .debug-level-1 { outline: 2px solid red; } */
+        /* .debug-level-2 { outline: 2px solid blue; } */
+        /* .debug-level-3 { outline: 2px solid green; } */
+
+        /* DEBUG TECHNIQUE 3: Visualize empty or zero-size elements */
+        /* *:empty { background: magenta !important; min-height: 20px; } */
+
+        /* DEBUG TECHNIQUE 4: Show computed grid/flex lines */
+        .db-grid-debug {
+            /* Chrome DevTools will show grid lines when inspecting */
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            /* Background to visualize grid cells */
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(0,123,255,0.05) 10px,
+                rgba(0,123,255,0.05) 20px
+            );
+        }
+
+        /* Highlight helper - temporary class for debugging */
+        .db-highlight {
+            outline: 3px dashed #dc3545 !important;
+            outline-offset: 2px;
+            position: relative;
+        }
+        .db-highlight::before {
+            content: 'DEBUG';
+            position: absolute;
+            top: -20px;
+            left: 0;
+            background: #dc3545;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            z-index: 9999;
+        }
+
+        /* Layout visualization */
+        .db-show-box-model {
+            background-clip: content-box;
+            padding: 10px;
+            border: 10px solid rgba(0,123,255,0.3);
+            margin: 10px;
+        }
+
+        /* Responsive debug borders */
+        .db-responsive-debug [class*="col"] {
+            outline: 1px dashed rgba(0,123,255,0.5);
+            min-height: 40px;
+        }
+
+        pre.db-code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+        .db-code .comment { color: #6a9955; }
+        .db-code .keyword { color: #569cd6; }
+        .db-code .string { color: #ce9178; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Debugging Tips</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#dbNav" aria-controls="dbNav"
+                    aria-expanded="false" aria-label="Toggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="dbNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#devtools">DevTools</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#css-debug">CSS Debug</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#js-debug">JS Debug</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#bootstrap-debug">Bootstrap</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-dark text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold">&#128269; Debugging Tips</h1>
+            <p class="lead">Chrome DevTools techniques and CSS/JS debugging strategies for Bootstrap projects.</p>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- DEVTOOLS SHORTCUTS & TECHNIQUES                              -->
+    <!-- ============================================================ -->
+    <section id="devtools" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">1. Chrome DevTools Essentials</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Keyboard Shortcuts</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr><td><kbd>F12</kbd> / <kbd>Ctrl+Shift+I</kbd></td><td>Open DevTools</td></tr>
+                                    <tr><td><kbd>Ctrl+Shift+C</kbd></td><td>Inspect element mode</td></tr>
+                                    <tr><td><kbd>Ctrl+Shift+J</kbd></td><td>Open Console</td></tr>
+                                    <tr><td><kbd>Ctrl+P</kbd></td><td>Open any file (Sources)</td></tr>
+                                    <tr><td><kbd>Ctrl+Shift+P</kbd></td><td>Command menu</td></tr>
+                                    <tr><td><kbd>Esc</kbd></td><td>Toggle Console drawer</td></tr>
+                                    <tr><td><kbd>[</kbd> / <kbd>]</kbd></td><td>Prev/next panel (in drawer)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Essential Panels</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <strong>Elements</strong> - Inspect/edit DOM &amp; CSS in real-time
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Console</strong> - Run JS, view logs &amp; errors
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Sources</strong> - Debug JS with breakpoints
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Network</strong> - Monitor requests, CDN loading
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Lighthouse</strong> - Performance &amp; a11y audits
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Rendering</strong> - Paint flashing, FPS meter
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DevTools tips -->
+            <div class="mt-4">
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">&#128161; Pro Tip: Command Menu</h5>
+                    <p class="mb-0">Press <kbd>Ctrl+Shift+P</kbd> and type "coverage" to find unused CSS/JS. Type "screenshot" to capture the page. Type "rendering" to enable paint flashing.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CSS DEBUGGING                                                -->
+    <!-- ============================================================ -->
+    <section id="css-debug" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">2. CSS Debugging Strategies</h2>
+
+            <div class="row g-4">
+                <!-- Strategy 1: Outline debug -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Outline All Elements</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Add to your console or CSS to see every element's boundaries:</p>
+                            <pre class="db-code"><span class="comment">// In browser console:</span>
+document.querySelectorAll('*').forEach(el =&gt; {
+    el.style.outline = '1px solid red';
+});
+
+<span class="comment">/* In CSS (temporary): */</span>
+* { outline: 1px solid red !important; }</pre>
+                            <div class="mt-3 db-responsive-debug">
+                                <div class="row">
+                                    <div class="col-4"><div class="p-2 bg-primary text-white text-center rounded">col-4</div></div>
+                                    <div class="col-4"><div class="p-2 bg-success text-white text-center rounded">col-4</div></div>
+                                    <div class="col-4"><div class="p-2 bg-warning text-center rounded">col-4</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy 2: Computed styles -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Inspect Computed Styles</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>In DevTools Elements panel, check the <strong>Computed</strong> tab to see final values:</p>
+                            <ol>
+                                <li>Right-click element &gt; Inspect</li>
+                                <li>Click "Computed" tab</li>
+                                <li>Expand properties to see source</li>
+                                <li>Use "Filter" to search specific properties</li>
+                            </ol>
+                            <p class="mt-3">Check "Show all" to see inherited and default values.</p>
+                            <div class="db-show-box-model rounded">
+                                <div class="bg-light p-2 rounded text-center">
+                                    Content area (click to inspect box model)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy 3: CSS specificity -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Debug Specificity Issues</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>When a style isn't applying, check the <strong>Styles</strong> panel:</p>
+                            <ul>
+                                <li><span class="text-decoration-line-through text-muted">Crossed out</span> = overridden</li>
+                                <li>Higher rules win (scroll to see all)</li>
+                                <li>Click the file link to jump to source</li>
+                            </ul>
+                            <pre class="db-code"><span class="comment">// Console: check what wins</span>
+getComputedStyle(element).backgroundColor;
+
+<span class="comment">// See all rules targeting an element</span>
+<span class="keyword">console</span>.table(
+    [...element.computedStyleMap()]
+);</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy 4: Visual debug classes -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Visual Debug Classes</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Add temporary debug classes to elements:</p>
+                            <pre class="db-code"><span class="comment">/* Add to your debug CSS */</span>
+.debug-red   { outline: 3px solid red; }
+.debug-blue  { outline: 3px solid blue; }
+.debug-green { outline: 3px solid green; }
+
+<span class="comment">/* Show grid lines */</span>
+.debug-grid [class*="col"] {
+    outline: 1px dashed rgba(0,0,255,0.5);
+}</pre>
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-outline-danger me-1" onclick="toggleDebug()">Toggle Debug Mode</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- JS DEBUGGING                                                 -->
+    <!-- ============================================================ -->
+    <section id="js-debug" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">3. JavaScript Debugging Strategies</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0">Console Techniques</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre class="db-code"><span class="comment">// Styled console output</span>
+<span class="keyword">console</span>.\u0025cStyled text
+    'color: blue; font-size: 20px');
+
+<span class="comment">// Table for structured data</span>
+<span class="keyword">console</span>.table([
+    {name: 'Card', w: 300, h: 200},
+    {name: 'Button', w: 100, h: 40}
+]);
+
+<span class="comment">// Group related logs</span>
+<span class="keyword">console</span>.group('Bootstrap Init');
+<span class="keyword">console</span>.log('Tooltips:', count);
+<span class="keyword">console</span>.log('Modals:', count);
+<span class="keyword">console</span>.groupEnd();
+
+<span class="comment">// Time operations</span>
+<span class="keyword">console</span>.time('Render');
+<span class="comment">// ... expensive code ...</span>
+<span class="keyword">console</span>.timeEnd('Render');
+
+<span class="comment">// Trace call stack</span>
+<span class="keyword">console</span>.trace('Where was this called?');</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0">Breakpoint Techniques</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre class="db-code"><span class="comment">// Conditional breakpoint</span>
+<span class="keyword">debugger</span>; <span class="comment">// Pauses here</span>
+
+<span class="comment">// In Sources panel, right-click line number:</span>
+<span class="comment">// - "Add breakpoint" - always pause</span>
+<span class="comment">// - "Add conditional breakpoint"</span>
+<span class="comment">//   (e.g., i === 5)</span>
+
+<span class="comment">// Event listener breakpoints:</span>
+<span class="comment">// Sources > Event Listener Breakpoints</span>
+<span class="comment">// Check: click, submit, load</span>
+
+<span class="comment">// DOM breakpoint:</span>
+<span class="comment">// Right-click element in Elements</span>
+<span class="comment">// > Break on > subtree modifications</span></pre>
+                            <div class="mt-3">
+                                <button class="btn btn-warning" id="debugBtn" onclick="demoDebug()">
+                                    Click to Demo debugger
+                                </button>
+                                <small class="d-block text-muted mt-1">Opens DevTools first! Will pause at debugger statement.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- BOOTSTRAP-SPECIFIC DEBUGGING                                 -->
+    <!-- ============================================================ -->
+    <section id="bootstrap-debug" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">4. Bootstrap-Specific Debugging</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Common Bootstrap Issues</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="accordion" id="bootstrapIssues">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#issue1">
+                                            Grid not wrapping correctly
+                                        </button>
+                                    </h2>
+                                    <div id="issue1" class="accordion-collapse collapse show"
+                                         data-bs-parent="#bootstrapIssues">
+                                        <div class="accordion-body">
+                                            <strong>Cause:</strong> Columns exceed 12, or missing <code>.row</code>.<br>
+                                            <strong>Fix:</strong> Check column total = 12, ensure container &gt; row &gt; col structure.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#issue2">
+                                            Modal not opening
+                                        </button>
+                                    </h2>
+                                    <div id="issue2" class="accordion-collapse collapse"
+                                         data-bs-parent="#bootstrapIssues">
+                                        <div class="accordion-body">
+                                            <strong>Cause:</strong> Bootstrap JS not loaded, or duplicate modal IDs.<br>
+                                            <strong>Fix:</strong> Verify bundle.js loaded, check for duplicate <code>id</code> attributes.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#issue3">
+                                            Dropdown not working
+                                        </button>
+                                    </h2>
+                                    <div id="issue3" class="accordion-collapse collapse"
+                                         data-bs-parent="#bootstrapIssues">
+                                        <div class="accordion-body">
+                                            <strong>Cause:</strong> Missing <code>data-bs-toggle="dropdown"</code> or Popper.js.<br>
+                                            <strong>Fix:</strong> Use bootstrap.bundle.min.js (includes Popper).
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Bootstrap Console Checks</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre class="db-code"><span class="comment">// Check Bootstrap version</span>
+<span class="keyword">console</span>.log(
+    bootstrap.Tooltip.VERSION
+);
+
+<span class="comment">// List all active Bootstrap components</span>
+document.querySelectorAll(
+    '[data-bs-toggle]'
+).forEach(el =&gt;
+    <span class="keyword">console</span>.log(
+        el.dataset.bsToggle,
+        el
+    )
+);
+
+<span class="comment">// Check if Bootstrap CSS loaded</span>
+[...document.styleSheets]
+    .filter(s =&gt; s.href?.includes('bootstrap'))
+    .forEach(s =&gt;
+        <span class="keyword">console</span>.log('Loaded:', s.href)
+    );
+
+<span class="comment">// Manually trigger Bootstrap event</span>
+<span class="keyword">const</span> modal = bootstrap.Modal
+    .getOrCreateInstance(
+        document.getElementById('myModal')
+    );
+modal.show();</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Debugging Tips. Professional Practice Series.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* Debug toggle - adds outlines to all columns */
+        function toggleDebug() {
+            document.body.classList.toggle('db-responsive-debug');
+        }
+
+        /* Demo debugger statement - pauses execution */
+        function demoDebug() {
+            console.log('About to hit debugger...');
+            debugger; /* This will pause if DevTools is open */
+            console.log('Continued past debugger!');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_02_09_Component_Real_World.html                            -->
+<!-- Bootstrap 5 Real-World JavaScript Patterns                   -->
+<!-- Production-ready component patterns for real applications    -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap Real-World JS Patterns</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="mb-4">Real-World JavaScript Patterns</h1>
+        <p class="lead text-muted">Production-ready patterns for common application scenarios.</p>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 1: Confirmation Dialog Pattern                       -->
+        <!-- Reusable confirmation modal for destructive actions          -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>1. Confirmation Dialog</h2>
+            <p>A reusable confirmation pattern for dangerous actions.</p>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-danger" data-confirm="Are you sure you want to delete this item?" data-action="delete">
+                    Delete Item
+                </button>
+                <button class="btn btn-outline-warning" data-confirm="This will remove all user data. Continue?" data-action="reset">
+                    Reset All Data
+                </button>
+                <button class="btn btn-outline-info" data-confirm="Send notification to all users?" data-action="notify">
+                    Notify All Users
+                </button>
+            </div>
+
+            <!-- Reusable confirmation modal -->
+            <div class="modal fade" id="confirmModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirm Action</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p id="confirmMessage"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="confirmAction">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2" id="confirmResult"></div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 2: Form Wizard / Multi-Step Form                     -->
+        <!-- Multi-step form using tabs with validation at each step      -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>2. Multi-Step Form Wizard</h2>
+            <p>A form wizard that validates each step before proceeding.</p>
+
+            <!-- Step indicators -->
+            <div class="d-flex justify-content-between mb-4" id="wizardSteps">
+                <div class="step-indicator active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <small>Personal</small>
+                </div>
+                <div class="step-indicator" data-step="2">
+                    <div class="step-circle">2</div>
+                    <small>Contact</small>
+                </div>
+                <div class="step-indicator" data-step="3">
+                    <div class="step-circle">3</div>
+                    <small>Review</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form id="wizardForm" novalidate>
+                        <!-- Step 1: Personal Info -->
+                        <div class="wizard-step" data-step="1">
+                            <h5>Personal Information</h5>
+                            <div class="mb-3">
+                                <label for="wizName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="wizName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="wizDob" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="wizDob" required>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Contact Info -->
+                        <div class="wizard-step d-none" data-step="2">
+                            <h5>Contact Information</h5>
+                            <div class="mb-3">
+                                <label for="wizEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="wizEmail" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="wizPhone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="wizPhone" required>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Review -->
+                        <div class="wizard-step d-none" data-step="3">
+                            <h5>Review Your Information</h5>
+                            <div class="bg-light p-3 rounded" id="reviewContent">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="button" class="btn btn-outline-secondary" id="wizardPrev" disabled>Previous</button>
+                            <button type="button" class="btn btn-primary" id="wizardNext">Next</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 3: Search with Debounce + Dropdown Results           -->
+        <!-- Search input with debounced API calls and dropdown results  -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>3. Live Search with Debounce</h2>
+            <p>Search input with debounced filtering and dropdown results.</p>
+
+            <div class="position-relative">
+                <input type="search" class="form-control form-control-lg" id="searchInput" placeholder="Search countries..." autocomplete="off">
+                <div class="list-group position-absolute w-100 shadow d-none" id="searchResults" style="z-index:1000; max-height:200px; overflow-y:auto;"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 4: Data Table with Sorting                           -->
+        <!-- Sortable table using Bootstrap and vanilla JS               -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>4. Sortable Data Table</h2>
+            <p>Click column headers to sort. Uses Bootstrap table styling.</p>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-striped" id="sortTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th data-sort="name" style="cursor:pointer">Name ↕</th>
+                            <th data-sort="age" style="cursor:pointer">Age ↕</th>
+                            <th data-sort="city" style="cursor:pointer">City ↕</th>
+                            <th data-sort="status" style="cursor:pointer">Status ↕</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sortBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 5: Notification Bell with Dropdown                   -->
+        <!-- Notification counter badge with dropdown listing             -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>5. Notification Bell</h2>
+            <p>Click the bell to see notifications. Mark as read with one click.</p>
+
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-outline-dark position-relative" type="button" data-bs-toggle="dropdown" id="notifBell">
+                    🔔
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notifCount">3</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-0" style="width:300px;">
+                    <div class="dropdown-header d-flex justify-content-between align-items-center">
+                        <strong>Notifications</strong>
+                        <button class="btn btn-sm btn-link text-decoration-none" id="markAllRead">Mark all read</button>
+                    </div>
+                    <div class="list-group list-group-flush" id="notifList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 6: Image Gallery with Modal Lightbox                 -->
+        <!-- Thumbnail grid that opens full-size in a modal               -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>6. Image Lightbox Gallery</h2>
+            <p>Click any thumbnail to open in a lightbox modal.</p>
+
+            <div class="row g-3" id="galleryGrid">
+                <!-- Thumbnails populated by JS -->
+            </div>
+
+            <!-- Lightbox modal -->
+            <div class="modal fade" id="lightboxModal" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content bg-dark">
+                        <div class="modal-header border-0">
+                            <h5 class="modal-title text-white" id="lightboxTitle"></h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center p-0">
+                            <div id="lightboxContent" class="p-5 text-white display-1"></div>
+                        </div>
+                        <div class="modal-footer border-0 justify-content-between">
+                            <button class="btn btn-outline-light" id="lightboxPrev">← Prev</button>
+                            <span class="text-white" id="lightboxCounter"></span>
+                            <button class="btn btn-outline-light" id="lightboxNext">Next →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        .step-indicator { text-align: center; flex: 1; position: relative; }
+        .step-circle { width:40px; height:40px; border-radius:50%; background:#dee2e6; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; margin-bottom:4px; }
+        .step-indicator.active .step-circle { background:#0d6efd; color:#fff; }
+        .step-indicator.completed .step-circle { background:#198754; color:#fff; }
+    </style>
+
+    <script>
+        // ============================================================
+        // Pattern 1: Reusable Confirmation Dialog
+        // Any button with data-confirm triggers a confirmation modal
+        // ============================================================
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        let confirmCallback = null;
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-confirm]');
+            if (!btn) return;
+
+            e.preventDefault();
+            const message = btn.getAttribute('data-confirm');
+            const action = btn.getAttribute('data-action');
+
+            document.getElementById('confirmMessage').textContent = message;
+            document.getElementById('confirmAction').setAttribute('data-action', action);
+            confirmModal.show();
+        });
+
+        document.getElementById('confirmAction').addEventListener('click', function () {
+            const action = this.getAttribute('data-action');
+            confirmModal.hide();
+            document.getElementById('confirmResult').innerHTML =
+                `<div class="alert alert-success py-1">Action "<strong>${action}</strong>" confirmed and executed.</div>`;
+        });
+
+        // ============================================================
+        // Pattern 2: Multi-Step Form Wizard
+        // Navigate between steps with validation
+        // ============================================================
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        function showWizardStep(step) {
+            document.querySelectorAll('.wizard-step').forEach(function (el) {
+                el.classList.toggle('d-none', parseInt(el.dataset.step) !== step);
+            });
+
+            document.querySelectorAll('#wizardSteps .step-indicator').forEach(function (el) {
+                const s = parseInt(el.dataset.step);
+                el.classList.toggle('active', s === step);
+                el.classList.toggle('completed', s < step);
+            });
+
+            document.getElementById('wizardPrev').disabled = step === 1;
+            document.getElementById('wizardNext').textContent = step === totalSteps ? 'Submit' : 'Next';
+
+            if (step === totalSteps) {
+                // Populate review
+                document.getElementById('reviewContent').innerHTML = `
+                    <p><strong>Name:</strong> ${document.getElementById('wizName').value || 'N/A'}</p>
+                    <p><strong>DOB:</strong> ${document.getElementById('wizDob').value || 'N/A'}</p>
+                    <p><strong>Email:</strong> ${document.getElementById('wizEmail').value || 'N/A'}</p>
+                    <p><strong>Phone:</strong> ${document.getElementById('wizPhone').value || 'N/A'}</p>
+                `;
+            }
+        }
+
+        function validateStep(step) {
+            const stepEl = document.querySelector(`.wizard-step[data-step="${step}"]`);
+            const inputs = stepEl.querySelectorAll('input[required]');
+            let valid = true;
+            inputs.forEach(function (input) {
+                if (!input.checkValidity()) {
+                    input.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                }
+            });
+            return valid;
+        }
+
+        document.getElementById('wizardNext').addEventListener('click', function () {
+            if (currentStep < totalSteps && !validateStep(currentStep)) return;
+            if (currentStep === totalSteps) {
+                alert('Form submitted successfully!');
+                return;
+            }
+            currentStep++;
+            showWizardStep(currentStep);
+        });
+
+        document.getElementById('wizardPrev').addEventListener('click', function () {
+            if (currentStep > 1) {
+                currentStep--;
+                showWizardStep(currentStep);
+            }
+        });
+
+        // ============================================================
+        // Pattern 3: Debounced Search
+        // Delay search execution until user stops typing
+        // ============================================================
+        const countries = ['Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Australia', 'Austria', 'Bangladesh', 'Belgium', 'Brazil', 'Canada', 'Chile', 'China', 'Colombia', 'Denmark', 'Egypt', 'Finland', 'France', 'Germany', 'Greece', 'India', 'Indonesia', 'Ireland', 'Italy', 'Japan', 'Kenya', 'Mexico', 'Netherlands', 'New Zealand', 'Nigeria', 'Norway', 'Pakistan', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Russia', 'South Africa', 'South Korea', 'Spain', 'Sweden', 'Switzerland', 'Thailand', 'Turkey', 'Ukraine', 'United Kingdom', 'United States', 'Vietnam'];
+
+        function debounce(fn, delay) {
+            let timer;
+            return function () {
+                clearTimeout(timer);
+                const args = arguments;
+                const ctx = this;
+                timer = setTimeout(function () { fn.apply(ctx, args); }, delay);
+            };
+        }
+
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+
+        const performSearch = debounce(function (query) {
+            if (query.length < 2) {
+                searchResults.classList.add('d-none');
+                return;
+            }
+            const matches = countries.filter(function (c) {
+                return c.toLowerCase().includes(query.toLowerCase());
+            }).slice(0, 8);
+
+            if (matches.length === 0) {
+                searchResults.innerHTML = '<div class="list-group-item text-muted">No results found</div>';
+            } else {
+                searchResults.innerHTML = matches.map(function (m) {
+                    return `<button type="button" class="list-group-item list-group-item-action search-result" data-value="${m}">${m}</button>`;
+                }).join('');
+            }
+            searchResults.classList.remove('d-none');
+        }, 300);
+
+        searchInput.addEventListener('input', function () {
+            performSearch(this.value);
+        });
+
+        searchResults.addEventListener('click', function (e) {
+            const item = e.target.closest('.search-result');
+            if (item) {
+                searchInput.value = item.getAttribute('data-value');
+                searchResults.classList.add('d-none');
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.add('d-none');
+            }
+        });
+
+        // ============================================================
+        // Pattern 4: Sortable Table
+        // Click headers to sort ascending/descending
+        // ============================================================
+        const tableData = [
+            { name: 'Alice', age: 28, city: 'New York', status: 'Active' },
+            { name: 'Bob', age: 34, city: 'London', status: 'Inactive' },
+            { name: 'Charlie', age: 22, city: 'Tokyo', status: 'Active' },
+            { name: 'Diana', age: 45, city: 'Paris', status: 'Pending' },
+            { name: 'Eve', age: 31, city: 'Berlin', status: 'Active' },
+            { name: 'Frank', age: 27, city: 'Sydney', status: 'Inactive' },
+        ];
+
+        let sortCol = '';
+        let sortDir = 1;
+
+        function renderTable() {
+            const body = document.getElementById('sortBody');
+            body.innerHTML = tableData.map(function (row) {
+                const statusClass = { Active: 'success', Inactive: 'danger', Pending: 'warning' }[row.status] || 'secondary';
+                return `<tr><td>${row.name}</td><td>${row.age}</td><td>${row.city}</td><td><span class="badge bg-${statusClass}">${row.status}</span></td></tr>`;
+            }).join('');
+        }
+
+        document.querySelectorAll('#sortTable th[data-sort]').forEach(function (th) {
+            th.addEventListener('click', function () {
+                const col = th.getAttribute('data-sort');
+                if (sortCol === col) sortDir *= -1;
+                else { sortCol = col; sortDir = 1; }
+
+                tableData.sort(function (a, b) {
+                    if (a[col] < b[col]) return -1 * sortDir;
+                    if (a[col] > b[col]) return 1 * sortDir;
+                    return 0;
+                });
+                renderTable();
+            });
+        });
+
+        renderTable();
+
+        // ============================================================
+        // Pattern 5: Notification Bell
+        // ============================================================
+        const notifications = [
+            { id: 1, text: 'New user registered', time: '2m ago', read: false },
+            { id: 2, text: 'Server CPU at 90%', time: '15m ago', read: false },
+            { id: 3, text: 'Backup completed', time: '1h ago', read: false },
+        ];
+
+        function renderNotifications() {
+            const list = document.getElementById('notifList');
+            const unread = notifications.filter(function (n) { return !n.read; });
+            document.getElementById('notifCount').textContent = unread.length;
+            document.getElementById('notifCount').className = unread.length > 0
+                ? 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger'
+                : 'visually-hidden';
+
+            list.innerHTML = notifications.map(function (n) {
+                return `<div class="list-group-item ${n.read ? 'bg-light' : ''}" data-notif-id="${n.id}">
+                    <div class="d-flex justify-content-between">
+                        <small>${n.text}</small>
+                        <small class="text-muted">${n.time}</small>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        document.getElementById('notifList').addEventListener('click', function (e) {
+            const item = e.target.closest('[data-notif-id]');
+            if (item) {
+                const id = parseInt(item.getAttribute('data-notif-id'));
+                const notif = notifications.find(function (n) { return n.id === id; });
+                if (notif) notif.read = true;
+                renderNotifications();
+            }
+        });
+
+        document.getElementById('markAllRead').addEventListener('click', function () {
+            notifications.forEach(function (n) { n.read = true; });
+            renderNotifications();
+        });
+
+        renderNotifications();
+
+        // ============================================================
+        // Pattern 6: Image Lightbox Gallery
+        // ============================================================
+        const galleryItems = [
+            { title: 'Mountain', color: '#28a745', icon: '🏔️' },
+            { title: 'Ocean', color: '#007bff', icon: '🌊' },
+            { title: 'Desert', color: '#ffc107', icon: '🏜️' },
+            { title: 'Forest', color: '#198754', icon: '🌲' },
+            { title: 'City', color: '#6c757d', icon: '🏙️' },
+            { title: 'Sunset', color: '#fd7e14', icon: '🌅' },
+        ];
+
+        let lightboxIndex = 0;
+
+        function renderGallery() {
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = galleryItems.map(function (item, i) {
+                return `<div class="col-6 col-md-4 col-lg-2">
+                    <div class="card cursor-pointer" style="cursor:pointer" data-gallery-index="${i}">
+                        <div class="card-body text-center p-4" style="background:${item.color}; color:#fff;">
+                            <span style="font-size:2rem">${item.icon}</span>
+                            <div class="mt-1"><small>${item.title}</small></div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function showLightbox(index) {
+            lightboxIndex = index;
+            const item = galleryItems[index];
+            document.getElementById('lightboxTitle').textContent = item.title;
+            document.getElementById('lightboxContent').innerHTML = `<span style="font-size:5rem">${item.icon}</span>`;
+            document.getElementById('lightboxCounter').textContent = `${index + 1} / ${galleryItems.length}`;
+        }
+
+        document.getElementById('galleryGrid').addEventListener('click', function (e) {
+            const card = e.target.closest('[data-gallery-index]');
+            if (card) {
+                showLightbox(parseInt(card.getAttribute('data-gallery-index')));
+                new bootstrap.Modal(document.getElementById('lightboxModal')).show();
+            }
+        });
+
+        document.getElementById('lightboxPrev').addEventListener('click', function () {
+            lightboxIndex = (lightboxIndex - 1 + galleryItems.length) % galleryItems.length;
+            showLightbox(lightboxIndex);
+        });
+
+        document.getElementById('lightboxNext').addEventListener('click', function () {
+            lightboxIndex = (lightboxIndex + 1) % galleryItems.length;
+            showLightbox(lightboxIndex);
+        });
+
+        renderGallery();
+    </script>
+</body>
+</html>

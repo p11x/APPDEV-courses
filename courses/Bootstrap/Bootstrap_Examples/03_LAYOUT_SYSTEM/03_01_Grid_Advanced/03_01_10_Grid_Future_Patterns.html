@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         03_01_10 - Grid Future Patterns
+         ============================================
+         CSS subgrid, container queries for grids,
+         and upcoming CSS Grid features. Progressive
+         enhancement with fallbacks.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_10 - Grid Future Patterns</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ============================================
+           CSS SUBGRID
+           Subgrid allows child grids to inherit track
+           definitions from their parent grid, enabling
+           true cross-component alignment.
+           Browser support: Chrome 117+, Firefox 71+, Safari 16+
+        ================================================ */
+        .parent-grid {
+            display: grid;
+            /* Parent has 3 columns */
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .subgrid-row {
+            /* Span all 3 parent columns */
+            grid-column: 1 / -1;
+            /* CRITICAL: subgrid inherits parent's column tracks */
+            display: grid;
+            grid-template-columns: subgrid;
+            /* Also inherit row sizing from parent if needed */
+            grid-row: span 1;
+            gap: 10px;
+        }
+
+        .subgrid-cell {
+            background: #cfe2ff;
+            border: 2px solid #9ec5fe;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        /* ============================================
+           SUBGRID FALLBACK
+           For browsers that don't support subgrid,
+           use a regular grid with matching columns
+        ================================================ */
+        @supports not (grid-template-columns: subgrid) {
+            .subgrid-row {
+                /* Fallback: repeat the same column definition */
+                grid-template-columns: repeat(3, 1fr);
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* ============================================
+           CONTAINER QUERIES FOR GRIDS
+           @container allows grid items to respond to
+           their container's size, not just the viewport.
+           Browser support: Chrome 105+, Safari 16+, Firefox 110+
+        ================================================ */
+        .cq-wrapper {
+            /* Define a container context */
+            container-type: inline-size;
+            container-name: grid-container;
+        }
+
+        .cq-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        /* Container query: respond to container width */
+        @container grid-container (min-width: 500px) {
+            .cq-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @container grid-container (min-width: 800px) {
+            .cq-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .cq-item {
+            background: #d1e7dd;
+            border: 2px solid #badbcc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* ============================================
+           CSS NESTING FOR GRIDS
+           CSS Nesting (native, no preprocessor) allows
+           grid styles to be written inline with selectors.
+           Browser support: Chrome 120+, Firefox 117+, Safari 17.2+
+        ================================================ */
+        .nested-css-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+
+            /* Native CSS nesting - child styles inside parent */
+            & .nested-item {
+                background: #fff3cd;
+                border: 2px solid #ffecb5;
+                border-radius: 8px;
+                padding: 15px;
+                text-align: center;
+
+                /* Nested pseudo-class */
+                &:hover {
+                    background: #ffeeba;
+                    transform: translateY(-2px);
+                }
+
+                /* Nested modifier */
+                &.highlighted {
+                    background: #cfe2ff;
+                    border-color: #9ec5fe;
+                }
+            }
+
+            /* Nested media query */
+            @media (max-width: 768px) {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ============================================
+           GRID TEMPLATE AREAS WITH SUBGRID
+           Combining named areas with subgrid for
+           deeply nested aligned layouts
+        ================================================ */
+        .complex-parent {
+            display: grid;
+            grid-template-columns: [sidebar] 200px [main-start] 1fr [main-end];
+            grid-template-rows: [header] auto [content] 1fr [footer] auto;
+            grid-template-areas:
+                "sidebar header"
+                "sidebar content"
+                "sidebar footer";
+            gap: 10px;
+            min-height: 400px;
+        }
+
+        .complex-header { grid-area: header; background: #212529; color: white; padding: 15px; border-radius: 8px; }
+        .complex-sidebar { grid-area: sidebar; background: #343a40; color: white; padding: 15px; border-radius: 8px; }
+        .complex-content { grid-area: content; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 2px solid #dee2e6; }
+
+        /* Subgrid inside content area */
+        .complex-content-grid {
+            display: grid;
+            /* Use subgrid to align with parent's columns */
+            grid-template-columns: subgrid;
+            grid-row: span 1;
+            gap: 10px;
+        }
+
+        @supports not (grid-template-columns: subgrid) {
+            .complex-content-grid {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+
+        .complex-content-cell {
+            background: white;
+            border-radius: 5px;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .complex-footer { grid-area: footer; background: #6c757d; color: white; padding: 15px; border-radius: 8px; }
+
+        /* ============================================
+           masonry-layout CSS PROPERTY (experimental)
+           grid-template-rows: masonry creates a true
+           masonry layout without JavaScript.
+           Support: Firefox only (behind flag), expected in all browsers
+        ================================================ */
+        .future-masonry {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* Fallback for browsers without masonry */
+            grid-auto-rows: 50px;
+            gap: 15px;
+        }
+
+        /* Progressive enhancement: use masonry if supported */
+        @supports (grid-template-rows: masonry) {
+            .future-masonry {
+                grid-template-rows: masonry;
+            }
+        }
+
+        .masonry-block {
+            background: #e2d9f3;
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #c4b5e0;
+        }
+
+        .masonry-block:nth-child(1) { grid-row: span 3; }
+        .masonry-block:nth-child(2) { grid-row: span 2; }
+        .masonry-block:nth-child(3) { grid-row: span 4; }
+        .masonry-block:nth-child(4) { grid-row: span 2; }
+        .masonry-block:nth-child(5) { grid-row: span 3; }
+        .masonry-block:nth-child(6) { grid-row: span 2; }
+
+        /* ============================================
+           @scope FOR GRID ISOLATION (experimental)
+           @scope limits style rules to a specific DOM subtree
+           Browser support: Chrome 118+, Safari 17.4+
+        ================================================ */
+        /* @scope (.dark-section) {
+            .scoped-grid { background: #212529; }
+            .scoped-item { background: #343a40; color: white; }
+        } */
+
+        .dark-section {
+            background: #212529;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .scoped-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .scoped-item {
+            background: #343a40;
+            color: white;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #495057;
+        }
+
+        @media (max-width: 768px) {
+            .parent-grid,
+            .scoped-grid,
+            .future-masonry {
+                grid-template-columns: 1fr;
+            }
+            .subgrid-row {
+                grid-template-columns: 1fr;
+            }
+            .complex-parent {
+                grid-template-columns: 1fr;
+                grid-template-areas: "header" "sidebar" "content" "footer";
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">03_01_10 - Grid Future Patterns</h1>
+
+        <!-- ============================================
+             SECTION 1: CSS Subgrid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. CSS Subgrid (Cross-component Alignment)</h2>
+            <div class="alert alert-success">
+                <strong>Subgrid</strong> is now supported in all major browsers (Chrome 117+, Firefox 71+, Safari 16+).
+                It allows child grids to inherit track definitions from their parent, ensuring perfect column alignment
+                across nested components.
+            </div>
+
+            <div class="parent-grid">
+                <div class="subgrid-cell" style="background: #0d6efd; color: white;">Header 1</div>
+                <div class="subgrid-cell" style="background: #0d6efd; color: white;">Header 2</div>
+                <div class="subgrid-cell" style="background: #0d6efd; color: white;">Header 3</div>
+
+                <!-- Subgrid row: inherits parent's 3-column definition -->
+                <div class="subgrid-row">
+                    <div class="subgrid-cell">Subgrid A-1</div>
+                    <div class="subgrid-cell">Subgrid A-2</div>
+                    <div class="subgrid-cell">Subgrid A-3</div>
+                </div>
+
+                <!-- Another subgrid row with different content lengths -->
+                <div class="subgrid-row">
+                    <div class="subgrid-cell">Short</div>
+                    <div class="subgrid-cell">This cell has much more content than the others</div>
+                    <div class="subgrid-cell">Medium text</div>
+                </div>
+
+                <div class="subgrid-cell" style="background: #198754; color: white;">Footer 1</div>
+                <div class="subgrid-cell" style="background: #198754; color: white;">Footer 2</div>
+                <div class="subgrid-cell" style="background: #198754; color: white;">Footer 3</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 2: Container Queries for Grids
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Container Queries (@container)</h2>
+            <div class="alert alert-info">
+                Container queries let grid items respond to their container's size instead of the viewport.
+                Perfect for reusable grid components that adapt regardless of where they're placed.
+            </div>
+
+            <!-- Narrow container: grid will be 1-2 columns -->
+            <h6>Narrow container (resize to see):</h6>
+            <div class="cq-wrapper border rounded p-3 mb-3" style="max-width: 400px; resize: horizontal; overflow: auto;">
+                <div class="cq-grid">
+                    <div class="cq-item">CQ 1</div>
+                    <div class="cq-item">CQ 2</div>
+                    <div class="cq-item">CQ 3</div>
+                    <div class="cq-item">CQ 4</div>
+                </div>
+            </div>
+
+            <!-- Wide container: grid will be 4 columns -->
+            <h6>Wide container:</h6>
+            <div class="cq-wrapper border rounded p-3">
+                <div class="cq-grid">
+                    <div class="cq-item">CQ 1</div>
+                    <div class="cq-item">CQ 2</div>
+                    <div class="cq-item">CQ 3</div>
+                    <div class="cq-item">CQ 4</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 3: Native CSS Nesting for Grids
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Native CSS Nesting for Grid Styles</h2>
+            <div class="alert alert-info">
+                CSS Nesting (no preprocessor needed) lets you write child and modifier styles
+                inside the parent selector using <code>&</code>.
+            </div>
+
+            <div class="nested-css-grid">
+                <div class="nested-item">Normal Item</div>
+                <div class="nested-item highlighted">Highlighted (&.highlighted)</div>
+                <div class="nested-item">Normal Item</div>
+                <div class="nested-item">Normal Item</div>
+                <div class="nested-item highlighted">Highlighted</div>
+                <div class="nested-item">Normal Item</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 4: masonry-layout (experimental)
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. grid-template-rows: masonry (Experimental)</h2>
+            <div class="alert alert-warning">
+                The <code>masonry</code> value for <code>grid-template-rows</code> creates a true
+                Pinterest-style masonry layout natively in CSS, no JavaScript needed.
+                Currently behind a flag in Firefox. Uses <code>@supports</code> for progressive enhancement.
+            </div>
+
+            <div class="future-masonry">
+                <div class="masonry-block"><strong>Block 1</strong><br><small>3 rows tall</small></div>
+                <div class="masonry-block"><strong>Block 2</strong><br><small>2 rows</small></div>
+                <div class="masonry-block"><strong>Block 3</strong><br><small>4 rows tall - tallest item</small></div>
+                <div class="masonry-block"><strong>Block 4</strong><br><small>2 rows</small></div>
+                <div class="masonry-block"><strong>Block 5</strong><br><small>3 rows</small></div>
+                <div class="masonry-block"><strong>Block 6</strong><br><small>2 rows</small></div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 5: Complex Subgrid + Named Areas
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Subgrid + Named Grid Areas Combined</h2>
+            <div class="alert alert-info">
+                Combining named grid areas with subgrid allows complex nested layouts where
+                inner components align with the outer grid's track definitions.
+            </div>
+
+            <div class="complex-parent">
+                <div class="complex-header"><strong>Header</strong></div>
+                <div class="complex-sidebar"><strong>Sidebar</strong></div>
+                <div class="complex-content">
+                    <strong>Content (with subgrid inside)</strong>
+                    <!-- Subgrid inside the content area -->
+                    <div class="complex-content-grid mt-2">
+                        <div class="complex-content-cell">Aligned Cell 1</div>
+                        <div class="complex-content-cell">Aligned Cell 2</div>
+                        <div class="complex-content-cell">Aligned Cell 3</div>
+                    </div>
+                </div>
+                <div class="complex-footer"><strong>Footer</strong></div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 6: Dark-themed Scoped Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Scoped Grid Theme (Dark Mode)</h2>
+            <div class="alert alert-info">
+                Grid themes can be scoped to specific sections using wrapper classes.
+                The upcoming <code>@scope</code> CSS rule will make this even cleaner.
+            </div>
+
+            <div class="dark-section">
+                <div class="scoped-grid">
+                    <div class="scoped-item">Dark 1</div>
+                    <div class="scoped-item">Dark 2</div>
+                    <div class="scoped-item">Dark 3</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 7: Future Features Timeline
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. CSS Grid Future Features Timeline</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Feature</th>
+                            <th>Status</th>
+                            <th>Browser Support</th>
+                            <th>Use Case</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Subgrid</td>
+                            <td><span class="badge bg-success">Stable</span></td>
+                            <td>Chrome 117+, FF 71+, Safari 16+</td>
+                            <td>Cross-component column alignment</td>
+                        </tr>
+                        <tr>
+                            <td>Container Queries</td>
+                            <td><span class="badge bg-success">Stable</span></td>
+                            <td>Chrome 105+, FF 110+, Safari 16+</td>
+                            <td>Component-level responsive design</td>
+                        </tr>
+                        <tr>
+                            <td>CSS Nesting</td>
+                            <td><span class="badge bg-success">Stable</span></td>
+                            <td>Chrome 120+, FF 117+, Safari 17.2+</td>
+                            <td>Cleaner grid CSS organization</td>
+                        </tr>
+                        <tr>
+                            <td>masonry layout</td>
+                            <td><span class="badge bg-warning">Experimental</span></td>
+                            <td>Firefox (behind flag)</td>
+                            <td>Native masonry without JS</td>
+                        </tr>
+                        <tr>
+                            <td>@scope</td>
+                            <td><span class="badge bg-warning">Experimental</span></td>
+                            <td>Chrome 118+, Safari 17.4+</td>
+                            <td>Scoped grid style isolation</td>
+                        </tr>
+                        <tr>
+                            <td>Scroll-driven Animations</td>
+                            <td><span class="badge bg-info">Emerging</span></td>
+                            <td>Chrome 115+</td>
+                            <td>Scroll-triggered grid animations</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

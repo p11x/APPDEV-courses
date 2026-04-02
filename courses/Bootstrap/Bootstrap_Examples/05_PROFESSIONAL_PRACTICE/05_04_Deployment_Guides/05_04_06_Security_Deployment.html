@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<!-- ====================================================================
+     05_04_06_Security_Deployment.html
+     
+     PURPOSE: Security best practices for Bootstrap deployment
+     TOPICS:  CSP headers, SRI hashes, HTTPS, security headers,
+              XSS prevention, secure asset delivery
+     
+     This example demonstrates how to deploy Bootstrap projects
+     with proper security measures including Content Security Policy,
+     Subresource Integrity, and other security headers.
+     ==================================================================== -->
+<html lang="en">
+<head>
+    <!-- ==============================================================
+         META TAGS - Security-relevant meta tags
+         ============================================================== -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ==============================================================
+         SECURITY META TAGS
+         
+         - referrer-policy: Controls how much referrer info is sent
+         - X-Content-Type-Options: Prevents MIME-type sniffing
+         - Note: Most security headers should be set at server level
+         ============================================================== -->
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    
+    <title>Security Deployment - Bootstrap Mastery</title>
+    
+    <!-- ==============================================================
+         BOOTSTRAP CSS WITH SRI (Subresource Integrity)
+         
+         SRI hashes verify that fetched resources haven't been tampered with.
+         The integrity attribute contains a cryptographic hash of the resource.
+         The crossorigin attribute is required for SRI to work with CDN.
+         
+         HOW TO GENERATE SRI HASHES:
+         1. Download the file
+         2. Run: cat file.js | openssl dgst -sha384 -binary | openssl base64 -A
+         3. Prefix with "sha384:"
+         
+         WHY SRI MATTERS:
+         - Prevents CDN compromise from injecting malicious code
+         - Browser will refuse to load if hash doesn't match
+         - Essential for any production deployment using CDNs
+         ============================================================== -->
+    <link 
+        rel="stylesheet" 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aVf636N"
+        crossorigin="anonymous">
+    
+    <!-- ==============================================================
+         CSP NONCE EXAMPLE (Server-side generated)
+         
+         In production, generate a unique nonce per request:
+         <script nonce="{{RANDOM_NONCE}}">
+         
+         This allows only scripts with the correct nonce to execute,
+         preventing inline script injection attacks.
+         ============================================================== -->
+    
+    <style>
+        /* ==============================================================
+           SECURITY-CONSCIOUS CSS PATTERNS
+           
+           Best practices for CSS in secure deployments:
+           - Avoid @import (extra HTTP requests, potential security issues)
+           - Use relative URLs where possible
+           - Avoid CSS expressions (IE legacy, potential XSS vector)
+           - Minimize use of url() with external resources
+           ============================================================== */
+        
+        /* Safe: CSS custom properties for theming */
+        :root {
+            /* Using CSS variables prevents inline style injection */
+            --secure-bg: #f8f9fa;
+            --secure-text: #212529;
+            --secure-accent: #0d6efd;
+            --secure-success: #198754;
+            --secure-warning: #ffc107;
+            --secure-danger: #dc3545;
+        }
+        
+        body {
+            background-color: var(--secure-bg);
+            color: var(--secure-text);
+        }
+        
+        .security-badge {
+            /* Using classes instead of inline styles */
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        
+        .security-badge.pass {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .security-badge.fail {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+        
+        .security-badge.warn {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+        
+        /* ==============================================================
+           CSP-SAFE PATTERNS
+           
+           These styles work with strict CSP policies:
+           - No inline styles (use external stylesheet or <style> with nonce)
+           - No javascript: URLs in CSS
+           - No data: URLs for fonts (can be blocked by CSP)
+           ============================================================== */
+        
+        .code-block {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .code-block .comment {
+            color: #6a9955;
+        }
+        
+        .code-block .keyword {
+            color: #569cd6;
+        }
+        
+        .code-block .string {
+            color: #ce9178;
+        }
+        
+        .header-highlight {
+            border-left: 4px solid var(--secure-accent);
+            padding-left: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- ==============================================================
+         NAVIGATION - Security deployment navigation
+         ============================================================== -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <!-- Using text instead of potentially unsafe SVG -->
+                🔒 Security Deployment
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#csp">CSP</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#sri">SRI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#headers">Headers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#https">HTTPS</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ==============================================================
+         HEADER SECTION
+         ============================================================== -->
+    <header class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold">Security Deployment</h1>
+                    <p class="lead">Deploy Bootstrap projects with enterprise-grade security</p>
+                    <div class="d-flex gap-2 flex-wrap mt-3">
+                        <!-- Using Bootstrap badges for security status -->
+                        <span class="badge bg-success">CSP Enabled</span>
+                        <span class="badge bg-success">SRI Verified</span>
+                        <span class="badge bg-success">HTTPS Only</span>
+                        <span class="badge bg-info">HSTS Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- ==============================================================
+             SECTION 1: Content Security Policy (CSP)
+             
+             CSP is the most important security header for preventing XSS.
+             It tells the browser which sources of content are allowed.
+             ============================================================== -->
+        <section id="csp" class="mb-5">
+            <h2 class="header-highlight mb-4">Content Security Policy (CSP)</h2>
+            
+            <div class="alert alert-info">
+                <strong>What is CSP?</strong> Content Security Policy is an HTTP header that 
+                tells the browser which sources of content (scripts, styles, images, etc.) 
+                are allowed to load. It's the primary defense against XSS attacks.
+            </div>
+            
+            <!-- CSP Policy Example -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Recommended CSP Policy for Bootstrap</h5>
+                </div>
+                <div class="card-body">
+                    <!-- ==================================================
+                         CSP HEADER VALUE
+                         
+                         This is the actual HTTP header your server should send.
+                         Each directive controls a different type of resource.
+                         ================================================== -->
+                    <div class="code-block"><span class="comment">// HTTP Header: Content-Security-Policy</span>
+<span class="keyword">default-src</span> 'self';
+<span class="keyword">script-src</span> 'self' https://cdn.jsdelivr.net;
+<span class="keyword">style-src</span> 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+<span class="keyword">img-src</span> 'self' data: https:;
+<span class="keyword">font-src</span> 'self' https://cdn.jsdelivr.net;
+<span class="keyword">connect-src</span> 'self';
+<span class="keyword">frame-ancestors</span> 'none';
+<span class="keyword">base-uri</span> 'self';
+<span class="keyword">form-action</span> 'self';</div>
+                    
+                    <hr>
+                    
+                    <!-- Explanation of each directive -->
+                    <h6>Directive Breakdown:</h6>
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Directive</th>
+                                <th>Purpose</th>
+                                <th>Bootstrap Requirement</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>default-src</code></td>
+                                <td>Fallback for all resource types</td>
+                                <td><code>'self'</code> - same origin only</td>
+                            </tr>
+                            <tr>
+                                <td><code>script-src</code></td>
+                                <td>JavaScript sources</td>
+                                <td>Allow CDN for Bootstrap JS</td>
+                            </tr>
+                            <tr>
+                                <td><code>style-src</code></td>
+                                <td>CSS sources</td>
+                                <td><code>'unsafe-inline'</code> needed for Bootstrap's inline styles</td>
+                            </tr>
+                            <tr>
+                                <td><code>img-src</code></td>
+                                <td>Image sources</td>
+                                <td>Allow data: URIs and HTTPS images</td>
+                            </tr>
+                            <tr>
+                                <td><code>font-src</code></td>
+                                <td>Font sources</td>
+                                <td>Allow CDN for Bootstrap Icons</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- CSP Implementation by Server -->
+            <div class="row g-4">
+                <!-- Apache -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0">Apache (.htaccess)</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block"><span class="comment"># Apache httpd.conf or .htaccess</span>
+Header set Content-Security-Policy \
+  "<span class="keyword">default-src</span> 'self'; \
+   <span class="keyword">script-src</span> 'self' \
+     https://cdn.jsdelivr.net; \
+   <span class="keyword">style-src</span> 'self' 'unsafe-inline' \
+     https://cdn.jsdelivr.net; \
+   <span class="keyword">img-src</span> 'self' data: https:"</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Nginx -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0">Nginx</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block"><span class="comment"># nginx.conf</span>
+add_header Content-Security-Policy \
+  "<span class="keyword">default-src</span> 'self'; \
+   <span class="keyword">script-src</span> 'self' \
+     https://cdn.jsdelivr.net; \
+   <span class="keyword">style-src</span> 'self' 'unsafe-inline' \
+     https://cdn.jsdelivr.net; \
+   <span class="keyword">img-src</span> 'self' data: https:" \
+   always;</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Node.js/Express -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0">Node.js / Express</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block"><span class="comment">// Express middleware</span>
+<span class="keyword">const</span> helmet = require(<span class="string">'helmet'</span>);
+
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: [<span class="string">"'self'"</span>],
+    scriptSrc: [<span class="string">"'self'"</span>, 
+      <span class="string">"https://cdn.jsdelivr.net"</span>],
+    styleSrc: [<span class="string">"'self'"</span>, 
+      <span class="string">"'unsafe-inline'"</span>]
+  }
+}));</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 2: Subresource Integrity (SRI)
+             
+             SRI ensures that resources loaded from CDNs haven't been
+             tampered with. The browser compares the hash of the
+             downloaded file against the integrity attribute.
+             ============================================================== -->
+        <section id="sri" class="mb-5">
+            <h2 class="header-highlight mb-4">Subresource Integrity (SRI)</h2>
+            
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">✅ Correct: With SRI</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block"><span class="comment">&lt;!-- SRI protects against CDN compromise --&gt;</span>
+&lt;<span class="keyword">link</span> 
+  rel=<span class="string">"stylesheet"</span>
+  href=<span class="string">"https://cdn.jsdelivr.net/npm/
+    bootstrap@5.3.3/dist/css/
+    bootstrap.min.css"</span>
+  integrity=<span class="string">"sha384-QWTKZyjpPEjISv5Wa
+    RU9OFeRpok6YcnS/1p8bUGKl6OS
+    YNROTER0WeiZs0aVf636N"</span>
+  crossorigin=<span class="string">"anonymous"</span>&gt;
+
+&lt;<span class="keyword">script</span> 
+  src=<span class="string">"https://cdn.jsdelivr.net/npm/
+    bootstrap@5.3.3/dist/js/
+    bootstrap.bundle.min.js"</span>
+  integrity=<span class="string">"sha384-YvpcrYf0tY3lHB60NNkmXc5s9fD
+    VZLSfVQmvFPwCq8mFpDrNvbTNpsMxM
+    XJLZl1FTERFBzNEk9"</span>
+  crossorigin=<span class="string">"anonymous"</span>&gt;
+&lt;/<span class="keyword">script</span>&gt;</div>
+                            <div class="security-badge pass mt-3">
+                                ✓ SRI Hash Verified
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">❌ Wrong: Without SRI</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block"><span class="comment">&lt;!-- NO SRI - vulnerable to CDN attack --&gt;</span>
+&lt;<span class="keyword">link</span> 
+  rel=<span class="string">"stylesheet"</span>
+  href=<span class="string">"https://cdn.jsdelivr.net/npm/
+    bootstrap@5.3.3/dist/css/
+    bootstrap.min.css"</span>&gt;
+
+&lt;<span class="keyword">script</span> 
+  src=<span class="string">"https://cdn.jsdelivr.net/npm/
+    bootstrap@5.3.3/dist/js/
+    bootstrap.bundle.min.js"</span>&gt;
+&lt;/<span class="keyword">script</span>&gt;
+
+<span class="comment">&lt;!-- If CDN is compromised, malicious 
+     code runs on your page! --&gt;</span></div>
+                            <div class="security-badge fail mt-3">
+                                ✗ No Integrity Check
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SRI Hash Generator Tool -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">SRI Hash Generator</h5>
+                </div>
+                <div class="card-body">
+                    <p>Generate SRI hashes for any CDN resource:</p>
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label for="cdnUrl" class="form-label">CDN URL</label>
+                            <input type="url" class="form-control" id="cdnUrl" 
+                                   value="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" onclick="generateSRI()">
+                                Generate Hash
+                            </button>
+                        </div>
+                    </div>
+                    <div id="sriResult" class="mt-3" style="display:none;">
+                        <label class="form-label">Generated SRI Hash:</label>
+                        <div class="code-block" id="sriOutput"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 3: Security Headers
+             
+             Complete list of HTTP security headers that should be
+             set for any production Bootstrap deployment.
+             ============================================================== -->
+        <section id="headers" class="mb-5">
+            <h2 class="header-highlight mb-4">Essential Security Headers</h2>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Header</th>
+                            <th>Recommended Value</th>
+                            <th>Purpose</th>
+                            <th>Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Strict-Transport-Security</code></td>
+                            <td><code>max-age=31536000; includeSubDomains</code></td>
+                            <td>Forces HTTPS for 1 year</td>
+                            <td><span class="badge bg-danger">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>Content-Security-Policy</code></td>
+                            <td><code>default-src 'self'; script-src...</code></td>
+                            <td>Controls resource loading</td>
+                            <td><span class="badge bg-danger">Critical</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>X-Content-Type-Options</code></td>
+                            <td><code>nosniff</code></td>
+                            <td>Prevents MIME-type sniffing</td>
+                            <td><span class="badge bg-warning">High</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>X-Frame-Options</code></td>
+                            <td><code>DENY</code></td>
+                            <td>Prevents clickjacking</td>
+                            <td><span class="badge bg-warning">High</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>X-XSS-Protection</code></td>
+                            <td><code>1; mode=block</code></td>
+                            <td>Legacy XSS filter (older browsers)</td>
+                            <td><span class="badge bg-info">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>Referrer-Policy</code></td>
+                            <td><code>strict-origin-when-cross-origin</code></td>
+                            <td>Controls referrer information</td>
+                            <td><span class="badge bg-info">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>Permissions-Policy</code></td>
+                            <td><code>camera=(), microphone=(), geolocation=()</code></td>
+                            <td>Controls browser features</td>
+                            <td><span class="badge bg-info">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>Cross-Origin-Opener-Policy</code></td>
+                            <td><code>same-origin</code></td>
+                            <td>Isolates browsing context</td>
+                            <td><span class="badge bg-secondary">Low</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Complete Nginx Configuration -->
+            <div class="card mt-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Complete Nginx Security Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <div class="code-block"><span class="comment"># Complete Nginx security headers for Bootstrap deployment</span>
+<span class="comment"># Add to your server {} block in nginx.conf</span>
+
+<span class="comment"># Force HTTPS for 1 year, including subdomains</span>
+add_header Strict-Transport-Security <span class="string">"max-age=31536000; includeSubDomains; preload"</span> always;
+
+<span class="comment"># Content Security Policy</span>
+add_header Content-Security-Policy <span class="string">"default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"</span> always;
+
+<span class="comment"># Prevent MIME-type sniffing</span>
+add_header X-Content-Type-Options <span class="string">"nosniff"</span> always;
+
+<span class="comment"># Prevent clickjacking</span>
+add_header X-Frame-Options <span class="string">"DENY"</span> always;
+
+<span class="comment"># Control referrer information</span>
+add_header Referrer-Policy <span class="string">"strict-origin-when-cross-origin"</span> always;
+
+<span class="comment"># Disable browser features we don't need</span>
+add_header Permissions-Policy <span class="string">"camera=(), microphone=(), geolocation=()"</span> always;
+
+<span class="comment"># Cross-origin isolation</span>
+add_header Cross-Origin-Opener-Policy <span class="string">"same-origin"</span> always;
+add_header Cross-Origin-Resource-Policy <span class="string">"same-origin"</span> always;</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 4: HTTPS Configuration
+             
+             HTTPS is mandatory for modern web applications. This section
+             covers SSL/TLS configuration and certificate management.
+             ============================================================== -->
+        <section id="https" class="mb-5">
+            <h2 class="header-highlight mb-4">HTTPS & TLS Configuration</h2>
+            
+            <div class="alert alert-warning">
+                <strong>Why HTTPS is Mandatory:</strong>
+                <ul class="mb-0 mt-2">
+                    <li>Bootstrap's JavaScript features require secure context</li>
+                    <li>Service Workers (for PWA) only work over HTTPS</li>
+                    <li>Geolocation API requires HTTPS</li>
+                    <li>HTTP/2 (performance) requires HTTPS in most browsers</li>
+                    <li>Google ranks HTTPS pages higher in search results</li>
+                </ul>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Let's Encrypt Setup -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Free SSL with Let's Encrypt</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block"><span class="comment"># Install Certbot</span>
+sudo apt install certbot python3-certbot-nginx
+
+<span class="comment"># Obtain and install certificate</span>
+sudo certbot --nginx -d example.com \
+  -d www.example.com
+
+<span class="comment"># Auto-renewal (adds cron job)</span>
+sudo certbot renew --dry-run
+
+<span class="comment"># Verify auto-renewal timer</span>
+sudo systemctl status certbot.timer</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- TLS Configuration -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Modern TLS Configuration</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="code-block"><span class="comment"># nginx.conf - SSL/TLS settings</span>
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384;
+ssl_prefer_server_ciphers off;
+
+<span class="comment"># HSTS with preloading</span>
+add_header Strict-Transport-Security 
+  <span class="string">"max-age=63072000; includeSubDomains; preload"</span>;
+
+<span class="comment"># OCSP Stapling</span>
+ssl_stapling on;
+ssl_stapling_verify on;</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 5: Security Checklist
+             
+             Complete deployment security checklist for Bootstrap projects.
+             ============================================================== -->
+        <section id="checklist" class="mb-5">
+            <h2 class="header-highlight mb-4">Deployment Security Checklist</h2>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Pre-Deployment</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check1" checked>
+                                <label class="form-check-label" for="check1">All CDN links have SRI hashes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check2" checked>
+                                <label class="form-check-label" for="check2">CSP header configured and tested</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check3" checked>
+                                <label class="form-check-label" for="check3">HTTPS certificate valid and auto-renewing</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check4" checked>
+                                <label class="form-check-label" for="check4">HSTS header enabled</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check5" checked>
+                                <label class="form-check-label" for="check5">No mixed content warnings</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check6">
+                                <label class="form-check-label" for="check6">X-Frame-Options set to DENY</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Post-Deployment</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check7">
+                                <label class="form-check-label" for="check7">SSL Labs grade A or A+</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check8">
+                                <label class="form-check-label" for="check8">Security headers verified (securityheaders.com)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check9">
+                                <label class="form-check-label" for="check9">CSP violations monitored</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check10">
+                                <label class="form-check-label" for="check10">Dependency vulnerabilities scanned</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check11">
+                                <label class="form-check-label" for="check11">Error pages don't leak info</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="check12">
+                                <label class="form-check-label" for="check12">Security monitoring active</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==============================================================
+         FOOTER
+         ============================================================== -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">Security Deployment Guide - Bootstrap Mastery Ecosystem</p>
+            <small class="text-muted">05_04_06_Security_Deployment.html</small>
+        </div>
+    </footer>
+
+    <!-- ==============================================================
+         BOOTSTRAP JS WITH SRI
+         
+         Always include SRI hash for CDN-hosted JavaScript.
+         The crossorigin="anonymous" attribute is required.
+         ============================================================== -->
+    <script 
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLSfVQmvFPwCq8mFpDrNvbTNpsMxMXJLZl1FTERFBzNEk9"
+        crossorigin="anonymous">
+    </script>
+    
+    <!-- ==============================================================
+         INLINE SCRIPT WITH CSP NONCE (concept)
+         
+         In production with strict CSP, inline scripts need a nonce:
+         <script nonce="RANDOM_VALUE">
+         The server generates a random nonce and adds it to both
+         the CSP header and each inline script tag.
+         ============================================================== -->
+    <script>
+        // ==============================================================
+        // SRI Hash Generator (simplified demonstration)
+        // In production, use a server-side tool or the SRI Hash website
+        // ==============================================================
+        function generateSRI() {
+            const url = document.getElementById('cdnUrl').value;
+            const resultDiv = document.getElementById('sriResult');
+            const outputDiv = document.getElementById('sriOutput');
+            
+            // This is a demonstration - real SRI hashes should be
+            // generated server-side or using tools like:
+            // https://www.srihash.org/
+            outputDiv.textContent = 
+                '<link\n' +
+                '  rel="stylesheet"\n' +
+                '  href="' + url + '"\n' +
+                '  integrity="sha384-[GENERATE_USING_OPENSSL]"\n' +
+                '  crossorigin="anonymous">\n\n' +
+                '// Generate with:\n' +
+                '// curl -s ' + url + ' | \\\n' +
+                '//   openssl dgst -sha384 -binary | \\\n' +
+                '//   openssl base64 -A';
+            
+            resultDiv.style.display = 'block';
+        }
+        
+        // ==============================================================
+        // Security Status Checker
+        // Demonstrates client-side security checks
+        // ==============================================================
+        (function checkSecurityStatus() {
+            const checks = {
+                https: location.protocol === 'https:',
+                secureContext: window.isSecureContext,
+                csp: !!document.querySelector('meta[http-equiv="Content-Security-Policy"]') 
+                     || true // CSP is usually in HTTP header
+            };
+            
+            console.log('Security Status:', checks);
+        })();
+    </script>
+</body>
+</html>

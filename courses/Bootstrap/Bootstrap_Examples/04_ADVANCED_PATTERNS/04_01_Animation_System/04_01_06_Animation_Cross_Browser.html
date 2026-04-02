@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_06_Animation_Cross_Browser.html                          -->
+<!-- Cross-Browser Animation Compatibility with Bootstrap 5         -->
+<!-- Covers: vendor prefixes, feature detection, fallbacks,         -->
+<!--         browser-specific bugs, polyfills, progressive enhance  -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_01_06 - Animation Cross-Browser</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* VENDOR PREFIXES                                               */
+        /* Modern browsers support unprefixed animation properties,      */
+        /* but older versions may need prefixes. Autoprefixer (PostCSS)  */
+        /* handles this automatically in production builds.              */
+        /*                                                               */
+        /* Prefixes:                                                     */
+        /*   -webkit- (Chrome, Safari, older Edge, Android)             */
+        /*   -moz-    (Firefox)                                         */
+        /*   -ms-     (older IE/Edge)                                   */
+        /*   -o-      (older Opera)                                     */
+        /* ============================================================= */
+
+        /* --------------------------------------------------------- */
+        /* VENDOR-PREFIXED KEYFRAMES                                 */
+        /* For maximum compatibility, define keyframes with all      */
+        /* prefixes. In production, use Autoprefixer to do this      */
+        /* automatically.                                            */
+        /* --------------------------------------------------------- */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-50px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Prefixed versions (usually handled by build tools) */
+        @-webkit-keyframes slideIn {
+            from { opacity: 0; -webkit-transform: translateX(-50px); }
+            to   { opacity: 1; -webkit-transform: translateX(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        @keyframes scaleUp {
+            from { opacity: 0; transform: scale(0.8); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes rotateIn {
+            from { opacity: 0; transform: rotate(-180deg) scale(0.5); }
+            to   { opacity: 1; transform: rotate(0) scale(1); }
+        }
+
+        @keyframes bounceIn {
+            0%   { opacity: 0; transform: scale(0.3); }
+            50%  { opacity: 1; transform: scale(1.05); }
+            70%  { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        /* --------------------------------------------------------- */
+        /* FULL VENDOR-PREFIX EXAMPLE                                */
+        /* Shows what a fully prefixed animation looks like          */
+        /* --------------------------------------------------------- */
+        .vendor-prefixed {
+            /* @keyframes declaration */
+            -webkit-animation: slideIn 0.6s ease-out forwards;
+            -moz-animation: slideIn 0.6s ease-out forwards;
+            -o-animation: slideIn 0.6s ease-out forwards;
+            animation: slideIn 0.6s ease-out forwards;
+
+            /* transform property */
+            -webkit-transform: translateZ(0);
+            -moz-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            -o-transform: translateZ(0);
+            transform: translateZ(0);
+
+            /* will-change */
+            will-change: transform, opacity;
+
+            /* backface-visibility (GPU acceleration hack) */
+            -webkit-backface-visibility: hidden;
+            -moz-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        /* --------------------------------------------------------- */
+        /* @supports FEATURE DETECTION                               */
+        /* CSS @supports checks if the browser supports a property   */
+        /* before applying styles. This is progressive enhancement.  */
+        /* --------------------------------------------------------- */
+
+        /* Default fallback (no animation) */
+        .feature-detect-card {
+            opacity: 1;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Enhanced version if animations are supported */
+        @supports (animation: fadeIn 0.3s) {
+            .feature-detect-card {
+                animation: fadeIn 0.6s ease-out;
+            }
+        }
+
+        /* Enhanced version if backdrop-filter is supported */
+        @supports (backdrop-filter: blur(10px)) {
+            .glass-card {
+                background: rgba(255,255,255,0.2);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.3);
+            }
+        }
+        /* Fallback for browsers without backdrop-filter */
+        @supports not (backdrop-filter: blur(10px)) {
+            .glass-card {
+                background: rgba(255,255,255,0.95);
+            }
+        }
+
+        /* Check for CSS transforms */
+        @supports (transform: translateX(0)) {
+            .transform-card {
+                transition: transform 0.3s ease;
+            }
+            .transform-card:hover {
+                transform: translateY(-8px);
+            }
+        }
+        /* Fallback: use margin if transforms not supported */
+        @supports not (transform: translateX(0)) {
+            .transform-card:hover {
+                margin-top: -8px;
+            }
+        }
+
+        /* --------------------------------------------------------- */
+        /* PROGRESSIVE ENHANCEMENT PATTERN                           */
+        /* Layer animations on top of functional CSS.                */
+        /* Base experience works without animations.                 */
+        /* --------------------------------------------------------- */
+
+        /* Step 1: Base layout (always works) */
+        .progressive-card {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            opacity: 1; /* Always visible */
+        }
+
+        /* Step 2: Add transition if supported */
+        @supports (transition: opacity 0.3s) {
+            .progressive-card {
+                transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s;
+            }
+            .progressive-card:hover {
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+        }
+
+        /* Step 3: Add transform if supported */
+        @supports (transform: translateY(0)) {
+            .progressive-card:hover {
+                transform: translateY(-4px);
+            }
+        }
+
+        /* --------------------------------------------------------- */
+        /* BROWSER-SPECIFIC BUGS AND WORKAROUNDS                     */
+        /* --------------------------------------------------------- */
+
+        /* Safari: transform-origin with animations */
+        /* Safari has bugs with transform-origin during animations  */
+        /* Workaround: use translate instead of transform-origin    */
+        .safari-safe {
+            /* Instead of transform-origin: top; use translateY */
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Safari: flex + animation overflow */
+        /* Safari clips animated content in flex containers */
+        /* Workaround: add overflow: visible to the flex parent */
+        .safari-flex-fix {
+            overflow: visible; /* Fixes Safari clipping */
+        }
+
+        /* iOS Safari: position fixed + animation */
+        /* position: fixed is buggy on iOS Safari during animations */
+        /* Workaround: use position: absolute with a fixed wrapper */
+        .ios-fixed-workaround {
+            /* Instead of position: fixed on the animated element */
+            position: absolute;
+            width: 100%;
+        }
+
+        /* Firefox: will-change memory leak */
+        /* Firefox doesn't always release GPU layers created by will-change */
+        /* Workaround: remove will-change after animation completes */
+        .ff-will-change-fix {
+            transition: transform 0.3s ease;
+        }
+        .ff-will-change-fix.animating {
+            will-change: transform;
+        }
+
+        /* IE11: No animation support */
+        /* IE11 doesn't support CSS animations well */
+        /* Content should still be visible (graceful degradation) */
+        .ie11-safe {
+            opacity: 1; /* Always visible, animation is enhancement */
+        }
+
+        /* Chrome: Subpixel rendering jitter */
+        /* Chrome can cause jittery animations due to subpixel rendering */
+        /* Workaround: force integer pixel values or use translateZ(0) */
+        .chrome-smooth {
+            /* Force GPU layer to avoid subpixel jitter */
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        /* --------------------------------------------------------- */
+        /* @supports TEST CARDS                                      */
+        /* Visual demonstration of feature detection                 */
+        /* --------------------------------------------------------- */
+        .supports-test-card {
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            color: #fff;
+            text-align: center;
+        }
+
+        /* --------------------------------------------------------- */
+        /* ANIMATION FALLBACK CLASSES                                */
+        /* Provide fallback behavior when animation is not supported */
+        /* --------------------------------------------------------- */
+        .anim-with-fallback {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        /* Fallback for browsers without animation support */
+        @supports not (animation: fadeIn 0.3s) {
+            .anim-with-fallback {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* --------------------------------------------------------- */
+        /* MODERN CSS WITH @supports                                 */
+        /* container queries, scroll-timeline, etc.                 */
+        /* --------------------------------------------------------- */
+        @supports (animation-timeline: scroll()) {
+            .scroll-driven {
+                /* Modern scroll-driven animation (Chrome 115+) */
+                animation: fadeIn linear;
+                animation-timeline: scroll();
+                animation-range: entry 0% entry 100%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">Cross-Browser Animation</h1>
+                <p class="lead text-muted">
+                    Vendor prefixes, feature detection, progressive enhancement, and browser bug workarounds.
+                </p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: FEATURE DETECTION WITH @supports                   -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. @supports Feature Detection</h2>
+            <p class="text-muted">
+                Use <code>@supports</code> to progressively enhance with animations.
+                Browsers that don't support animations get a simpler but still functional experience.
+            </p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="supports-test-card bg-primary" id="testAnimation">
+                        <h6>Animation Support</h6>
+                        <p class="small mb-0">
+                            <code>@supports (animation: fadeIn 0.3s)</code>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="supports-test-card bg-success glass-card">
+                        <h6>Backdrop Filter</h6>
+                        <p class="small mb-0">
+                            <code>@supports (backdrop-filter: blur(10px))</code>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="supports-test-card bg-info transform-card">
+                        <h6>CSS Transforms</h6>
+                        <p class="small mb-0">
+                            <code>@supports (transform: translateX(0))</code>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-info mt-3" id="supportInfo">
+                <!-- JS will fill in browser support info -->
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: PROGRESSIVE ENHANCEMENT                            -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Progressive Enhancement Pattern</h2>
+            <p class="text-muted">
+                Base experience works without animations. Animations are layered on top
+                as an enhancement for capable browsers.
+            </p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="progressive-card">
+                        <h5>Card 1</h5>
+                        <p class="mb-0 small">
+                            Base: visible content (no animation).<br>
+                            Enhanced: hover lift + shadow (if supported).
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="progressive-card">
+                        <h5>Card 2</h5>
+                        <p class="mb-0 small">
+                            Works in ALL browsers regardless of animation support.
+                            Animations are purely decorative.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="progressive-card">
+                        <h5>Card 3</h5>
+                        <p class="mb-0 small">
+                            This is the core principle: function first,
+                            animation second.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: VENDOR PREFIXES                                    -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Vendor Prefixes</h2>
+            <div class="alert alert-warning">
+                <strong>Production recommendation:</strong> Use <a href="https://autoprefixer.github.io/" target="_blank">Autoprefixer</a>
+                in your build pipeline to automatically add vendor prefixes. Never write them manually.
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped small">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Property</th>
+                            <th>Chrome/Safari</th>
+                            <th>Firefox</th>
+                            <th>Old Edge/IE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>@keyframes</code></td>
+                            <td><code>@-webkit-keyframes</code></td>
+                            <td><code>@-moz-keyframes</code></td>
+                            <td><code>@-ms-keyframes</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>animation</code></td>
+                            <td><code>-webkit-animation</code></td>
+                            <td><code>-moz-animation</code></td>
+                            <td><code>-ms-animation</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>transform</code></td>
+                            <td><code>-webkit-transform</code></td>
+                            <td><code>-moz-transform</code></td>
+                            <td><code>-ms-transform</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>transition</code></td>
+                            <td><code>-webkit-transition</code></td>
+                            <td><code>-moz-transition</code></td>
+                            <td><code>-ms-transition</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>backface-visibility</code></td>
+                            <td><code>-webkit-backface-visibility</code></td>
+                            <td><code>-moz-backface-visibility</code></td>
+                            <td>N/A</td>
+                        </tr>
+                        <tr>
+                            <td><code>will-change</code></td>
+                            <td>Unprefixed</td>
+                            <td>Unprefixed</td>
+                            <td>Not supported</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: BROWSER BUG WORKAROUNDS                            -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Common Browser Animation Bugs</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h6>Safari Bugs</h6>
+                            <ul class="small mb-0">
+                                <li><strong>Flex clipping:</strong> Add <code>overflow: visible</code> to flex parent</li>
+                                <li><strong>Transform-origin:</strong> Use <code>translateY()</code> instead</li>
+                                <li><strong>position:fixed:</strong> Use absolute within fixed wrapper</li>
+                                <li><strong>100vh:</strong> Use <code>100dvh</code> or JS to calculate</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-info">
+                        <div class="card-body">
+                            <h6>Firefox Bugs</h6>
+                            <ul class="small mb-0">
+                                <li><strong>will-change leak:</strong> Remove after animation completes</li>
+                                <li><strong>SVG transforms:</strong> Apply <code>transform-box: fill-box</code></li>
+                                <li><strong>Flex gap animation:</strong> Use margin instead</li>
+                                <li><strong>backdrop-filter:</strong> Enable in about:config (older versions)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <h6>Chrome Bugs</h6>
+                            <ul class="small mb-0">
+                                <li><strong>Subpixel jitter:</strong> Use <code>translateZ(0)</code></li>
+                                <li><strong>Font rendering:</strong> Add <code>-webkit-font-smoothing</code></li>
+                                <li><strong>will-change memory:</strong> Limit to 4-5 elements at once</li>
+                                <li><strong>Layer explosion:</strong> Avoid promoting too many elements</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-secondary">
+                        <div class="card-body">
+                            <h6>Edge/IE (Legacy)</h6>
+                            <ul class="small mb-0">
+                                <li><strong>IE11:</strong> No CSS animation — use JS fallback</li>
+                                <li><strong>Old Edge:</strong> Use <code>-ms-</code> prefixes</li>
+                                <li><strong>Graceful degradation:</strong> Content must still be visible</li>
+                                <li><strong>JS fallback:</strong> <code>element.style.opacity = 1</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: @supports ANIMATED CARDS                           -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Feature-Detected Animated Cards</h2>
+            <p class="text-muted">
+                These cards demonstrate different animations based on browser capabilities.
+            </p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="anim-with-fallback card" style="animation-delay: 0s">
+                        <div class="card-body">
+                            <h5>Fade-In Card</h5>
+                            <p class="mb-0">
+                                Fades in if animations supported.
+                                Otherwise, appears instantly (visible by default).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="anim-with-fallback card" style="animation-delay: 0.2s">
+                        <div class="card-body">
+                            <h5>Delayed Fade-In</h5>
+                            <p class="mb-0">
+                                0.2s delay before fade. Content is still accessible
+                                without animation support.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: JAVASCRIPT FEATURE DETECTION                       -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. JavaScript Feature Detection</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>CSS.supports() API</h6>
+                            <pre class="bg-dark text-light p-2 rounded small"><code>// Check if CSS animation is supported
+if (CSS.supports('animation', 'fadeIn 0.3s')) {
+    el.classList.add('animated');
+} else {
+    el.style.opacity = 1; // Fallback
+}
+
+// Check will-change support
+if (CSS.supports('will-change', 'transform')) {
+    el.style.willChange = 'transform';
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Event-based Detection</h6>
+                            <pre class="bg-dark text-light p-2 rounded small"><code>// Detect animation event support
+const animEnd = (function() {
+    const el = document.createElement('div');
+    const map = {
+        'animation': 'animationend',
+        'WebkitAnimation': 'webkitAnimationEnd',
+        'MozAnimation': 'animationend',
+        'OAnimation': 'oAnimationEnd'
+    };
+    for (let prop in map) {
+        if (el.style[prop] !== undefined) {
+            return map[prop];
+        }
+    }
+})();</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 7: COMPATIBILITY TABLE                                -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. CSS Animation Browser Support</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Feature</th>
+                            <th>Chrome</th>
+                            <th>Firefox</th>
+                            <th>Safari</th>
+                            <th>Edge</th>
+                            <th>IE11</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CSS Animations</td>
+                            <td class="text-success">43+</td>
+                            <td class="text-success">16+</td>
+                            <td class="text-success">9+</td>
+                            <td class="text-success">12+</td>
+                            <td class="text-warning">10 (partial)</td>
+                        </tr>
+                        <tr>
+                            <td>CSS Transitions</td>
+                            <td class="text-success">26+</td>
+                            <td class="text-success">16+</td>
+                            <td class="text-success">9+</td>
+                            <td class="text-success">12+</td>
+                            <td class="text-success">10+</td>
+                        </tr>
+                        <tr>
+                            <td>will-change</td>
+                            <td class="text-success">36+</td>
+                            <td class="text-success">36+</td>
+                            <td class="text-success">9.1+</td>
+                            <td class="text-success">79+</td>
+                            <td class="text-danger">No</td>
+                        </tr>
+                        <tr>
+                            <td>@supports</td>
+                            <td class="text-success">28+</td>
+                            <td class="text-success">22+</td>
+                            <td class="text-success">9+</td>
+                            <td class="text-success">12+</td>
+                            <td class="text-danger">No</td>
+                        </tr>
+                        <tr>
+                            <td>prefers-reduced-motion</td>
+                            <td class="text-success">74+</td>
+                            <td class="text-success">63+</td>
+                            <td class="text-success">10.1+</td>
+                            <td class="text-success">79+</td>
+                            <td class="text-danger">No</td>
+                        </tr>
+                        <tr>
+                            <td>Scroll-driven Animations</td>
+                            <td class="text-success">115+</td>
+                            <td class="text-warning">Behind flag</td>
+                            <td class="text-warning">TP</td>
+                            <td class="text-success">115+</td>
+                            <td class="text-danger">No</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 8: AUTO prefixer Configuration                        -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Autoprefixer Configuration</h2>
+            <div class="card">
+                <div class="card-body">
+                    <h6>package.json browserslist</h6>
+                    <pre class="bg-dark text-light p-3 rounded small"><code>{
+  "browserslist": [
+    "> 0.5%",           /* Browsers with >0.5% global usage */
+    "last 2 versions",  /* Last 2 versions of each browser */
+    "not dead",         /* Exclude unsupported browsers */
+    "not ie 11"         /* Exclude IE11 (optional) */
+  ]
+}</code></pre>
+                    <h6 class="mt-3">PostCSS Config</h6>
+                    <pre class="bg-dark text-light p-3 rounded small"><code>// postcss.config.js
+module.exports = {
+  plugins: [
+    require('autoprefixer'),  // Adds vendor prefixes automatically
+    require('cssnano')        // Minifies CSS
+  ]
+}</code></pre>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ----------------------------------------------------------- */
+        /* BROWSER SUPPORT DETECTION                                   */
+        /* Uses CSS.supports() to detect feature availability          */
+        /* ----------------------------------------------------------- */
+        const supportInfo = document.getElementById('supportInfo');
+        const features = [
+            { name: 'CSS Animations', test: 'animation', value: 'fadeIn 0.3s' },
+            { name: 'CSS Transitions', test: 'transition', value: 'opacity 0.3s' },
+            { name: 'Transform', test: 'transform', value: 'translateX(0)' },
+            { name: 'will-change', test: 'will-change', value: 'transform' },
+            { name: '@supports', test: 'display', value: 'flex' },
+            { name: 'Backdrop Filter', test: 'backdrop-filter', value: 'blur(10px)' }
+        ];
+
+        let html = '<h6>Browser Feature Support:</h6><ul class="mb-0">';
+        features.forEach(function (f) {
+            const supported = CSS.supports(f.test, f.value);
+            html += `<li>${f.name}: <span class="${supported ? 'text-success' : 'text-danger'}">
+                     ${supported ? 'Supported' : 'Not Supported'}</span></li>`;
+        });
+        html += '</ul>';
+        supportInfo.innerHTML = html;
+    </script>
+</body>
+</html>

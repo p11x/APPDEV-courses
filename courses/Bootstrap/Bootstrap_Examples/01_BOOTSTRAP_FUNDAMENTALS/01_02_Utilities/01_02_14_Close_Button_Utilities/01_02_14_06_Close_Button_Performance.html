@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 
+        Close Button Performance - Bootstrap 5
+        Exploring how Bootstrap's close button is implemented for optimal performance,
+        including SVG background images, CSS-only icons, and efficient rendering.
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Close Button Performance - Bootstrap 5 Utilities</title>
+    
+    <!-- Bootstrap 5.3.3 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* Custom styles for demonstration */
+        .demo-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            background-color: #f8f9fa;
+        }
+        
+        /* Performance comparison cards */
+        .perf-card {
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background: white;
+        }
+        
+        .perf-card.fast { border-left: 4px solid #198754; }
+        .perf-card.medium { border-left: 4px solid #ffc107; }
+        .perf-card.slow { border-left: 4px solid #dc3545; }
+        
+        /* Code block styling */
+        pre code {
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main container -->
+    <div class="container my-5">
+        <!-- Page header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Close Button Performance</h1>
+                <p class="lead text-muted">
+                    Understanding Bootstrap's CSS-only close button implementation 
+                    and its performance advantages.
+                </p>
+                <hr class="my-4">
+            </div>
+        </div>
+
+        <!-- Section 1: CSS-Only Implementation -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="demo-section">
+                    <h2 class="h4 mb-3">1. CSS-Only SVG Background</h2>
+                    <!-- 
+                        Bootstrap 5 uses an inline SVG as a CSS background-image
+                        on the .btn-close element. This means:
+                        - No extra HTTP requests
+                        - No icon fonts to download
+                        - No JavaScript rendering needed
+                        - Instant display when CSS loads
+                    -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="perf-card fast">
+                                <h3 class="h6 text-success">Bootstrap Approach</h3>
+                                <button type="button" class="btn-close" aria-label="Close"></button>
+                                <ul class="mt-2 mb-0 small">
+                                    <li>SVG encoded in CSS</li>
+                                    <li>Zero additional HTTP requests</li>
+                                    <li>Renders instantly with CSS</li>
+                                    <li>Scales to any size</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="perf-card slow">
+                                <h3 class="h6 text-danger">Icon Font Approach</h3>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Close">
+                                    <span style="font-family: serif;">&#10005;</span>
+                                </button>
+                                <ul class="mt-2 mb-0 small">
+                                    <li>Requires font file download</li>
+                                    <li>Additional HTTP request</li>
+                                    <li>Flash of unstyled content</li>
+                                    <li>Fixed resolution</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <pre class="bg-dark text-light p-3 rounded mt-3"><code>/* Bootstrap 5 close button CSS - SVG encoded inline */
+.btn-close {
+    /* SVG is embedded directly in the CSS */
+    background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg'...%3e%3c/svg%3e") 
+                center/1em auto no-repeat;
+    
+    /* Key properties for performance:
+       - background: no external request
+       - 1em sizing: scales with font-size
+       - transparent background: only the SVG is visible
+    */
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Minimal DOM Impact -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="demo-section">
+                    <h2 class="h4 mb-3">2. Minimal DOM Impact</h2>
+                    <!-- 
+                        Bootstrap's close button is a single button element with one class.
+                        No nested spans, SVGs, or additional elements needed.
+                    -->
+                    <div class="bg-white p-3 rounded border">
+                        <h3 class="h6">DOM Structure Comparison:</h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- Bootstrap: 1 element --&gt;
+&lt;button type="button" 
+    class="btn-close" 
+    aria-label="Close"&gt;
+&lt;/button&gt;</code></pre>
+                                <p class="text-success small">
+                                    <strong>Minimal:</strong> Single element, 
+                                    single class, no children.
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- Font icon: 2+ elements --&gt;
+&lt;button type="button" 
+    class="btn" aria-label="Close"&gt;
+    &lt;i class="fas fa-times"&gt;&lt;/i&gt;
+&lt;/button&gt;</code></pre>
+                                <p class="text-warning small">
+                                    <strong>More elements:</strong> Nested element 
+                                    required for the icon.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Rendering Performance -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="demo-section">
+                    <h2 class="h4 mb-3">3. Rendering Performance</h2>
+                    <!-- 
+                        CSS background-image SVGs are extremely performant because
+                        the browser can cache them, they're part of the CSSOM,
+                        and they don't require layout recalculations.
+                    -->
+                    <div class="bg-white p-3 rounded border mb-3">
+                        <h3 class="h6">Why CSS Background SVG is Fast:</h3>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Factor</th>
+                                    <th>CSS Background SVG</th>
+                                    <th>Inline SVG</th>
+                                    <th>Icon Font</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>HTTP Requests</td>
+                                    <td class="text-success">0</td>
+                                    <td class="text-success">0</td>
+                                    <td class="text-danger">1+</td>
+                                </tr>
+                                <tr>
+                                    <td>DOM Elements</td>
+                                    <td class="text-success">1</td>
+                                    <td class="text-warning">2+</td>
+                                    <td class="text-warning">2+</td>
+                                </tr>
+                                <tr>
+                                    <td>Render Blocking</td>
+                                    <td class="text-success">None</td>
+                                    <td class="text-success">None</td>
+                                    <td class="text-danger">Font load</td>
+                                </tr>
+                                <tr>
+                                    <td>Caching</td>
+                                    <td class="text-success">With CSS</td>
+                                    <td class="text-warning">Per page</td>
+                                    <td class="text-success">Separate</td>
+                                </tr>
+                                <tr>
+                                    <td>Scalability</td>
+                                    <td class="text-success">Infinite</td>
+                                    <td class="text-success">Infinite</td>
+                                    <td class="text-warning">Fixed steps</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Many Close Buttons Performance -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="demo-section">
+                    <h2 class="h4 mb-3">4. Performance with Many Close Buttons</h2>
+                    <!-- 
+                        Since Bootstrap's close button uses a CSS background-image,
+                        adding more close buttons has negligible performance impact.
+                        The SVG is loaded once with the CSS and reused for all instances.
+                    -->
+                    <div class="bg-white p-3 rounded border mb-3">
+                        <h3 class="h6">50 Close Buttons (Same Cost as 1):</h3>
+                        <div class="d-flex flex-wrap gap-2" id="manyButtons">
+                            <!-- 
+                                These 50 close buttons all share the same CSS background-image.
+                                The browser renders them all with zero additional HTTP requests.
+                            -->
+                        </div>
+                        <p class="text-muted mt-2 mb-0">
+                            <small>
+                                All 50 buttons use the same CSS-defined SVG. 
+                                The cost is identical to having just one button.
+                            </small>
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Key Insight:</strong> With CSS background-image SVGs, 
+                        the icon data is part of the stylesheet. Adding more instances 
+                        of the button doesn't increase memory usage or load time.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Custom Close Button Performance -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="demo-section">
+                    <h2 class="h4 mb-3">5. Custom Close Button - Performance Tips</h2>
+                    <!-- 
+                        If you need to customize the close button icon while
+                        maintaining performance, here are the best approaches.
+                    -->
+                    <div class="bg-white p-3 rounded border mb-3">
+                        <h3 class="h6">Option A: Override CSS Variable (Best)</h3>
+                        <pre class="bg-dark text-light p-3 rounded"><code>/* Override the CSS custom property for a custom icon */
+:root {
+    --bs-close-btn-content: url("data:image/svg+xml,%3csvg...%3e%3c/svg%3e");
+}
+/* All close buttons now use your custom SVG - no extra requests */</code></pre>
+                    </div>
+                    
+                    <div class="bg-white p-3 rounded border mb-3">
+                        <h3 class="h6">Option B: Inline Style Override</h3>
+                        <!-- 
+                            Inline style override for one-off custom icons.
+                            Still no extra HTTP request if the SVG is data-encoded.
+                        -->
+                        <button type="button" class="btn-close" aria-label="Close"
+                                style="background-image: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27%23dc3545%27%3e%3cpath d=%27M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z%27/%3e%3c/svg%3e');">
+                        </button>
+                        <p class="text-muted mt-2 mb-0">
+                            <small>This close button uses a red-colored SVG, still zero extra requests.</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6: Lazy Loading Considerations -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="demo-section">
+                    <h2 class="h4 mb-3">6. CDN Performance Optimization</h2>
+                    <!-- 
+                        Tips for optimizing Bootstrap CSS loading performance.
+                    -->
+                    <div class="bg-white p-3 rounded border">
+                        <h3 class="h6">Preloading Bootstrap CSS:</h3>
+                        <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- Preload the CSS for faster rendering --&gt;
+&lt;link rel="preload" 
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+      as="style"&gt;
+
+&lt;!-- Then load it normally --&gt;
+&lt;link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+      rel="stylesheet"&gt;</code></pre>
+                        
+                        <h3 class="h6 mt-3">Browser Caching Benefits:</h3>
+                        <ul class="mb-0">
+                            <li>CDN files are cached across sites that use the same URL</li>
+                            <li>Close button SVG is loaded once, cached with the CSS</li>
+                            <li>Subsequent page loads use cached CSS (no re-download)</li>
+                            <li>SVG background is rendered from cache instantly</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="row">
+            <div class="col-12">
+                <hr>
+                <p class="text-muted text-center mb-0">
+                    Bootstrap 5 Close Button Performance &mdash; Part of Bootstrap Fundamentals Course
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JavaScript Bundle from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        /* 
+            Generate 50 close buttons to demonstrate rendering performance.
+            All buttons share the same CSS background-image with no extra cost.
+        */
+        (function() {
+            var container = document.getElementById('manyButtons');
+            for (var i = 0; i < 50; i++) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn-close';
+                btn.setAttribute('aria-label', 'Close ' + (i + 1));
+                container.appendChild(btn);
+            }
+        })();
+    </script>
+</body>
+</html>

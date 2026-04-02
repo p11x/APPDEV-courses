@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     05_02_03_Development_Server.html
+     Topic: Local Dev Server Setup, Live Reload, HTTPS Local
+     ============================================================
+     A development server provides live reloading, file watching,
+     and local HTTPS for realistic testing. This covers setup
+     for various tools and approaches to serve Bootstrap projects
+     locally during development.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Server - Bootstrap Development Workflow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .config-block {
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.82rem;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.5;
+        }
+        .server-option {
+            border-left: 4px solid var(--bs-primary);
+            transition: background-color 0.2s;
+        }
+        .server-option:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Dev Server</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="#live-reload">Live Reload</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#https">HTTPS Local</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#network">Network Access</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#config">Configuration</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Development Server Setup</h1>
+            <p class="lead">Local dev server with live reload, HTTPS, and network access for Bootstrap 5 projects.</p>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#" class="text-white-50">Workflow</a></li>
+                    <li class="breadcrumb-item active text-white">Dev Server</li>
+                </ol>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- ============================================================
+             SECTION 1: LIVE RELOAD
+             ============================================================
+             Live reload automatically refreshes the browser when
+             files change. Different tools implement this differently:
+             full page reload, CSS injection, or HMR.
+             ============================================================ -->
+        <section id="live-reload" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">1. Live Reload Options</h2>
+            
+            <div class="row g-4">
+                <!-- BrowserSync -->
+                <div class="col-lg-6">
+                    <div class="card server-option h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">BrowserSync</h5>
+                            <span class="badge bg-primary mb-2">Standalone</span>
+                            <p class="card-text">
+                                Synchronized testing across devices. Automatically reloads
+                                on file changes with CSS injection support.
+                            </p>
+                            <div class="config-block">
+<span class="comment"># Install globally</span>
+npm install -g browser-sync
+
+<span class="comment"># Serve static files with live reload</span>
+browser-sync start --server --files <span class="string">"css/*.css, *.html"</span>
+
+<span class="comment"># Watch SCSS and HTML</span>
+browser-sync start --server --files <span class="string">"**/*.css, **/*.html"</span>
+
+<span class="comment"># With proxy (for PHP, Node backend)</span>
+browser-sync start --proxy <span class="string">"localhost:8080"</span> --files <span class="string">"**/*"</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vite Dev Server -->
+                <div class="col-lg-6">
+                    <div class="card server-option h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Vite Dev Server</h5>
+                            <span class="badge bg-success mb-2">Built-in</span>
+                            <p class="card-text">
+                                Native ESM dev server with instant start and
+                                sub-50ms hot module replacement.
+                            </p>
+                            <div class="config-block">
+<span class="comment">// vite.config.js</span>
+<span class="keyword">export default</span> {
+  server: {
+    port: 5173,
+    host: <span class="keyword">true</span>,      <span class="comment">// Expose to network</span>
+    open: <span class="keyword">true</span>,      <span class="comment">// Open browser</span>
+    cors: <span class="keyword">true</span>,      <span class="comment">// Enable CORS</span>
+    strictPort: <span class="keyword">true</span>, <span class="comment">// Fail if port taken</span>
+    
+    <span class="comment">// File watching options</span>
+    watch: {
+      usePolling: <span class="keyword">true</span>,  <span class="comment">// For Docker/WSL</span>
+      interval: 100,
+    },
+  }
+};
+
+<span class="comment">// Run: npx vite</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Webpack Dev Server -->
+                <div class="col-lg-6">
+                    <div class="card server-option h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Webpack Dev Server</h5>
+                            <span class="badge bg-info mb-2">Built-in</span>
+                            <p class="card-text">
+                                Full-featured dev server with HMR, proxy support,
+                                and history API fallback.
+                            </p>
+                            <div class="config-block">
+<span class="comment">// webpack.config.js</span>
+module.exports = {
+  devServer: {
+    static: <span class="string">'./dist'</span>,
+    port: 3000,
+    hot: <span class="keyword">true</span>,           <span class="comment">// HMR enabled</span>
+    liveReload: <span class="keyword">true</span>,    <span class="comment">// Live reload</span>
+    open: <span class="keyword">true</span>,
+    compress: <span class="keyword">true</span>,
+    historyApiFallback: <span class="keyword">true</span>,
+    client: {
+      overlay: <span class="keyword">true</span>,    <span class="comment">// Show errors in browser</span>
+      progress: <span class="keyword">true</span>,   <span class="comment">// Show build progress</span>
+    },
+  }
+};</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Live Server (VS Code) -->
+                <div class="col-lg-6">
+                    <div class="card server-option h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Live Server (VS Code)</h5>
+                            <span class="badge bg-warning text-dark mb-2">Editor Extension</span>
+                            <p class="card-text">
+                                VS Code extension for quick static file serving.
+                                Right-click HTML file and select "Open with Live Server".
+                            </p>
+                            <div class="config-block">
+<span class="comment">// .vscode/settings.json</span>
+{
+  <span class="string">"liveServer.settings.port"</span>: 5500,
+  <span class="string">"liveServer.settings.root"</span>: <span class="string">"/"</span>,
+  <span class="string">"liveServer.settings.CustomBrowser"</span>: <span class="string">"chrome"</span>,
+  <span class="string">"liveServer.settings.NoBrowser"</span>: <span class="keyword">false</span>,
+  <span class="string">"liveServer.settings.ignoreFiles"</span>: [
+    <span class="string">"**/*.scss"</span>,
+    <span class="string">"**/node_modules/**"</span>
+  ]
+}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 2: HTTPS LOCAL
+             ============================================================
+             Local HTTPS is essential for testing features that
+             require secure contexts: service workers, camera/mic
+             access, payment APIs, and secure cookies.
+             ============================================================ -->
+        <section id="https" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">2. Local HTTPS Setup</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">mkcert (Recommended)</h5>
+                    <p class="text-muted">Creates locally-trusted SSL certificates without configuration.</p>
+                    <div class="config-block">
+<span class="comment"># Install mkcert (macOS)</span>
+brew install mkcert
+
+<span class="comment"># Install mkcert (Windows - via Chocolatey)</span>
+choco install mkcert
+
+<span class="comment"># Install the local CA</span>
+mkcert -install
+
+<span class="comment"># Generate certificates for localhost</span>
+mkcert localhost 127.0.0.1 ::1
+
+<span class="comment"># Creates: localhost+2.pem and localhost+2-key.pem</span></div>
+                    
+                    <h5 class="mt-4 mb-3">Vite with HTTPS</h5>
+                    <div class="config-block">
+<span class="comment">// vite.config.js</span>
+<span class="keyword">import</span> { defineConfig } <span class="keyword">from</span> <span class="string">'vite'</span>;
+<span class="keyword">import</span> fs <span class="keyword">from</span> <span class="string">'fs'</span>;
+
+<span class="function">export default</span> <span class="function">defineConfig</span>({
+  server: {
+    https: {
+      key: fs.<span class="function">readFileSync</span>(<span class="string">'localhost+2-key.pem'</span>),
+      cert: fs.<span class="function">readFileSync</span>(<span class="string">'localhost+2.pem'</span>),
+    },
+    host: <span class="string">'localhost'</span>,
+    port: 5173,
+  },
+});</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Webpack with HTTPS</h5>
+                    <div class="config-block">
+<span class="comment">// webpack.config.js</span>
+<span class="keyword">const</span> fs = <span class="function">require</span>(<span class="string">'fs'</span>);
+
+module.exports = {
+  devServer: {
+    server: {
+      type: <span class="string">'https'</span>,
+      options: {
+        key: fs.<span class="function">readFileSync</span>(<span class="string">'./certs/localhost+2-key.pem'</span>),
+        cert: fs.<span class="function">readFileSync</span>(<span class="string">'./certs/localhost+2.pem'</span>),
+      },
+    },
+    host: <span class="string">'localhost'</span>,
+    port: 3000,
+  },
+};</div>
+
+                    <h5 class="mt-4 mb-3">Self-Signed (Without mkcert)</h5>
+                    <div class="config-block">
+<span class="comment"># Generate self-signed cert with OpenSSL</span>
+openssl req -x509 -newkey rsa:4096 \
+  -keyout key.pem -out cert.pem \
+  -days 365 -nodes \
+  -subj <span class="string">"/CN=localhost"</span>
+
+<span class="comment"># Browser will show security warning - click Advanced > Proceed</span></div>
+
+                    <!-- When HTTPS matters -->
+                    <div class="alert alert-info mt-4">
+                        <h6 class="alert-heading">When Local HTTPS Is Required</h6>
+                        <ul class="mb-0">
+                            <li>Service Worker registration</li>
+                            <li>getUserMedia (camera/microphone)</li>
+                            <li>Geolocation API (some browsers)</li>
+                            <li>Payment Request API</li>
+                            <li>Secure cookies (SameSite=None)</li>
+                            <li>OAuth redirects</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 3: NETWORK ACCESS
+             ============================================================
+             Exposing the dev server to the local network enables
+             testing on real mobile devices and other computers.
+             ============================================================ -->
+        <section id="network" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">3. Network Access</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Find Your Local IP</h5>
+                    <div class="config-block">
+<span class="comment"># macOS / Linux</span>
+ifconfig | grep <span class="string">"inet "</span>
+<span class="comment"># or</span>
+ip addr show
+
+<span class="comment"># Windows</span>
+ipconfig
+<span class="comment"># Look for IPv4 Address under your adapter</span></div>
+                    
+                    <h5 class="mt-4 mb-3">Bind to All Interfaces</h5>
+                    <div class="config-block">
+<span class="comment"># Vite - expose to network</span>
+npx vite --host 0.0.0.0
+<span class="comment"># Access via: http://192.168.x.x:5173</span>
+
+<span class="comment"># Webpack Dev Server</span>
+<span class="comment">// In webpack.config.js</span>
+devServer: {
+  host: <span class="string">'0.0.0.0'</span>,
+  port: 3000,
+}
+
+<span class="comment"># BrowserSync</span>
+browser-sync start --server --host <span class="string">"0.0.0.0"</span></div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Testing on Mobile Devices</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Steps to Test on Phone</h6>
+                            <ol>
+                                <li>Start dev server with <code>--host 0.0.0.0</code></li>
+                                <li>Note your computer's local IP (e.g., 192.168.1.100)</li>
+                                <li>Ensure phone is on same WiFi network</li>
+                                <li>Open <code>http://192.168.1.100:5173</code> on phone</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <!-- BrowserSync unique feature -->
+                    <div class="alert alert-success mt-3">
+                        <h6 class="alert-heading">BrowserSync Unique Feature</h6>
+                        <p class="mb-0">
+                            BrowserSync synchronizes scroll, click, and form input
+                            across all connected devices. Great for responsive
+                            testing on multiple screen sizes simultaneously.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 4: CONFIGURATION
+             ============================================================
+             Dev server configuration options for various scenarios:
+             proxy APIs, custom headers, middleware, etc.
+             ============================================================ -->
+        <section id="config" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">4. Server Configuration</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">API Proxy Setup</h5>
+                    <!-- Proxy configuration for backend API -->
+                    <div class="config-block">
+<span class="comment">// Vite - proxy API requests to backend</span>
+server: {
+  proxy: {
+    <span class="string">'/api'</span>: {
+      target: <span class="string">'http://localhost:8080'</span>,
+      changeOrigin: <span class="keyword">true</span>,
+      rewrite: (path) => path.<span class="function">replace</span>(<span class="string">/^\/api/</span>, <span class="string">''</span>),
+    },
+    <span class="string">'/auth'</span>: {
+      target: <span class="string">'https://auth.example.com'</span>,
+      changeOrigin: <span class="keyword">true</span>,
+      secure: <span class="keyword">false</span>,
+    },
+  },
+}
+
+<span class="comment">// Webpack - proxy API requests</span>
+devServer: {
+  proxy: {
+    <span class="string">'/api'</span>: {
+      target: <span class="string">'http://localhost:8080'</span>,
+      pathRewrite: { <span class="string">'^/api'</span>: <span class="string">''</span> },
+    },
+  },
+}</div>
+                    
+                    <h5 class="mt-4 mb-3">History API Fallback</h5>
+                    <div class="config-block">
+<span class="comment">// For SPA routing - redirect all 404s to index.html</span>
+<span class="comment">// Vite - automatic for SPA mode</span>
+
+<span class="comment">// Webpack</span>
+devServer: {
+  historyApiFallback: <span class="keyword">true</span>,
+  <span class="comment">// Or with custom rules</span>
+  historyApiFallback: {
+    rewrites: [
+      { from: <span class="string">/^\/admin/</span>, to: <span class="string">'/admin.html'</span> },
+      { from: <span class="string">/./</span>, to: <span class="string">'/index.html'</span> },
+    ],
+  },
+}</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Custom Headers</h5>
+                    <div class="config-block">
+<span class="comment">// Add custom headers for development</span>
+<span class="comment">// Vite</span>
+server: {
+  headers: {
+    <span class="string">'X-Custom-Header'</span>: <span class="string">'dev-value'</span>,
+    <span class="string">'Access-Control-Allow-Origin'</span>: <span class="string">'*'</span>,
+  },
+}
+
+<span class="comment">// Webpack</span>
+devServer: {
+  headers: {
+    <span class="string">'X-Custom-Header'</span>: <span class="string">'dev-value'</span>,
+  },
+}</div>
+                    
+                    <h5 class="mt-4 mb-3">Common Dev Server Ports</h5>
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-dark">
+                            <tr><th>Tool</th><th>Default Port</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Vite</td><td>5173</td></tr>
+                            <tr><td>Webpack</td><td>8080 / 3000</td></tr>
+                            <tr><td>Parcel</td><td>1234</td></tr>
+                            <tr><td>BrowserSync</td><td>3000</td></tr>
+                            <tr><td>Live Server</td><td>5500</td></tr>
+                            <tr><td>http-server</td><td>8080</td></tr>
+                        </tbody>
+                    </table>
+                    
+                    <!-- Quick static server -->
+                    <h5 class="mt-4 mb-3">Quick Static Servers</h5>
+                    <div class="config-block">
+<span class="comment"># http-server - zero config</span>
+npx http-server ./dist -p 8080 -o
+
+<span class="comment"># Python 3 built-in</span>
+python -m http.server 8000
+
+<span class="comment"># serve package</span>
+npx serve ./dist -l 3000
+
+<span class="comment"># PHP built-in</span>
+php -S localhost:8000</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="text-muted mb-0">Bootstrap 5.3.3 Development Workflow - Module 05_02_03</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

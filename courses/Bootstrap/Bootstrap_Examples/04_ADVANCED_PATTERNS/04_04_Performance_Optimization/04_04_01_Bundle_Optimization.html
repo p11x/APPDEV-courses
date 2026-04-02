@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_01_Bundle_Optimization.html
+     Topic: Bundle Optimization Strategies for Bootstrap Projects
+     
+     This file demonstrates techniques to optimize Bootstrap bundle size,
+     reduce payload, and improve load performance.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <!-- Required meta tags for proper rendering and touch scaling -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Performance hint: preconnect to CDN to reduce DNS + TLS time -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+    <!-- Bootstrap 5.3.3 CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Bundle Optimization - Bootstrap 5</title>
+
+    <!-- ============================================================
+         INLINE CSS STRATEGY
+         Critical CSS can be inlined to eliminate render-blocking requests.
+         Only include above-the-fold styles here for fastest first paint.
+         ============================================================ -->
+    <style>
+        /* Critical path CSS: styles needed for initial viewport render */
+        .hero-section {
+            min-height: 50vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+            color: #fff;
+        }
+
+        /* Utility: hide elements visually but keep accessible */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        /* Bundle size indicator visualization */
+        .bundle-bar {
+            height: 30px;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        /* Lazy-loaded section placeholder */
+        .lazy-section {
+            min-height: 200px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+         NAVIGATION: Uses only Bootstrap utility classes
+         Avoid importing custom nav CSS; Bootstrap nav covers this.
+         ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <!-- Brand link -->
+            <a class="navbar-brand fw-bold" href="#">Bundle Optimization</a>
+
+            <!-- Mobile toggle button for collapsed menu -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav" aria-controls="navbarNav"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Collapsible nav links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#strategies">Strategies</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#comparison">Comparison</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#techniques">Techniques</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+         HERO SECTION
+         Demonstrates critical CSS inlining - this section renders
+         immediately without waiting for external stylesheets.
+         ============================================================ -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Bundle Optimization</h1>
+            <p class="lead mt-3">Reduce payload size and improve load performance with proven optimization strategies.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: OPTIMIZATION STRATEGIES OVERVIEW
+         Each card represents a different bundle optimization technique.
+         Using Bootstrap grid ensures responsive layout without extra CSS.
+         ============================================================ -->
+    <section id="strategies" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-4">Optimization Strategies</h2>
+
+            <div class="row g-4">
+                <!-- Strategy 1: CSS Purging -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-primary">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">CSS Purging</h5>
+                            <p class="card-text">Remove unused CSS rules from Bootstrap using tools like PurgeCSS. Can reduce CSS payload by 60-90%.</p>
+                            <!-- Code example block -->
+                            <pre class="bg-dark text-light p-3 rounded"><code>npx purgecss --css bootstrap.min.css \
+  --content "**/*.html" \
+  --output dist/</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy 2: Selective Imports -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">Selective Imports</h5>
+                            <p class="card-text">Import only the Bootstrap components you need via Sass. Exclude unused modules entirely.</p>
+                            <pre class="bg-dark text-light p-3 rounded"><code>// Import only needed modules
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/buttons";</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy 3: Minification -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-warning">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">Minification</h5>
+                            <p class="card-text">Minify CSS and JS to remove whitespace, comments, and shorten identifiers.</p>
+                            <pre class="bg-dark text-light p-3 rounded"><code>// Webpack minification config
+optimization: {
+  minimize: true,
+  minimizer: [
+    new CssMinimizerPlugin(),
+    new TerserPlugin()
+  ]
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy 4: Gzip/Brotli Compression -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-info">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">Compression</h5>
+                            <p class="card-text">Enable Gzip or Brotli on your server. Reduces transfer size by 70-85% for text-based assets.</p>
+                            <pre class="bg-dark text-light p-3 rounded"><code># Nginx gzip config
+gzip on;
+gzip_types text/css
+  application/javascript;
+gzip_min_length 256;</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy 5: CDN Caching -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-danger">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">CDN Caching</h5>
+                            <p class="card-text">Use CDN-hosted Bootstrap with long cache headers. Users benefit from shared browser cache across sites.</p>
+                            <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- CDN with SRI hash --&gt;
+&lt;link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/
+  bootstrap@5.3.3/dist/css/
+  bootstrap.min.css"
+  integrity="sha384-..."
+  crossorigin="anonymous"&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy 6: Tree Shaking -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-secondary">
+                        <div class="card-body">
+                            <h5 class="card-title text-secondary">Tree Shaking</h5>
+                            <p class="card-text">Use ES module imports so bundlers can eliminate dead code from the final output.</p>
+                            <pre class="bg-dark text-light p-3 rounded"><code>// ES module tree-shakeable import
+import { Tooltip } from 'bootstrap';
+// Only Tooltip code is bundled</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: BUNDLE SIZE COMPARISON
+         Visual comparison of different optimization levels.
+         Bootstrap progress bars show relative sizes.
+         ============================================================ -->
+    <section id="comparison" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-4">Bundle Size Comparison</h2>
+
+            <!-- Full Bootstrap bundle -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="fw-semibold">Full Bootstrap CSS+JS</span>
+                    <span class="text-muted">~230 KB</span>
+                </div>
+                <div class="progress" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar bg-danger bundle-bar" style="width: 100%">100%</div>
+                </div>
+            </div>
+
+            <!-- After CSS purging -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="fw-semibold">After CSS Purging</span>
+                    <span class="text-muted">~45 KB</span>
+                </div>
+                <div class="progress" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar bg-warning bundle-bar" style="width: 20%">20%</div>
+                </div>
+            </div>
+
+            <!-- After selective imports -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="fw-semibold">Selective Imports Only</span>
+                    <span class="text-muted">~25 KB</span>
+                </div>
+                <div class="progress" role="progressbar" aria-valuenow="11" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar bg-info bundle-bar" style="width: 11%">11%</div>
+                </div>
+            </div>
+
+            <!-- After minification + gzip -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="fw-semibold">Minified + Gzipped</span>
+                    <span class="text-muted">~8 KB</span>
+                </div>
+                <div class="progress" role="progressbar" aria-valuenow="3" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar bg-success bundle-bar" style="width: 8%">~3%</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: LAZY LOADING DEMO
+         Demonstrates deferring non-critical content until needed.
+         Uses Intersection Observer (vanilla JS, no extra library).
+         ============================================================ -->
+    <section id="techniques" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-4">Lazy Loading Technique</h2>
+            <p class="text-center text-muted mb-4">
+                Scroll down to trigger lazy loading of below-the-fold content using Intersection Observer API.
+            </p>
+
+            <!-- Spacer to push content below fold -->
+            <div style="height: 150px;" class="d-flex align-items-center justify-content-center bg-light rounded mb-4">
+                <span class="text-muted">Scroll down to see lazy loading in action</span>
+            </div>
+
+            <!-- Lazy-loaded section: data attribute holds the real content URL -->
+            <div class="lazy-section rounded mb-3" data-lazy="true" id="lazyBlock1">
+                <div class="text-center text-muted">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Content loads when visible</p>
+                </div>
+            </div>
+
+            <!-- Another lazy section -->
+            <div class="lazy-section rounded" data-lazy="true" id="lazyBlock2">
+                <div class="text-center text-muted">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Second lazy block</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: RESOURCE HINTS TABLE
+         Shows all resource hint types and when to use each.
+         ============================================================ -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-4">Resource Hints Reference</h2>
+
+            <!-- Responsive table: Bootstrap table classes for styling -->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">Hint</th>
+                            <th scope="col">Attribute</th>
+                            <th scope="col">Use Case</th>
+                            <th scope="col">Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>dns-prefetch</code></td>
+                            <td><code>&lt;link rel="dns-prefetch"&gt;</code></td>
+                            <td>Resolve DNS for third-party domains early</td>
+                            <td>Saves 20-120ms per domain</td>
+                        </tr>
+                        <tr>
+                            <td><code>preconnect</code></td>
+                            <td><code>&lt;link rel="preconnect"&gt;</code></td>
+                            <td>Establish connection (DNS+TCP+TLS) early</td>
+                            <td>Saves 100-500ms for critical origins</td>
+                        </tr>
+                        <tr>
+                            <td><code>preload</code></td>
+                            <td><code>&lt;link rel="preload"&gt;</code></td>
+                            <td>Fetch critical resources discovered late</td>
+                            <td>Improves LCP by 0.5-1.5s</td>
+                        </tr>
+                        <tr>
+                            <td><code>prefetch</code></td>
+                            <td><code>&lt;link rel="prefetch"&gt;</code></td>
+                            <td>Fetch resources for next navigation</td>
+                            <td>Speeds up subsequent page loads</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         FOOTER
+         Simple footer using Bootstrap utilities only.
+         ============================================================ -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Bundle Optimization &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+         BOOTSTRAP JS BUNDLE
+         Placed at end of body to avoid render-blocking.
+         Includes Popper.js for tooltips/dropdowns.
+         
+         DEFER STRATEGY: The 'defer' attribute ensures script is
+         downloaded in parallel with HTML parsing and executed after
+         the DOM is fully parsed. This is the optimal placement.
+         ============================================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+
+    <!-- ============================================================
+         INLINE CRITICAL JS
+         Small scripts can be inlined to avoid extra HTTP requests.
+         The Intersection Observer below implements lazy loading.
+         ============================================================ -->
+    <script>
+        // Lazy loading implementation using Intersection Observer
+        // This is a zero-dependency approach that defers non-critical content
+        if ('IntersectionObserver' in window) {
+            const lazyObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        // Simulate loading content after a brief delay
+                        setTimeout(() => {
+                            el.innerHTML = `
+                                <div class="card m-3">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Lazy-Loaded Content</h5>
+                                        <p class="card-text">This content was loaded only when it became visible in the viewport.</p>
+                                        <span class="badge bg-success">Loaded on Demand</span>
+                                    </div>
+                                </div>`;
+                            el.classList.remove('lazy-section');
+                            el.style.minHeight = 'auto';
+                        }, 800);
+                        lazyObserver.unobserve(el);
+                    }
+                });
+            }, {
+                // rootMargin: start loading 100px before element enters viewport
+                rootMargin: '100px'
+            });
+
+            // Observe all lazy sections
+            document.querySelectorAll('[data-lazy]').forEach(el => {
+                lazyObserver.observe(el);
+            });
+        }
+    </script>
+</body>
+</html>

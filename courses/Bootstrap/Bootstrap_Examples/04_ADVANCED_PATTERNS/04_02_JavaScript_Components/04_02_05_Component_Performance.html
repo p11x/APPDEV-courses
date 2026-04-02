@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_02_05_Component_Performance.html                           -->
+<!-- Bootstrap 5 JavaScript Performance Optimization              -->
+<!-- Demonstrates techniques to optimize Bootstrap JS components   -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap JS Performance Optimization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="mb-4">Component Performance Optimization</h1>
+        <p class="lead text-muted">
+            Techniques to keep Bootstrap JavaScript performant in large-scale applications.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- Technique 1: Event Delegation                                -->
+        <!-- Instead of attaching listeners to every element, delegate    -->
+        <!-- from a parent. Reduces memory usage and listener count.      -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>1. Event Delegation</h2>
+            <p>One listener on a parent handles events for all children, even dynamically added ones.</p>
+
+            <div id="delegationContainer">
+                <button class="btn btn-outline-primary me-1 mb-1" data-action="info">Info</button>
+                <button class="btn btn-outline-success me-1 mb-1" data-action="success">Success</button>
+                <button class="btn btn-outline-warning me-1 mb-1" data-action="warning">Warning</button>
+                <button class="btn btn-outline-danger me-1 mb-1" data-action="danger">Danger</button>
+            </div>
+            <button class="btn btn-sm btn-secondary mt-2" id="addDelegatedBtn">+ Add More Buttons</button>
+            <div class="mt-2" id="delegationOutput"></div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Technique 2: Lazy Initialization                             -->
+        <!-- Initialize components only when they become visible, not     -->
+        <!-- on page load. Reduces initial JS execution time.             -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>2. Lazy Initialization (Intersection Observer)</h2>
+            <p>Components below are initialized only when scrolled into view.</p>
+
+            <div style="height:100px; overflow:hidden;" class="border rounded p-3 mb-3">
+                <p class="text-muted">Scroll down to trigger lazy initialization...</p>
+            </div>
+
+            <div id="lazyTooltip" class="lazy-component" data-lazy-type="tooltip" data-bs-toggle="tooltip" title="I was lazily initialized!">
+                <button class="btn btn-primary">Hover Me (Lazy Tooltip)</button>
+            </div>
+            <span id="lazyStatus" class="badge bg-secondary ms-2">Not initialized</span>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Technique 3: Throttled/Debounced Events                      -->
+        <!-- Scroll and resize events can fire rapidly. Throttle them to  -->
+        <!-- avoid excessive computation.                                 -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>3. Throttled Events</h2>
+            <p>Throttle scroll event processing to maintain smooth performance.</p>
+
+            <div id="throttleDemo" style="height:150px; overflow-y:auto; border:1px solid #dee2e6;" class="p-3">
+                <div style="height:600px;">
+                    <p>Scroll this container. The counter below shows raw vs throttled event counts.</p>
+                    <div class="position-sticky bottom-0 bg-white pt-2">
+                        <span class="badge bg-primary" id="rawScrollCount">Raw: 0</span>
+                        <span class="badge bg-success" id="throttledScrollCount">Throttled: 0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Technique 4: RequestAnimationFrame for DOM Updates           -->
+        <!-- Batch DOM reads/writes using rAF to avoid layout thrashing  -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>4. RequestAnimationFrame Batching</h2>
+            <p>Batch DOM updates with <code>requestAnimationFrame</code> to prevent layout thrashing.</p>
+
+            <div class="d-flex gap-3 mb-3">
+                <button class="btn btn-danger" id="thrashBtn">Without rAF (Slow)</button>
+                <button class="btn btn-success" id="rafBtn">With rAF (Fast)</button>
+            </div>
+            <div id="rafContainer" class="d-flex flex-wrap gap-1 mb-2"></div>
+            <span class="badge bg-info" id="rafTime">Ready</span>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Technique 5: WeakMap for Component Storage                   -->
+        <!-- Store component data using WeakMap to allow GC when elements -->
+        <!-- are removed from DOM.                                        -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>5. WeakMap for Component Data</h2>
+            <p>Use <code>WeakMap</code> to store component state that gets garbage collected automatically.</p>
+
+            <div id="weakMapContainer">
+                <div class="card d-inline-block me-2 mb-2" style="width:150px;">
+                    <div class="card-body text-center">
+                        <small>Card 1</small>
+                        <div class="mt-2 count-display fw-bold">0</div>
+                        <button class="btn btn-sm btn-primary mt-1 increment-btn">+1</button>
+                    </div>
+                </div>
+                <div class="card d-inline-block me-2 mb-2" style="width:150px;">
+                    <div class="card-body text-center">
+                        <small>Card 2</small>
+                        <div class="mt-2 count-display fw-bold">0</div>
+                        <button class="btn btn-sm btn-primary mt-1 increment-btn">+1</button>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" id="removeWeakMapCard">Remove Last Card</button>
+            <button class="btn btn-sm btn-outline-primary" id="addWeakMapCard">Add Card</button>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Technique 6: Passive Event Listeners                         -->
+        <!-- Use { passive: true } for touch/scroll events to improve    -->
+        <!-- scroll performance on mobile.                                -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>6. Passive Event Listeners</h2>
+            <p>Register touch/scroll listeners as passive to improve mobile scrolling.</p>
+
+            <div id="passiveDemo" style="height:100px; overflow-y:auto; border:1px solid #dee2e6; touch-action:pan-y;" class="p-3">
+                <div style="height:400px;">
+                    Touch-scroll on this area. Passive listeners don't block scrolling.
+                </div>
+            </div>
+            <span class="badge bg-success" id="passiveStatus">Passive listener registered</span>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Technique 7: Component Pooling / Reuse                       -->
+        <!-- Reuse toast elements instead of creating/destroying them     -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>7. Component Pooling</h2>
+            <p>Reuse a single toast element instead of creating new ones each time.</p>
+
+            <div class="toast-container position-fixed bottom-0 end-0 p-3">
+                <!-- Single reusable toast element -->
+                <div id="pooledToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header">
+                        <strong class="me-auto" id="pooledToastTitle">Notification</strong>
+                        <small id="pooledToastTime">Just now</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body" id="pooledToastBody">Pooled toast content.</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="firePooledToast">Fire Pooled Toast</button>
+            <button class="btn btn-secondary ms-2" id="fireNewToast">Fire New (Non-pooled) Toast</button>
+            <div class="mt-2">
+                <span class="badge bg-success" id="pooledToastCount">Pooled: 0</span>
+                <span class="badge bg-danger" id="newToastCount">New: 0</span>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ============================================================
+        // Technique 1: Event Delegation
+        // Single listener on parent handles all child button clicks.
+        // Dynamically added buttons work automatically.
+        // ============================================================
+        let delegationCounter = 0;
+        const delegationContainer = document.getElementById('delegationContainer');
+
+        // Single event listener on parent container
+        delegationContainer.addEventListener('click', function (e) {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return; // Click wasn't on a delegated button
+
+            const action = btn.getAttribute('data-action');
+            delegationCounter++;
+            document.getElementById('delegationOutput').innerHTML =
+                `<div class="alert alert-${action} py-1 px-2 d-inline-block mb-0">` +
+                `Action: <strong>${action}</strong> (click #${delegationCounter})</div>`;
+        });
+
+        document.getElementById('addDelegatedBtn').addEventListener('click', function () {
+            const actions = ['primary', 'secondary', 'info', 'success', 'warning', 'danger'];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            const btn = document.createElement('button');
+            btn.className = `btn btn-outline-${action} me-1 mb-1`;
+            btn.setAttribute('data-action', action);
+            btn.textContent = action.charAt(0).toUpperCase() + action.slice(1);
+            delegationContainer.appendChild(btn);
+        });
+
+        // ============================================================
+        // Technique 2: Lazy Initialization with Intersection Observer
+        // Initialize tooltips only when they enter the viewport.
+        // ============================================================
+        const lazyObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const type = el.getAttribute('data-lazy-type');
+
+                    if (type === 'tooltip' && !bootstrap.Tooltip.getInstance(el)) {
+                        new bootstrap.Tooltip(el);
+                        document.getElementById('lazyStatus').textContent = 'Initialized!';
+                        document.getElementById('lazyStatus').className = 'badge bg-success ms-2';
+                    }
+
+                    // Stop observing after initialization
+                    lazyObserver.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        // Observe all lazy components
+        document.querySelectorAll('.lazy-component').forEach(function (el) {
+            lazyObserver.observe(el);
+        });
+
+        // ============================================================
+        // Technique 3: Throttled Event Handling
+        // Limit execution frequency of scroll handlers
+        // ============================================================
+        let rawCount = 0;
+        let throttledCount = 0;
+
+        // Simple throttle function
+        function throttle(fn, delay) {
+            let lastCall = 0;
+            return function () {
+                const now = Date.now();
+                if (now - lastCall >= delay) {
+                    lastCall = now;
+                    fn.apply(this, arguments);
+                }
+            };
+        }
+
+        const throttleDemo = document.getElementById('throttleDemo');
+
+        // Raw scroll counter
+        throttleDemo.addEventListener('scroll', function () {
+            rawCount++;
+            document.getElementById('rawScrollCount').textContent = 'Raw: ' + rawCount;
+        });
+
+        // Throttled scroll counter (max once per 200ms)
+        throttleDemo.addEventListener('scroll', throttle(function () {
+            throttledCount++;
+            document.getElementById('throttledScrollCount').textContent = 'Throttled: ' + throttledCount;
+        }, 200));
+
+        // ============================================================
+        // Technique 4: requestAnimationFrame Batching
+        // Batch DOM operations to prevent layout thrashing
+        // ============================================================
+        const rafContainer = document.getElementById('rafContainer');
+        const BOXES = 200;
+
+        // Create boxes
+        for (let i = 0; i < BOXES; i++) {
+            const box = document.createElement('div');
+            box.style.cssText = 'width:20px;height:20px;background:steelblue;display:inline-block;transition:none;';
+            rafContainer.appendChild(box);
+        }
+
+        // WITHOUT rAF: Read then write in a loop (layout thrashing)
+        document.getElementById('thrashBtn').addEventListener('click', function () {
+            const boxes = rafContainer.children;
+            const start = performance.now();
+
+            for (let i = 0; i < boxes.length; i++) {
+                // Force layout read
+                const width = boxes[i].offsetWidth;
+                // Immediately write (forces synchronous layout)
+                boxes[i].style.background = `hsl(${(width + i * 5) % 360}, 70%, 50%)`;
+            }
+
+            const elapsed = (performance.now() - start).toFixed(2);
+            document.getElementById('rafTime').textContent = `Without rAF: ${elapsed}ms`;
+        });
+
+        // WITH rAF: Batch reads, then batch writes
+        document.getElementById('rafBtn').addEventListener('click', function () {
+            const boxes = rafContainer.children;
+            const start = performance.now();
+
+            // Batch all reads first
+            const widths = [];
+            for (let i = 0; i < boxes.length; i++) {
+                widths.push(boxes[i].offsetWidth);
+            }
+
+            // Batch all writes in rAF
+            requestAnimationFrame(function () {
+                for (let i = 0; i < boxes.length; i++) {
+                    boxes[i].style.background = `hsl(${(widths[i] + i * 5) % 360}, 70%, 50%)`;
+                }
+
+                const elapsed = (performance.now() - start).toFixed(2);
+                document.getElementById('rafTime').textContent = `With rAF: ${elapsed}ms`;
+            });
+        });
+
+        // ============================================================
+        // Technique 5: WeakMap for Component Data
+        // State is stored per-element and auto-GC'd when element removed
+        // ============================================================
+        const componentState = new WeakMap();
+
+        function initCounterCard(card) {
+            const countEl = card.querySelector('.count-display');
+            const btn = card.querySelector('.increment-btn');
+
+            // Store state in WeakMap keyed by the card element
+            componentState.set(card, { count: 0 });
+
+            btn.addEventListener('click', function () {
+                const state = componentState.get(card);
+                if (state) {
+                    state.count++;
+                    countEl.textContent = state.count;
+                }
+            });
+        }
+
+        // Initialize existing cards
+        document.querySelectorAll('#weakMapContainer .card').forEach(initCounterCard);
+
+        document.getElementById('removeWeakMapCard').addEventListener('click', function () {
+            const container = document.getElementById('weakMapContainer');
+            const lastCard = container.lastElementChild;
+            if (lastCard) {
+                // Removing the DOM element makes the WeakMap entry eligible for GC
+                container.removeChild(lastCard);
+            }
+        });
+
+        let wmCardCounter = 2;
+        document.getElementById('addWeakMapCard').addEventListener('click', function () {
+            wmCardCounter++;
+            const container = document.getElementById('weakMapContainer');
+            const card = document.createElement('div');
+            card.className = 'card d-inline-block me-2 mb-2';
+            card.style.width = '150px';
+            card.innerHTML = `
+                <div class="card-body text-center">
+                    <small>Card ${wmCardCounter}</small>
+                    <div class="mt-2 count-display fw-bold">0</div>
+                    <button class="btn btn-sm btn-primary mt-1 increment-btn">+1</button>
+                </div>
+            `;
+            container.appendChild(card);
+            initCounterCard(card);
+        });
+
+        // ============================================================
+        // Technique 6: Passive Event Listeners
+        // { passive: true } tells the browser the handler won't call
+        // preventDefault(), allowing immediate scrolling.
+        // ============================================================
+        const passiveDemo = document.getElementById('passiveDemo');
+        passiveDemo.addEventListener('touchmove', function () {
+            // Touch handler that doesn't prevent default
+        }, { passive: true });
+
+        // ============================================================
+        // Technique 7: Component Pooling
+        // Reuse a single toast element by updating its content.
+        // ============================================================
+        let pooledCount = 0;
+        let newCount = 0;
+        const pooledToastEl = document.getElementById('pooledToast');
+        const pooledToast = new bootstrap.Toast(pooledToastEl, { delay: 3000 });
+
+        document.getElementById('firePooledToast').addEventListener('click', function () {
+            pooledCount++;
+            // Update existing toast content instead of creating new element
+            document.getElementById('pooledToastTitle').textContent = 'Pooled #' + pooledCount;
+            document.getElementById('pooledToastBody').textContent = 'Reusing the same DOM element. Memory efficient!';
+            document.getElementById('pooledToastCount').textContent = 'Pooled: ' + pooledCount;
+            pooledToast.show();
+        });
+
+        document.getElementById('fireNewToast').addEventListener('click', function () {
+            newCount++;
+            // Create a new toast element each time (less efficient)
+            const el = document.createElement('div');
+            el.className = 'toast';
+            el.setAttribute('role', 'alert');
+            el.innerHTML = `
+                <div class="toast-header bg-danger text-white">
+                    <strong class="me-auto">New #${newCount}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">New DOM element created each time. Less efficient.</div>
+            `;
+            document.querySelector('.toast-container').appendChild(el);
+            const t = new bootstrap.Toast(el, { delay: 3000 });
+            t.show();
+            document.getElementById('newToastCount').textContent = 'New: ' + newCount;
+
+            // Clean up after hidden
+            el.addEventListener('hidden.bs.toast', function () { el.remove(); });
+        });
+    </script>
+</body>
+</html>

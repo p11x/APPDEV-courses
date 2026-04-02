@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================ -->
+    <!-- CORE META TAGS - Essential for all pages     -->
+    <!-- ============================================ -->
+
+    <!-- charset="UTF-8" ensures proper character encoding across browsers -->
+    <meta charset="UTF-8">
+
+    <!--
+        viewport meta tag is CRITICAL for responsive design.
+        - width=device-width: sets the viewport width to match the device's screen width
+        - initial-scale=1.0: sets the initial zoom level to 100%
+        Without this tag, Bootstrap's responsive classes will NOT work on mobile devices.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Description meta tag for SEO -->
+    <meta name="description" content="Bootstrap 5 SASS Compilation Concepts - Understanding how Bootstrap's SASS source is organized and compiled">
+
+    <!-- Author meta tag -->
+    <meta name="author" content="Bootstrap Course">
+
+    <!-- X-UA-Compatible forces IE to use latest rendering engine -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- ============================================ -->
+    <!-- TITLE - Displayed in browser tab             -->
+    <!-- ============================================ -->
+    <title>01_01_02 - SASS Compilation</title>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 CSS CDN                          -->
+    <!-- ============================================ -->
+    <!--
+        In a production SASS workflow, you would NOT use the CDN.
+        Instead, you compile Bootstrap's SASS source files into your own CSS.
+        We use the CDN here so the page works without a SASS build tool installed.
+        The concepts demonstrated below explain what happens during SASS compilation.
+    -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aV76Ug"
+        crossorigin="anonymous"
+    >
+
+    <!-- Bootstrap Icons CDN for visual examples -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <!-- ============================================ -->
+    <!-- CUSTOM STYLES - SASS Compilation Concepts    -->
+    <!-- ============================================ -->
+    <!--
+        These styles simulate what you would produce with SASS.
+        In a real SASS workflow, you would write SCSS files and compile them.
+
+        SASS compilation chain:
+        .scss files -> SASS compiler -> single .css file -> served to browser
+
+        Key SASS features demonstrated in comments below:
+        - Variables: $primary-color: #0d6efd;
+        - Nesting: .parent { .child { ... } }
+        - Mixins: @mixin flex-center { display: flex; ... }
+        - Partials: @import "variables", "mixins";
+        - Functions: color.adjust($color, $amount)
+    -->
+    <style>
+        /*
+            SASS VARIABLE SIMULATION
+            In SASS: $card-border-radius: 0.5rem;
+            CSS output: border-radius: 0.5rem;
+            Variables allow you to define values once and reuse them everywhere.
+        */
+        .sass-variable-demo {
+            border-radius: 0.5rem;
+            border: 2px solid #0d6efd;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        /*
+            SASS NESTING SIMULATION
+            In SASS:
+            .sass-nesting-demo {
+                padding: 1rem;
+                .nested-child {
+                    color: #0d6efd;
+                    &:hover { color: #0a58ca; }
+                }
+            }
+            SASS nesting reduces repetition and mirrors HTML structure.
+            The & (ampersand) refers to the parent selector.
+        */
+        .sass-nesting-demo {
+            padding: 1rem;
+            background-color: #e7f1ff;
+            border-radius: 0.375rem;
+        }
+        .sass-nesting-demo .nested-child {
+            color: #0d6efd;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .sass-nesting-demo .nested-child:hover {
+            color: #0a58ca;
+            text-decoration: underline;
+        }
+
+        /*
+            SASS MIXIN SIMULATION
+            In SASS:
+            @mixin flex-center {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            Mixins are reusable blocks of CSS declarations.
+            You can pass parameters: @mixin border-radius($radius: 0.25rem) { ... }
+        */
+        .sass-mixin-demo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background-color: #d1e7dd;
+            border-radius: 0.375rem;
+        }
+
+        /*
+            SASS PARTIAL / IMPORT SIMULATION
+            Bootstrap's SASS is organized into partials:
+            - _variables.scss (all default values)
+            - _mixins.scss (reusable patterns)
+            - _buttons.scss (button component)
+            - _cards.scss (card component)
+            - bootstrap.scss (main file that imports all partials)
+
+            The underscore prefix indicates a partial file.
+            Partials are not compiled to separate CSS files.
+        */
+        .partial-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background-color: #6c757d;
+            color: white;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        /*
+            Color comparison boxes for SASS darken/lighten demo.
+            These simulate SASS color functions:
+            - darken($primary, 15%) produces a deeper blue
+            - lighten($primary, 30%) produces a lighter blue
+        */
+        .color-swatch {
+            height: 60px;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================ -->
+    <!-- NAVIGATION BAR                               -->
+    <!-- ============================================ -->
+    <!--
+        Standard navbar using Bootstrap components.
+        The navbar demonstrates Bootstrap's pre-compiled CSS classes,
+        which were originally defined in Bootstrap's _navbar.scss partial.
+    -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-filetype-scss me-2"></i>SASS Compilation
+            </a>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#variables">Variables</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#nesting">Nesting</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#mixins">Mixins</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#partials">Partials</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================ -->
+    <!-- HERO SECTION                                 -->
+    <!-- ============================================ -->
+    <!--
+        Hero header explaining SASS compilation.
+        The bg-info class represents Bootstrap's info color,
+        defined as $info in _variables.scss and compiled to CSS.
+    -->
+    <header class="bg-info text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">SASS Compilation</h1>
+            <p class="lead mb-0">
+                Understanding how Bootstrap uses SASS (Syntactically Awesome Style Sheets)
+                to generate its CSS. SASS adds powerful features like variables, nesting,
+                mixins, and partials to standard CSS.
+            </p>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT                                 -->
+    <!-- ============================================ -->
+    <main class="container py-5">
+
+        <!-- ============================================ -->
+        <!-- SASS VARIABLES SECTION                       -->
+        <!-- ============================================ -->
+        <!--
+            SASS Variables are one of the most fundamental features.
+            Bootstrap defines hundreds of variables in _variables.scss.
+            These control colors, spacing, typography, breakpoints, and more.
+        -->
+        <section class="mb-5" id="variables">
+            <h2 class="mb-4">
+                <i class="bi bi-palette me-2"></i>SASS Variables
+            </h2>
+            <div class="row g-4">
+                <!--
+                    col-lg-8: Main explanation column.
+                    Explains what SASS variables are and how Bootstrap uses them.
+                -->
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">What Are SASS Variables?</h5>
+                            <p class="card-text">
+                                SASS variables store values that can be reused throughout your stylesheet.
+                                They use the <code>$</code> prefix. Bootstrap's <code>_variables.scss</code>
+                                file contains over 1,500 variables that control every aspect of the framework.
+                            </p>
+                            <!--
+                                Code block showing SASS variable syntax.
+                                bg-dark text-white creates a terminal-like appearance.
+                                font-monospace uses a monospace font for code.
+                            -->
+                            <div class="bg-dark text-white p-3 rounded font-monospace small mb-3">
+                                <div class="text-success">// Bootstrap's primary color variable</div>
+                                <div>$primary: #0d6efd !default;</div>
+                                <div class="text-success">// Spacing scale variable</div>
+                                <div>$spacer: 1rem !default;</div>
+                                <div class="text-success">// Border radius variable</div>
+                                <div>$border-radius: 0.375rem !default;</div>
+                                <div class="mt-2 text-success">// Using variables in CSS rules</div>
+                                <div>.btn-primary {</div>
+                                <div>&nbsp;&nbsp;background-color: $primary;</div>
+                                <div>&nbsp;&nbsp;border-radius: $border-radius;</div>
+                                <div>}</div>
+                            </div>
+                            <!--
+                                The !default flag means: "Use this value only if it hasn't been set yet."
+                                This allows you to override Bootstrap variables BEFORE importing Bootstrap.
+                            -->
+                            <div class="alert alert-primary mb-0">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                <strong>Key Concept:</strong> The <code>!default</code> flag allows
+                                you to override Bootstrap's default values. Set your variables
+                                <em>before</em> importing Bootstrap's SASS to customize the framework.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        Visual demo of SASS variables in action.
+                        Shows how the compiled CSS uses the values that were set by variables.
+                    -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Variable Output Example</h5>
+                            <p class="card-text text-muted">
+                                After SASS compilation, variable references are replaced with their actual values:
+                            </p>
+                            <div class="sass-variable-demo">
+                                <strong>CSS Output:</strong>
+                                <code class="d-block mt-2">
+                                    border-radius: 0.5rem;<br>
+                                    border: 2px solid #0d6efd;<br>
+                                    background-color: #f8f9fa;
+                                </code>
+                                <p class="mb-0 mt-2 text-muted small">
+                                    The compiled CSS contains the final values, not the variable names.
+                                    Browsers don't understand SASS variables - they only see plain CSS.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--
+                    col-lg-4: Sidebar showing common Bootstrap variables.
+                    Lists frequently used variables and their default values.
+                -->
+                <div class="col-lg-4">
+                    <div class="card bg-light sticky-lg-top">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-list-ul me-2"></i>Common Bootstrap Variables
+                            </h5>
+                            <!--
+                                list-group-flush: Removes outer borders for a cleaner look.
+                                Each list item shows a variable name and its default value.
+                            -->
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-light d-flex justify-content-between">
+                                    <code>$primary</code>
+                                    <span class="badge bg-primary">#0d6efd</span>
+                                </li>
+                                <li class="list-group-item bg-light d-flex justify-content-between">
+                                    <code>$secondary</code>
+                                    <span class="badge bg-secondary">#6c757d</span>
+                                </li>
+                                <li class="list-group-item bg-light d-flex justify-content-between">
+                                    <code>$success</code>
+                                    <span class="badge bg-success">#198754</span>
+                                </li>
+                                <li class="list-group-item bg-light d-flex justify-content-between">
+                                    <code>$danger</code>
+                                    <span class="badge bg-danger">#dc3545</span>
+                                </li>
+                                <li class="list-group-item bg-light d-flex justify-content-between">
+                                    <code>$spacer</code>
+                                    <span class="badge bg-dark">1rem</span>
+                                </li>
+                                <li class="list-group-item bg-light d-flex justify-content-between">
+                                    <code>$border-radius</code>
+                                    <span class="badge bg-dark">0.375rem</span>
+                                </li>
+                                <li class="list-group-item bg-light d-flex justify-content-between">
+                                    <code>$font-size-base</code>
+                                    <span class="badge bg-dark">1rem</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SASS NESTING SECTION                         -->
+        <!-- ============================================ -->
+        <!--
+            Nesting allows you to write CSS rules inside other CSS rules.
+            This mirrors the HTML structure and reduces selector repetition.
+        -->
+        <section class="mb-5" id="nesting">
+            <h2 class="mb-4">
+                <i class="bi bi-diagram-3 me-2"></i>SASS Nesting
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">
+                                <i class="bi bi-x-circle me-2"></i>Without Nesting (Plain CSS)
+                            </h5>
+                            <!--
+                                Shows repetitive CSS selectors without nesting.
+                                Notice how ".nav" is repeated for each descendant selector.
+                            -->
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div>.nav {</div>
+                                <div>&nbsp;&nbsp;display: flex;</div>
+                                <div>&nbsp;&nbsp;list-style: none;</div>
+                                <div>}</div>
+                                <div class="mt-2">.nav .nav-item {</div>
+                                <div>&nbsp;&nbsp;margin-right: 1rem;</div>
+                                <div>}</div>
+                                <div class="mt-2">.nav .nav-item .nav-link {</div>
+                                <div>&nbsp;&nbsp;color: #6c757d;</div>
+                                <div>}</div>
+                                <div class="mt-2">.nav .nav-item .nav-link:hover {</div>
+                                <div>&nbsp;&nbsp;color: #0d6efd;</div>
+                                <div>}</div>
+                            </div>
+                            <p class="text-muted mt-3 mb-0 small">
+                                Repetitive parent selectors increase file size and make
+                                maintenance harder. Changing the parent name requires
+                                updating every selector.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100 border-success">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">
+                                <i class="bi bi-check-circle me-2"></i>With Nesting (SASS)
+                            </h5>
+                            <!--
+                                Shows the same CSS written with SASS nesting.
+                                The & symbol refers to the parent selector.
+                                Much cleaner and mirrors the HTML structure.
+                            -->
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div>.nav {</div>
+                                <div>&nbsp;&nbsp;display: flex;</div>
+                                <div>&nbsp;&nbsp;list-style: none;</div>
+                                <div>&nbsp;&nbsp;.nav-item {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;margin-right: 1rem;</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;.nav-link {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;color: #6c757d;</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;:hover {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;color: #0d6efd;</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                                <div>&nbsp;&nbsp;}</div>
+                                <div>}</div>
+                            </div>
+                            <p class="text-muted mt-3 mb-0 small">
+                                The <code>&amp;</code> (ampersand) compiles to the parent selector.
+                                <code>&amp;:hover</code> becomes <code>.nav-link:hover</code>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!--
+                    Live demo of nested styles applied to actual HTML elements.
+                    Shows how the compiled output looks when rendered.
+                -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Live Nesting Demo</h5>
+                            <p class="card-text text-muted">
+                                The element below uses CSS that was generated from nested SASS rules:
+                            </p>
+                            <div class="sass-nesting-demo">
+                                <div class="nested-child">
+                                    <i class="bi bi-arrow-right me-2"></i>
+                                    Hover over this text to see the :hover state from nested SASS
+                                </div>
+                                <div class="nested-child mt-2">
+                                    <i class="bi bi-arrow-right me-2"></i>
+                                    Each nested rule compiles to a compound CSS selector
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SASS MIXINS SECTION                          -->
+        <!-- ============================================ -->
+        <!--
+            Mixins are reusable blocks of CSS declarations.
+            They can accept parameters, making them flexible and powerful.
+            Bootstrap uses mixins extensively for responsive breakpoints,
+            border-radius, transitions, and more.
+        -->
+        <section class="mb-5" id="mixins">
+            <h2 class="mb-4">
+                <i class="bi bi-stack me-2"></i>SASS Mixins
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">What Are Mixins?</h5>
+                            <p class="card-text">
+                                Mixins let you define reusable groups of CSS declarations.
+                                Think of them as functions for CSS. You define them once
+                                and include them wherever needed using <code>@include</code>.
+                            </p>
+                            <!--
+                                Code example showing mixin definition and usage.
+                                Shows both the definition (@mixin) and the call (@include).
+                            -->
+                            <div class="bg-dark text-white p-3 rounded font-monospace small mb-3">
+                                <div class="text-success">// Define a mixin</div>
+                                <div>@mixin flex-center {</div>
+                                <div>&nbsp;&nbsp;display: flex;</div>
+                                <div>&nbsp;&nbsp;justify-content: center;</div>
+                                <div>&nbsp;&nbsp;align-items: center;</div>
+                                <div>}</div>
+                                <div class="mt-2 text-success">// Use it with @include</div>
+                                <div>.hero-banner {</div>
+                                <div>&nbsp;&nbsp;@include flex-center;</div>
+                                <div>&nbsp;&nbsp;height: 100vh;</div>
+                                <div>}</div>
+                            </div>
+
+                            <h6 class="mt-4">Mixins With Parameters</h6>
+                            <p class="card-text text-muted">
+                                Mixins can accept parameters for flexibility:
+                            </p>
+                            <div class="bg-dark text-white p-3 rounded font-monospace small mb-3">
+                                <div class="text-success">// Mixin with default parameter</div>
+                                <div>@mixin border-radius($radius: 0.25rem) {</div>
+                                <div>&nbsp;&nbsp;border-radius: $radius;</div>
+                                <div>&nbsp;&nbsp;-webkit-border-radius: $radius;</div>
+                                <div>}</div>
+                                <div class="mt-2 text-success">// Usage</div>
+                                <div>.card { @include border-radius(0.5rem); }</div>
+                                <div>.badge { @include border-radius(50rem); }</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        Real Bootstrap mixins examples.
+                        Shows actual mixins from Bootstrap's _mixins.scss.
+                    -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Bootstrap's Actual Mixins</h5>
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div class="text-success">// From _mixins.scss</div>
+                                <div>@mixin media-breakpoint-up($name) {</div>
+                                <div>&nbsp;&nbsp;@media (min-width: breakpoint-min($name)) {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;@content;</div>
+                                <div>&nbsp;&nbsp;}</div>
+                                <div>}</div>
+                                <div class="mt-2 text-success">// Used to create responsive classes</div>
+                                <div>@include media-breakpoint-up(md) {</div>
+                                <div>&nbsp;&nbsp;.col-md-6 { width: 50%; }</div>
+                                <div>}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <!--
+                        Live demo showing mixin output.
+                        The flex-center mixin creates a centered container.
+                    -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Mixin Output Demo</h5>
+                            <p class="card-text text-muted small">
+                                This box uses the <code>flex-center</code> mixin output:
+                            </p>
+                            <div class="sass-mixin-demo">
+                                <span class="badge bg-success fs-6">Centered</span>
+                                <span class="badge bg-primary fs-6">With</span>
+                                <span class="badge bg-warning text-dark fs-6">Flexbox</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        Card showing Bootstrap mixin categories.
+                        Lists the main types of mixins Bootstrap provides.
+                    -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-folder me-2"></i>Bootstrap Mixin Categories
+                            </h5>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <span class="partial-indicator">_mixins.scss</span>
+                                    Breakpoints
+                                </li>
+                                <li class="mb-2">
+                                    <span class="partial-indicator">_mixins.scss</span>
+                                    Border-radius
+                                </li>
+                                <li class="mb-2">
+                                    <span class="partial-indicator">_mixins.scss</span>
+                                    Gradients
+                                </li>
+                                <li class="mb-2">
+                                    <span class="partial-indicator">_mixins.scss</span>
+                                    Box-shadow
+                                </li>
+                                <li class="mb-2">
+                                    <span class="partial-indicator">_mixins.scss</span>
+                                    Text truncation
+                                </li>
+                                <li class="mb-0">
+                                    <span class="partial-indicator">_mixins.scss</span>
+                                    Clearfix
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SASS PARTIALS SECTION                        -->
+        <!-- ============================================ -->
+        <!--
+            Partials are SASS files meant to be imported into other SASS files.
+            They are prefixed with an underscore (_), which tells the SASS compiler
+            not to compile them independently.
+        -->
+        <section class="mb-5" id="partials">
+            <h2 class="mb-4">
+                <i class="bi bi-files me-2"></i>SASS Partials & Imports
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Bootstrap's File Structure</h5>
+                            <p class="card-text">
+                                Bootstrap's SASS source is organized into many partial files.
+                                The main entry point (<code>bootstrap.scss</code>) imports all partials
+                                in a specific order. This modular structure makes the codebase maintainable.
+                            </p>
+                            <!--
+                                File tree showing Bootstrap's SASS structure.
+                                Each file is a partial (prefixed with _).
+                            -->
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div>scss/</div>
+                                <div>├── <span class="text-warning">bootstrap.scss</span> <span class="text-success">← Main entry point</span></div>
+                                <div>├── <span class="text-info">_variables.scss</span> <span class="text-success">← All default values</span></div>
+                                <div>├── <span class="text-info">_variables-dark.scss</span></div>
+                                <div>├── <span class="text-info">_mixins.scss</span> <span class="text-success">← Reusable patterns</span></div>
+                                <div>├── _root.scss</div>
+                                <div>├── _reboot.scss <span class="text-success">← CSS reset</span></div>
+                                <div>├── _type.scss</div>
+                                <div>├── _buttons.scss</div>
+                                <div>├── _forms.scss</div>
+                                <div>├── _navbar.scss</div>
+                                <div>├── _card.scss</div>
+                                <div>├── _modal.scss</div>
+                                <div>├── _utilities/</div>
+                                <div>│&nbsp;&nbsp;├── _api.scss</div>
+                                <div>│&nbsp;&nbsp;├── _display.scss</div>
+                                <div>│&nbsp;&nbsp;└── _flex.scss</div>
+                                <div>└── <span class="text-warning">bootstrap-grid.scss</span> <span class="text-success">← Grid-only build</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        Shows how the main bootstrap.scss imports partials.
+                        Demonstrates the @import chain.
+                    -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">The Import Chain</h5>
+                            <p class="card-text text-muted">
+                                Bootstrap's main file imports partials in a specific order.
+                                Order matters because later files depend on earlier ones.
+                            </p>
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div class="text-success">// bootstrap.scss (simplified)</div>
+                                <div class="mt-1">@import "functions"; <span class="text-success">// Must be first</span></div>
+                                <div>@import "variables"; <span class="text-success">// Uses functions</span></div>
+                                <div>@import "mixins"; <span class="text-success">// Uses variables</span></div>
+                                <div>@import "root"; <span class="text-success">// CSS custom properties</span></div>
+                                <div>@import "reboot"; <span class="text-success">// CSS reset</span></div>
+                                <div>@import "type"; <span class="text-success">// Typography</span></div>
+                                <div>@import "buttons"; <span class="text-success">// Components</span></div>
+                                <div>@import "card";</div>
+                                <div>@import "modal";</div>
+                                <div class="mt-2 text-success">// Modern SASS uses @use instead of @import</div>
+                                <div>@use "variables" as *;</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!--
+                        Color functions demo.
+                        Shows SASS darken/lighten and how they produce color variations.
+                    -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-droplet me-2"></i>SASS Color Functions
+                            </h5>
+                            <p class="card-text text-muted small">
+                                SASS can modify colors programmatically:
+                            </p>
+                            <div class="color-swatch bg-primary mb-2">$primary (#0d6efd)</div>
+                            <div class="color-swatch mb-2" style="background-color: #084298;">
+                                darken($primary, 15%) (#084298)
+                            </div>
+                            <div class="color-swatch mb-2" style="background-color: #6ea8fe;">
+                                lighten($primary, 30%) (#6ea8fe)
+                            </div>
+                            <div class="color-swatch" style="background-color: rgba(13,110,253,0.5);">
+                                rgba($primary, 0.5)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        @use vs @import explanation.
+                        Modern SASS recommends @use over @import.
+                    -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                                @use vs @import
+                            </h5>
+                            <p class="card-text small">
+                                <code>@import</code> is deprecated in modern SASS.
+                                Use <code>@use</code> and <code>@forward</code> instead.
+                            </p>
+                            <div class="bg-dark text-white p-3 rounded font-monospace small mb-0">
+                                <div class="text-danger text-decoration-line-through">
+                                    @import "variables";
+                                </div>
+                                <div class="text-success mt-1">
+                                    @use "variables" as *;
+                                </div>
+                                <div class="text-success">
+                                    @use "variables" as v;
+                                </div>
+                                <div class="mt-1 text-muted">
+                                    // v.$primary or just $primary
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- COMPILATION WORKFLOW SECTION                 -->
+        <!-- ============================================ -->
+        <!--
+            Explains the complete SASS compilation workflow.
+            From writing SCSS to serving CSS to the browser.
+        -->
+        <section>
+            <h2 class="mb-4">
+                <i class="bi bi-gear me-2"></i>Compilation Workflow
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="display-4 text-primary mb-3">
+                                <i class="bi bi-pencil-square"></i>
+                            </div>
+                            <h5 class="card-title">1. Write SCSS</h5>
+                            <p class="card-text text-muted">
+                                Create <code>.scss</code> files using variables, nesting,
+                                mixins, and imports. Override Bootstrap defaults in your
+                                own variables file.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="display-4 text-warning mb-3">
+                                <i class="bi bi-cpu"></i>
+                            </div>
+                            <h5 class="card-title">2. Compile</h5>
+                            <p class="card-text text-muted">
+                                Run the SASS compiler (<code>sass input.scss output.css</code>)
+                                or use a build tool like Webpack, Vite, or Parcel
+                                with SASS plugins.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center h-100">
+                        <div class="card-body">
+                            <div class="display-4 text-success mb-3">
+                                <i class="bi bi-check-lg"></i>
+                            </div>
+                            <h5 class="card-title">3. Serve CSS</h5>
+                            <p class="card-text text-muted">
+                                The compiled <code>.css</code> file contains plain CSS
+                                that browsers understand. No SASS syntax remains.
+                                Optionally minify for production.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--
+                Terminal commands for SASS compilation.
+                Shows practical commands developers run.
+            -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Common SASS Commands</h5>
+                    <div class="bg-dark text-white p-3 rounded font-monospace small">
+                        <div class="text-success"># Install SASS globally</div>
+                        <div>npm install -g sass</div>
+                        <div class="mt-2 text-success"># Compile once</div>
+                        <div>sass src/scss/main.scss dist/css/main.css</div>
+                        <div class="mt-2 text-success"># Watch for changes (auto-recompile)</div>
+                        <div>sass --watch src/scss:dist/css</div>
+                        <div class="mt-2 text-success"># Compile with compression</div>
+                        <div>sass src/scss/main.scss dist/css/main.css --style compressed</div>
+                        <div class="mt-2 text-success"># Using npm scripts in package.json</div>
+                        <div>"scripts": {</div>
+                        <div>&nbsp;&nbsp;"sass:build": "sass src/scss:dist/css --style compressed",</div>
+                        <div>&nbsp;&nbsp;"sass:watch": "sass --watch src/scss:dist/css"</div>
+                        <div>}</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================ -->
+    <!-- FOOTER                                       -->
+    <!-- ============================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>SASS Compilation</h5>
+                    <p class="text-muted mb-0">
+                        Understanding Bootstrap's SASS architecture: variables, nesting, mixins, and partials.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-github"></i></a>
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <p class="text-center text-muted mb-0">
+                &copy; 2024 Bootstrap Course. Built with Bootstrap 5.3.3
+            </p>
+        </div>
+    </footer>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 JAVASCRIPT BUNDLE CDN            -->
+    <!-- ============================================ -->
+    <!--
+        Bootstrap JS bundle includes Popper.js and all Bootstrap plugins.
+        Loaded at end of body for progressive rendering.
+    -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- ============================================ -->
+    <!-- CUSTOM JAVASCRIPT                            -->
+    <!-- ============================================ -->
+    <script>
+        // Log Bootstrap version to confirm loading
+        console.log('Bootstrap version:', bootstrap.Tooltip.VERSION || '5.3.3');
+
+        // Initialize tooltips for any elements with data-bs-toggle="tooltip"
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(
+            tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl)
+        );
+    </script>
+</body>
+</html>

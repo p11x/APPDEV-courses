@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_04_04: Svelte Bootstrap Integration                        -->
+<!-- Demonstrates Svelte patterns with Bootstrap 5, reactive       -->
+<!-- declarations, stores, transitions, and component composition  -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Svelte Bootstrap Integration</title>
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- ============================================================= -->
+    <!-- Svelte Bootstrap Integration Reference                        -->
+    <!-- Svelte compiles components at build time to vanilla JS        -->
+    <!-- No virtual DOM - direct DOM manipulation for performance      -->
+    <!-- ============================================================= -->
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-warning">Svelte + Bootstrap 5</h1>
+            <p class="lead text-muted">Reactive Declarations, Stores, Transitions, Actions</p>
+        </div>
+
+        <div class="alert alert-warning" role="alert">
+            <strong>Svelte Pattern:</strong> Components compile to vanilla JS - no runtime overhead. Reactive state uses <code>$:</code> labels.
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Svelte Reactive Declarations                                 -->
+        <!-- $: label creates reactive statements that auto-run            -->
+        <!-- when referenced variables change                              -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Svelte Reactive Declarations ($:)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- Svelte Counter Component --&gt;
+&lt;script&gt;
+  let count = 0;
+
+  // Reactive declaration - auto-updates when count changes
+  $: badgeClass = count > 0 ? 'bg-success'
+                 : count &lt; 0 ? 'bg-danger'
+                 : 'bg-secondary';
+
+  // Reactive statement block
+  $: if (count > 10) {
+    alert('Count is getting high!');
+    count = 0;
+  }
+
+  // Reactive derived value
+  $: doubled = count * 2;
+&lt;/script&gt;
+
+&lt;!-- Bootstrap-styled Svelte template --&gt;
+&lt;div class="card shadow-sm"&gt;
+  &lt;div class="card-body text-center"&gt;
+    &lt;p class="display-4"&gt;
+      Count: &lt;span class="badge {badgeClass}"&gt;{count}&lt;/span&gt;
+    &lt;/p&gt;
+    &lt;p&gt;Doubled: {doubled}&lt;/p&gt;
+    &lt;div class="btn-group"&gt;
+      &lt;button class="btn btn-outline-danger" on:click={() => count--}&gt;-&lt;/button&gt;
+      &lt;button class="btn btn-outline-secondary" on:click={() => count = 0}&gt;Reset&lt;/button&gt;
+      &lt;button class="btn btn-outline-success" on:click={() => count++}&gt;+&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+                <!-- Working simulation of Svelte output -->
+                <div class="border p-3 rounded bg-light mt-3">
+                    <h6>Simulated Output:</h6>
+                    <div class="text-center">
+                        <p class="display-4">Count: <span class="badge bg-success" id="svelte-count">0</span></p>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-danger" onclick="svelteCountDemo(-1)">- Decrement</button>
+                            <button class="btn btn-outline-secondary" onclick="svelteCountDemo(0)">Reset</button>
+                            <button class="btn btn-outline-success" onclick="svelteCountDemo(1)">+ Increment</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Svelte Stores                                                -->
+        <!-- Writable stores provide shared reactive state across components -->
+        <!-- $store syntax auto-subscribes and unsubscribes                -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Svelte Stores (writable, readable, derived)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- stores.js - Shared reactive state --&gt;
+import { writable, derived } from 'svelte/store';
+
+// Writable store - can be updated from any component
+export const todos = writable([
+  { id: 1, text: 'Learn Svelte stores', completed: false },
+  { id: 2, text: 'Integrate Bootstrap', completed: true },
+]);
+
+// Derived store - computed from other stores
+export const completedCount = derived(
+  todos,
+  $todos => $todos.filter(t => t.completed).length
+);
+
+// Readable store - external data source
+export const time = readable(new Date(), function start(set) {
+  const interval = setInterval(() => set(new Date()), 1000);
+  return function stop() { clearInterval(interval); };
+});
+
+&lt;!-- TodoList.svelte - Consuming the store --&gt;
+&lt;script&gt;
+  import { todos, completedCount } from './stores.js';
+
+  let newTodo = '';
+
+  function addTodo() {
+    if (!newTodo.trim()) return;
+    // $todos auto-subscribes, .update() modifies store value
+    todos.update(t => [...t, { id: Date.now(), text: newTodo, completed: false }]);
+    newTodo = '';
+  }
+
+  function removeTodo(id) {
+    todos.update(t => t.filter(todo => todo.id !== id));
+  }
+
+  function toggleTodo(id) {
+    todos.update(t => t.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  }
+&lt;/script&gt;
+
+&lt;!-- $todos auto-subscribes in template --&gt;
+&lt;ul class="list-group"&gt;
+  {#each $todos as todo (todo.id)}
+    &lt;li class="list-group-item" class:list-group-item-success={todo.completed}&gt;
+      &lt;span on:click={() => toggleTodo(todo.id)}&gt;{todo.text}&lt;/span&gt;
+      &lt;button on:click={() => removeTodo(todo.id)}&gt;Remove&lt;/button&gt;
+    &lt;/li&gt;
+  {/each}
+&lt;/ul&gt;
+&lt;p&gt;{$completedCount} of {$todos.length} completed&lt;/p&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Svelte Transitions with Bootstrap                            -->
+        <!-- Svelte has built-in transition directives for smooth animations -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Svelte Transitions & Animations</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;script&gt;
+  import { fade, fly, slide, scale } from 'svelte/transition';
+  import { flip } from 'svelte/animate';
+  import { quintOut } from 'svelte/easing';
+
+  let visible = true;
+  let items = [1, 2, 3, 4, 5];
+&lt;/script&gt;
+
+&lt;!-- fade transition for alerts --&gt;
+{#if visible}
+  &lt;div class="alert alert-success"
+       transition:fade={{ duration: 300 }}&gt;
+    This alert fades in and out smoothly
+  &lt;/div&gt;
+{/if}
+
+&lt;!-- fly transition with Bootstrap cards --&gt;
+{#if visible}
+  &lt;div class="card"
+       transition:fly={{ y: 200, duration: 500 }}&gt;
+    &lt;div class="card-body"&gt;Fly transition&lt;/div&gt;
+  &lt;/div&gt;
+{/if}
+
+&lt;!-- slide transition for accordion-like content --&gt;
+{#if visible}
+  &lt;div transition:slide={{ duration: 300 }}&gt;
+    &lt;div class="card card-body"&gt;Slide content&lt;/div&gt;
+  &lt;/div&gt;
+{/if}
+
+&lt;!-- animate:flip for list reordering --&gt;
+{#each items as item (item)}
+  &lt;div class="list-group-item"
+       animate:flip={{ duration: 250, easing: quintOut }}&gt;
+    Item {item}
+  &lt;/div&gt;
+{/each}</code></pre>
+                <!-- Working demo using Bootstrap transitions -->
+                <div class="mt-3">
+                    <button class="btn btn-success mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#svelteTransitionDemo">
+                        Toggle Collapse (Bootstrap equivalent)
+                    </button>
+                    <div class="collapse" id="svelteTransitionDemo">
+                        <div class="card card-body">
+                            This simulates Svelte's <code>transition:slide</code> using Bootstrap's collapse component. Svelte transitions compile to CSS animations at build time.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Svelte Actions                                               -->
+        <!-- use:action directives apply reusable behavior to elements     -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Svelte Actions (use:action)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- actions.js - Reusable DOM behavior --&gt;
+export function tooltip(node, text) {
+  // Initialize Bootstrap tooltip on the node
+  node.setAttribute('data-bs-toggle', 'tooltip');
+  node.setAttribute('data-bs-placement', 'top');
+  node.setAttribute('title', text);
+  const tip = new bootstrap.Tooltip(node);
+
+  return {
+    // Called when parameters change
+    update(newText) {
+      node.setAttribute('title', newText);
+      tip.setContent({ '.tooltip-inner': newText });
+    },
+    // Called when element is destroyed
+    destroy() {
+      tip.dispose();
+    }
+  };
+}
+
+export function clickOutside(node, callback) {
+  function handleClick(event) {
+    if (!node.contains(event.target)) {
+      callback(event);
+    }
+  }
+  document.addEventListener('click', handleClick);
+  return {
+    destroy() {
+      document.removeEventListener('click', handleClick);
+    }
+  };
+}
+
+&lt;!-- Using actions in a component --&gt;
+&lt;script&gt;
+  import { tooltip, clickOutside } from './actions.js';
+  let dropdownOpen = false;
+&lt;/script&gt;
+
+&lt;!-- use:tooltip applies Bootstrap tooltip via action --&gt;
+&lt;button class="btn btn-primary" use:tooltip={"Save your changes"}&gt;
+  Save
+&lt;/button&gt;
+
+&lt;!-- use:clickOutside closes dropdown on outside click --&gt;
+&lt;div class="dropdown" use:clickOutside={() => dropdownOpen = false}&gt;
+  &lt;button class="btn btn-secondary dropdown-toggle"
+          on:click={() => dropdownOpen = !dropdownOpen}&gt;
+    Menu
+  &lt;/button&gt;
+  &lt;ul class="dropdown-menu" class:show={dropdownOpen}&gt;
+    &lt;li&gt;&lt;a class="dropdown-item" href="#"&gt;Action&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a class="dropdown-item" href="#"&gt;Another&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+                <!-- Working demo of action concepts -->
+                <button class="btn btn-primary me-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Action output: Bootstrap tooltip">
+                    Tooltip Action
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Svelte Each/If Blocks with Bootstrap                         -->
+        <!-- {#each}, {#if} are Svelte template syntax for iteration/conditionals -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Svelte Template Syntax ({#if}, {#each}, {#await})</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- Conditional rendering with Bootstrap alerts --&gt;
+{#if status === 'success'}
+  &lt;div class="alert alert-success"&gt;Operation successful!&lt;/div&gt;
+{:else if status === 'error'}
+  &lt;div class="alert alert-danger"&gt;Something went wrong&lt;/div&gt;
+{:else}
+  &lt;div class="alert alert-info"&gt;Ready&lt;/div&gt;
+{/if}
+
+&lt;!-- List rendering with Bootstrap list-group --&gt;
+{#each users as user, index (user.id)}
+  &lt;div class="list-group-item"&gt;
+    {index + 1}. {user.name}
+  &lt;/div&gt;
+{:empty}
+  &lt;div class="list-group-item text-muted"&gt;No users found&lt;/div&gt;
+{/each}
+
+&lt;!-- Async data with Bootstrap loading states --&gt;
+{#await fetchUsers()}
+  &lt;div class="text-center"&gt;
+    &lt;div class="spinner-border text-primary"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+{:then users}
+  {#each users as user}
+    &lt;div class="card mb-2"&gt;
+      &lt;div class="card-body"&gt;{user.name}&lt;/div&gt;
+    &lt;/div&gt;
+  {/each}
+{:catch error}
+  &lt;div class="alert alert-danger"&gt;{error.message}&lt;/div&gt;
+{/await}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Svelte Bootstrap Library Reference                           -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Svelte-Bootstrap Library Components</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr><th>Bootstrap Component</th><th>sveltestrap</th><th>Svelte Feature</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Alert</td><td>&lt;Alert&gt;</td><td>transition:fade</td></tr>
+                        <tr><td>Modal</td><td>&lt;Modal&gt;</td><td>bind:isOpen</td></tr>
+                        <tr><td>Dropdown</td><td>&lt;Dropdown&gt;</td><td>on:click outside</td></tr>
+                        <tr><td>Toast</td><td>&lt;Toast&gt;</td><td>autohide prop</td></tr>
+                        <tr><td>Table</td><td>&lt;Table&gt;</td><td>{#each} rows</td></tr>
+                        <tr><td>Navbar</td><td>&lt;Navbar&gt;</td><td>bind:isOpen responsive</td></tr>
+                        <tr><td>Form</td><td>&lt;Form&gt;</td><td>bind:value two-way</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        <!-- Svelte count demo simulation -->
+        let svelteCount = 0;
+        function svelteCountDemo(action) {
+            if (action === 0) svelteCount = 0;
+            else svelteCount += action;
+            const badge = document.getElementById('svelte-count');
+            badge.textContent = svelteCount;
+            badge.className = 'badge ' + (svelteCount > 0 ? 'bg-success' : svelteCount < 0 ? 'bg-danger' : 'bg-secondary');
+        }
+        <!-- Initialize tooltips -->
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+    </script>
+</body>
+</html>

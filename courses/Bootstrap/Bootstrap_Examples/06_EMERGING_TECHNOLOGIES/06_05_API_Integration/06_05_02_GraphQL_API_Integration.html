@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================
+         GraphQL API Integration with Bootstrap 5
+         
+         GraphQL is a query language for APIs developed by Facebook in 2012
+         and open-sourced in 2015. Unlike REST, GraphQL allows clients to
+         request exactly the data they need in a single request.
+         
+         Key Concepts:
+         - Query: Read data (like GET in REST)
+         - Mutation: Modify data (like POST/PUT/DELETE in REST)
+         - Subscription: Real-time data updates (like WebSockets)
+         - Schema: Defines the API's type system
+         - Resolvers: Functions that populate data for schema fields
+         ============================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphQL API Integration - Bootstrap 5</title>
+
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p2CzPaLk/s7e7K+5S2l2J6L3I3N6K" crossorigin="anonymous">
+
+    <style>
+        /*
+         * Custom styles for GraphQL demonstration components.
+         * Bootstrap handles most layout; these are supplementary.
+         */
+        
+        /* Syntax-highlighted code blocks with dark theme */
+        .code-block {
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        /* GraphQL keyword highlighting */
+        .gql-keyword { color: #cba6f7; font-weight: bold; }
+        .gql-field { color: #89b4fa; }
+        .gql-string { color: #a6e3a1; }
+        .gql-comment { color: #6c7086; font-style: italic; }
+
+        /* Spinner overlay for loading states */
+        .loading-overlay {
+            display: none;
+            position: relative;
+        }
+
+        .loading-overlay.active {
+            display: block;
+        }
+
+        /* Smooth transitions for result containers */
+        .result-container {
+            transition: opacity 0.3s ease;
+        }
+
+        /* Query builder field row styling */
+        .field-row {
+            transition: background-color 0.2s ease;
+        }
+
+        .field-row:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+
+        /* JSON response viewer */
+        .json-viewer {
+            background: #0d1117;
+            color: #c9d1d9;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Tab content fade animation */
+        .tab-pane {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- ============================================================
+         NAVIGATION BAR
+         Bootstrap navbar for page section navigation
+         ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <!-- GraphQL Logo SVG -->
+                <svg width="24" height="24" viewBox="0 0 400 400" class="me-2">
+                    <g fill="#E535AB">
+                        <path d="M57.468 302.66l-14.376-8.3 160.15-277.38 14.376 8.3z"/>
+                        <path d="M39.8 272.2h320.3v16.6H39.8z"/>
+                        <path d="M206.348 374.026l-160.21-92.5 8.3-14.376 160.21 92.5zM345.522 132.947l-160.21-92.5 8.3-14.376 160.21 92.5z"/>
+                        <path d="M54.482 132.883l-8.3-14.375 160.21-92.5 8.3 14.375z"/>
+                        <path d="M342.568 302.663l-160.15-277.38 14.376-8.3 160.15 277.38zM52.5 107.5h16.6v185H52.5zM330.9 107.5h16.6v185h-16.6z"/>
+                        <path d="M203.522 367l-7.25-12.558 139.34-80.45 7.25 12.557z"/>
+                        <path d="M369.5 297.9c-9.6 16.7-31 22.4-47.7 12.8-16.7-9.6-22.4-31-12.8-47.7 9.6-16.7 31-22.4 47.7-12.8 16.8 9.7 22.5 31 12.8 47.7M90.9 137c-9.6 16.7-31 22.4-47.7 12.8-16.7-9.6-22.4-31-12.8-47.7 9.6-16.7 31-22.4 47.7-12.8 16.7 9.7 22.4 31 12.8 47.7M30.5 297.9c-9.6-16.7-3.9-38 12.8-47.7 16.7-9.6 38-3.9 47.7 12.8 9.6 16.7 3.9 38-12.8 47.7-16.8 9.6-38.1 3.9-47.7-12.8M309.1 137c-9.6-16.7-3.9-38 12.8-47.7 16.7-9.6 38-3.9 47.7 12.8 9.6 16.7 3.9 38-12.8 47.7-16.7 9.6-38.1 3.9-47.7-12.8M200 395.8c-19.3 0-34.9-15.6-34.9-34.9 0-19.3 15.6-34.9 34.9-34.9 19.3 0 34.9 15.6 34.9 34.9 0 19.3-15.6 34.9-34.9 34.9M200 74c-19.3 0-34.9-15.6-34.9-34.9 0-19.3 15.6-34.9 34.9-34.9 19.3 0 34.9 15.6 34.9 34.9 0 19.3-15.6 34.9-34.9 34.9"/>
+                    </g>
+                </svg>
+                GraphQL Integration
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#basics">Basics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#fetching">Fetching</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#mutations">Mutations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#builder">Query Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#demo">Live Demo</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+         HERO SECTION
+         ============================================================ -->
+    <header class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold">GraphQL API Integration</h1>
+                    <p class="lead">
+                        Learn how to query APIs using GraphQL with vanilla JavaScript and display
+                        the results using Bootstrap 5 components.
+                    </p>
+                    <!-- Badges showing tech stack -->
+                    <div class="mt-3">
+                        <span class="badge bg-success fs-6 me-1">Bootstrap 5.3.3</span>
+                        <span class="badge bg-pink fs-6 me-1" style="background-color: #E535AB;">GraphQL</span>
+                        <span class="badge bg-warning text-dark fs-6">JavaScript Fetch API</span>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center d-none d-lg-block">
+                    <!-- Visual representation of a GraphQL query -->
+                    <div class="code-block text-start" style="font-size: 0.75rem;">
+<span class="gql-keyword">query</span> {
+  <span class="gql-field">company</span> {
+    <span class="gql-field">name</span>
+    <span class="gql-field">ceo</span>
+  }
+  <span class="gql-field">rockets</span> {
+    <span class="gql-field">name</span>
+    <span class="gql-field">cost</span>
+  }
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- ============================================================
+             SECTION 1: GRAPHQL BASICS
+             Explains core GraphQL concepts with syntax examples
+             ============================================================ -->
+        <section id="basics" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">
+                <span class="text-primary">01.</span> GraphQL Query Structure &amp; Syntax
+            </h2>
+
+            <div class="row">
+                <!-- Concept explanation cards -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 border-primary">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">Query</h5>
+                            <p class="card-text">
+                                A <strong>Query</strong> in GraphQL is used to <em>read</em> or fetch data.
+                                It is analogous to a GET request in REST, but far more flexible.
+                                Clients specify exactly which fields they need, reducing over-fetching.
+                            </p>
+                            <div class="code-block mt-3">
+<span class="gql-comment"># Simple query</span>
+<span class="gql-keyword">query</span> {
+  <span class="gql-field">launches</span>(limit: <span class="gql-string">3</span>) {
+    <span class="gql-field">mission_name</span>
+    <span class="gql-field">launch_date_utc</span>
+  }
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 border-success">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">Mutation</h5>
+                            <p class="card-text">
+                                A <strong>Mutation</strong> is used to <em>write</em> or modify data on the server.
+                                This includes creating, updating, and deleting resources.
+                                Mutations can also return data after the operation.
+                            </p>
+                            <div class="code-block mt-3">
+<span class="gql-comment"># Mutation to insert data</span>
+<span class="gql-keyword">mutation</span> {
+  <span class="gql-field">insert_users</span>(
+    objects: {<span class="gql-field">name</span>: <span class="gql-string">"Alice"</span>}
+  ) {
+    <span class="gql-field">returning</span> {
+      <span class="gql-field">id</span>
+      <span class="gql-field">name</span>
+    }
+  }
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 border-info">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">Variables</h5>
+                            <p class="card-text">
+                                <strong>Variables</strong> allow you to parameterize queries dynamically
+                                instead of string interpolation. Variables are passed separately from
+                                the query in the request body, preventing injection attacks.
+                            </p>
+                            <div class="code-block mt-3">
+<span class="gql-comment"># Query with variables</span>
+<span class="gql-keyword">query</span> GetLaunch(
+  $limit: <span class="gql-field">Int</span>
+) {
+  <span class="gql-field">launches</span>(limit: $limit) {
+    <span class="gql-field">mission_name</span>
+  }
+}
+<span class="gql-comment"># Variables JSON:</span>
+{<span class="gql-string">"limit"</span>: <span class="gql-string">5</span>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REST vs GraphQL comparison table -->
+            <div class="card mt-4">
+                <div class="card-header bg-dark text-white">
+                    <strong>REST vs GraphQL Comparison</strong>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Feature</th>
+                                <th>REST</th>
+                                <th>GraphQL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Endpoints</td>
+                                <td>Multiple URLs (<code>/users</code>, <code>/posts</code>)</td>
+                                <td>Single endpoint (<code>/graphql</code>)</td>
+                            </tr>
+                            <tr>
+                                <td>Data Fetching</td>
+                                <td>Fixed data structure per endpoint</td>
+                                <td>Client specifies exact fields needed</td>
+                            </tr>
+                            <tr>
+                                <td>Over-fetching</td>
+                                <td>Common - returns all fields</td>
+                                <td>Eliminated - request only what you need</td>
+                            </tr>
+                            <tr>
+                                <td>Under-fetching</td>
+                                <td>Common - multiple requests needed</td>
+                                <td>Single request for nested data</td>
+                            </tr>
+                            <tr>
+                                <td>Type System</td>
+                                <td>Optional (OpenAPI/Swagger)</td>
+                                <td>Built-in strong type system</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 2: FETCHING DATA WITH GRAPHQL
+             Demonstrates how to make GraphQL requests using fetch()
+             
+             GraphQL requests are always POST requests to a single endpoint.
+             The request body must contain:
+             1. "query" - the GraphQL query string
+             2. "variables" (optional) - dynamic parameters as JSON
+             3. "operationName" (optional) - name of the operation
+             ============================================================ -->
+        <section id="fetching" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">
+                <span class="text-primary">02.</span> Fetching Data with GraphQL
+            </h2>
+
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <strong>How GraphQL fetch() Works</strong>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                Unlike REST's GET requests, GraphQL uses <code>POST</code> for all operations.
+                                The query is sent in the request body as JSON:
+                            </p>
+                            <div class="code-block">
+<span class="gql-comment">/*
+ * fetch() call structure for GraphQL:
+ *
+ * 1. URL: The single GraphQL endpoint
+ * 2. Method: Always POST
+ * 3. Headers: Content-Type must be application/json
+ *    - Add Authorization header if API requires it
+ * 4. Body: JSON.stringify() with query + variables
+ */</span>
+
+<span class="gql-keyword">const</span> response = <span class="gql-keyword">await</span> fetch(
+  <span class="gql-string">'https://spacex-production.up.railway.app/'</span>,
+  {
+    method: <span class="gql-string">'POST'</span>,
+    headers: {
+      <span class="gql-string">'Content-Type'</span>: <span class="gql-string">'application/json'</span>
+    },
+    <span class="gql-comment">// Body contains the GraphQL query</span>
+    body: JSON.stringify({
+      query: <span class="gql-string">`{ company { name } }`</span>
+    })
+  }
+);
+
+<span class="gql-keyword">const</span> { data } = <span class="gql-keyword">await</span> response.json();
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong>Live Example: SpaceX Company Info</strong>
+                            <button class="btn btn-sm btn-primary" id="btnCompanyInfo"
+                                onclick="fetchCompanyInfo()">
+                                Fetch Data
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <!-- Loading spinner - shown during API call -->
+                            <div id="companyLoading" class="loading-overlay text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Querying GraphQL endpoint...</p>
+                            </div>
+
+                            <!-- Error alert - shown if fetch fails -->
+                            <div id="companyError" class="alert alert-danger d-none" role="alert">
+                                <strong>Error!</strong> <span id="companyErrorText"></span>
+                            </div>
+
+                            <!-- Results container - populated by JavaScript -->
+                            <div id="companyResults" class="result-container">
+                                <p class="text-muted text-center py-3">
+                                    Click "Fetch Data" to load SpaceX company information via GraphQL.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SpaceX Launches Table -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong>SpaceX Launches - GraphQL Data in Bootstrap Table</strong>
+                    <div>
+                        <label class="me-2">Limit:</label>
+                        <!-- Select input for controlling query limit -->
+                        <select class="form-select form-select-sm d-inline-block w-auto me-2"
+                            id="launchLimit">
+                            <option value="3">3</option>
+                            <option value="5" selected>5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                        </select>
+                        <button class="btn btn-sm btn-success" onclick="fetchLaunches()">
+                            Fetch Launches
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Loading state -->
+                    <div id="launchesLoading" class="loading-overlay text-center py-5">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Fetching launch data...</p>
+                    </div>
+
+                    <!-- Error state -->
+                    <div id="launchesError" class="alert alert-danger m-3 d-none" role="alert">
+                        <strong>Error!</strong> <span id="launchesErrorText"></span>
+                    </div>
+
+                    <!-- Bootstrap table populated by GraphQL response -->
+                    <div class="table-responsive" id="launchesTableWrapper">
+                        <table class="table table-hover table-striped mb-0" id="launchesTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Mission Name</th>
+                                    <th>Rocket</th>
+                                    <th>Launch Date</th>
+                                    <th>Status</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="launchesTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        Click "Fetch Launches" to populate this table with GraphQL data.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 3: MUTATIONS
+             Demonstrates GraphQL mutations for creating/modifying data
+             
+             Mutations follow the same POST structure as queries but use
+             the "mutation" keyword. The server executes mutations
+             sequentially (unlike queries which can run in parallel).
+             ============================================================ -->
+        <section id="mutations" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">
+                <span class="text-primary">03.</span> Mutations
+            </h2>
+
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <strong>Mutation Concepts</strong>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                While <strong>queries</strong> only read data, <strong>mutations</strong> modify it.
+                                GraphQL mutations can return data after execution, allowing you to confirm changes.
+                            </p>
+
+                            <h6>Key Differences from Queries:</h6>
+                            <ul>
+                                <li><strong>Sequential execution:</strong> Fields in a mutation run one after another</li>
+                                <li><strong>Side effects:</strong> Mutations modify server state</li>
+                                <li><strong>Return values:</strong> Often return the modified object</li>
+                                <li><strong>Input types:</strong> Use input objects for complex arguments</li>
+                            </ul>
+
+                            <!-- Mutation syntax example -->
+                            <div class="code-block mt-3">
+<span class="gql-comment">// Mutation with variables</span>
+<span class="gql-keyword">const</span> mutation = <span class="gql-string">`
+  mutation InsertUser($name: String!, $email: String!) {
+    insert_users(objects: [{
+      name: $name,
+      email: $email
+    }]) {
+      returning {
+        id
+        name
+        email
+        created_at
+      }
+      affected_rows
+    }
+  }
+`</span>;
+
+<span class="gql-keyword">const</span> variables = {
+  name: <span class="gql-string">"John Doe"</span>,
+  email: <span class="gql-string">"john@example.com"</span>
+};
+
+fetch(endpoint, {
+  method: <span class="gql-string">'POST'</span>,
+  headers: { <span class="gql-string">'Content-Type'</span>: <span class="gql-string">'application/json'</span> },
+  body: JSON.stringify({ query: mutation, variables })
+});
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <strong>Interactive Mutation Form (Simulated)</strong>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">
+                                This form simulates a mutation. Since most public GraphQL APIs are read-only,
+                                this demonstrates the client-side mutation pattern.
+                            </p>
+
+                            <!-- Form that demonstrates mutation structure -->
+                            <form id="mutationForm" onsubmit="handleMutation(event)">
+                                <div class="mb-3">
+                                    <label for="mutationName" class="form-label">Mission Name</label>
+                                    <input type="text" class="form-control" id="mutationName"
+                                        placeholder="Enter mission name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="mutationRocket" class="form-label">Rocket</label>
+                                    <select class="form-select" id="mutationRocket" required>
+                                        <option value="">Select a rocket...</option>
+                                        <option value="Falcon 1">Falcon 1</option>
+                                        <option value="Falcon 9">Falcon 9</option>
+                                        <option value="Falcon Heavy">Falcon Heavy</option>
+                                        <option value="Starship">Starship</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="mutationDate" class="form-label">Launch Date</label>
+                                    <input type="date" class="form-control" id="mutationDate" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="mutationSuccess" class="form-label">Success</label>
+                                    <select class="form-select" id="mutationSuccess" required>
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100">
+                                    Execute Mutation
+                                </button>
+                            </form>
+
+                            <!-- Mutation result display -->
+                            <div id="mutationResult" class="mt-3 d-none">
+                                <div class="alert alert-info">
+                                    <strong>Mutation Request (would be sent to server):</strong>
+                                    <pre class="json-viewer mt-2 mb-0" id="mutationPreview"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mutated data display - cards showing "created" items -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <strong>Created Missions (Client-Side Simulation)</strong>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="mutationCards">
+                        <div class="col-12 text-center text-muted py-3" id="noMissionsMsg">
+                            Use the form above to "create" missions. They will appear here as Bootstrap cards.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 4: QUERY BUILDER UI
+             Interactive Bootstrap form that builds GraphQL queries
+             
+             This demonstrates how to create a visual query builder
+             using Bootstrap form components that generates GraphQL
+             queries dynamically based on user selections.
+             ============================================================ -->
+        <section id="builder" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">
+                <span class="text-primary">04.</span> Query Builder UI
+            </h2>
+
+            <div class="row">
+                <!-- Query builder form -->
+                <div class="col-lg-5 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-dark text-white">
+                            <strong>Build Your Query</strong>
+                        </div>
+                        <div class="card-body">
+                            <!-- API type selector - determines which dataset to query -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">API Resource</label>
+                                <select class="form-select" id="queryResource"
+                                    onchange="updateFieldOptions()">
+                                    <option value="launches">Launches</option>
+                                    <option value="rockets">Rockets</option>
+                                    <option value="capsules">Capsules</option>
+                                </select>
+                            </div>
+
+                            <!-- Limit parameter -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Limit</label>
+                                <input type="number" class="form-control" id="queryLimit"
+                                    value="5" min="1" max="50" onchange="buildQuery()">
+                            </div>
+
+                            <!-- Field selection checkboxes -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Fields to Include</label>
+                                <div class="border rounded p-3" id="fieldCheckboxes">
+                                    <!-- Dynamically populated based on resource type -->
+                                </div>
+                            </div>
+
+                            <!-- Order by selector -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Order By</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="queryOrderBy"
+                                        onchange="buildQuery()">
+                                        <option value="">None</option>
+                                        <option value="launch_date_utc">Launch Date</option>
+                                        <option value="mission_name">Mission Name</option>
+                                    </select>
+                                    <select class="form-select" id="queryOrderDir"
+                                        onchange="buildQuery()">
+                                        <option value="desc">Descending</option>
+                                        <option value="asc">Ascending</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary w-100" onclick="executeBuiltQuery()"
+                                id="btnExecuteQuery">
+                                Execute Query
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generated query preview -->
+                <div class="col-lg-7 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <strong>Generated GraphQL Query</strong>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyQuery()">
+                                Copy
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <!-- The dynamically built query is displayed here -->
+                            <div class="code-block" id="generatedQuery"
+                                style="min-height: 200px;">
+                                <span class="gql-comment"># Configure options on the left to build your query</span>
+                            </div>
+
+                            <hr>
+
+                            <h6>Query Result</h6>
+                            <!-- Loading state for query builder -->
+                            <div id="builderLoading" class="loading-overlay text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-primary"
+                                    role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span class="ms-2">Executing query...</span>
+                            </div>
+
+                            <!-- Query result JSON display -->
+                            <div class="json-viewer" id="builderResult"
+                                style="min-height: 150px;">
+                                <span class="text-muted">// Results will appear here</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 5: LIVE DEMO - Countries GraphQL API
+             Uses the public Countries GraphQL API (countries.trevorblades.com)
+             
+             This demonstrates a real-world GraphQL integration with:
+             - Loading states using Bootstrap spinners
+             - Error handling with Bootstrap alerts
+             - Data display using Bootstrap cards
+             - Search/filter functionality with Bootstrap forms
+             ============================================================ -->
+        <section id="demo" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">
+                <span class="text-primary">05.</span> Live Demo - Countries GraphQL API
+            </h2>
+
+            <div class="alert alert-info">
+                <strong>API Used:</strong> <code>https://countries.trevorblades.com/graphql</code>
+                - A public GraphQL API providing country data. No authentication required.
+            </div>
+
+            <!-- Search and filter controls -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <!-- Continent filter dropdown -->
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Filter by Continent</label>
+                            <select class="form-select" id="continentFilter"
+                                onchange="filterCountries()">
+                                <option value="">All Continents</option>
+                                <option value="AF">Africa</option>
+                                <option value="AN">Antarctica</option>
+                                <option value="AS">Asia</option>
+                                <option value="EU">Europe</option>
+                                <option value="NA">North America</option>
+                                <option value="OC">Oceania</option>
+                                <option value="SA">South America</option>
+                            </select>
+                        </div>
+
+                        <!-- Country code search -->
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Search by Code</label>
+                            <input type="text" class="form-control" id="codeSearch"
+                                placeholder="e.g., US, IN, GB" maxlength="2"
+                                oninput="filterCountries()">
+                        </div>
+
+                        <!-- Currency filter -->
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Filter by Currency</label>
+                            <input type="text" class="form-control" id="currencySearch"
+                                placeholder="e.g., USD, EUR, INR" maxlength="3"
+                                oninput="filterCountries()">
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" onclick="filterCountries()">
+                                Search Countries
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading spinner for countries -->
+            <div id="countriesLoading" class="loading-overlay text-center py-5">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Querying Countries GraphQL API...</p>
+            </div>
+
+            <!-- Error alert for countries -->
+            <div id="countriesError" class="alert alert-danger d-none" role="alert">
+                <strong>GraphQL Error!</strong> <span id="countriesErrorText"></span>
+            </div>
+
+            <!-- Countries results displayed as Bootstrap cards -->
+            <div class="row" id="countriesResults">
+                <!-- Cards will be dynamically inserted here -->
+            </div>
+
+            <!-- Pagination info -->
+            <div class="text-center mt-3 text-muted" id="countriesCount"></div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-1">GraphQL API Integration with Bootstrap 5</p>
+            <p class="text-muted mb-0">
+                APIs used: SpaceX GraphQL API &amp; Countries Trevorblades API
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+    <!-- ============================================================
+         JAVASCRIPT: GraphQL Integration Logic
+         
+         This script section contains all the JavaScript functions
+         for interacting with GraphQL APIs. Each function is
+         thoroughly commented to explain the GraphQL concepts.
+         ============================================================ -->
+    <script>
+        /*
+         * ===========================================================
+         * API ENDPOINTS
+         * 
+         * GraphQL uses a single endpoint for all operations.
+         * We define our endpoints here as constants.
+         * ===========================================================
+         */
+        const SPACEX_API = 'https://spacex-production.up.railway.app/';
+        const COUNTRIES_API = 'https://countries.trevorblades.com/graphql';
+
+        /*
+         * ===========================================================
+         * HELPER: showLoading / hideLoading
+         * 
+         * These utility functions manage Bootstrap loading spinners
+         * to provide visual feedback during API calls. This is
+         * important for UX when GraphQL queries may take time.
+         * ===========================================================
+         */
+        function showLoading(loadingId) {
+            document.getElementById(loadingId).classList.add('active');
+            document.getElementById(loadingId).style.display = 'block';
+        }
+
+        function hideLoading(loadingId) {
+            document.getElementById(loadingId).classList.remove('active');
+            document.getElementById(loadingId).style.display = 'none';
+        }
+
+        /*
+         * ===========================================================
+         * HELPER: showError / hideError
+         * 
+         * Manages Bootstrap alert components for error display.
+         * GraphQL errors come in a different format than REST errors:
+         * { "errors": [{ "message": "...", "locations": [...], "path": [...] }] }
+         * We must handle both network errors and GraphQL-level errors.
+         * ===========================================================
+         */
+        function showError(containerId, textId, message) {
+            const container = document.getElementById(containerId);
+            container.classList.remove('d-none');
+            document.getElementById(textId).textContent = message;
+        }
+
+        function hideError(containerId) {
+            document.getElementById(containerId).classList.add('d-none');
+        }
+
+        /*
+         * ===========================================================
+         * CORE FUNCTION: graphqlFetch()
+         * 
+         * This is the central function for all GraphQL requests.
+         * 
+         * Parameters:
+         *   endpoint (string) - The GraphQL API URL
+         *   query (string)    - The GraphQL query/mutation string
+         *   variables (obj)   - Optional variables for parameterized queries
+         * 
+         * Returns:
+         *   The "data" property from the GraphQL response
+         * 
+         * Throws:
+         *   Error if network request fails or GraphQL returns errors
+         * 
+         * How GraphQL requests work:
+         * 1. Always POST to the single endpoint
+         * 2. Content-Type must be application/json
+         * 3. Body contains: { query, variables, operationName }
+         * 4. Response is always { data, errors }
+         * ===========================================================
+         */
+        async function graphqlFetch(endpoint, query, variables = {}) {
+            /*
+             * Make the POST request with the GraphQL payload.
+             * JSON.stringify converts our JavaScript object to a JSON string
+             * for the request body.
+             */
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    /*
+                     * Some GraphQL APIs require authentication headers.
+                     * Example: 'Authorization': 'Bearer YOUR_TOKEN'
+                     * The SpaceX and Countries APIs are public, so no auth needed.
+                     */
+                },
+                body: JSON.stringify({
+                    query: query,
+                    variables: variables
+                })
+            });
+
+            /*
+             * Check for HTTP-level errors (network issues, 500 errors, etc.)
+             * This catches problems before we even get to GraphQL-level errors.
+             */
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            /*
+             * Parse the JSON response.
+             * GraphQL responses always have this structure:
+             * {
+             *   "data": { ... },    // The requested data (may be null if errors)
+             *   "errors": [ ... ]   // Array of error objects (may be absent)
+             * }
+             */
+            const result = await response.json();
+
+            /*
+             * Check for GraphQL-level errors.
+             * These are different from HTTP errors - the request succeeded
+             * but the GraphQL execution encountered problems.
+             * 
+             * GraphQL error format:
+             * {
+             *   "message": "Error description",
+             *   "locations": [{ "line": 1, "column": 1 }],
+             *   "path": ["fieldName"]
+             * }
+             */
+            if (result.errors && result.errors.length > 0) {
+                const errorMessage = result.errors.map(e => e.message).join('; ');
+                throw new Error(`GraphQL Error: ${errorMessage}`);
+            }
+
+            return result.data;
+        }
+
+        /*
+         * ===========================================================
+         * SECTION 2: Fetch SpaceX Company Information
+         * 
+         * This function demonstrates a simple GraphQL query to fetch
+         * company information from the SpaceX API.
+         * 
+         * The query requests specific fields from the "company" type:
+         * - name, ceo, coo, cto, employees, valuation, summary
+         * 
+         * Notice how we only ask for the fields we need - this is the
+         * core advantage of GraphQL over REST.
+         * ===========================================================
+         */
+        async function fetchCompanyInfo() {
+            const loadingEl = 'companyLoading';
+            const errorEl = 'companyError';
+            const resultsEl = 'companyResults';
+
+            showLoading(loadingEl);
+            hideError(errorEl);
+
+            /*
+             * GraphQL Query:
+             * This query requests fields from the "company" root field.
+             * Each field corresponds to a resolver on the server.
+             */
+            const query = `
+                query {
+                    company {
+                        name
+                        founder
+                        founded
+                        employees
+                        vehicles
+                        launch_sites
+                        valuation
+                        summary
+                    }
+                }
+            `;
+
+            try {
+                /*
+                 * Execute the GraphQL query using our helper function.
+                 * The result will be an object with a "company" property
+                 * containing the requested fields.
+                 */
+                const data = await graphqlFetch(SPACEX_API, query);
+                const company = data.company;
+
+                /*
+                 * Display the results using Bootstrap components.
+                 * We build HTML dynamically from the GraphQL response data.
+                 */
+                document.getElementById(resultsEl).innerHTML = `
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <strong>Company Name</strong>
+                            <p class="text-muted mb-0">${company.name}</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <strong>Founder</strong>
+                            <p class="text-muted mb-0">${company.founder}</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <strong>Founded</strong>
+                            <p class="text-muted mb-0">${company.founded}</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <strong>Employees</strong>
+                            <p class="text-muted mb-0">${company.employees?.toLocaleString() || 'N/A'}</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <strong>Vehicles</strong>
+                            <p class="text-muted mb-0">${company.vehicles}</p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <strong>Valuation</strong>
+                            <p class="text-muted mb-0">$${(company.valuation / 1e9).toFixed(1)}B</p>
+                        </div>
+                        <div class="col-12">
+                            <strong>Summary</strong>
+                            <p class="text-muted mb-0 small">${company.summary}</p>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                /*
+                 * Error handling:
+                 * Display the error message in a Bootstrap alert.
+                 * Common errors: network failures, GraphQL syntax errors,
+                 * missing required variables, authorization failures.
+                 */
+                showError(errorEl, 'companyErrorText', error.message);
+                document.getElementById(resultsEl).innerHTML = '';
+            } finally {
+                /*
+                 * Always hide the loading spinner when done,
+                 * regardless of success or failure.
+                 */
+                hideLoading(loadingEl);
+            }
+        }
+
+        /*
+         * ===========================================================
+         * SECTION 2: Fetch SpaceX Launches with Variables
+         * 
+         * Demonstrates a parameterized GraphQL query using variables.
+         * 
+         * Variables are the recommended way to pass dynamic values:
+         * 1. Define variables in the query: query GetLaunches($limit: Int!)
+         * 2. Use variables in arguments: launches(limit: $limit)
+         * 3. Pass variables separately in the request body
+         * 
+         * This approach:
+         * - Prevents GraphQL injection attacks
+         * - Allows query reuse with different values
+         * - Keeps query strings clean
+         * ===========================================================
+         */
+        async function fetchLaunches() {
+            const loadingEl = 'launchesLoading';
+            const errorEl = 'launchesError';
+
+            showLoading(loadingEl);
+            hideError(errorEl);
+
+            // Get the limit value from the Bootstrap select dropdown
+            const limit = parseInt(document.getElementById('launchLimit').value);
+
+            /*
+             * Parameterized Query:
+             * $limit is a variable of type Int (required, denoted by !)
+             * The query uses this variable to control how many results to return.
+             */
+            const query = `
+                query GetLaunches($limit: Int!) {
+                    launches(limit: $limit) {
+                        mission_name
+                        launch_date_utc
+                        launch_success
+                        details
+                        links {
+                            article_link
+                            flickr_images
+                        }
+                        rocket {
+                            rocket_name
+                            rocket_type
+                        }
+                    }
+                }
+            `;
+
+            try {
+                /*
+                 * Pass the variable to graphqlFetch.
+                 * The variables object keys must match the variable names in the query.
+                 */
+                const data = await graphqlFetch(SPACEX_API, query, { limit: limit });
+                const launches = data.launches;
+
+                /*
+                 * Build table rows from the GraphQL response.
+                 * We use template literals to generate HTML for each launch.
+                 * Each row displays data from the GraphQL response fields.
+                 */
+                const tbody = document.getElementById('launchesTableBody');
+
+                if (launches.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No launches found.
+                            </td>
+                        </tr>
+                    `;
+                    hideLoading(loadingEl);
+                    return;
+                }
+
+                tbody.innerHTML = launches.map((launch, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${launch.mission_name}</strong></td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                ${launch.rocket?.rocket_name || 'Unknown'}
+                            </span>
+                            <br>
+                            <small class="text-muted">${launch.rocket?.rocket_type || ''}</small>
+                        </td>
+                        <td>
+                            ${new Date(launch.launch_date_utc).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            })}
+                        </td>
+                        <td>
+                            <!-- Bootstrap badge for launch success/failure status -->
+                            ${launch.launch_success === true
+                                ? '<span class="badge bg-success">Success</span>'
+                                : launch.launch_success === false
+                                    ? '<span class="badge bg-danger">Failed</span>'
+                                    : '<span class="badge bg-warning text-dark">Pending</span>'
+                            }
+                        </td>
+                        <td>
+                            <!-- Truncate details with tooltip for full text -->
+                            <span title="${launch.details || 'No details available'}">
+                                ${launch.details
+                                    ? launch.details.substring(0, 50) + '...'
+                                    : '<em class="text-muted">No details</em>'
+                                }
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                showError(errorEl, 'launchesErrorText', error.message);
+                document.getElementById('launchesTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger py-4">
+                            Failed to load data: ${error.message}
+                        </td>
+                    </tr>
+                `;
+            } finally {
+                hideLoading(loadingEl);
+            }
+        }
+
+        /*
+         * ===========================================================
+         * SECTION 3: Mutation Handler (Simulated)
+         * 
+         * Since most public GraphQL APIs don't allow mutations,
+         * this function simulates the mutation pattern.
+         * 
+         * In a real application, a mutation request looks identical
+         * to a query request, but uses the "mutation" keyword:
+         * 
+         * POST /graphql
+         * {
+         *   "query": "mutation { insert_mission(...) { ... } }",
+         *   "variables": { "name": "...", ... }
+         * }
+         * 
+         * This simulation demonstrates:
+         * 1. How to structure a mutation request
+         * 2. How to display mutation results
+         * 3. How mutations can return data after execution
+         * ===========================================================
+         */
+        function handleMutation(event) {
+            event.preventDefault();
+
+            // Collect form data
+            const name = document.getElementById('mutationName').value;
+            const rocket = document.getElementById('mutationRocket').value;
+            const date = document.getElementById('mutationDate').value;
+            const success = document.getElementById('mutationSuccess').value === 'true';
+
+            /*
+             * Construct the GraphQL mutation string.
+             * In a real app, this would be sent to the server.
+             * Variables use GraphQL input types for validation.
+             */
+            const mutation = `
+                mutation InsertMission(
+                    $name: String!
+                    $rocket: String!
+                    $date: Date!
+                    $success: Boolean!
+                ) {
+                    insert_missions(objects: [{
+                        mission_name: $name,
+                        rocket: $rocket,
+                        launch_date: $date,
+                        success: $success
+                    }]) {
+                        returning {
+                            id
+                            mission_name
+                            rocket
+                            launch_date
+                            success
+                        }
+                        affected_rows
+                    }
+                }
+            `;
+
+            const variables = {
+                name,
+                rocket,
+                date,
+                success
+            };
+
+            /*
+             * Display the mutation that would be sent to the server.
+             * This helps developers understand the GraphQL mutation format.
+             */
+            const resultDiv = document.getElementById('mutationResult');
+            const preview = document.getElementById('mutationPreview');
+
+            const simulatedResponse = {
+                query: mutation.trim(),
+                variables: variables,
+                /* Simulated server response */
+                response: {
+                    data: {
+                        insert_missions: {
+                            returning: [{
+                                id: crypto.randomUUID(),
+                                mission_name: name,
+                                rocket: rocket,
+                                launch_date: date,
+                                success: success
+                            }],
+                            affected_rows: 1
+                        }
+                    }
+                }
+            };
+
+            preview.textContent = JSON.stringify(simulatedResponse, null, 2);
+            resultDiv.classList.remove('d-none');
+
+            /*
+             * Add a Bootstrap card showing the "created" mission.
+             * In a real app, the server would return the created object.
+             */
+            addMissionCard(name, rocket, date, success);
+
+            // Reset the form
+            event.target.reset();
+        }
+
+        /*
+         * ===========================================================
+         * Helper: Add Mission Card
+         * 
+         * Creates a Bootstrap card for each "mutated" mission.
+         * Demonstrates displaying mutation results as cards.
+         * ===========================================================
+         */
+        function addMissionCard(name, rocket, date, success) {
+            // Hide the "no missions" placeholder message
+            document.getElementById('noMissionsMsg')?.remove();
+
+            const cardsContainer = document.getElementById('mutationCards');
+            const cardId = crypto.randomUUID().substring(0, 8);
+
+            const card = document.createElement('div');
+            card.className = 'col-md-4 col-sm-6 mb-3';
+            card.id = `mission-${cardId}`;
+            card.innerHTML = `
+                <div class="card border-${success ? 'success' : 'danger'} h-100">
+                    <div class="card-header bg-${success ? 'success' : 'danger'} text-white d-flex justify-content-between align-items-center">
+                        <strong>${name}</strong>
+                        <button type="button" class="btn-close btn-close-white btn-sm"
+                            onclick="document.getElementById('mission-${cardId}').remove()"
+                            aria-label="Remove"></button>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Rocket:</strong> ${rocket}</p>
+                        <p class="mb-1"><strong>Date:</strong> ${date}</p>
+                        <p class="mb-0">
+                            <strong>Status:</strong>
+                            <span class="badge bg-${success ? 'success' : 'danger'}">
+                                ${success ? 'Success' : 'Failed'}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="card-footer text-muted small">
+                        <small>ID: ${cardId} | Created via GraphQL Mutation</small>
+                    </div>
+                </div>
+            `;
+
+            cardsContainer.appendChild(card);
+        }
+
+        /*
+         * ===========================================================
+         * SECTION 4: Query Builder
+         * 
+         * This section implements a visual query builder that generates
+         * GraphQL queries from form inputs.
+         * 
+         * Field options are organized by resource type (launches, rockets,
+         * capsules) and the query is rebuilt whenever the user changes
+         * any option.
+         * ===========================================================
+         */
+
+        /*
+         * Field definitions for each GraphQL resource type.
+         * These correspond to fields available in the SpaceX GraphQL schema.
+         */
+        const resourceFields = {
+            launches: {
+                label: 'Launches',
+                fields: [
+                    { name: 'mission_name', label: 'Mission Name', checked: true },
+                    { name: 'launch_date_utc', label: 'Launch Date', checked: true },
+                    { name: 'launch_success', label: 'Success Status', checked: true },
+                    { name: 'details', label: 'Details', checked: false },
+                    { name: 'upcoming', label: 'Upcoming', checked: false }
+                ],
+                sortFields: ['launch_date_utc', 'mission_name']
+            },
+            rockets: {
+                label: 'Rockets',
+                fields: [
+                    { name: 'name', label: 'Name', checked: true },
+                    { name: 'type', label: 'Type', checked: true },
+                    { name: 'active', label: 'Active', checked: true },
+                    { name: 'stages', label: 'Stages', checked: false },
+                    { name: 'boosters', label: 'Boosters', checked: false },
+                    { name: 'cost_per_launch', label: 'Cost per Launch', checked: false },
+                    { name: 'success_rate_pct', label: 'Success Rate %', checked: false },
+                    { name: 'description', label: 'Description', checked: false }
+                ],
+                sortFields: ['name', 'cost_per_launch', 'success_rate_pct']
+            },
+            capsules: {
+                label: 'Capsules',
+                fields: [
+                    { name: 'id', label: 'ID', checked: true },
+                    { name: 'type', label: 'Type', checked: true },
+                    { name: 'status', label: 'Status', checked: true },
+                    { name: 'reuse_count', label: 'Reuse Count', checked: false },
+                    { name: 'water_landings', label: 'Water Landings', checked: false },
+                    { name: 'land_landings', label: 'Land Landings', checked: false },
+                    { name: 'original_launch', label: 'Original Launch', checked: false }
+                ],
+                sortFields: ['id', 'reuse_count']
+            }
+        };
+
+        /*
+         * Initialize the field checkboxes on page load.
+         * Creates Bootstrap form-check inputs for each field.
+         */
+        function initQueryBuilder() {
+            updateFieldOptions();
+            buildQuery();
+        }
+
+        /*
+         * Updates the available field checkboxes based on selected resource.
+         * Dynamically generates Bootstrap checkbox inputs from resourceFields.
+         */
+        function updateFieldOptions() {
+            const resource = document.getElementById('queryResource').value;
+            const config = resourceFields[resource];
+            const container = document.getElementById('fieldCheckboxes');
+
+            container.innerHTML = config.fields.map(field => `
+                <div class="form-check field-row py-1">
+                    <input class="form-check-input" type="checkbox"
+                        id="field_${field.name}"
+                        value="${field.name}"
+                        ${field.checked ? 'checked' : ''}
+                        onchange="buildQuery()">
+                    <label class="form-check-label" for="field_${field.name}">
+                        ${field.label}
+                        <code class="text-muted small">${field.name}</code>
+                    </label>
+                </div>
+            `).join('');
+
+            // Update order by options
+            const orderBySelect = document.getElementById('queryOrderBy');
+            orderBySelect.innerHTML = '<option value="">None</option>' +
+                config.sortFields.map(f =>
+                    `<option value="${f}">${f}</option>`
+                ).join('');
+
+            buildQuery();
+        }
+
+        /*
+         * Builds a GraphQL query string from the current form state.
+         * Called whenever any builder option changes.
+         * 
+         * Generates a query like:
+         * query {
+         *   launches(limit: 5) {
+         *     mission_name
+         *     launch_date_utc
+         *   }
+         * }
+         */
+        function buildQuery() {
+            const resource = document.getElementById('queryResource').value;
+            const limit = document.getElementById('queryLimit').value;
+            const orderBy = document.getElementById('queryOrderBy').value;
+            const orderDir = document.getElementById('queryOrderDir').value;
+
+            // Get all checked field checkboxes
+            const checkedFields = [...document.querySelectorAll('#fieldCheckboxes input:checked')]
+                .map(cb => cb.value);
+
+            if (checkedFields.length === 0) {
+                document.getElementById('generatedQuery').innerHTML =
+                    '<span class="gql-comment"># Select at least one field</span>';
+                return;
+            }
+
+            /*
+             * Build the query string step by step.
+             * This demonstrates GraphQL query structure programmatically.
+             */
+            let query = `<span class="gql-keyword">query</span> {\n`;
+            query += `  <span class="gql-field">${resource}</span>(limit: <span class="gql-string">${limit}</span>)`;
+
+            /*
+             * If an order is specified, add the sort argument.
+             * GraphQL uses enum-like values for sort direction.
+             */
+            if (orderBy) {
+                query = `<span class="gql-keyword">query</span> {\n`;
+                query += `  <span class="gql-field">${resource}</span>(limit: <span class="gql-string">${limit}</span>, sort: <span class="gql-string">"${orderBy}"</span>, order: <span class="gql-string">"${orderDir}"</span>)`;
+            }
+
+            query += ` {\n`;
+
+            // Add each selected field
+            checkedFields.forEach(field => {
+                query += `    <span class="gql-field">${field}</span>\n`;
+            });
+
+            query += `  }\n}`;
+            query += `\n`;
+
+            document.getElementById('generatedQuery').innerHTML = query;
+        }
+
+        /*
+         * Executes the query built by the Query Builder UI.
+         * Constructs a plain-text query string and sends it to the SpaceX API.
+         */
+        async function executeBuiltQuery() {
+            const resource = document.getElementById('queryResource').value;
+            const limit = parseInt(document.getElementById('queryLimit').value);
+            const orderBy = document.getElementById('queryOrderBy').value;
+            const orderDir = document.getElementById('queryOrderDir').value;
+
+            const checkedFields = [...document.querySelectorAll('#fieldCheckboxes input:checked')]
+                .map(cb => cb.value);
+
+            if (checkedFields.length === 0) {
+                document.getElementById('builderResult').textContent =
+                    'Please select at least one field.';
+                return;
+            }
+
+            showLoading('builderLoading');
+
+            /*
+             * Build the actual (non-highlighted) query string for the API call.
+             * This is the plain-text version that gets sent to the server.
+             */
+            let queryParams = `limit: ${limit}`;
+            if (orderBy) {
+                queryParams += `, sort: "${orderBy}", order: "${orderDir}"`;
+            }
+
+            const query = `
+                query {
+                    ${resource}(${queryParams}) {
+                        ${checkedFields.join('\n')}
+                    }
+                }
+            `;
+
+            try {
+                const data = await graphqlFetch(SPACEX_API, query);
+
+                /*
+                 * Display the raw JSON response.
+                 * In a production app, you'd parse and display this
+                 * in a more user-friendly format.
+                 */
+                document.getElementById('builderResult').textContent =
+                    JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('builderResult').textContent =
+                    `Error: ${error.message}`;
+            } finally {
+                hideLoading('builderLoading');
+            }
+        }
+
+        /*
+         * Copies the generated query to the clipboard.
+         * Uses the modern navigator.clipboard API.
+         */
+        function copyQuery() {
+            const queryEl = document.getElementById('generatedQuery');
+            // Strip HTML tags to get plain text query
+            const plainQuery = queryEl.textContent || queryEl.innerText;
+            navigator.clipboard.writeText(plainQuery).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.classList.replace('btn-outline-secondary', 'btn-outline-success');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.replace('btn-outline-success', 'btn-outline-secondary');
+                }, 2000);
+            });
+        }
+
+        /*
+         * ===========================================================
+         * SECTION 5: Countries GraphQL API
+         * 
+         * Uses the public Countries API (countries.trevorblades.com)
+         * to demonstrate a real-world GraphQL integration.
+         * 
+         * The Countries API schema includes:
+         * - continents: [Continent]
+         * - continent(code: String!): Continent
+         * - countries: [Country]
+         * - country(code: String!): Country
+         * - languages: [Language]
+         * - language(code: String!): Language
+         * 
+         * Country type has fields like:
+         * code, name, native, phone, capital, currency, emoji, languages
+         * ===========================================================
+         */
+
+        // Cache for countries data to avoid repeated API calls
+        let countriesCache = null;
+
+        /*
+         * Loads all countries from the GraphQL API and caches them.
+         * Demonstrates fetching a complete dataset with selected fields.
+         */
+        async function loadCountries() {
+            showLoading('countriesLoading');
+            hideError('countriesError');
+
+            /*
+             * GraphQL query for countries:
+             * We request specific fields for each country.
+             * The "countries" root field returns all countries.
+             */
+            const query = `
+                query {
+                    countries {
+                        code
+                        name
+                        native
+                        phone
+                        capital
+                        currency
+                        emoji
+                        emojiU
+                        continent {
+                            code
+                            name
+                        }
+                        languages {
+                            code
+                            name
+                            native
+                        }
+                    }
+                }
+            `;
+
+            try {
+                const data = await graphqlFetch(COUNTRIES_API, query);
+                countriesCache = data.countries;
+                displayCountries(countriesCache);
+            } catch (error) {
+                showError('countriesError', 'countriesErrorText', error.message);
+            } finally {
+                hideLoading('countriesLoading');
+            }
+        }
+
+        /*
+         * Filters cached countries based on form inputs and re-renders.
+         * If no cache exists, fetches from API first.
+         * 
+         * This demonstrates client-side filtering of GraphQL data.
+         * In a production app, you might push filters to the server
+         * using GraphQL query arguments.
+         */
+        async function filterCountries() {
+            // Ensure we have data
+            if (!countriesCache) {
+                await loadCountries();
+                return;
+            }
+
+            const continentFilter = document.getElementById('continentFilter').value.toUpperCase();
+            const codeFilter = document.getElementById('codeSearch').value.toUpperCase();
+            const currencyFilter = document.getElementById('currencySearch').value.toUpperCase();
+
+            /*
+             * Filter the cached data.
+             * In a real GraphQL app, you'd use query variables to filter server-side:
+             * query($continent: String!, $currency: String!) {
+             *   countries(filter: { continent: { eq: $continent }, ... })
+             * }
+             */
+            let filtered = countriesCache;
+
+            if (continentFilter) {
+                filtered = filtered.filter(c => c.continent?.code === continentFilter);
+            }
+
+            if (codeFilter) {
+                filtered = filtered.filter(c => c.code.toUpperCase().includes(codeFilter));
+            }
+
+            if (currencyFilter) {
+                filtered = filtered.filter(c =>
+                    c.currency?.toUpperCase().includes(currencyFilter)
+                );
+            }
+
+            displayCountries(filtered);
+        }
+
+        /*
+         * Renders country data as Bootstrap cards.
+         * Each card displays data from the GraphQL response.
+         * 
+         * This is where GraphQL data meets Bootstrap components:
+         * - Cards for visual presentation
+         * - Badges for status indicators
+         * - Responsive grid layout
+         */
+        function displayCountries(countries) {
+            const container = document.getElementById('countriesResults');
+            const countEl = document.getElementById('countriesCount');
+
+            if (countries.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <h5 class="text-muted">No countries found matching your criteria.</h5>
+                        <p class="text-muted">Try adjusting your filters.</p>
+                    </div>
+                `;
+                countEl.textContent = '';
+                return;
+            }
+
+            /*
+             * Generate a Bootstrap card for each country.
+             * Data comes directly from the GraphQL response fields.
+             */
+            container.innerHTML = countries.map(country => `
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <span style="font-size: 2rem;">${country.emoji}</span>
+                                <div class="ms-2">
+                                    <h6 class="card-title mb-0">${country.name}</h6>
+                                    <small class="text-muted">${country.native || ''}</small>
+                                </div>
+                            </div>
+                            <ul class="list-unstyled small mb-0">
+                                <li>
+                                    <strong>Code:</strong>
+                                    <span class="badge bg-dark">${country.code}</span>
+                                </li>
+                                <li><strong>Capital:</strong> ${country.capital || 'N/A'}</li>
+                                <li><strong>Currency:</strong> ${country.currency || 'N/A'}</li>
+                                <li><strong>Phone:</strong> +${country.phone}</li>
+                                <li>
+                                    <strong>Continent:</strong>
+                                    <span class="badge bg-primary">${country.continent?.name || 'N/A'}</span>
+                                </li>
+                                <li>
+                                    <strong>Languages:</strong>
+                                    ${country.languages?.length > 0
+                                        ? country.languages.map(l =>
+                                            `<span class="badge bg-secondary me-1">${l.name}</span>`
+                                        ).join('')
+                                        : 'N/A'
+                                    }
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            countEl.textContent = `Showing ${countries.length} countries`;
+        }
+
+        /*
+         * ===========================================================
+         * INITIALIZATION
+         * 
+         * Runs when the page loads.
+         * 1. Initializes the query builder UI
+         * 2. Loads countries data for the live demo
+         * ===========================================================
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            initQueryBuilder();
+            loadCountries();
+        });
+    </script>
+
+</body>
+</html>

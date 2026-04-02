@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_04_14: Laravel Bootstrap Integration                       -->
+<!-- Demonstrates Laravel Blade templates with Bootstrap 5,        -->
+<!-- Blade directives, Livewire, Alpine.js, and Vite integration  -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laravel Bootstrap Integration</title>
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- ============================================================= -->
+    <!-- Laravel Bootstrap Integration Reference                       -->
+    <!-- Laravel uses Blade templates with @directives, Vite for      -->
+    <!-- assets, Livewire for reactive components, Alpine.js for JS   -->
+    <!-- ============================================================= -->
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold" style="color: #ff2d20;">Laravel + Bootstrap 5</h1>
+            <p class="lead text-muted">Blade Templates, Livewire, Alpine.js, Vite, Components</p>
+        </div>
+
+        <div class="alert" style="background: #ff2d20; color: white;" role="alert">
+            <strong>Laravel Pattern:</strong> Blade templates use @directives for control flow. Livewire provides server-driven reactivity. Alpine.js adds lightweight client interactivity.
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Laravel Bootstrap Setup with Vite                           -->
+        <!-- Vite replaces Laravel Mix as the default asset bundler      -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-white" style="background: #ff2d20;">
+                <h5 class="mb-0">Laravel Bootstrap Setup (Vite)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code># Install Bootstrap via npm
+npm install bootstrap @popperjs/core
+
+# vite.config.js - Configure Vite with Laravel plugin
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: [
+                'resources/css/app.css',      // Or app.scss for Sass
+                'resources/js/app.js',
+            ],
+            refresh: true,
+        }),
+    ],
+});
+
+// resources/css/app.scss - Bootstrap import with customization
+// Override Bootstrap variables BEFORE the import
+$primary: #ff2d20;             // Laravel red
+$enable-rounded: true;
+$enable-shadows: true;
+
+@import 'bootstrap/scss/bootstrap';
+
+// resources/js/app.js - Bootstrap JS import
+import 'bootstrap';
+
+// Alpine.js for lightweight interactivity (ships with Laravel Breeze)
+import Alpine from 'alpinejs';
+window.Alpine = Alpine;
+Alpine.start();
+
+// Blade template - Load Vite assets
+// @vite(['resources/css/app.css', 'resources/js/app.js'])</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Laravel Blade Layout with Bootstrap                          -->
+        <!-- layouts/app.blade.php - Master layout template                -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Blade Layout (layouts/app.blade.php)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- resources/views/layouts/app.blade.php --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang="{{ str_replace('_', '-', app()-&gt;getLocale()) }}"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;meta name="csrf-token" content="{{ csrf_token() }}"&gt;
+    &lt;title&gt;@yield('title', config('app.name'))&lt;/title&gt;
+    @vite(['resources/css/app.scss', 'resources/js/app.js'])
+    @stack('styles')
+&lt;/head&gt;
+&lt;body class="bg-light"&gt;
+    &lt;!-- Bootstrap Navbar with Blade conditionals --&gt;
+    &lt;nav class="navbar navbar-expand-lg navbar-dark" style="background: #ff2d20;"&gt;
+        &lt;div class="container"&gt;
+            &lt;a class="navbar-brand" href="{{ route('home') }}"&gt;{{ config('app.name') }}&lt;/a&gt;
+            &lt;button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarNav"&gt;
+                &lt;span class="navbar-toggler-icon"&gt;&lt;/span&gt;
+            &lt;/button&gt;
+            &lt;div class="collapse navbar-collapse" id="navbarNav"&gt;
+                &lt;ul class="navbar-nav ms-auto"&gt;
+                    &lt;li class="nav-item"&gt;
+                        &lt;a class="nav-link {{ request()-&gt;routeIs('home') ? 'active' : '' }}"
+                           href="{{ route('home') }}"&gt;Home&lt;/a&gt;
+                    &lt;/li&gt;
+                    @auth
+                        &lt;li class="nav-item"&gt;
+                            &lt;a class="nav-link" href="{{ route('dashboard') }}"&gt;Dashboard&lt;/a&gt;
+                        &lt;/li&gt;
+                        &lt;li class="nav-item"&gt;
+                            &lt;form method="POST" action="{{ route('logout') }}"&gt;
+                                @csrf
+                                &lt;button type="submit" class="nav-link btn btn-link"&gt;Logout&lt;/button&gt;
+                            &lt;/form&gt;
+                        &lt;/li&gt;
+                    @else
+                        &lt;li class="nav-item"&gt;
+                            &lt;a class="nav-link" href="{{ route('login') }}"&gt;Login&lt;/a&gt;
+                        &lt;/li&gt;
+                        &lt;li class="nav-item"&gt;
+                            &lt;a class="nav-link" href="{{ route('register') }}"&gt;Register&lt;/a&gt;
+                        &lt;/li&gt;
+                    @endauth
+                &lt;/ul&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/nav&gt;
+
+    &lt;!-- Session flash messages as Bootstrap alerts --&gt;
+    &lt;div class="container mt-3"&gt;
+        @if(session('success'))
+            &lt;x-alert type="success" :message="session('success')" /&gt;
+        @endif
+        @if(session('error'))
+            &lt;x-alert type="danger" :message="session('error')" /&gt;
+        @endif
+        @if($errors-&gt;any())
+            &lt;x-alert type="danger"&gt;
+                &lt;ul class="mb-0"&gt;
+                    @foreach($errors-&gt;all() as $error)
+                        &lt;li&gt;{{ $error }}&lt;/li&gt;
+                    @endforeach
+                &lt;/ul&gt;
+            &lt;/x-alert&gt;
+        @endif
+    &lt;/div&gt;
+
+    &lt;main class="container py-4"&gt;
+        @yield('content')
+    &lt;/main&gt;
+
+    @include('layouts.partials.footer')
+    @stack('scripts')
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Laravel Blade Directives with Bootstrap                      -->
+        <!-- @if, @foreach, @forelse, @auth, @guest directives            -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Blade Directives + Bootstrap</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- resources/views/articles/index.blade.php --&gt;
+@extends('layouts.app')
+
+@section('title', 'Articles')
+
+@section('content')
+&lt;div class="d-flex justify-content-between align-items-center mb-4"&gt;
+    &lt;h1&gt;Articles&lt;/h1&gt;
+    @auth
+        &lt;a href="{{ route('articles.create') }}" class="btn btn-primary"&gt;New Article&lt;/a&gt;
+    @endauth
+&lt;/div&gt;
+
+&lt;!-- Bootstrap grid with @foreach directive --&gt;
+&lt;div class="row"&gt;
+    @foreach($articles as $article)
+        &lt;div class="col-md-6 col-lg-4 mb-4"&gt;
+            &lt;div class="card h-100 shadow-sm"&gt;
+                @if($article-&gt;image)
+                    &lt;img src="{{ asset('storage/' . $article-&gt;image) }}"
+                         class="card-img-top" alt="{{ $article-&gt;title }}"&gt;
+                @endif
+                &lt;div class="card-body"&gt;
+                    &lt;h5 class="card-title"&gt;{{ $article-&gt;title }}&lt;/h5&gt;
+                    &lt;p class="card-text"&gt;{{ Str::limit($article-&gt;body, 150) }}&lt;/p&gt;
+                    &lt;span class="badge bg-secondary"&gt;{{ $article-&gt;category-&gt;name }}&lt;/span&gt;
+                &lt;/div&gt;
+                &lt;div class="card-footer bg-transparent d-flex gap-2"&gt;
+                    &lt;a href="{{ route('articles.show', $article) }}"
+                       class="btn btn-outline-primary btn-sm"&gt;Read More&lt;/a&gt;
+                    @can('update', $article)
+                        &lt;a href="{{ route('articles.edit', $article) }}"
+                           class="btn btn-outline-secondary btn-sm"&gt;Edit&lt;/a&gt;
+                    @endcan
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    @endforeach
+
+    &lt;!-- @forelse handles empty collections --&gt;
+    @forelse($articles as $article)
+        &lt;!-- articles shown above --&gt;
+    @empty
+        &lt;div class="col-12"&gt;
+            &lt;div class="alert alert-info"&gt;
+                No articles found.
+                @auth
+                    &lt;a href="{{ route('articles.create') }}"&gt;Write the first one!&lt;/a&gt;
+                @endauth
+            &lt;/div&gt;
+        &lt;/div&gt;
+    @endforelse
+&lt;/div&gt;
+
+&lt;!-- Laravel pagination with Bootstrap --&gt;
+{{ $articles-&gt;links() }}
+{{-- Or custom Bootstrap pagination: --}}
+{{ $articles-&gt;links('pagination::bootstrap-5') }}
+@endsection</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Laravel Blade Components                                     -->
+        <!-- @component and x- components for reusable Bootstrap elements -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Blade Components (x- syntax)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- resources/views/components/alert.blade.php --&gt;
+@props(['type' =&gt; 'info', 'dismissible' =&gt; false])
+
+&lt;div {{ $attributes-&gt;merge(['class' =&gt; "alert alert-{$type} {$dismissibleClass}"]) }}
+     role="alert"&gt;
+    {{ $slot }}
+    @if($dismissible)
+        &lt;button type="button" class="btn-close" data-bs-dismiss="alert"&gt;&lt;/button&gt;
+    @endif
+&lt;/div&gt;
+
+&lt;!-- resources/views/components/card.blade.php --&gt;
+@props(['title' =&gt; null, 'headerColor' =&gt; 'primary'])
+
+&lt;div {{ $attributes-&gt;merge(['class' =&gt; 'card shadow-sm mb-4']) }}&gt;
+    @if($title)
+        &lt;div class="card-header bg-{{ $headerColor }} text-white"&gt;
+            &lt;h5 class="mb-0"&gt;{{ $title }}&lt;/h5&gt;
+        &lt;/div&gt;
+    @endif
+    &lt;div class="card-body"&gt;
+        {{ $slot }}
+    &lt;/div&gt;
+    @isset($footer)
+        &lt;div class="card-footer bg-transparent"&gt;
+            {{ $footer }}
+        &lt;/div&gt;
+    @endisset
+&lt;/div&gt;
+
+&lt;!-- resources/views/components/modal.blade.php --&gt;
+@props(['id', 'title', 'size' =&gt; ''])
+
+&lt;div class="modal fade" id="{{ $id }}" tabindex="-1"&gt;
+    &lt;div class="modal-dialog {{ $size }}"&gt;
+        &lt;div class="modal-content"&gt;
+            &lt;div class="modal-header"&gt;
+                &lt;h5 class="modal-title"&gt;{{ $title }}&lt;/h5&gt;
+                &lt;button type="button" class="btn-close" data-bs-dismiss="modal"&gt;&lt;/button&gt;
+            &lt;/div&gt;
+            &lt;div class="modal-body"&gt;
+                {{ $slot }}
+            &lt;/div&gt;
+            @isset($footer)
+                &lt;div class="modal-footer"&gt;
+                    {{ $footer }}
+                &lt;/div&gt;
+            @endisset
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Using Blade components in views --&gt;
+&lt;x-alert type="success" dismissible&gt;Operation completed!&lt;/x-alert&gt;
+&lt;x-card title="User Profile" header-color="info"&gt;
+    &lt;p&gt;Name: {{ $user-&gt;name }}&lt;/p&gt;
+&lt;/x-card&gt;
+&lt;x-modal id="deleteModal" title="Confirm Delete"&gt;
+    &lt;p&gt;Are you sure you want to delete this item?&lt;/p&gt;
+    &lt;x-slot:footer&gt;
+        &lt;button class="btn btn-secondary" data-bs-dismiss="modal"&gt;Cancel&lt;/button&gt;
+        &lt;button class="btn btn-danger"&gt;Delete&lt;/button&gt;
+    &lt;/x-slot:footer&gt;
+&lt;/x-modal&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Laravel Livewire with Bootstrap                              -->
+        <!-- Livewire provides server-driven reactivity without JS        -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Livewire Components + Bootstrap</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>// app/Http/Livewire/Counter.php
+namespace App\Http\Livewire;
+
+use Livewire\Component;
+
+class Counter extends Component
+{
+    public $count = 0;
+
+    public function increment() { $this-&gt;count++; }
+    public function decrement() { $this-&gt;count--; }
+    public function resetCount() { $this-&gt;count = 0; }
+
+    public function render()
+    {
+        return view('livewire.counter');
+    }
+}
+
+&lt;!-- resources/views/livewire/counter.blade.php --&gt;
+&lt;div class="card shadow-sm mb-4"&gt;
+    &lt;div class="card-header bg-primary text-white"&gt;
+        &lt;h5 class="mb-0"&gt;Livewire Counter (Server-Driven Reactivity)&lt;/h5&gt;
+    &lt;/div&gt;
+    &lt;div class="card-body text-center"&gt;
+        &lt;p class="display-4"&gt;
+            Count: &lt;span class="badge bg-{{ $count > 0 ? 'success' : ($count &lt; 0 ? 'danger' : 'secondary') }}"&gt;
+                {{ $count }}
+            &lt;/span&gt;
+        &lt;/p&gt;
+        &lt;!-- wire:click calls PHP methods without writing JavaScript --&gt;
+        &lt;div class="btn-group"&gt;
+            &lt;button wire:click="decrement" class="btn btn-outline-danger"&gt;- Decrement&lt;/button&gt;
+            &lt;button wire:click="resetCount" class="btn btn-outline-secondary"&gt;Reset&lt;/button&gt;
+            &lt;button wire:click="increment" class="btn btn-outline-success"&gt;+ Increment&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Livewire Search with Bootstrap --&gt;
+&lt;!-- resources/views/livewire/article-search.blade.php --&gt;
+&lt;div&gt;
+    &lt;!-- wire:model.live provides real-time search as user types --&gt;
+    &lt;input type="text" class="form-control mb-3"
+           wire:model.live="search" placeholder="Search articles..."&gt;
+
+    &lt;!-- Loading indicator --&gt;
+    &lt;div wire:loading class="text-center mb-3"&gt;
+        &lt;div class="spinner-border text-primary"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class="row"&gt;
+        @forelse($articles as $article)
+            &lt;div class="col-md-6 mb-3"&gt;
+                &lt;div class="card h-100"&gt;
+                    &lt;div class="card-body"&gt;
+                        &lt;h6&gt;{{ $article-&gt;title }}&lt;/h6&gt;
+                        &lt;p class="text-muted small"&gt;{{ Str::limit($article-&gt;body, 100) }}&lt;/p&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        @empty
+            &lt;div class="col-12"&gt;
+                &lt;div class="alert alert-info"&gt;No articles found for "{{ $search }}"&lt;/div&gt;
+            &lt;/div&gt;
+        @endforelse
+    &lt;/div&gt;
+
+    {{ $articles-&gt;links() }}
+&lt;/div&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Laravel Form Validation with Bootstrap                       -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Laravel Forms + Bootstrap Validation</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- resources/views/articles/create.blade.php --&gt;
+@extends('layouts.app')
+@section('content')
+&lt;div class="row justify-content-center"&gt;
+    &lt;div class="col-md-8"&gt;
+        &lt;x-card title="Create Article"&gt;
+            &lt;form method="POST" action="{{ route('articles.store') }}" enctype="multipart/form-data"&gt;
+                @csrf
+
+                &lt;div class="mb-3"&gt;
+                    &lt;label class="form-label"&gt;Title&lt;/label&gt;
+                    &lt;input type="text" name="title"
+                           class="form-control @error('title') is-invalid @enderror"
+                           value="{{ old('title') }}"&gt;
+                    @error('title')
+                        &lt;div class="invalid-feedback"&gt;{{ $message }}&lt;/div&gt;
+                    @enderror
+                &lt;/div&gt;
+
+                &lt;div class="mb-3"&gt;
+                    &lt;label class="form-label"&gt;Category&lt;/label&gt;
+                    &lt;select name="category_id"
+                            class="form-select @error('category_id') is-invalid @enderror"&gt;
+                        &lt;option value=""&gt;Select...&lt;/option&gt;
+                        @foreach($categories as $category)
+                            &lt;option value="{{ $category-&gt;id }}"
+                                {{ old('category_id') == $category-&gt;id ? 'selected' : '' }}&gt;
+                                {{ $category-&gt;name }}
+                            &lt;/option&gt;
+                        @endforeach
+                    &lt;/select&gt;
+                    @error('category_id')
+                        &lt;div class="invalid-feedback"&gt;{{ $message }}&lt;/div&gt;
+                    @enderror
+                &lt;/div&gt;
+
+                &lt;div class="mb-3"&gt;
+                    &lt;label class="form-label"&gt;Body&lt;/label&gt;
+                    &lt;textarea name="body" rows="6"
+                              class="form-control @error('body') is-invalid @enderror"&gt;{{ old('body') }}&lt;/textarea&gt;
+                    @error('body')
+                        &lt;div class="invalid-feedback"&gt;{{ $message }}&lt;/div&gt;
+                    @enderror
+                &lt;/div&gt;
+
+                &lt;button type="submit" class="btn btn-primary"&gt;Create Article&lt;/button&gt;
+                &lt;a href="{{ route('articles.index') }}" class="btn btn-secondary"&gt;Cancel&lt;/a&gt;
+            &lt;/form&gt;
+        &lt;/x-card&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+@endsection</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Laravel + Bootstrap Reference                                -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Laravel + Bootstrap Best Practices</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr><th>Feature</th><th>Laravel Approach</th><th>Bootstrap Integration</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>CSS/JS</td><td>Vite bundling</td><td>Bootstrap SCSS via npm</td></tr>
+                        <tr><td>Templates</td><td>Blade @directives</td><td>Bootstrap HTML classes</td></tr>
+                        <tr><td>Components</td><td>x-alert, x-card</td><td>Reusable Bootstrap components</td></tr>
+                        <tr><td>Reactivity</td><td>Livewire / Alpine.js</td><td>Dynamic Bootstrap states</td></tr>
+                        <tr><td>Forms</td><td>@error directive</td><td>Bootstrap validation classes</td></tr>
+                        <tr><td>Pagination</td><td>$collection->links()</td><td>Bootstrap 5 pagination view</td></tr>
+                        <tr><td>Auth</td><td>@auth / @guest</td><td>Conditional navbar items</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

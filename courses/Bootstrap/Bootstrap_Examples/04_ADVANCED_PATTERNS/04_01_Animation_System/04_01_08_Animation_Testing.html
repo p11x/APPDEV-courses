@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_08_Animation_Testing.html                                -->
+<!-- Testing Animations with Bootstrap 5                            -->
+<!-- Covers: visual regression testing, animation unit tests,        -->
+<!--         performance profiling, automated a11y testing,          -->
+<!--         cross-browser testing, CI/CD integration               -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_01_08 - Animation Testing</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .test-card {
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        .test-card:nth-child(1) { animation-delay: 0.05s; }
+        .test-card:nth-child(2) { animation-delay: 0.1s; }
+        .test-card:nth-child(3) { animation-delay: 0.15s; }
+
+        .test-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e9ecef;
+            border-top-color: #0d6efd;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .perf-timeline {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 150px;
+            padding: 1rem;
+            background: #1a1a2e;
+            border-radius: 0.5rem;
+        }
+        .perf-bar {
+            flex: 1;
+            background: #0d6efd;
+            border-radius: 2px 2px 0 0;
+            transition: height 0.3s ease;
+            min-width: 8px;
+        }
+        .perf-bar.layout { background: #dc3545; }
+        .perf-bar.paint { background: #ffc107; }
+        .perf-bar.composite { background: #198754; }
+
+        .test-result {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        .test-pass { background: #d1e7dd; color: #0f5132; }
+        .test-fail { background: #f8d7da; color: #842029; }
+        .test-info { background: #cff4fc; color: #055160; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .test-card { animation: none !important; opacity: 1 !important; }
+            .test-spinner { animation: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">Animation Testing</h1>
+                <p class="lead text-muted">
+                    Tools and techniques for testing animation correctness, performance, and accessibility.
+                </p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: ANIMATION VERIFICATION                             -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Automated Animation Verification</h2>
+            <p class="text-muted">
+                JavaScript can verify that CSS animations are applied correctly and fire expected events.
+            </p>
+            <button class="btn btn-primary mb-3" id="runTestsBtn">Run Animation Tests</button>
+            <div id="testResults"></div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: VISUAL TESTING PREVIEW                             -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Visual Regression Test Preview</h2>
+            <p class="text-muted">
+                These cards represent animation states that can be captured and compared in visual regression tests.
+            </p>
+            <div class="row g-3" id="visualTestRow">
+                <div class="col-md-4">
+                    <div class="card test-card">
+                        <div class="card-body text-center">
+                            <h6>State: Initial</h6>
+                            <div class="test-spinner mx-auto"></div>
+                            <small class="text-muted d-block mt-2">Animation running</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card test-card">
+                        <div class="card-body text-center">
+                            <h6>State: Loaded</h6>
+                            <div class="bg-success text-white p-3 rounded">&#10003; Content Ready</div>
+                            <small class="text-muted d-block mt-2">Animation complete</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card test-card">
+                        <div class="card-body text-center">
+                            <h6>State: Error</h6>
+                            <div class="bg-danger text-white p-3 rounded">&#10007; Load Failed</div>
+                            <small class="text-muted d-block mt-2">Error animation</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: PERFORMANCE PROFILING UI                           -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Performance Profiling Visualization</h2>
+            <p class="text-muted">
+                Simulated frame breakdown showing layout (red), paint (yellow), and composite (green) times.
+                In production, use Chrome DevTools Performance tab to capture this data.
+            </p>
+            <div class="perf-timeline" id="perfTimeline">
+                <!-- Bars will be generated by JS -->
+            </div>
+            <div class="mt-2 d-flex gap-3 small">
+                <span><span class="badge bg-danger">Layout</span> >10ms (bad)</span>
+                <span><span class="badge bg-warning">Paint</span> 5-10ms</span>
+                <span><span class="badge bg-success">Composite</span> <5ms (good)</span>
+            </div>
+            <button class="btn btn-outline-primary btn-sm mt-2" id="regeneratePerfBtn">Regenerate</button>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: TESTING TOOLKIT TABLE                              -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Animation Testing Toolkit</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped small">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Tool</th>
+                            <th>Purpose</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>getComputedStyle</strong></td>
+                            <td>Read computed animation properties</td>
+                            <td><code>getComputedStyle(el).animationName</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>getAnimations()</strong></td>
+                            <td>Get Web Animations API instances</td>
+                            <td><code>el.getAnimations()</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>animationstart/end</strong></td>
+                            <td>Listen for animation lifecycle events</td>
+                            <td><code>el.addEventListener('animationend', ...)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CSS.supports</strong></td>
+                            <td>Feature detection</td>
+                            <td><code>CSS.supports('animation', 'x 1s')</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Performance API</strong></td>
+                            <td>Measure animation timing</td>
+                            <td><code>performance.now()</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cypress/Puppeteer</strong></td>
+                            <td>E2E animation testing</td>
+                            <td><code>cy.get('.el').should('have.css', 'opacity', '1')</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Jest + jsdom</strong></td>
+                            <td>Unit test animation logic</td>
+                            <td><code>expect(el.classList.contains('animated')).toBe(true)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Playwright</strong></td>
+                            <td>Visual regression testing</td>
+                            <td><code>await expect(page).toHaveScreenshot()</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: TEST CODE EXAMPLES                                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Test Code Examples</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Jest Unit Test</h6>
+                            <pre class="bg-dark text-light p-2 rounded small"><code>test('element has animation class', () => {
+  const el = document.createElement('div');
+  el.classList.add('animated-card');
+
+  expect(el.classList.contains('animated-card'))
+    .toBe(true);
+
+  const style = getComputedStyle(el);
+  expect(style.animationName).toBe('fadeIn');
+});
+
+test('animation completes', async () => {
+  const el = document.querySelector('.card');
+  el.classList.add('animate');
+
+  await new Promise(resolve => {
+    el.addEventListener('animationend', resolve);
+  });
+
+  expect(el.style.opacity).toBe('1');
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Cypress E2E Test</h6>
+                            <pre class="bg-dark text-light p-2 rounded small"><code>describe('Card Animation', () => {
+  it('animates on scroll', () => {
+    cy.visit('/page');
+    cy.get('.card').should('have.css',
+      'opacity', '0');
+
+    cy.scrollTo('bottom');
+    cy.get('.card').should('have.css',
+      'opacity', '1');
+
+    cy.get('.card').should('have.css',
+      'transform', 'none');
+  });
+
+  it('respects reduced motion', () => {
+    cy.visit('/page', {
+      onBeforeLoad(win) {
+        cy.stub(win, 'matchMedia')
+          .withArgs('(prefers-reduced-motion: reduce)')
+          .returns({ matches: true });
+      }
+    });
+    cy.get('.card').should('have.css',
+      'opacity', '1');
+  });
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Playwright Visual Test</h6>
+                            <pre class="bg-dark text-light p-2 rounded small"><code>test('card animation snapshot', async ({ page }) => {
+  await page.goto('/page');
+
+  // Wait for animation to start
+  await page.waitForTimeout(100);
+
+  // Screenshot during animation
+  await expect(page).toHaveScreenshot(
+    'card-animating.png',
+    { maxDiffPixels: 100 }
+  );
+
+  // Wait for animation to end
+  await page.waitForTimeout(500);
+
+  // Screenshot after animation
+  await expect(page).toHaveScreenshot(
+    'card-complete.png'
+  );
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Accessibility Test</h6>
+                            <pre class="bg-dark text-light p-2 rounded small"><code>test('no flashing content', async ({ page }) => {
+  await page.goto('/page');
+
+  // Check no element flashes >3 times/sec
+  const elements = await page.$$('*');
+  for (const el of elements) {
+    const style = await el.evaluate(e =>
+      getComputedStyle(e)
+    );
+    const duration = parseFloat(
+      style.animationDuration
+    );
+    // If duration < 0.33s and infinite,
+    // it flashes >3 times/sec
+    if (duration < 0.33) {
+      const count = style.animationIterationCount;
+      expect(count).not.toBe('infinite');
+    }
+  }
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: CI/CD INTEGRATION                                  -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. CI/CD Animation Testing Pipeline</h2>
+            <div class="card">
+                <div class="card-body">
+                    <pre class="bg-dark text-light p-3 rounded small mb-0"><code># .github/workflows/animation-tests.yml
+name: Animation Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests (Jest)
+        run: npm run test:unit -- --coverage
+
+      - name: E2E tests (Playwright)
+        run: npx playwright test
+
+      - name: Visual regression
+        run: npx playwright test --grep "@visual"
+        # Compares screenshots against baselines
+
+      - name: Accessibility audit
+        run: npx pa11y-ci --config .pa11yci.json
+        # Checks WCAG compliance including motion
+
+      - name: Performance audit
+        run: npx lighthouse-ci autorun
+        # Lighthouse flags animations causing jank</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 7: TESTING CHECKLIST                                  -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Animation Testing Checklist</h2>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Animation applies correct CSS properties</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">animationend/transitionend fires correctly</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">prefers-reduced-motion disables animation</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">No content flashes >3 times/second</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Animation maintains 60fps</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Cross-browser visual consistency</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Focus management after animated reveal</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled><label class="form-check-label">Content visible without animation support</label></div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ----------------------------------------------------------- */
+        /* ANIMATION TEST RUNNER                                       */
+        /* Runs automated checks on animation elements                 */
+        /* ----------------------------------------------------------- */
+        document.getElementById('runTestsBtn').addEventListener('click', function () {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '';
+            const tests = [];
+
+            function assert(name, condition, details) {
+                tests.push({ name, pass: condition, details });
+                const div = document.createElement('div');
+                div.className = 'test-result ' + (condition ? 'test-pass' : 'test-fail');
+                div.innerHTML = `<strong>${condition ? 'PASS' : 'FAIL'}</strong> — ${name}${details ? ': ' + details : ''}`;
+                results.appendChild(div);
+            }
+
+            /* Test 1: CSS animation support */
+            assert('CSS Animations supported',
+                CSS.supports('animation', 'fadeIn 0.3s'));
+
+            /* Test 2: CSS transition support */
+            assert('CSS Transitions supported',
+                CSS.supports('transition', 'opacity 0.3s'));
+
+            /* Test 3: transform support */
+            assert('CSS Transforms supported',
+                CSS.supports('transform', 'translateX(0)'));
+
+            /* Test 4: Test cards have animation */
+            const cards = document.querySelectorAll('.test-card');
+            cards.forEach(function (card, i) {
+                const style = getComputedStyle(card);
+                assert(`Card ${i + 1} has animation`,
+                    style.animationName !== 'none',
+                    style.animationName);
+            });
+
+            /* Test 5: Spinner has infinite animation */
+            const spinner = document.querySelector('.test-spinner');
+            if (spinner) {
+                const style = getComputedStyle(spinner);
+                assert('Spinner has infinite iteration',
+                    style.animationIterationCount === 'infinite');
+            }
+
+            /* Test 6: Reduced motion detection */
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const info = document.createElement('div');
+            info.className = 'test-result test-info';
+            info.innerHTML = `<strong>INFO</strong> — prefers-reduced-motion: ${reducedMotion ? 'ENABLED' : 'DISABLED'}`;
+            results.appendChild(info);
+
+            /* Test 7: Animation duration within budget */
+            if (spinner) {
+                const duration = parseFloat(getComputedStyle(spinner).animationDuration);
+                assert('Spinner duration < 1s',
+                    duration < 1,
+                    duration + 's');
+            }
+
+            /* Summary */
+            const passCount = tests.filter(t => t.pass).length;
+            const summary = document.createElement('div');
+            summary.className = 'test-result ' + (passCount === tests.length ? 'test-pass' : 'test-fail');
+            summary.innerHTML = `<strong>SUMMARY:</strong> ${passCount}/${tests.length} tests passed`;
+            results.appendChild(summary);
+        });
+
+        /* ----------------------------------------------------------- */
+        /* PERFORMANCE TIMELINE VISUALIZATION                          */
+        /* Generates a random frame breakdown chart                    */
+        /* ----------------------------------------------------------- */
+        function generatePerfTimeline() {
+            const timeline = document.getElementById('perfTimeline');
+            timeline.innerHTML = '';
+            for (let i = 0; i < 60; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'perf-bar';
+                const r = Math.random();
+                if (r < 0.15) {
+                    bar.classList.add('layout');
+                    bar.style.height = (60 + Math.random() * 80) + 'px';
+                } else if (r < 0.4) {
+                    bar.classList.add('paint');
+                    bar.style.height = (30 + Math.random() * 50) + 'px';
+                } else {
+                    bar.classList.add('composite');
+                    bar.style.height = (10 + Math.random() * 30) + 'px';
+                }
+                timeline.appendChild(bar);
+            }
+        }
+        generatePerfTimeline();
+        document.getElementById('regeneratePerfBtn').addEventListener('click', generatePerfTimeline);
+    </script>
+</body>
+</html>

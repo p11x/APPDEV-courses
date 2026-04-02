@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<!-- Bootstrap 5 Color Performance - Optimization strategies for color usage -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>01_02_03_09 - Color Performance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Performance-optimized custom color classes */
+        /* Defining colors as CSS custom properties allows reuse without duplication */
+        :root {
+            --brand-primary: #6366f1;
+            --brand-secondary: #8b5cf6;
+        }
+
+        /* Custom utility classes using CSS variables - single source of truth */
+        .text-brand-primary { color: var(--brand-primary) !important; }
+        .text-brand-secondary { color: var(--brand-secondary) !important; }
+        .bg-brand-primary { background-color: var(--brand-primary) !important; }
+        .bg-brand-secondary { background-color: var(--brand-secondary) !important; }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">Color Performance Best Practices</h1>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 1: Use Bootstrap's Built-in Colors -->
+        <!-- Bootstrap's classes are optimized and tree-shakeable -->
+        <!-- Using built-in utilities avoids writing custom CSS -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>1. Prefer Bootstrap's Built-in Colors</h2>
+            <p>Using Bootstrap's color utilities generates zero additional CSS. Custom colors add to stylesheet size.</p>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h5 class="text-success">Optimal: Bootstrap Utilities</h5>
+                            <!-- These classes already exist in Bootstrap's CSS -->
+                            <!-- No additional CSS is generated or loaded -->
+                            <span class="badge text-bg-primary">Primary</span>
+                            <span class="badge text-bg-success">Success</span>
+                            <span class="badge text-bg-danger">Danger</span>
+                            <span class="badge text-bg-warning">Warning</span>
+                            <span class="badge text-bg-info">Info</span>
+                            <p class="mt-2 small text-muted">Zero additional CSS. Classes already in Bootstrap bundle.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h5 class="text-warning">Avoid: Excessive Custom Colors</h5>
+                            <!-- Custom classes require additional CSS definitions -->
+                            <span class="badge text-brand-primary">Custom 1</span>
+                            <span class="badge text-brand-secondary">Custom 2</span>
+                            <p class="mt-2 small text-muted">Custom classes add CSS. Use only when Bootstrap colors are insufficient.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 2: CSS Variables for Theming -->
+        <!-- CSS variables allow runtime color changes without new stylesheets -->
+        <!-- This is more performant than loading separate theme CSS files -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>2. CSS Variables for Dynamic Theming</h2>
+            <p>CSS custom properties (variables) enable runtime theme switching without additional HTTP requests.</p>
+
+            <!-- Theme toggle demonstrating CSS variable performance -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Runtime Theme Switching</h5>
+                    <p>CSS variables change instantly - no stylesheet re-download needed.</p>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="applyTheme('default')">Default Theme</button>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="applyTheme('ocean')">Ocean Theme</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="applyTheme('forest')">Forest Theme</button>
+
+                    <!-- Preview area affected by theme changes -->
+                    <div id="themePreview" class="mt-3 p-3 rounded" style="transition: all 0.3s ease;">
+                        <button class="btn btn-primary me-2">Primary</button>
+                        <button class="btn btn-success me-2">Success</button>
+                        <button class="btn btn-danger">Danger</button>
+                        <div class="mt-2">
+                            <span class="badge text-bg-primary me-1">Badge</span>
+                            <span class="badge text-bg-success me-1">Badge</span>
+                            <span class="badge text-bg-danger">Badge</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 3: Avoid Inline Styles -->
+        <!-- Inline styles cannot be cached by the browser -->
+        <!-- Utility classes are part of the cached CSS file -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>3. Avoid Inline Color Styles</h2>
+            <p>Utility classes are cacheable. Inline styles are not and increase HTML size.</p>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h5 class="text-success">Optimal: Utility Classes</h5>
+                            <!-- These classes are in the cached Bootstrap CSS file -->
+                            <p class="text-primary">Using .text-primary</p>
+                            <p class="text-success">Using .text-success</p>
+                            <p class="text-danger">Using .text-danger</p>
+                            <!-- Classes are reusable, cached, and maintainable -->
+                            <div class="bg-primary p-2 rounded text-white mb-1">.bg-primary .text-white</div>
+                            <div class="bg-success p-2 rounded text-white mb-1">.bg-success .text-white</div>
+                            <div class="bg-danger p-2 rounded text-white">.bg-danger .text-white</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <h5 class="text-warning">Avoid: Inline Styles</h5>
+                            <!-- Inline styles repeat in HTML, increasing file size -->
+                            <p style="color: #0d6efd;">style="color: #0d6efd"</p>
+                            <p style="color: #198754;">style="color: #198754"</p>
+                            <p style="color: #dc3545;">style="color: #dc3545"</p>
+                            <!-- Each inline style is repeated per element - bloats HTML -->
+                            <div style="background-color: #0d6efd; padding: 0.5rem; border-radius: 0.375rem; color: white; margin-bottom: 0.25rem;">Repeated inline styles</div>
+                            <div style="background-color: #198754; padding: 0.5rem; border-radius: 0.375rem; color: white; margin-bottom: 0.25rem;">Increase file size</div>
+                            <div style="background-color: #dc3545; padding: 0.5rem; border-radius: 0.375rem; color: white;">Not cacheable</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 4: Minimize Custom CSS -->
+        <!-- Each custom class adds to CSS bundle size -->
+        <!-- Combine Bootstrap utilities instead of creating custom classes -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>4. Combine Utilities Instead of Custom CSS</h2>
+            <p>Compose visual styles from Bootstrap utilities rather than writing new CSS rules.</p>
+
+            <div class="row g-3">
+                <!-- Complex styling achieved with utility combination -->
+                <div class="col-md-4">
+                    <div class="bg-primary text-white p-4 rounded-3 shadow-sm text-center">
+                        <h5 class="fw-bold mb-2">Utility Composition</h5>
+                        <p class="mb-0 small">.bg-primary .text-white .p-4 .rounded-3 .shadow-sm .text-center</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-success-subtle border border-success p-4 rounded-3 text-center">
+                        <h5 class="text-success fw-bold mb-2">Subtle Variant</h5>
+                        <p class="text-success-emphasis small mb-0">.bg-success-subtle .border-success .text-success</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="bg-gradient text-white p-4 rounded-3 shadow text-center" style="background: linear-gradient(135deg, #0d6efd, #6610f2) !important;">
+                        <h5 class="fw-bold mb-2">Gradient Style</h5>
+                        <p class="mb-0 small">.bg-gradient + inline gradient</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <strong>Tip:</strong> Over 90% of common color patterns can be achieved with Bootstrap's built-in utilities. Only write custom CSS for truly unique brand colors.
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 5: Color Consistency -->
+        <!-- Using a consistent color palette reduces cognitive load -->
+        <!-- and keeps the CSS bundle smaller -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>5. Maintain Color Consistency</h2>
+            <p>Stick to Bootstrap's semantic color naming for consistency across your project.</p>
+
+            <!-- Color mapping reference table -->
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Semantic Meaning</th>
+                        <th>Bootstrap Class</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-primary fw-bold">Primary</td>
+                        <td><code>.text-primary / .bg-primary</code></td>
+                        <td>Main brand actions, key UI elements</td>
+                    </tr>
+                    <tr>
+                        <td class="text-secondary fw-bold">Secondary</td>
+                        <td><code>.text-secondary / .bg-secondary</code></td>
+                        <td>Less important actions, subtle elements</td>
+                    </tr>
+                    <tr>
+                        <td class="text-success fw-bold">Success</td>
+                        <td><code>.text-success / .bg-success</code></td>
+                        <td>Positive outcomes, confirmations, completed states</td>
+                    </tr>
+                    <tr>
+                        <td class="text-danger fw-bold">Danger</td>
+                        <td><code>.text-danger / .bg-danger</code></td>
+                        <td>Errors, destructive actions, critical alerts</td>
+                    </tr>
+                    <tr>
+                        <td class="text-warning fw-bold">Warning</td>
+                        <td><code>.text-warning / .bg-warning</code></td>
+                        <td>Caution states, attention needed</td>
+                    </tr>
+                    <tr>
+                        <td class="text-info fw-bold">Info</td>
+                        <td><code>.text-info / .bg-info</code></td>
+                        <td>Informational messages, neutral notifications</td>
+                    </tr>
+                    <tr>
+                        <td class="text-dark fw-bold">Dark</td>
+                        <td><code>.text-dark / .bg-dark</code></td>
+                        <td>High contrast elements, text, dark surfaces</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-bold">Muted</td>
+                        <td><code>.text-muted</code></td>
+                        <td>De-emphasized text, placeholders, disabled states</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- SECTION 6: File Size Comparison -->
+        <!-- Showing the impact of different approaches on file size -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>6. Performance Comparison</h2>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Approach</th>
+                            <th>CSS Size Impact</th>
+                            <th>Cacheable</th>
+                            <th>Runtime Switchable</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-success">
+                            <td>Bootstrap utility classes</td>
+                            <td>0 bytes (already in bundle)</td>
+                            <td>Yes</td>
+                            <td>N/A</td>
+                        </tr>
+                        <tr class="table-success">
+                            <td>CSS custom properties</td>
+                            <td>~200 bytes per theme</td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td>Custom CSS classes</td>
+                            <td>~50-100 bytes each</td>
+                            <td>Yes</td>
+                            <td>No</td>
+                        </tr>
+                        <tr class="table-danger">
+                            <td>Inline styles</td>
+                            <td>~50-100 bytes per element</td>
+                            <td>No</td>
+                            <td>No</td>
+                        </tr>
+                        <tr class="table-danger">
+                            <td>Separate theme CSS files</td>
+                            <td>Additional HTTP request</td>
+                            <td>Separate cache</td>
+                            <td>Requires swap</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* Theme switcher using CSS custom properties */
+        /* This approach is performant because it only changes variable values */
+        /* No new CSS is downloaded, no DOM reflow for stylesheet loading */
+        function applyTheme(theme) {
+            const root = document.documentElement;
+
+            /* Each theme only changes 3 CSS variable values */
+            switch(theme) {
+                case 'ocean':
+                    /* Ocean theme: blue/green palette */
+                    root.style.setProperty('--bs-primary', '#0ea5e9');
+                    root.style.setProperty('--bs-primary-rgb', '14, 165, 233');
+                    root.style.setProperty('--bs-success', '#14b8a6');
+                    root.style.setProperty('--bs-success-rgb', '20, 184, 166');
+                    root.style.setProperty('--bs-danger', '#f43f5e');
+                    root.style.setProperty('--bs-danger-rgb', '244, 63, 94');
+                    break;
+                case 'forest':
+                    /* Forest theme: green/earth palette */
+                    root.style.setProperty('--bs-primary', '#22c55e');
+                    root.style.setProperty('--bs-primary-rgb', '34, 197, 94');
+                    root.style.setProperty('--bs-success', '#84cc16');
+                    root.style.setProperty('--bs-success-rgb', '132, 204, 22');
+                    root.style.setProperty('--bs-danger', '#ef4444');
+                    root.style.setProperty('--bs-danger-rgb', '239, 68, 68');
+                    break;
+                default:
+                    /* Reset to Bootstrap defaults by removing overrides */
+                    root.style.removeProperty('--bs-primary');
+                    root.style.removeProperty('--bs-primary-rgb');
+                    root.style.removeProperty('--bs-success');
+                    root.style.removeProperty('--bs-success-rgb');
+                    root.style.removeProperty('--bs-danger');
+                    root.style.removeProperty('--bs-danger-rgb');
+            }
+        }
+    </script>
+</body>
+</html>

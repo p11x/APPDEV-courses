@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 06_01_13_AI_Integration_Patterns.html                         -->
+<!-- AI Integration Patterns with Bootstrap 5                     -->
+<!-- Covers: Chatbots, recommendation engines, personalization,   -->
+<!-- content generation, search enhancement                       -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI integration patterns with Bootstrap 5 - chatbots, recommendations, personalization">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>AI Integration Patterns | Bootstrap 5</title>
+    <style>
+        .pattern-card {
+            border-left: 4px solid #20c997;
+            transition: transform 0.3s ease;
+        }
+        .pattern-card:hover { transform: translateY(-3px); }
+        /* Chatbot styles */
+        .chat-window {
+            height: 350px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .chat-bubble {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            margin-bottom: 0.5rem;
+        }
+        .chat-user {
+            background: #0d6efd;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-bot {
+            background: #e9ecef;
+            color: #333;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-6px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">&#129302; AI Patterns</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#chatbot">Chatbot</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#recommendations">Recommendations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#personalization">Personalization</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#search">AI Search</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="bg-info text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">AI Integration Patterns</h1>
+            <p class="lead">Production-ready patterns for embedding AI capabilities into Bootstrap web applications.</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- Section 1: Chatbot Integration -->
+        <section id="chatbot" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">
+                <span class="text-info">&#128172;</span> AI Chatbot Integration
+            </h2>
+            <p class="text-muted">Embed conversational AI directly into your Bootstrap application with a fully accessible chat interface.</p>
+
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card pattern-card">
+                        <div class="card-header bg-info text-white d-flex justify-content-between">
+                            <span>&#129302; AI Assistant</span>
+                            <span class="badge bg-light text-dark">Online</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <!-- Chat messages area -->
+                            <div class="chat-window" id="chatWindow" role="log" aria-live="polite" aria-label="Chat messages">
+                                <div class="chat-bubble chat-bot">
+                                    Hello! I'm your AI assistant. How can I help you today?
+                                </div>
+                                <div class="chat-bubble chat-bot">
+                                    I can help with product recommendations, answer questions, or guide you through our site.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <!-- Chat input form -->
+                            <form id="chatForm" class="d-flex gap-2">
+                                <label for="chatInput" class="visually-hidden">Type your message</label>
+                                <input type="text" class="form-control" id="chatInput" placeholder="Type your message..." autocomplete="off">
+                                <button type="submit" class="btn btn-info" aria-label="Send message">
+                                    &#10148;
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chatbot implementation code -->
+            <div class="card mt-4 pattern-card">
+                <div class="card-header bg-dark text-white"><code>Chatbot Integration Pattern</code></div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>// AI Chatbot integration pattern with Bootstrap 5
+// Connects to AI API and renders conversation in Bootstrap UI
+
+class AIChatbot {
+    constructor(containerId, apiEndpoint) {
+        this.container = document.getElementById(containerId);
+        this.apiEndpoint = apiEndpoint;
+        this.conversationHistory = [];
+        this.isTyping = false;
+    }
+
+    // Add a message to the chat window
+    addMessage(content, sender = 'bot') {
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble chat-${sender}`;
+        bubble.textContent = content;
+        bubble.setAttribute('role', 'article');
+        this.container.appendChild(bubble);
+        this.container.scrollTop = this.container.scrollHeight;
+
+        // Store in conversation history
+        this.conversationHistory.push({ role: sender, content });
+    }
+
+    // Show typing indicator while AI processes
+    showTyping() {
+        this.isTyping = true;
+        const indicator = document.createElement('div');
+        indicator.className = 'chat-bubble chat-bot typing-indicator';
+        indicator.id = 'typingIndicator';
+        indicator.innerHTML = '<span></span><span></span><span></span>';
+        this.container.appendChild(indicator);
+        this.container.scrollTop = this.container.scrollHeight;
+    }
+
+    // Remove typing indicator
+    hideTyping() {
+        this.isTyping = false;
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) indicator.remove();
+    }
+
+    // Send user message to AI API
+    async sendMessage(userMessage) {
+        this.addMessage(userMessage, 'user');
+        this.showTyping();
+
+        try {
+            const response = await fetch(this.apiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: this.conversationHistory,
+                    max_tokens: 150
+                })
+            });
+            const data = await response.json();
+            this.hideTyping();
+            this.addMessage(data.reply, 'bot');
+        } catch (error) {
+            this.hideTyping();
+            this.addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+        }
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Recommendation Engine -->
+        <section id="recommendations" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">
+                <span class="text-info">&#127873;</span> AI Recommendation Engine
+            </h2>
+            <p class="text-muted">Display AI-powered product and content recommendations using Bootstrap card layouts.</p>
+
+            <!-- Recommendations display -->
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="card pattern-card h-100">
+                        <img src="https://picsum.photos/300/200?random=30" class="card-img-top" alt="Recommended product" loading="lazy">
+                        <div class="card-body">
+                            <span class="badge bg-info mb-2">92% Match</span>
+                            <h6 class="card-title">Wireless Headphones</h6>
+                            <p class="card-text small text-muted">Based on your browsing history</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-success">$79.99</span>
+                                <button class="btn btn-sm btn-outline-primary">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card pattern-card h-100">
+                        <img src="https://picsum.photos/300/200?random=31" class="card-img-top" alt="Recommended product" loading="lazy">
+                        <div class="card-body">
+                            <span class="badge bg-info mb-2">88% Match</span>
+                            <h6 class="card-title">Smart Watch</h6>
+                            <p class="card-text small text-muted">Customers like you bought this</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-success">$199.99</span>
+                                <button class="btn btn-sm btn-outline-primary">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card pattern-card h-100">
+                        <img src="https://picsum.photos/300/200?random=32" class="card-img-top" alt="Recommended product" loading="lazy">
+                        <div class="card-body">
+                            <span class="badge bg-warning text-dark mb-2">76% Match</span>
+                            <h6 class="card-title">Bluetooth Speaker</h6>
+                            <p class="card-text small text-muted">Trending in your area</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-success">$49.99</span>
+                                <button class="btn btn-sm btn-outline-primary">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card pattern-card h-100">
+                        <img src="https://picsum.photos/300/200?random=33" class="card-img-top" alt="Recommended product" loading="lazy">
+                        <div class="card-body">
+                            <span class="badge bg-secondary mb-2">65% Match</span>
+                            <h6 class="card-title">USB-C Hub</h6>
+                            <p class="card-text small text-muted">Frequently bought together</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-success">$34.99</span>
+                                <button class="btn btn-sm btn-outline-primary">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendation engine code -->
+            <div class="card mt-4 pattern-card">
+                <div class="card-header bg-dark text-white"><code>Recommendation Engine Pattern</code></div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>// AI Recommendation Engine with Bootstrap card rendering
+// Fetches personalized recommendations and renders as cards
+
+class RecommendationEngine {
+    constructor(apiEndpoint) {
+        this.apiEndpoint = apiEndpoint;
+        // User behavior tracking for personalization
+        this.userProfile = {
+            viewedProducts: [],
+            purchasedItems: [],
+            searchHistory: [],
+            categoryPreferences: {}
+        };
+    }
+
+    // Track user product views
+    trackView(productId, category) {
+        this.userProfile.viewedProducts.push({
+            id: productId,
+            category,
+            timestamp: Date.now()
+        });
+        // Update category preference score
+        this.userProfile.categoryPreferences[category] =
+            (this.userProfile.categoryPreferences[category] || 0) + 1;
+    }
+
+    // Fetch AI-powered recommendations
+    async getRecommendations(type = 'personalized', limit = 4) {
+        const response = await fetch(this.apiEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_profile: this.userProfile,
+                recommendation_type: type,
+                limit: limit
+            })
+        });
+        return response.json();
+    }
+
+    // Render recommendations as Bootstrap cards
+    renderCards(containerId, recommendations) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        recommendations.forEach(item => {
+            const col = document.createElement('div');
+            col.className = 'col-md-3';
+            col.innerHTML = `
+                &lt;div class="card h-100"&gt;
+                    &lt;img src="${item.image}" class="card-img-top" alt="${item.name}"&gt;
+                    &lt;div class="card-body"&gt;
+                        &lt;span class="badge bg-info"&gt;${item.matchScore}% Match&lt;/span&gt;
+                        &lt;h6&gt;${item.name}&lt;/h6&gt;
+                        &lt;p class="small text-muted"&gt;${item.reason}&lt;/p&gt;
+                        &lt;span class="fw-bold"&gt;$${item.price}&lt;/span&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;`;
+            container.appendChild(col);
+        });
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Personalization -->
+        <section id="personalization" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">
+                <span class="text-info">&#128100;</span> AI Personalization
+            </h2>
+
+            <div class="row g-4">
+                <!-- Dynamic content personalization -->
+                <div class="col-md-6">
+                    <div class="card pattern-card h-100">
+                        <div class="card-body">
+                            <h5>Dynamic Content Adaptation</h5>
+                            <p class="card-text">AI personalizes page content based on user segment, behavior, and preferences.</p>
+                            <!-- Personalization demo -->
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Headline</strong>
+                                        <span class="badge bg-success">Personalized</span>
+                                    </div>
+                                    <small class="text-muted">"Welcome back, Tech Enthusiast!" vs "Welcome!"</small>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Hero Image</strong>
+                                        <span class="badge bg-success">Personalized</span>
+                                    </div>
+                                    <small class="text-muted">Shows electronics for tech segment, fashion for style segment</small>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>CTA Button</strong>
+                                        <span class="badge bg-success">Personalized</span>
+                                    </div>
+                                    <small class="text-muted">"Continue Shopping" for returning vs "Explore Now" for new</small>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Price Display</strong>
+                                        <span class="badge bg-warning">Conditional</span>
+                                    </div>
+                                    <small class="text-muted">Shows member pricing for logged-in loyalty members</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- A/B test results -->
+                <div class="col-md-6">
+                    <div class="card pattern-card h-100">
+                        <div class="card-body">
+                            <h5>AI A/B Testing Results</h5>
+                            <p class="card-text">AI continuously tests and optimizes personalized experiences.</p>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Variant A (Generic)</span>
+                                    <span>2.3% conversion</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-secondary" style="width: 23%;">2.3%</div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Variant B (AI Personalized)</span>
+                                    <span>7.8% conversion</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: 78%;">7.8%</div>
+                                </div>
+                            </div>
+                            <div class="alert alert-success mb-0">
+                                <strong>&#128640; +239% improvement</strong> with AI personalization
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: AI-Powered Search -->
+        <section id="search" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">
+                <span class="text-info">&#128269;</span> AI-Enhanced Search
+            </h2>
+
+            <div class="card pattern-card">
+                <div class="card-body">
+                    <!-- Search input with AI enhancements -->
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-lg-8">
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-info text-white">&#128269;</span>
+                                <input type="search" class="form-control" id="aiSearch" placeholder="Search with AI... (try 'comfortable running shoes under $100')" aria-label="AI-powered search">
+                                <button class="btn btn-info" type="button">Search</button>
+                            </div>
+                            <small class="text-muted">AI understands natural language queries, synonyms, and intent</small>
+                        </div>
+                    </div>
+
+                    <!-- Search capabilities -->
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 text-center">
+                                <div class="display-6">&#128270;</div>
+                                <h6>Semantic Search</h6>
+                                <small class="text-muted">Understands meaning, not just keywords</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 text-center">
+                                <div class="display-6">&#129513;</div>
+                                <h6>Intent Detection</h6>
+                                <small class="text-muted">Knows if you're browsing or buying</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 text-center">
+                                <div class="display-6">&#128221;</div>
+                                <h6>Spell Correction</h6>
+                                <small class="text-muted">Fixes typos automatically</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded p-3 text-center">
+                                <div class="display-6">&#128172;</div>
+                                <h6>Query Suggestions</h6>
+                                <small class="text-muted">AI-powered autocomplete</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="text-muted mb-0">AI Integration Patterns Module | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Chatbot demo script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatWindow = document.getElementById('chatWindow');
+            const chatForm = document.getElementById('chatForm');
+            const chatInput = document.getElementById('chatInput');
+
+            // Predefined AI responses for demo
+            const responses = [
+                "I can help you find the perfect product! What category interests you?",
+                "Based on your preferences, I'd recommend checking out our electronics section.",
+                "That's a great question! Let me look that up for you.",
+                "I've found 3 products that match your criteria. Would you like me to show them?",
+                "Is there anything else I can assist you with today?"
+            ];
+
+            chatForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                // Add user message
+                const userBubble = document.createElement('div');
+                userBubble.className = 'chat-bubble chat-user';
+                userBubble.textContent = message;
+                chatWindow.appendChild(userBubble);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                chatInput.value = '';
+
+                // Show typing indicator
+                const typing = document.createElement('div');
+                typing.className = 'chat-bubble chat-bot typing-indicator';
+                typing.innerHTML = '<span></span><span></span><span></span>';
+                chatWindow.appendChild(typing);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+
+                // Simulate AI response after delay
+                setTimeout(() => {
+                    typing.remove();
+                    const botBubble = document.createElement('div');
+                    botBubble.className = 'chat-bubble chat-bot';
+                    botBubble.textContent = responses[Math.floor(Math.random() * responses.length)];
+                    chatWindow.appendChild(botBubble);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }, 1000 + Math.random() * 1500);
+            });
+        });
+    </script>
+</body>
+</html>

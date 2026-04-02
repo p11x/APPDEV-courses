@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================ -->
+    <!-- 02_05_05 - MODALS TESTING STRATEGIES                         -->
+    <!-- Covers: Testing patterns, modal lifecycle, assertions        -->
+    <!-- ============================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modals Testing Strategies - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .example-section { border-bottom: 2px solid #dee2e6; padding-bottom: 2rem; margin-bottom: 2rem; }
+        pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+        pre code { background: none; color: inherit; }
+    </style>
+</head>
+<body>
+
+    <!-- Page Header -->
+    <div class="container-fluid bg-secondary text-white py-4 mb-5">
+        <div class="container">
+            <h1 class="display-4">Modals: Testing Strategies</h1>
+            <p class="lead">Modal testing patterns, lifecycle events, and assertion strategies</p>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: MODAL LIFECYCLE EVENTS                         -->
+        <!-- Bootstrap modals fire events at each stage of their      -->
+        <!-- lifecycle. Understanding these is key to testing.         -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">1. Modal Lifecycle Events</h2>
+            <p>Understanding modal events is essential for writing reliable tests.</p>
+
+            <div class="table-responsive mb-3">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Event</th>
+                            <th>When Fired</th>
+                            <th>Use in Testing</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>show.bs.modal</code></td>
+                            <td>Immediately when show is called</td>
+                            <td>Assert initial state before animation</td>
+                        </tr>
+                        <tr>
+                            <td><code>shown.bs.modal</code></td>
+                            <td>After modal is visible to user</td>
+                            <td>Assert focus, visibility, content</td>
+                        </tr>
+                        <tr>
+                            <td><code>hide.bs.modal</code></td>
+                            <td>Immediately when hide is called</td>
+                            <td>Assert state before close animation</td>
+                        </tr>
+                        <tr>
+                            <td><code>hidden.bs.modal</code></td>
+                            <td>After modal is completely hidden</td>
+                            <td>Assert cleanup, DOM state, focus return</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Interactive demo of lifecycle events -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#lifecycleModal">
+                Open Lifecycle Demo
+            </button>
+
+            <div class="card mt-3">
+                <div class="card-header">Event Log</div>
+                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                    <ul class="list-unstyled mb-0" id="eventLog">
+                        <li class="text-muted small">Click the button to see events...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="modal fade" id="lifecycleModal" tabindex="-1" aria-labelledby="lifecycleLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="lifecycleLabel">Lifecycle Events Demo</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Watch the event log to see lifecycle events firing.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                const eventLog = document.getElementById('eventLog');
+                let logCount = 0;
+
+                function logEvent(name, color) {
+                    logCount++;
+                    const time = new Date().toLocaleTimeString();
+                    const li = document.createElement('li');
+                    li.className = 'small';
+                    li.innerHTML = `<span class="text-${color} fw-bold">${logCount}.</span> [${time}] <code>${name}</code>`;
+                    if (logCount === 1) eventLog.innerHTML = '';
+                    eventLog.appendChild(li);
+                }
+
+                const modalEl = document.getElementById('lifecycleModal');
+                modalEl.addEventListener('show.bs.modal', () => logEvent('show.bs.modal', 'warning'));
+                modalEl.addEventListener('shown.bs.modal', () => logEvent('shown.bs.modal', 'success'));
+                modalEl.addEventListener('hide.bs.modal', () => logEvent('hide.bs.modal', 'warning'));
+                modalEl.addEventListener('hidden.bs.modal', () => logEvent('hidden.bs.modal', 'danger'));
+            </script>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: TESTING PATTERNS                               -->
+        <!-- Common testing patterns using vanilla JS (adaptable to    -->
+        <!-- any framework like Jest, Mocha, Cypress, Playwright).     -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">2. Testing Patterns Reference</h2>
+
+            <!-- Pattern: Testing modal visibility -->
+            <div class="card mb-3">
+                <div class="card-header">Pattern 1: Testing Modal Visibility</div>
+                <div class="card-body">
+                    <pre><code>// Assert modal is visible after show
+test('modal becomes visible', function(done) {
+    const modal = document.getElementById('testModal');
+    modal.addEventListener('shown.bs.modal', function() {
+        assert.ok(modal.classList.contains('show'));
+        assert.equal(modal.style.display, 'block');
+        assert.equal(modal.getAttribute('aria-hidden'), 'false');
+        done();
+    });
+    new bootstrap.Modal(modal).show();
+});</code></pre>
+                </div>
+            </div>
+
+            <!-- Pattern: Testing modal closes -->
+            <div class="card mb-3">
+                <div class="card-header">Pattern 2: Testing Modal Close</div>
+                <div class="card-body">
+                    <pre><code>// Assert modal is hidden after close
+test('modal closes on button click', function(done) {
+    const modal = document.getElementById('testModal');
+    const bsModal = new bootstrap.Modal(modal);
+    modal.addEventListener('hidden.bs.modal', function() {
+        assert.ok(!modal.classList.contains('show'));
+        assert.equal(modal.style.display, '');
+        done();
+    });
+    bsModal.show();
+    setTimeout(() => {
+        modal.querySelector('.btn-close').click();
+    }, 100);
+});</code></pre>
+                </div>
+            </div>
+
+            <!-- Pattern: Testing focus management -->
+            <div class="card mb-3">
+                <div class="card-header">Pattern 3: Testing Focus Management</div>
+                <div class="card-body">
+                    <pre><code>// Assert focus moves into modal and returns on close
+test('focus is trapped and restored', function(done) {
+    const trigger = document.getElementById('openBtn');
+    const modal = document.getElementById('testModal');
+    const bsModal = new bootstrap.Modal(modal);
+
+    modal.addEventListener('shown.bs.modal', function() {
+        // Focus should be inside the modal
+        assert.ok(modal.contains(document.activeElement));
+        bsModal.hide();
+    });
+
+    modal.addEventListener('hidden.bs.modal', function() {
+        // Focus should return to trigger
+        assert.equal(document.activeElement, trigger);
+        done();
+    });
+
+    trigger.focus();
+    bsModal.show();
+});</code></pre>
+                </div>
+            </div>
+
+            <!-- Pattern: Testing form submission in modal -->
+            <div class="card mb-3">
+                <div class="card-header">Pattern 4: Testing Form in Modal</div>
+                <div class="card-body">
+                    <pre><code>// Assert form data is captured correctly
+test('modal form submits with correct data', function(done) {
+    const modal = document.getElementById('formModal');
+    const bsModal = new bootstrap.Modal(modal);
+
+    modal.addEventListener('shown.bs.modal', function() {
+        const input = modal.querySelector('#emailInput');
+        input.value = 'test@example.com';
+
+        modal.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            assert.equal(input.value, 'test@example.com');
+            done();
+        });
+
+        modal.querySelector('[type="submit"]').click();
+    });
+
+    bsModal.show();
+});</code></pre>
+                </div>
+            </div>
+
+            <!-- Pattern: Testing ESC key behavior -->
+            <div class="card mb-3">
+                <div class="card-header">Pattern 5: Testing Keyboard (ESC) Close</div>
+                <div class="card-body">
+                    <pre><code>// Assert ESC closes the modal
+test('ESC key closes modal', function(done) {
+    const modal = document.getElementById('testModal');
+    const bsModal = new bootstrap.Modal(modal);
+
+    modal.addEventListener('shown.bs.modal', function() {
+        // Simulate ESC keypress
+        const escEvent = new KeyboardEvent('keydown', {
+            key: 'Escape',
+            keyCode: 27,
+            bubbles: true
+        });
+        document.dispatchEvent(escEvent);
+    });
+
+    modal.addEventListener('hidden.bs.modal', function() {
+        assert.ok(true, 'Modal closed by ESC');
+        done();
+    });
+
+    bsModal.show();
+});</code></pre>
+                </div>
+            </div>
+
+            <!-- Pattern: Testing backdrop click -->
+            <div class="card">
+                <div class="card-header">Pattern 6: Testing Backdrop Click</div>
+                <div class="card-body">
+                    <pre><code>// Assert clicking backdrop closes modal
+test('backdrop click closes modal', function(done) {
+    const modal = document.getElementById('testModal');
+    const bsModal = new bootstrap.Modal(modal);
+
+    modal.addEventListener('shown.bs.modal', function() {
+        const backdrop = document.querySelector('.modal-backdrop');
+        backdrop.click();
+    });
+
+    modal.addEventListener('hidden.bs.modal', function() {
+        assert.ok(true, 'Modal closed by backdrop click');
+        done();
+    });
+
+    bsModal.show();
+});</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: TESTABLE MODAL EXAMPLE                        -->
+        <!-- A modal specifically structured for easy testing with     -->
+        <!-- data-testid attributes and predictable behavior.          -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">3. Testable Modal Example</h2>
+            <p>Using <code>data-testid</code> attributes for reliable test selectors.</p>
+
+            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#testableModal" data-testid="open-testable-modal">
+                Open Testable Modal
+            </button>
+
+            <div class="modal fade" id="testableModal" tabindex="-1" aria-labelledby="testableLabel" aria-hidden="true" data-testid="testable-modal">
+                <div class="modal-dialog" data-testid="modal-dialog">
+                    <div class="modal-content" data-testid="modal-content">
+                        <div class="modal-header" data-testid="modal-header">
+                            <h5 class="modal-title" id="testableLabel" data-testid="modal-title">Testable Modal</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" data-testid="modal-close-btn"></button>
+                        </div>
+                        <div class="modal-body" data-testid="modal-body">
+                            <form data-testid="modal-form">
+                                <div class="mb-3">
+                                    <label for="testEmail" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="testEmail" data-testid="email-input" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="testMessage" class="form-label">Message</label>
+                                    <textarea class="form-control" id="testMessage" data-testid="message-input" rows="3" required></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer" data-testid="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-testid="cancel-btn">Cancel</button>
+                            <button type="button" class="btn btn-primary" data-testid="submit-btn">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: RUNNING THE TESTS                             -->
+        <!-- Button to run all assertion tests in-browser.            -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">4. In-Browser Test Runner</h2>
+            <p>Run modal tests directly in the browser (demonstration).</p>
+
+            <button type="button" class="btn btn-primary mb-3" id="runTestsBtn">Run All Modal Tests</button>
+
+            <div class="card" id="testResults" style="display: none;">
+                <div class="card-header">Test Results</div>
+                <div class="card-body">
+                    <ul class="list-group" id="testList"></ul>
+                </div>
+            </div>
+
+            <script>
+                document.getElementById('runTestsBtn').addEventListener('click', function() {
+                    const results = document.getElementById('testList');
+                    const resultsCard = document.getElementById('testResults');
+                    results.innerHTML = '';
+                    resultsCard.style.display = 'block';
+
+                    function assertResult(name, condition) {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        li.innerHTML = `<span>${name}</span><span class="badge ${condition ? 'bg-success' : 'bg-danger'}">${condition ? 'PASS' : 'FAIL'}</span>`;
+                        results.appendChild(li);
+                    }
+
+                    // Test 1: Modal exists in DOM
+                    assertResult('Modal element exists in DOM', !!document.getElementById('testableModal'));
+
+                    // Test 2: Modal has correct ARIA
+                    const modal = document.getElementById('testableModal');
+                    assertResult('Modal has aria-labelledby', modal.hasAttribute('aria-labelledby'));
+
+                    // Test 3: Modal has tabindex=-1
+                    assertResult('Modal has tabindex="-1"', modal.getAttribute('tabindex') === '-1');
+
+                    // Test 4: Close button has aria-label
+                    const closeBtn = modal.querySelector('.btn-close');
+                    assertResult('Close button has aria-label', closeBtn.hasAttribute('aria-label'));
+
+                    // Test 5: data-testid attributes present
+                    assertResult('Modal has data-testid', modal.hasAttribute('data-testid'));
+                    assertResult('Title has data-testid', !!document.querySelector('[data-testid="modal-title"]'));
+                    assertResult('Body has data-testid', !!document.querySelector('[data-testid="modal-body"]'));
+                    assertResult('Footer has data-testid', !!document.querySelector('[data-testid="modal-footer"]'));
+
+                    // Test 6: Form has required fields
+                    assertResult('Email input exists', !!document.getElementById('testEmail'));
+                    assertResult('Message input exists', !!document.getElementById('testMessage'));
+
+                    // Test 7: Buttons exist
+                    assertResult('Cancel button exists', !!document.querySelector('[data-testid="cancel-btn"]'));
+                    assertResult('Submit button exists', !!document.querySelector('[data-testid="submit-btn"]'));
+
+                    // Test 8: Bootstrap JS API available
+                    assertResult('bootstrap.Modal is available', typeof bootstrap !== 'undefined' && typeof bootstrap.Modal !== 'undefined');
+                });
+            </script>
+        </section>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

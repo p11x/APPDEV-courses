@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     05_02_04_Hot_Reload.html
+     Topic: Hot Module Replacement, CSS Injection, Component
+            Hot Reload
+     ============================================================
+     HMR updates modules in the browser without a full page
+     reload, preserving application state. This is critical
+     for efficient Bootstrap development with interactive
+     components and complex layouts.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hot Reload - Bootstrap Development Workflow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .config-block {
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.82rem;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.5;
+        }
+        .hmr-flow {
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.05), rgba(25, 135, 84, 0.05));
+            border: 1px solid var(--bs-border-color);
+        }
+        .step-badge {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Hot Reload</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="#concepts">Concepts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#css-injection">CSS Injection</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#js-hmr">JS HMR</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#bootstrap">Bootstrap HMR</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Hot Module Replacement</h1>
+            <p class="lead">CSS injection, component-level hot reload, and state-preserving updates for Bootstrap development.</p>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#" class="text-white-50">Workflow</a></li>
+                    <li class="breadcrumb-item active text-white">Hot Reload</li>
+                </ol>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- ============================================================
+             SECTION 1: HMR CONCEPTS
+             ============================================================
+             HMR replaces modules in-place without reloading the page.
+             Different file types have different HMR strategies.
+             ============================================================ -->
+        <section id="concepts" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">1. HMR Concepts</h2>
+            
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- HMR flow diagram -->
+                    <div class="hmr-flow rounded p-4 mb-4">
+                        <h5 class="mb-3">HMR Flow</h5>
+                        <div class="row g-3 text-center">
+                            <div class="col">
+                                <div class="step-badge bg-primary text-white mx-auto mb-2">1</div>
+                                <small><strong>File Change</strong><br>Developer saves file</small>
+                            </div>
+                            <div class="col-auto d-flex align-items-center"><span class="fs-4">&rarr;</span></div>
+                            <div class="col">
+                                <div class="step-badge bg-info text-white mx-auto mb-2">2</div>
+                                <small><strong>Watcher</strong><br>Dev server detects change</small>
+                            </div>
+                            <div class="col-auto d-flex align-items-center"><span class="fs-4">&rarr;</span></div>
+                            <div class="col">
+                                <div class="step-badge bg-warning text-dark mx-auto mb-2">3</div>
+                                <small><strong>Recompile</strong><br>Only changed module</small>
+                            </div>
+                            <div class="col-auto d-flex align-items-center"><span class="fs-4">&rarr;</span></div>
+                            <div class="col">
+                                <div class="step-badge bg-success text-white mx-auto mb-2">4</div>
+                                <small><strong>Hot Update</strong><br>WebSocket push to browser</small>
+                            </div>
+                            <div class="col-auto d-flex align-items-center"><span class="fs-4">&rarr;</span></div>
+                            <div class="col">
+                                <div class="step-badge bg-danger text-white mx-auto mb-2">5</div>
+                                <small><strong>Replace</strong><br>Module swapped in-place</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- HMR vs Live Reload comparison -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">Hot Module Replacement</div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>Replaces only changed modules</li>
+                                        <li>Preserves application state</li>
+                                        <li>CSS changes: instant, no reload</li>
+                                        <li>JS changes: module-level swap</li>
+                                        <li>No loss of form input, scroll position</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">Live Reload</div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>Full page refresh on any change</li>
+                                        <li>All state is lost</li>
+                                        <li>Simple but disruptive</li>
+                                        <li>Works with any file type</li>
+                                        <li>Scroll position reset</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- What HMR can update -->
+                    <div class="card">
+                        <div class="card-header bg-dark text-white">HMR Update Types</div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>CSS/SCSS</span>
+                                <span class="badge bg-success">Instant</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>HTML Templates</span>
+                                <span class="badge bg-success">Instant</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>JS Modules</span>
+                                <span class="badge bg-info">With HMR API</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Images/Assets</span>
+                                <span class="badge bg-success">Instant</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Global JS</span>
+                                <span class="badge bg-warning text-dark">Full Reload</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Config Changes</span>
+                                <span class="badge bg-danger">Restart</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 2: CSS INJECTION
+             ============================================================
+             CSS injection updates styles without page reload.
+             This is the most impactful HMR feature for Bootstrap
+             development as it provides instant visual feedback.
+             ============================================================ -->
+        <section id="css-injection" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">2. CSS Injection</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">How CSS Injection Works</h5>
+                    <p class="text-muted">
+                        When a CSS/SCSS file changes, the dev server sends the new CSS
+                        to the browser via WebSocket. The browser replaces the existing
+                        <code>&lt;style&gt;</code> tag content without reloading the page,
+                        preserving all interactive state.
+                    </p>
+                    
+                    <!-- Vite CSS config -->
+                    <h5 class="mb-3">Vite CSS Configuration</h5>
+                    <div class="config-block">
+<span class="comment">// vite.config.js</span>
+<span class="function">export default</span> {
+  css: {
+    <span class="comment">// Inject CSS as &lt;style&gt; tags (dev)</span>
+    <span class="comment">// Extract to files (prod) - automatic</span>
+    devSourcemap: <span class="keyword">true</span>,
+    
+    <span class="comment">// SCSS global variables</span>
+    preprocessorOptions: {
+      scss: {
+        additionalData: <span class="string">`
+          $enable-gradients: true;
+          $theme-colors: (
+            "custom": #6f42c1
+          );
+        `</span>,
+      },
+    },
+    
+    <span class="comment">// CSS Modules config</span>
+    modules: {
+      localsConvention: <span class="string">'camelCase'</span>,
+    },
+  },
+};</div>
+                    
+                    <!-- Webpack CSS HMR -->
+                    <h5 class="mt-4 mb-3">Webpack CSS HMR</h5>
+                    <div class="config-block">
+<span class="comment">// webpack.config.js</span>
+module: {
+  rules: [
+    {
+      test: /\.scss$/,
+      use: [
+        <span class="comment">// style-loader enables CSS HMR</span>
+        <span class="comment">// In dev mode - injects &lt;style&gt; tags</span>
+        <span class="string">'style-loader'</span>,
+        <span class="string">'css-loader'</span>,
+        <span class="string">'sass-loader'</span>,
+      ],
+    },
+    {
+      test: /\.css$/,
+      use: [
+        {
+          loader: <span class="string">'style-loader'</span>,
+          options: {
+            <span class="comment">// Enable HMR for CSS</span>
+            injectType: <span class="string">'singletonStyleTag'</span>,
+          },
+        },
+        <span class="string">'css-loader'</span>,
+      ],
+    },
+  ],
+}</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <!-- Live demo section -->
+                    <h5 class="mb-3">Live CSS Demo</h5>
+                    <div class="card mb-3" id="css-demo-card">
+                        <div class="card-body">
+                            <h6 class="card-title">Interactive CSS Demo</h6>
+                            <p class="card-text">
+                                In a real dev environment, editing the SCSS for this card
+                                would update instantly without page reload. Try changing
+                                variables, colors, and spacing - state is preserved.
+                            </p>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="demoSwitch" checked>
+                                <label class="form-check-label" for="demoSwitch">Toggle state preserved during HMR</label>
+                            </div>
+                            <input type="text" class="form-control mb-2" placeholder="Type here - state preserved during CSS HMR">
+                            <div class="progress mb-2">
+                                <div class="progress-bar" role="progressbar" style="width: 65%">65%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- CSS Modules with Bootstrap -->
+                    <h5 class="mb-3">CSS Modules + Bootstrap</h5>
+                    <div class="config-block">
+<span class="comment">// Using CSS Modules alongside Bootstrap</span>
+<span class="keyword">import</span> styles <span class="keyword">from</span> <span class="string">'./Component.module.scss'</span>;
+<span class="keyword">import</span> <span class="string">'bootstrap/dist/css/bootstrap.min.css'</span>;
+
+<span class="comment">// Apply Bootstrap utility + custom module class</span>
+element.className = <span class="string">`d-flex </span><span class="variable">${styles.customCard}</span><span class="string">`</span>;
+
+<span class="comment">// Component.module.scss</span>
+<span class="selector">.customCard</span> {
+  <span class="comment">// Scoped to this component only</span>
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}</div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <strong>Tip:</strong> For Bootstrap SCSS projects, CSS injection
+                        works automatically since Sass files are processed through
+                        the CSS pipeline. Variable changes trigger instant updates.
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 3: JS HMR
+             ============================================================
+             JavaScript HMR requires the module to accept its own
+             updates using the HMR API. Frameworks like React and
+             Vue automate this with react-refresh and vue-loader.
+             ============================================================ -->
+        <section id="js-hmr" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">3. JavaScript HMR</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Manual HMR API</h5>
+                    <div class="config-block">
+<span class="comment">// Using the HMR API directly</span>
+<span class="comment">// Works with Vite (import.meta.hot) and Webpack (module.hot)</span>
+
+<span class="comment">// Vite HMR API</span>
+<span class="keyword">if</span> (import.meta.hot) {
+  <span class="comment">// Accept updates to this module</span>
+  import.meta.hot.<span class="function">accept</span>((mod) => {
+    <span class="comment">// Module has been updated</span>
+    console.<span class="function">log</span>(<span class="string">'Module updated:'</span>, mod);
+  });
+  
+  <span class="comment">// Accept updates to specific dependency</span>
+  import.meta.hot.<span class="function">accept</span>(<span class="string">'./utils.js'</span>, (newUtils) => {
+    <span class="comment">// Re-run logic with new utils</span>
+    newUtils.<span class="function">initUI</span>();
+  });
+  
+  <span class="comment">// Handle disposal (cleanup before swap)</span>
+  import.meta.hot.<span class="function">dispose</span>((data) => {
+    <span class="comment">// Cleanup: remove event listeners, intervals</span>
+    clearInterval(data.timer);
+  });
+}
+
+<span class="comment">// Webpack HMR API</span>
+<span class="keyword">if</span> (module.hot) {
+  module.hot.<span class="function">accept</span>();
+}</div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <h5 class="mb-3">Bootstrap Component HMR</h5>
+                    <div class="config-block">
+<span class="comment">// HMR with Bootstrap JS components</span>
+<span class="keyword">import</span> { Modal, Tooltip } <span class="keyword">from</span> <span class="string">'bootstrap'</span>;
+
+<span class="keyword">let</span> activeModals = [];
+<span class="keyword">let</span> activeTooltips = [];
+
+<span class="keyword">function</span> <span class="function">initComponents</span>() {
+  <span class="comment">// Initialize all tooltips</span>
+  document.<span class="function">querySelectorAll</span>(<span class="string">'[data-bs-toggle="tooltip"]'</span>)
+    .<span class="function">forEach</span>(el => {
+      activeTooltips.<span class="function">push</span>(<span class="keyword">new</span> <span class="function">Tooltip</span>(el));
+    });
+}
+
+<span class="comment">// HMR: cleanup and reinitialize on update</span>
+<span class="keyword">if</span> (import.meta.hot) {
+  import.meta.hot.<span class="function">dispose</span>(() => {
+    <span class="comment">// Dispose Bootstrap instances before swap</span>
+    activeTooltips.<span class="function">forEach</span>(t => t.<span class="function">dispose</span>());
+    activeModals.<span class="function">forEach</span>(m => m.<span class="function">dispose</span>());
+    activeTooltips = [];
+    activeModals = [];
+  });
+  
+  import.meta.hot.<span class="function">accept</span>(() => {
+    <span class="comment">// Reinitialize after module swap</span>
+    <span class="function">initComponents</span>();
+  });
+}
+
+<span class="function">initComponents</span>();</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ============================================================
+             SECTION 4: BOOTSTRAP-SPECIFIC HMR
+             ============================================================
+             Bootstrap development benefits greatly from HMR:
+             SCSS variable changes, component modifications,
+             and layout adjustments all update instantly.
+             ============================================================ -->
+        <section id="bootstrap" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">4. Bootstrap HMR Setup</h2>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="mb-3">SCSS Variables HMR</h5>
+                    <div class="config-block">
+<span class="comment">// _variables.scss - Change these and see instant updates</span>
+
+<span class="comment">// Theme colors - change any and HMR reflects instantly</span>
+<span class="variable">$primary</span>:       <span class="string">#0d6efd</span>;
+<span class="variable">$secondary</span>:     <span class="string">#6c757d</span>;
+<span class="variable">$success</span>:       <span class="string">#198754</span>;
+
+<span class="comment">// Spacing scale</span>
+<span class="variable">$spacer</span>: <span class="string">1rem</span>;
+
+<span class="comment">// Border radius</span>
+<span class="variable">$border-radius</span>: <span class="string">0.375rem</span>;
+
+<span class="comment">// main.scss</span>
+<span class="keyword">@import</span> <span class="string">'variables'</span>;
+<span class="keyword">@import</span> <span class="string">'../node_modules/bootstrap/scss/bootstrap'</span>;
+
+<span class="comment">// With Vite/Webpack + sass-loader,</span>
+<span class="comment">// changing any variable above triggers</span>
+<span class="comment">// instant CSS injection - no reload needed!</span></div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <!-- HMR demo with Bootstrap components -->
+                    <h5 class="mb-3">Component HMR Demo</h5>
+                    <p class="text-muted">
+                        The components below demonstrate how HMR preserves
+                        state. Toggle switches, fill inputs, scroll position
+                        - all preserved during CSS updates.
+                    </p>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>HMR State Preservation Demo</strong>
+                        </div>
+                        <div class="card-body">
+                            <!-- Form with state -->
+                            <div class="mb-3">
+                                <label class="form-label">Form input preserved:</label>
+                                <input type="text" class="form-control" value="This state survives HMR">
+                            </div>
+                            <!-- Toggle preserved -->
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="hmrSwitch">
+                                <label class="form-check-label" for="hmrSwitch">Switch state preserved</label>
+                            </div>
+                            <!-- Accordion preserved -->
+                            <div class="accordion" id="hmrAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" 
+                                                data-bs-toggle="collapse" data-bs-target="#hmrCollapse">
+                                            Accordion open state preserved during HMR
+                                        </button>
+                                    </h2>
+                                    <div id="hmrCollapse" class="accordion-collapse collapse"
+                                         data-bs-parent="#hmrAccordion">
+                                        <div class="accordion-body">
+                                            Open this accordion, then edit SCSS. The accordion
+                                            stays open - HMR preserves state.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance tip -->
+                    <div class="alert alert-success">
+                        <h6 class="alert-heading">HMR Performance Tips</h6>
+                        <ul class="mb-0 small">
+                            <li>CSS changes: ~10-50ms update time</li>
+                            <li>Keep SCSS partials small for faster recompilation</li>
+                            <li>Use <code>@use</code> instead of <code>@import</code> (faster)</li>
+                            <li>Avoid deep nesting (&gt;4 levels) in SCSS</li>
+                            <li>Split large SCSS files into focused partials</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="text-muted mb-0">Bootstrap 5.3.3 Development Workflow - Module 05_02_04</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

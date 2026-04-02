@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_04_12: Django Bootstrap Integration                        -->
+<!-- Demonstrates Django templates with Bootstrap 5, template      -->
+<!-- inheritance, form rendering, widget_tweaks, crispy forms      -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Django Bootstrap Integration</title>
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- ============================================================= -->
+    <!-- Django Bootstrap Integration Reference                        -->
+    <!-- Django's template system works seamlessly with Bootstrap.     -->
+    <!-- Template inheritance enables reusable layouts.                -->
+    <!-- ============================================================= -->
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold" style="color: #092e20;">Django + Bootstrap 5</h1>
+            <p class="lead text-muted">Template Inheritance, Forms, Crispy Forms, Widget Tweaks</p>
+        </div>
+
+        <div class="alert" style="background: #092e20; color: white;" role="alert">
+            <strong>Django Pattern:</strong> Template inheritance ({% extends %}, {% block %}) creates reusable layouts. Forms render as Bootstrap markup via widget_tweaks or crispy-forms.
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Django Template Inheritance                                  -->
+        <!-- base.html provides the Bootstrap layout, child templates     -->
+        <!-- override blocks for page-specific content                    -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-white" style="background: #092e20;">
+                <h5 class="mb-0">Django Template Inheritance (base.html)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- templates/base.html - Base layout template --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;!-- Bootstrap 5 CSS via CDN --&gt;
+    &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"&gt;
+    &lt;title&gt;{% block title %}Django App{% endblock %}&lt;/title&gt;
+    {% block extra_css %}{% endblock %}
+&lt;/head&gt;
+&lt;body class="bg-light"&gt;
+    &lt;!-- Bootstrap Navbar --&gt;
+    &lt;nav class="navbar navbar-expand-lg navbar-dark" style="background: #092e20;"&gt;
+        &lt;div class="container"&gt;
+            &lt;a class="navbar-brand" href="{% url 'home' %}"&gt;Django App&lt;/a&gt;
+            &lt;button class="navbar-toggler" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarNav"&gt;
+                &lt;span class="navbar-toggler-icon"&gt;&lt;/span&gt;
+            &lt;/button&gt;
+            &lt;div class="collapse navbar-collapse" id="navbarNav"&gt;
+                &lt;ul class="navbar-nav ms-auto"&gt;
+                    &lt;li class="nav-item"&gt;
+                        &lt;a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+                           href="{% url 'home' %}"&gt;Home&lt;/a&gt;
+                    &lt;/li&gt;
+                    &lt;li class="nav-item"&gt;
+                        &lt;a class="nav-link" href="{% url 'about' %}"&gt;About&lt;/a&gt;
+                    &lt;/li&gt;
+                    {% if user.is_authenticated %}
+                    &lt;li class="nav-item"&gt;
+                        &lt;a class="nav-link" href="{% url 'dashboard' %}"&gt;Dashboard&lt;/a&gt;
+                    &lt;/li&gt;
+                    &lt;li class="nav-item"&gt;
+                        &lt;a class="nav-link" href="{% url 'logout' %}"&gt;Logout&lt;/a&gt;
+                    &lt;/li&gt;
+                    {% else %}
+                    &lt;li class="nav-item"&gt;
+                        &lt;a class="nav-link" href="{% url 'login' %}"&gt;Login&lt;/a&gt;
+                    &lt;/li&gt;
+                    {% endif %}
+                &lt;/ul&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/nav&gt;
+
+    &lt;!-- Messages framework with Bootstrap alerts --&gt;
+    &lt;div class="container mt-3"&gt;
+        {% for message in messages %}
+        &lt;div class="alert alert-{{ message.tags }} alert-dismissible fade show"&gt;
+            {{ message }}
+            &lt;button type="button" class="btn-close" data-bs-dismiss="alert"&gt;&lt;/button&gt;
+        &lt;/div&gt;
+        {% endfor %}
+    &lt;/div&gt;
+
+    &lt;!-- Page content block --&gt;
+    &lt;main class="container py-4"&gt;
+        {% block content %}{% endblock %}
+    &lt;/main&gt;
+
+    &lt;!-- Bootstrap Footer --&gt;
+    &lt;footer class="bg-dark text-white text-center py-3 mt-5"&gt;
+        &lt;p class="mb-0"&gt;&amp;copy; {% now "Y" %} Django Bootstrap App&lt;/p&gt;
+    &lt;/footer&gt;
+
+    &lt;script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"&gt;&lt;/script&gt;
+    {% block extra_js %}{% endblock %}
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Django Child Templates                                       -->
+        <!-- {% extends %} inherits from base, {% block %} fills content  -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Child Templates ({% extends %}, {% block %})</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- templates/home.html - Child template --&gt;
+{% extends 'base.html' %}
+
+{% block title %}Home - My Django App{% endblock %}
+
+{% block content %}
+&lt;div class="text-center mb-5"&gt;
+    &lt;h1 class="display-4"&gt;Welcome to Django + Bootstrap&lt;/h1&gt;
+    &lt;p class="lead text-muted"&gt;Server-rendered HTML with Bootstrap 5&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- Django loop with Bootstrap grid --&gt;
+&lt;div class="row"&gt;
+    {% for item in items %}
+    &lt;div class="col-md-6 col-lg-4 mb-4"&gt;
+        &lt;div class="card h-100 shadow-sm"&gt;
+            &lt;div class="card-body"&gt;
+                &lt;h5 class="card-title"&gt;{{ item.title }}&lt;/h5&gt;
+                &lt;p class="card-text"&gt;{{ item.description|truncatewords:30 }}&lt;/p&gt;
+                &lt;a href="{% url 'item_detail' item.pk %}" class="btn btn-primary btn-sm"&gt;
+                    View Details
+                &lt;/a&gt;
+            &lt;/div&gt;
+            &lt;div class="card-footer text-muted small"&gt;
+                {{ item.created_at|date:"M d, Y" }}
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    {% empty %}
+    &lt;div class="col-12"&gt;
+        &lt;div class="alert alert-info"&gt;No items found.&lt;/div&gt;
+    &lt;/div&gt;
+    {% endfor %}
+&lt;/div&gt;
+
+&lt;!-- Pagination with Bootstrap --&gt;
+{% if is_paginated %}
+&lt;nav&gt;
+    &lt;ul class="pagination justify-content-center"&gt;
+        {% if page_obj.has_previous %}
+        &lt;li class="page-item"&gt;
+            &lt;a class="page-link" href="?page={{ page_obj.previous_page_number }}"&gt;Previous&lt;/a&gt;
+        &lt;/li&gt;
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        &lt;li class="page-item {% if page_obj.number == num %}active{% endif %}"&gt;
+            &lt;a class="page-link" href="?page={{ num }}"&gt;{{ num }}&lt;/a&gt;
+        &lt;/li&gt;
+        {% endfor %}
+        {% if page_obj.has_next %}
+        &lt;li class="page-item"&gt;
+            &lt;a class="page-link" href="?page={{ page_obj.next_page_number }}"&gt;Next&lt;/a&gt;
+        &lt;/li&gt;
+        {% endif %}
+    &lt;/ul&gt;
+&lt;/nav&gt;
+{% endif %}
+{% endblock %}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Django Forms with Bootstrap                                  -->
+        <!-- widget_tweaks and crispy-forms render Django forms as Bootstrap -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Django Forms + Bootstrap (widget_tweaks)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- Method 1: widget_tweaks - Manual field styling --&gt;
+{% load widget_tweaks %}
+
+&lt;form method="post"&gt;
+    {% csrf_token %}
+
+    {% for field in form %}
+    &lt;div class="mb-3"&gt;
+        &lt;label class="form-label"&gt;{{ field.label }}&lt;/label&gt;
+        {% if field.errors %}
+            {% render_field field class="form-control is-invalid" %}
+            {% for error in field.errors %}
+            &lt;div class="invalid-feedback"&gt;{{ error }}&lt;/div&gt;
+            {% endfor %}
+        {% else %}
+            {% render_field field class="form-control" %}
+        {% endif %}
+        {% if field.help_text %}
+        &lt;div class="form-text"&gt;{{ field.help_text }}&lt;/div&gt;
+        {% endif %}
+    &lt;/div&gt;
+    {% endfor %}
+
+    &lt;button type="submit" class="btn btn-primary"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;!-- Method 2: django-crispy-forms - Automatic Bootstrap rendering --&gt;
+{# Install: pip install django-crispy-forms crispy-bootstrap5 #}
+{# settings.py: CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5" #}
+{#              CRISPY_TEMPLATE_PACK = "bootstrap5" #}
+
+{% load crispy_forms_tags %}
+
+&lt;form method="post"&gt;
+    {% csrf_token %}
+    {{ form|crispy }}
+    &lt;button type="submit" class="btn btn-primary"&gt;Submit&lt;/button&gt;
+&lt;/form&gt;
+
+&lt;!-- Crispy forms also supports layout helpers --&gt;
+{# In forms.py: #}
+{# from crispy_forms.helper import FormHelper #}
+{# from crispy_forms.layout import Layout, Row, Column, Submit #}
+{#
+class ContactForm(forms.Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+    email = forms.EmailField()
+    message = forms.CharField(widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Row(
+                Column('first_name', css_class='col-md-6'),
+                Column('last_name', css_class='col-md-6'),
+            ),
+            'email',
+            'message',
+            Submit('submit', 'Send Message', css_class='btn-primary'),
+        )
+#}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Django ModelForms with Bootstrap                             -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Django ModelForms + Bootstrap</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code># models.py - Django model
+from django.db import models
+
+class Article(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    category = models.ForeignKey('Category', on_delete=models.CASCADE)
+    published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+# forms.py - ModelForm with Bootstrap widget customization
+from django import forms
+from .models import Article
+
+class ArticleForm(forms.ModelForm):
+    class Meta:
+        model = Article
+        fields = ['title', 'content', 'category', 'published']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter article title',
+            }),
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 6,
+                'placeholder': 'Write your article...',
+            }),
+            'category': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'published': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+        }
+
+# views.py - Class-based view
+from django.views.generic import CreateView, UpdateView
+from django.urls import reverse_lazy
+
+class ArticleCreateView(CreateView):
+    model = Article
+    form_class = ArticleForm
+    template_name = 'articles/article_form.html'
+    success_url = reverse_lazy('article_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Article created successfully!')
+        return super().form_valid(form)
+
+&lt;!-- templates/articles/article_form.html --&gt;
+{% extends 'base.html' %}
+{% block content %}
+&lt;div class="row justify-content-center"&gt;
+    &lt;div class="col-md-8"&gt;
+        &lt;div class="card shadow-sm"&gt;
+            &lt;div class="card-header bg-primary text-white"&gt;
+                &lt;h5 class="mb-0"&gt;{% if form.instance.pk %}Edit{% else %}Create{% endif %} Article&lt;/h5&gt;
+            &lt;/div&gt;
+            &lt;div class="card-body"&gt;
+                {% load crispy_forms_tags %}
+                &lt;form method="post"&gt;
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    &lt;button type="submit" class="btn btn-primary"&gt;Save&lt;/button&gt;
+                    &lt;a href="{% url 'article_list' %}" class="btn btn-secondary"&gt;Cancel&lt;/a&gt;
+                &lt;/form&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+{% endblock %}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Django Template Tags with Bootstrap                          -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Django Template Tags + Bootstrap</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>&lt;!-- Conditional classes with Django template logic --&gt;
+&lt;div class="alert {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}alert-success
+                  {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}alert-danger
+                  {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}alert-warning
+                  {% else %}alert-info{% endif %}"&gt;
+    {{ message }}
+&lt;/div&gt;
+
+&lt;!-- Loop with Bootstrap table --&gt;
+&lt;table class="table table-striped table-hover"&gt;
+    &lt;thead class="table-dark"&gt;
+        &lt;tr&gt;
+            &lt;th&gt;#&lt;/th&gt;
+            &lt;th&gt;Title&lt;/th&gt;
+            &lt;th&gt;Status&lt;/th&gt;
+            &lt;th&gt;Actions&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+        {% for article in articles %}
+        &lt;tr&gt;
+            &lt;td&gt;{{ forloop.counter }}&lt;/td&gt;
+            &lt;td&gt;{{ article.title }}&lt;/td&gt;
+            &lt;td&gt;
+                &lt;span class="badge {% if article.published %}bg-success{% else %}bg-warning{% endif %}"&gt;
+                    {% if article.published %}Published{% else %}Draft{% endif %}
+                &lt;/span&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+                &lt;a href="{% url 'article_edit' article.pk %}" class="btn btn-sm btn-outline-primary"&gt;Edit&lt;/a&gt;
+                &lt;button class="btn btn-sm btn-outline-danger"
+                        data-bs-toggle="modal" data-bs-target="#deleteModal{{ article.pk }}"&gt;
+                    Delete
+                &lt;/button&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+        {% endfor %}
+    &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;!-- URL tag with Bootstrap navigation --&gt;
+&lt;nav aria-label="breadcrumb"&gt;
+    &lt;ol class="breadcrumb"&gt;
+        &lt;li class="breadcrumb-item"&gt;&lt;a href="{% url 'home' %}"&gt;Home&lt;/a&gt;&lt;/li&gt;
+        &lt;li class="breadcrumb-item"&gt;&lt;a href="{% url 'blog' %}"&gt;Blog&lt;/a&gt;&lt;/li&gt;
+        &lt;li class="breadcrumb-item active"&gt;{{ article.title }}&lt;/li&gt;
+    &lt;/ol&gt;
+&lt;/nav&gt;
+
+&lt;!-- Static files with Bootstrap --&gt;
+{% load static %}
+&lt;link rel="stylesheet" href="{% static 'css/custom.css' %}"&gt;
+&lt;img src="{% static 'images/logo.png' %}" class="img-fluid rounded" alt="Logo"&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- Django + Bootstrap Reference                                 -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Django + Bootstrap Best Practices</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr><th>Feature</th><th>Django Approach</th><th>Bootstrap Integration</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Layout</td><td>Template inheritance</td><td>base.html with navbar/footer</td></tr>
+                        <tr><td>Forms</td><td>ModelForm + crispy-forms</td><td>Auto Bootstrap 5 rendering</td></tr>
+                        <tr><td>Messages</td><td>messages framework</td><td>Bootstrap alert dismissible</td></tr>
+                        <tr><td>Pagination</td><td>Paginator class</td><td>Bootstrap pagination component</td></tr>
+                        <tr><td>Static files</td><td>STATICFILES_DIRS</td><td>Local Bootstrap or CDN</td></tr>
+                        <tr><td>Auth</td><td>django.contrib.auth</td><td>Bootstrap login/register forms</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

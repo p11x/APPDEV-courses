@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 05_06_09_Performance_Tips.html                                -->
+<!-- Quick Performance Wins, Critical CSS, Lazy Loading            -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Tips - Critical CSS, Lazy Loading, Quick Wins</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* ============================================================ */
+        /* CRITICAL CSS: Inline above-the-fold styles                   */
+        /* This ensures the hero section renders without waiting        */
+        /* for the full stylesheet to download.                         */
+        /* ============================================================ */
+        .pf-hero {
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            padding: 4rem 0;
+            color: white;
+            text-align: center;
+        }
+
+        /* Performance: use will-change for animated elements */
+        .pf-animated-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .pf-animated-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+
+        /* Content-visibility: auto - skips rendering off-screen content */
+        .pf-lazy-section {
+            content-visibility: auto;
+            contain-intrinsic-size: 0 500px;
+        }
+
+        .pf-metric {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .pf-metric-label {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Skeleton loading animation */
+        .pf-skeleton {
+            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 0.375rem;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Performance Tips</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#pfNav" aria-controls="pfNav"
+                    aria-expanded="false" aria-label="Toggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="pfNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#core-vitals">Core Vitals</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#critical-css">Critical CSS</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#lazy">Lazy Loading</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#optimization">Optimization</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero - uses inlined critical CSS for instant render -->
+    <section class="pf-hero">
+        <div class="container">
+            <h1 class="display-4 fw-bold">&#9889; Performance Tips</h1>
+            <p class="lead">Quick wins for faster Bootstrap pages: critical CSS, lazy loading, and optimization strategies.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CORE WEB VITALS OVERVIEW                                     -->
+    <!-- ============================================================ -->
+    <section id="core-vitals" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">1. Core Web Vitals</h2>
+            <div class="row g-4 text-center">
+                <div class="col-md-4">
+                    <div class="card border-success h-100">
+                        <div class="card-body">
+                            <div class="pf-metric text-success">2.5s</div>
+                            <div class="pf-metric-label text-success mb-2">LCP Target</div>
+                            <h5>Largest Contentful Paint</h5>
+                            <p class="text-muted">Time until the largest content element is visible. Optimize images, use CDN, reduce server response time.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-warning h-100">
+                        <div class="card-body">
+                            <div class="pf-metric text-warning">100ms</div>
+                            <div class="pf-metric-label text-warning mb-2">FID Target</div>
+                            <h5>First Input Delay</h5>
+                            <p class="text-muted">Time from first interaction to browser response. Minimize JS execution, defer non-critical scripts.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-info h-100">
+                        <div class="card-body">
+                            <div class="pf-metric text-info">0.1</div>
+                            <div class="pf-metric-label text-info mb-2">CLS Target</div>
+                            <h5>Cumulative Layout Shift</h5>
+                            <p class="text-muted">Visual stability. Set dimensions on images/embeds, avoid injecting content above the fold.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- CRITICAL CSS                                                 -->
+    <!-- Inline above-the-fold CSS, defer the rest                    -->
+    <!-- ============================================================ -->
+    <section id="critical-css" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">2. Critical CSS Strategy</h2>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Technique: Inline + Async Load</h5></div>
+                        <div class="card-body">
+                            <p>Inline critical CSS in <code>&lt;head&gt;</code>, load full stylesheet asynchronously:</p>
+                            <pre class="bg-dark text-success p-3 rounded"><code>&lt;!-- Critical CSS inlined in head --&gt;
+&lt;style&gt;
+  /* Only above-the-fold styles */
+  .hero { padding: 4rem 0; }
+  .navbar { position: sticky; }
+&lt;/style&gt;
+
+&lt;!-- Full CSS loaded async --&gt;
+&lt;link rel="preload"
+      href="bootstrap.min.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"&gt;
+
+&lt;!-- Fallback for no-JS --&gt;
+&lt;noscript&gt;
+  &lt;link rel="stylesheet"
+        href="bootstrap.min.css"&gt;
+&lt;/noscript&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Tools for Extracting Critical CSS</h5></div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <strong>critical</strong> (npm)
+                                    <br><small class="text-muted">Automatically extracts above-the-fold CSS</small>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>criticalCSS</strong>
+                                    <br><small class="text-muted">CLI tool for critical CSS extraction</small>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>PurgeCSS</strong>
+                                    <br><small class="text-muted">Removes unused CSS from Bootstrap</small>
+                                    <pre class="bg-dark text-success p-2 rounded mt-2 mb-0"><code>npx purgecss --css bootstrap.min.css \
+  --content *.html \
+  --output dist/css/</code></pre>
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Chrome DevTools</strong>
+                                    <br><small class="text-muted">Coverage tab shows used vs unused CSS bytes</small>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- LAZY LOADING                                                 -->
+    <!-- ============================================================ -->
+    <section id="lazy" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">3. Lazy Loading</h2>
+            <div class="row g-4">
+                <!-- Native lazy loading -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Native Lazy Loading</h5></div>
+                        <div class="card-body">
+                            <p>Add <code>loading="lazy"</code> to images/iframes below the fold:</p>
+                            <pre class="bg-dark text-success p-2 rounded"><code>&lt;img src="photo.jpg"
+     class="img-fluid"
+     loading="lazy"
+     alt="Lazy loaded image"
+     width="800"
+     height="600"&gt;
+
+&lt;!-- Always set width/height to
+     prevent CLS --&gt;</code></pre>
+                            <div class="mt-3">
+                                <!-- Demo lazy loaded images -->
+                                <img src="https://placehold.co/400x200/0d6efd/white?text=Lazy+1"
+                                     class="img-fluid rounded mb-2" loading="lazy"
+                                     alt="Lazy loaded placeholder 1">
+                                <img src="https://placehold.co/400x200/198754/white?text=Lazy+2"
+                                     class="img-fluid rounded" loading="lazy"
+                                     alt="Lazy loaded placeholder 2">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content visibility -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">content-visibility: auto</h5></div>
+                        <div class="card-body">
+                            <p>CSS-only lazy rendering. Browser skips off-screen content:</p>
+                            <pre class="bg-dark text-success p-2 rounded"><code>.below-fold-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
+  /* Tells browser the approximate
+     height for scrollbar calculation */
+}</code></pre>
+                            <div class="alert alert-info mt-3">
+                                <strong>Browser Support:</strong> Chrome 85+, Edge 85+, Opera 71+. Graceful degradation in others.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skeleton screens -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Skeleton Loading Screens</h5></div>
+                        <div class="card-body">
+                            <p>Show placeholder UI while content loads:</p>
+                            <div class="card">
+                                <div class="pf-skeleton" style="height:150px"></div>
+                                <div class="card-body">
+                                    <div class="pf-skeleton mb-2" style="height:20px;width:70%"></div>
+                                    <div class="pf-skeleton mb-2" style="height:14px;width:100%"></div>
+                                    <div class="pf-skeleton" style="height:14px;width:80%"></div>
+                                </div>
+                            </div>
+                            <pre class="bg-dark text-success p-2 rounded mt-3"><code>&lt;!-- Replace with real content
+     when loaded --&gt;
+&lt;div class="skeleton"&gt;&lt;/div&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deferred JS loading -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Script Loading Strategies</h5></div>
+                        <div class="card-body">
+                            <pre class="bg-dark text-success p-2 rounded"><code>&lt;!-- 1. Defer: Downloads parallel,
+     executes after HTML parsed --&gt;
+&lt;script src="app.js" defer&gt;&lt;/script&gt;
+
+&lt;!-- 2. Async: Downloads parallel,
+     executes when ready --&gt;
+&lt;script src="analytics.js"
+        async&gt;&lt;/script&gt;
+
+&lt;!-- 3. Module: Deferred by default,
+     respects import order --&gt;
+&lt;script type="module"
+        src="app.mjs"&gt;&lt;/script&gt;
+
+&lt;!-- 4. Dynamic import: Load on
+     demand --&gt;
+&lt;script&gt;
+  btn.addEventListener('click',
+    async () =&gt; {
+      const module = await import(
+        './heavy-feature.js'
+      );
+      module.init();
+    }
+  );
+&lt;/script&gt;</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- OPTIMIZATION QUICK WINS                                      -->
+    <!-- ============================================================ -->
+    <section id="optimization" class="py-5 bg-light pf-lazy-section">
+        <div class="container">
+            <h2 class="mb-4">4. Quick Performance Wins</h2>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card text-center pf-animated-card h-100">
+                        <div class="card-body">
+                            <h1>&#128190;</h1>
+                            <h5>Use CDN</h5>
+                            <p class="small text-muted">Bootstrap CDN is globally cached. One user's visit caches it for all sites using the same CDN URL.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card text-center pf-animated-card h-100">
+                        <div class="card-body">
+                            <h1>&#128065;</h1>
+                            <h5>Preload Key Resources</h5>
+                            <p class="small text-muted"><code>&lt;link rel="preload"&gt;</code> for fonts and critical CSS tells the browser to fetch them early.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card text-center pf-animated-card h-100">
+                        <div class="card-body">
+                            <h1>&#127912;</h1>
+                            <h5>Purge Unused CSS</h5>
+                            <p class="small text-muted">Bootstrap CSS is ~200KB. PurgeCSS can reduce it to ~10KB by removing unused component styles.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card text-center pf-animated-card h-100">
+                        <div class="card-body">
+                            <h1>&#128247;</h1>
+                            <h5>Optimize Images</h5>
+                            <p class="small text-muted">Use WebP/AVIF formats, srcset for responsive sizes, and always set width/height to prevent CLS.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance budget -->
+            <div class="mt-5 p-4 border rounded bg-white">
+                <h5>Performance Budget</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead class="table-dark">
+                            <tr><th>Resource</th><th>Budget</th><th>Bootstrap Default</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Total CSS</td><td>&lt; 100KB</td><td>~200KB (purge to ~10KB)</td></tr>
+                            <tr><td>Total JS</td><td>&lt; 150KB</td><td>~60KB (bundle.min.js)</td></tr>
+                            <tr><td>Images (per page)</td><td>&lt; 500KB</td><td>Depends on content</td></tr>
+                            <tr><td>Fonts</td><td>&lt; 100KB</td><td>Subset if using custom fonts</td></tr>
+                            <tr><td>Total Page Weight</td><td>&lt; 1MB</td><td>Aim for under 500KB</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Performance Tips. Professional Practice Series.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

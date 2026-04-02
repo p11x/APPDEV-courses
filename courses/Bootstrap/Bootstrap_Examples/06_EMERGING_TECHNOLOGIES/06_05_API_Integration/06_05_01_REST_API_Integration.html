@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================= -->
+    <!-- REST API Integration with Bootstrap 5                         -->
+    <!-- ============================================================= -->
+    <!-- This file demonstrates how to integrate REST APIs using the    -->
+    <!-- JavaScript fetch() API alongside Bootstrap 5 components for   -->
+    <!-- UI feedback (spinners, alerts, modals, cards, tables).         -->
+    <!--                                                                -->
+    <!-- We use JSONPlaceholder (https://jsonplaceholder.typicode.com)  -->
+    <!-- as a free mock REST API that simulates CRUD operations.        -->
+    <!-- ============================================================= -->
+
+    <meta charset="UTF-8">
+    <!-- meta viewport ensures proper rendering on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Integration - Bootstrap 5</title>
+
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* Custom styles for enhanced readability */
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+        }
+        .section-divider {
+            border-top: 3px solid #0d6efd;
+            margin: 2rem 0;
+        }
+        .method-badge {
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- ============================================================= -->
+    <!-- NAVBAR - Page navigation                                      -->
+    <!-- ============================================================= -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">REST API + Bootstrap 5</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Anchor links to each section of the page -->
+                    <li class="nav-item"><a class="nav-link" href="#concepts">Concepts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#get-section">GET</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#post-section">POST</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#put-section">PUT</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#delete-section">DELETE</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#crud-app">CRUD App</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================= -->
+    <!-- HERO / HEADER SECTION                                         -->
+    <!-- ============================================================= -->
+    <header class="bg-primary text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">REST API Integration</h1>
+            <p class="lead">
+                Learn how to perform CRUD operations using the JavaScript
+                <code>fetch()</code> API with Bootstrap 5 for beautiful, responsive UI.
+            </p>
+            <!-- Bootstrap badges showing the HTTP methods covered -->
+            <span class="badge bg-success method-badge me-1">GET</span>
+            <span class="badge bg-warning text-dark method-badge me-1">POST</span>
+            <span class="badge bg-info method-badge me-1">PUT</span>
+            <span class="badge bg-danger method-badge">DELETE</span>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: REST API CONCEPTS                                  -->
+        <!-- ============================================================= -->
+        <section id="concepts" class="mb-5">
+            <h2 class="border-bottom pb-2">REST API Concepts</h2>
+
+            <!--
+                REST (Representational State Transfer) is an architectural style
+                for designing networked applications. A REST API exposes resources
+                (data objects) that clients can manipulate using standard HTTP methods.
+
+                Key principles:
+                1. Statelessness  - Each request contains all information needed.
+                2. Resources      - Everything is identified by a URI (e.g., /posts/1).
+                3. HTTP Verbs     - CRUD maps to GET, POST, PUT/PATCH, DELETE.
+                4. Status Codes   - The server responds with codes like 200, 201, 404.
+                5. JSON Payloads  - Data is typically exchanged as JSON.
+            -->
+
+            <div class="row g-4">
+                <!-- Card explaining GET -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-success">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">
+                                <span class="badge bg-success">GET</span> Read
+                            </h5>
+                            <p class="card-text">
+                                Retrieves resource(s) from the server. Should be
+                                <strong>safe</strong> and <strong>idempotent</strong>
+                                (no side effects; same result every time).
+                            </p>
+                            <code>GET /posts</code><br>
+                            <code>GET /posts/1</code>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card explaining POST -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-warning">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">
+                                <span class="badge bg-warning text-dark">POST</span> Create
+                            </h5>
+                            <p class="card-text">
+                                Sends data to the server to create a new resource.
+                                The server typically responds with <strong>201 Created</strong>
+                                and the new resource.
+                            </p>
+                            <code>POST /posts</code><br>
+                            Body: <code>{ title, body }</code>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card explaining PUT -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-info">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">
+                                <span class="badge bg-info">PUT</span> Update
+                            </h5>
+                            <p class="card-text">
+                                Replaces an entire resource with the provided data.
+                                <strong>PUT</strong> is idempotent; sending the same
+                                request twice produces the same result.
+                            </p>
+                            <code>PUT /posts/1</code><br>
+                            Body: <code>{ id, title, body }</code>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card explaining DELETE -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 border-danger">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">
+                                <span class="badge bg-danger">DELETE</span> Delete
+                            </h5>
+                            <p class="card-text">
+                                Removes the specified resource from the server.
+                                Typically returns <strong>200 OK</strong> or
+                                <strong>204 No Content</strong> on success.
+                            </p>
+                            <code>DELETE /posts/1</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HTTP Status Codes reference table -->
+            <div class="mt-4">
+                <h4>Common HTTP Status Codes</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Code</th>
+                                <th>Meaning</th>
+                                <th>When Used</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>200</td><td>OK</td><td>Successful GET, PUT, DELETE</td></tr>
+                            <tr><td>201</td><td>Created</td><td>Successful POST (resource created)</td></tr>
+                            <tr><td>204</td><td>No Content</td><td>Successful DELETE (nothing to return)</td></tr>
+                            <tr><td>400</td><td>Bad Request</td><td>Client sent invalid data</td></tr>
+                            <tr><td>401</td><td>Unauthorized</td><td>Authentication required</td></tr>
+                            <tr><td>403</td><td>Forbidden</td><td>Client lacks permission</td></tr>
+                            <tr><td>404</td><td>Not Found</td><td>Resource does not exist</td></tr>
+                            <tr><td>500</td><td>Internal Server Error</td><td>Server-side failure</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: GET REQUEST - Fetch and display posts              -->
+        <!-- ============================================================= -->
+        <section id="get-section" class="mb-5">
+            <h2 class="border-bottom pb-2">
+                <span class="badge bg-success">GET</span> Fetching Data
+            </h2>
+
+            <!--
+                The fetch() function initiates a network request and returns a
+                Promise that resolves to a Response object. We call .json() on
+                the Response to parse the JSON body.
+
+                Syntax:
+                    fetch(url, options)
+                        .then(response => response.json())
+                        .then(data => { ... })
+                        .catch(error => { ... });
+
+                Or with async/await:
+                    const response = await fetch(url);
+                    const data = await response.json();
+            -->
+
+            <p>Click the button below to fetch the first 6 posts from JSONPlaceholder and display them as Bootstrap cards.</p>
+
+            <!-- Fetch button triggers the GET request -->
+            <button id="btn-fetch-posts" class="btn btn-success mb-3" onclick="fetchPosts()">
+                <span id="fetch-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                Fetch Posts (GET)
+            </button>
+
+            <!--
+                Bootstrap alert placeholder for error messages.
+                Hidden by default (d-none); shown only when an error occurs.
+            -->
+            <div id="get-error-alert" class="alert alert-danger d-none" role="alert"></div>
+
+            <!--
+                The fetched posts will be rendered as Bootstrap cards inside
+                this row. Each card displays the post title and body.
+            -->
+            <div id="posts-container" class="row g-3">
+                <!-- Cards injected dynamically by JavaScript -->
+            </div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: POST REQUEST - Create a new post                   -->
+        <!-- ============================================================= -->
+        <section id="post-section" class="mb-5">
+            <h2 class="border-bottom pb-2">
+                <span class="badge bg-warning text-dark">POST</span> Creating Data
+            </h2>
+
+            <!--
+                POST requests send data in the request body. We must set the
+                Content-Type header to 'application/json' and stringify the
+                payload using JSON.stringify().
+
+                The fetch options object looks like:
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: '...', body: '...', userId: 1 })
+                    }
+
+                JSONPlaceholder fakes a successful creation and returns the
+                new object with an id of 101 (the next available id).
+            -->
+
+            <p>Fill out the form below to simulate creating a new post via POST request.</p>
+
+            <!-- Bootstrap form for creating a new post -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form id="create-post-form" onsubmit="createPost(event)">
+                        <!-- Title input -->
+                        <div class="mb-3">
+                            <label for="post-title" class="form-label">Post Title</label>
+                            <input type="text" class="form-control" id="post-title"
+                                   placeholder="Enter post title" required>
+                        </div>
+                        <!-- Body textarea -->
+                        <div class="mb-3">
+                            <label for="post-body" class="form-label">Post Body</label>
+                            <textarea class="form-control" id="post-body" rows="3"
+                                      placeholder="Enter post content" required></textarea>
+                        </div>
+                        <!-- Submit button with loading spinner -->
+                        <button type="submit" class="btn btn-warning" id="btn-create-post">
+                            <span id="create-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                            Create Post (POST)
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alert for POST success or error -->
+            <div id="post-alert" class="d-none" role="alert"></div>
+
+            <!-- Display the created post response -->
+            <div id="created-post-container"></div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: PUT REQUEST - Update an existing post              -->
+        <!-- ============================================================= -->
+        <section id="put-section" class="mb-5">
+            <h2 class="border-bottom pb-2">
+                <span class="badge bg-info">PUT</span> Updating Data
+            </h2>
+
+            <!--
+                PUT replaces the entire resource with the new data provided.
+                Unlike PATCH (which does a partial update), PUT requires the
+                complete representation of the resource.
+
+                The request includes:
+                    method: 'PUT'
+                    headers: { 'Content-Type': 'application/json' }
+                    body: JSON.stringify({ id: 1, title: 'New Title', body: '...', userId: 1 })
+            -->
+
+            <p>Select a post to update, modify the fields, and submit the PUT request.</p>
+
+            <!-- Step 1: Select a post to edit -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label for="put-post-id" class="form-label">Post ID to Update</label>
+                            <input type="number" class="form-control" id="put-post-id"
+                                   min="1" max="100" value="1">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-info" onclick="loadPostForEdit()">
+                                <span id="load-edit-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                Load Post
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert for PUT section -->
+            <div id="put-alert" class="d-none" role="alert"></div>
+
+            <!-- Step 2: Edit form (shown after loading a post) -->
+            <div id="edit-form-container" class="d-none">
+                <div class="card border-info mb-3">
+                    <div class="card-header bg-info text-white">Edit Post</div>
+                    <div class="card-body">
+                        <form id="edit-post-form" onsubmit="updatePost(event)">
+                            <input type="hidden" id="edit-post-id-hidden">
+                            <div class="mb-3">
+                                <label for="edit-title" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="edit-title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="edit-body" class="form-label">Body</label>
+                                <textarea class="form-control" id="edit-body" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-info text-white" id="btn-update-post">
+                                <span id="update-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                Update Post (PUT)
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display the updated post response -->
+            <div id="updated-post-container"></div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: DELETE REQUEST - Remove a post                     -->
+        <!-- ============================================================= -->
+        <section id="delete-section" class="mb-5">
+            <h2 class="border-bottom pb-2">
+                <span class="badge bg-danger">DELETE</span> Deleting Data
+            </h2>
+
+            <!--
+                DELETE requests remove a resource. The fetch call simply sets
+                method: 'DELETE'. JSONPlaceholder returns an empty object {}
+                to simulate success.
+
+                Best practice: Always confirm with the user before deleting.
+                We use a Bootstrap modal as a confirmation dialog.
+            -->
+
+            <p>Enter a Post ID and click delete. A confirmation modal will appear before the request is sent.</p>
+
+            <div class="row g-2 align-items-end mb-3">
+                <div class="col-auto">
+                    <label for="delete-post-id" class="form-label">Post ID</label>
+                    <input type="number" class="form-control" id="delete-post-id"
+                           min="1" max="100" value="1">
+                </div>
+                <div class="col-auto">
+                    <!-- Button triggers the confirmation modal -->
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                        Delete Post
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alert for DELETE section -->
+            <div id="delete-alert" class="d-none" role="alert"></div>
+
+            <!--
+                Bootstrap Modal for delete confirmation.
+                Modals are dialogs that appear on top of the page content.
+                data-bs-toggle="modal" and data-bs-target="#id" trigger it.
+            -->
+            <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete post
+                            <strong id="modal-delete-id-display"></strong>?
+                            This action cannot be undone.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="btn-confirm-delete" onclick="deletePost()">
+                                <span id="delete-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: FULL CRUD APPLICATION                              -->
+        <!-- ============================================================= -->
+        <section id="crud-app" class="mb-5">
+            <h2 class="border-bottom pb-2">Full CRUD Application</h2>
+
+            <!--
+                This section combines all CRUD operations into a single,
+                cohesive application. Users can:
+                  - View all posts in a table (READ)
+                  - Add a new post via an inline form (CREATE)
+                  - Edit any post using a modal (UPDATE)
+                  - Delete any post with a confirmation modal (DELETE)
+
+                The table demonstrates Bootstrap's responsive table component
+                along with contextual button colors for actions.
+            -->
+
+            <p>
+                A fully functional CRUD app that loads posts into a table.
+                Use the action buttons to edit or delete individual rows.
+            </p>
+
+            <!-- Load all posts into the table -->
+            <button class="btn btn-primary mb-3" onclick="loadCrudTable()">
+                <span id="crud-load-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                Load All Posts
+            </button>
+
+            <!-- Alert for the CRUD app section -->
+            <div id="crud-alert" class="d-none" role="alert"></div>
+
+            <!--
+                Bootstrap responsive table: wraps the table in
+                .table-responsive so it scrolls horizontally on small screens.
+            -->
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle" id="crud-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Body (preview)</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="crud-table-body">
+                        <!-- Rows injected dynamically by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================= -->
+    <!-- EDIT MODAL for CRUD table                                      -->
+    <!-- ============================================================= -->
+    <!--
+        This modal is used by the full CRUD application to edit a post.
+        It is populated dynamically when the user clicks "Edit" on a row.
+    -->
+    <div class="modal fade" id="crudEditModal" tabindex="-1" aria-labelledby="crudEditModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="crudEditModalLabel">Edit Post</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="crud-edit-form">
+                        <input type="hidden" id="crud-edit-id">
+                        <div class="mb-3">
+                            <label for="crud-edit-title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="crud-edit-title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="crud-edit-body" class="form-label">Body</label>
+                            <textarea class="form-control" id="crud-edit-body" rows="3" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-info text-white" id="btn-crud-save" onclick="crudSaveEdit()">
+                        <span id="crud-save-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- DELETE CONFIRMATION MODAL for CRUD table                       -->
+    <!-- ============================================================= -->
+    <div class="modal fade" id="crudDeleteModal" tabindex="-1" aria-labelledby="crudDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="crudDeleteModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Delete post <strong id="crud-delete-id-display"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="btn-crud-confirm-delete" onclick="crudConfirmDelete()">
+                        <span id="crud-delete-spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- FOOTER                                                        -->
+    <!-- ============================================================= -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                REST API Integration Demo &mdash; Bootstrap 5.3.3 &amp;
+                <a href="https://jsonplaceholder.typicode.com" class="text-info" target="_blank">JSONPlaceholder</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle CDN (includes Popper.js for tooltips/dropdowns/modals) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================= -->
+    <!-- JAVASCRIPT: All API interaction logic                          -->
+    <!-- ============================================================= -->
+    <script>
+        /*
+         * ================================================================
+         * BASE CONFIGURATION
+         * ================================================================
+         * JSONPlaceholder provides a fake REST API at the base URL below.
+         * Resources include: /posts, /comments, /albums, /photos, /todos, /users
+         *
+         * Each resource supports full CRUD operations:
+         *   GET    /posts      -> list all posts
+         *   GET    /posts/1    -> get post with id 1
+         *   POST   /posts      -> create a new post
+         *   PUT    /posts/1    -> update post with id 1
+         *   DELETE /posts/1    -> delete post with id 1
+         * ================================================================
+         */
+        const API_BASE = 'https://jsonplaceholder.typicode.com';
+
+        /*
+         * ================================================================
+         * UTILITY FUNCTIONS
+         * ================================================================
+         */
+
+        /**
+         * Shows a Bootstrap spinner inside a button and disables it.
+         * Spinners indicate that a network request is in progress,
+         * improving UX by providing visual feedback.
+         *
+         * @param {string} spinnerId - The ID of the spinner element
+         * @param {string} buttonId  - The ID of the button to disable
+         */
+        function showSpinner(spinnerId, buttonId) {
+            document.getElementById(spinnerId).classList.remove('d-none');
+            document.getElementById(buttonId).disabled = true;
+        }
+
+        /**
+         * Hides a Bootstrap spinner and re-enables the button.
+         *
+         * @param {string} spinnerId - The ID of the spinner element
+         * @param {string} buttonId  - The ID of the button to enable
+         */
+        function hideSpinner(spinnerId, buttonId) {
+            document.getElementById(spinnerId).classList.add('d-none');
+            document.getElementById(buttonId).disabled = false;
+        }
+
+        /**
+         * Displays a Bootstrap alert (success, danger, info, etc.).
+         *
+         * Bootstrap alerts provide contextual feedback messages for
+         * typical user actions. We use them here to show success or
+         * error messages after API calls.
+         *
+         * @param {string} containerId - The ID of the alert div
+         * @param {string} type        - Bootstrap alert type (success, danger, warning, info)
+         * @param {string} message     - The message to display
+         */
+        function showAlert(containerId, type, message) {
+            const alertEl = document.getElementById(containerId);
+            alertEl.className = `alert alert-${type}`;
+            alertEl.role = 'alert';
+            alertEl.innerHTML = message;
+            // Auto-hide after 5 seconds for non-error alerts
+            if (type !== 'danger') {
+                setTimeout(() => alertEl.classList.add('d-none'), 5000);
+            }
+        }
+
+        /**
+         * Hides an alert element.
+         * @param {string} containerId - The ID of the alert div
+         */
+        function hideAlert(containerId) {
+            document.getElementById(containerId).classList.add('d-none');
+        }
+
+        /*
+         * ================================================================
+         * SECTION 1: GET REQUESTS
+         * ================================================================
+         *
+         * GET is the most common HTTP method. It retrieves data without
+         * modifying anything on the server.
+         *
+         * The fetch() function:
+         *   - Takes a URL and optional config object
+         *   - Returns a Promise that resolves to a Response object
+         *   - The Response object has methods like .json(), .text(), .blob()
+         *
+         * Error handling note: fetch() only rejects on network failures.
+         * HTTP errors (404, 500, etc.) do NOT throw — you must check
+         * response.ok (true for status 200-299) manually.
+         * ================================================================
+         */
+
+        /**
+         * Fetches the first 6 posts from JSONPlaceholder and renders
+         * them as Bootstrap cards.
+         *
+         * Demonstrates:
+         *   - GET request with fetch()
+         *   - Loading state with spinner
+         *   - Error handling with try/catch
+         *   - Dynamic Bootstrap card rendering
+         */
+        async function fetchPosts() {
+            const postsContainer = document.getElementById('posts-container');
+
+            // Show loading spinner and clear previous results
+            showSpinner('fetch-spinner', 'btn-fetch-posts');
+            postsContainer.innerHTML = '';
+            hideAlert('get-error-alert');
+
+            try {
+                /*
+                 * fetch() performs a GET request by default.
+                 * We append ?_limit=6 to limit results to 6 posts.
+                 *
+                 * The URL: https://jsonplaceholder.typicode.com/posts?_limit=6
+                 */
+                const response = await fetch(`${API_BASE}/posts?_limit=6`);
+
+                /*
+                 * CRITICAL: Check response.ok to detect HTTP errors.
+                 * fetch() does not throw for 4xx/5xx status codes.
+                 * response.ok is true only for status 200-299.
+                 */
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status} ${response.statusText}`);
+                }
+
+                /*
+                 * Parse the JSON body. response.json() returns a Promise
+                 * that resolves to the parsed JavaScript object.
+                 */
+                const posts = await response.json();
+
+                /*
+                 * Build Bootstrap cards for each post.
+                 * We use template literals (backticks) for HTML strings
+                 * and insert them with innerHTML.
+                 */
+                posts.forEach(post => {
+                    const cardHTML = `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-header bg-success text-white">
+                                    <small>Post #${post.id} &mdash; User ${post.userId}</small>
+                                </div>
+                                <div class="card-body">
+                                    <!--
+                                        text-capitalize: Capitalizes the first letter
+                                        text-truncate: Adds ellipsis for overflow text
+                                    -->
+                                    <h5 class="card-title text-capitalize">${post.title}</h5>
+                                    <p class="card-text text-muted">${post.body}</p>
+                                </div>
+                                <div class="card-footer text-muted">
+                                    <small>From JSONPlaceholder API</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    postsContainer.innerHTML += cardHTML;
+                });
+
+                showAlert('get-error-alert', 'success',
+                    `<strong>Success!</strong> Fetched ${posts.length} posts via GET request.`);
+
+            } catch (error) {
+                /*
+                 * Error handling covers:
+                 *   - Network failures (no internet, DNS issues)
+                 *   - HTTP errors we detected via response.ok
+                 *   - JSON parsing errors
+                 *
+                 * We display a Bootstrap alert-danger to inform the user.
+                 */
+                console.error('GET Error:', error);
+                showAlert('get-error-alert', 'danger',
+                    `<strong>Error!</strong> Failed to fetch posts: ${error.message}`);
+            } finally {
+                /*
+                 * The finally block always runs, whether the request
+                 * succeeded or failed. We hide the spinner here to
+                 * ensure the UI returns to its normal state.
+                 */
+                hideSpinner('fetch-spinner', 'btn-fetch-posts');
+            }
+        }
+
+        /*
+         * ================================================================
+         * SECTION 2: POST REQUESTS
+         * ================================================================
+         *
+         * POST creates a new resource on the server. The request must include:
+         *   1. method: 'POST'
+         *   2. headers: { 'Content-Type': 'application/json' }
+         *      (tells the server we're sending JSON)
+         *   3. body: JSON.stringify(data)
+         *      (converts a JS object to a JSON string)
+         *
+         * JSONPlaceholder always returns { id: 101 } for new posts,
+         * since it doesn't actually persist data.
+         * ================================================================
+         */
+
+        /**
+         * Handles the "Create Post" form submission.
+         * Sends a POST request with the form data.
+         *
+         * @param {Event} event - The form submit event
+         */
+        async function createPost(event) {
+            /*
+             * preventDefault() stops the form from reloading the page.
+             * This is essential for SPA-style interactions.
+             */
+            event.preventDefault();
+
+            const title = document.getElementById('post-title').value.trim();
+            const body = document.getElementById('post-body').value.trim();
+
+            showSpinner('create-spinner', 'btn-create-post');
+            hideAlert('post-alert');
+            document.getElementById('created-post-container').innerHTML = '';
+
+            try {
+                /*
+                 * POST request configuration:
+                 *   - method: 'POST' specifies the HTTP verb
+                 *   - headers: Declares we're sending JSON
+                 *   - body: The JSON payload (title, body, userId)
+                 *
+                 * JSON.stringify() converts the JS object to a JSON string.
+                 * Without this, fetch would send [object Object].
+                 */
+                const response = await fetch(`${API_BASE}/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Additional common headers:
+                        // 'Authorization': 'Bearer <token>',
+                        // 'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        body: body,
+                        userId: 1  // Hardcoded user ID for demo
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                /*
+                 * The response body contains the newly created resource.
+                 * JSONPlaceholder returns: { id: 101, title: '...', body: '...', userId: 1 }
+                 */
+                const newPost = await response.json();
+
+                // Show success alert
+                showAlert('post-alert', 'success',
+                    `<strong>Created!</strong> Post with ID ${newPost.id} was created successfully.`);
+
+                // Display the created post as a Bootstrap card
+                const container = document.getElementById('created-post-container');
+                container.innerHTML = `
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <strong>Server Response (Created Post)</strong>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">${newPost.title}</h5>
+                            <p class="card-text">${newPost.body}</p>
+                            <p class="text-muted mb-0">Post ID: ${newPost.id} | User ID: ${newPost.userId}</p>
+                        </div>
+                    </div>
+                `;
+
+                // Clear the form fields after successful creation
+                document.getElementById('create-post-form').reset();
+
+            } catch (error) {
+                console.error('POST Error:', error);
+                showAlert('post-alert', 'danger',
+                    `<strong>Error!</strong> Failed to create post: ${error.message}`);
+            } finally {
+                hideSpinner('create-spinner', 'btn-create-post');
+            }
+        }
+
+        /*
+         * ================================================================
+         * SECTION 3: PUT REQUESTS
+         * ================================================================
+         *
+         * PUT replaces an entire resource. You send the complete object,
+         * not just the changed fields. For partial updates, use PATCH.
+         *
+         * The request structure is similar to POST:
+         *   method: 'PUT'
+         *   headers: { 'Content-Type': 'application/json' }
+         *   body: JSON.stringify(updatedResource)
+         *
+         * The URL includes the resource ID: /posts/1
+         * ================================================================
+         */
+
+        /**
+         * Loads a post by ID into the edit form.
+         * This is a GET request that fetches the existing data first.
+         */
+        async function loadPostForEdit() {
+            const postId = document.getElementById('put-post-id').value;
+
+            showSpinner('load-edit-spinner', null);
+            hideAlert('put-alert');
+            document.getElementById('updated-post-container').innerHTML = '';
+
+            try {
+                // First, GET the existing post data
+                const response = await fetch(`${API_BASE}/posts/${postId}`);
+
+                if (!response.ok) {
+                    throw new Error(`Post with ID ${postId} not found (Status: ${response.status})`);
+                }
+
+                const post = await response.json();
+
+                // Populate the edit form with existing data
+                document.getElementById('edit-post-id-hidden').value = post.id;
+                document.getElementById('edit-title').value = post.title;
+                document.getElementById('edit-body').value = post.body;
+
+                // Show the edit form
+                document.getElementById('edit-form-container').classList.remove('d-none');
+
+                showAlert('put-alert', 'info',
+                    `Loaded post #${post.id}. Modify the fields and click Update.`);
+
+            } catch (error) {
+                console.error('Load Error:', error);
+                showAlert('put-alert', 'danger',
+                    `<strong>Error!</strong> ${error.message}`);
+            } finally {
+                hideSpinner('load-edit-spinner', null);
+            }
+        }
+
+        /**
+         * Sends a PUT request to update the post.
+         *
+         * @param {Event} event - The form submit event
+         */
+        async function updatePost(event) {
+            event.preventDefault();
+
+            const postId = document.getElementById('edit-post-id-hidden').value;
+            const title = document.getElementById('edit-title').value.trim();
+            const body = document.getElementById('edit-body').value.trim();
+
+            showSpinner('update-spinner', 'btn-update-post');
+            hideAlert('put-alert');
+
+            try {
+                /*
+                 * PUT request to update post #postId.
+                 *
+                 * We include the full resource representation:
+                 *   - id: The post ID (required for PUT)
+                 *   - title: Updated title
+                 *   - body: Updated body
+                 *   - userId: Original user ID (must be included)
+                 *
+                 * JSONPlaceholder returns the updated object.
+                 */
+                const response = await fetch(`${API_BASE}/posts/${postId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: parseInt(postId),
+                        title: title,
+                        body: body,
+                        userId: 1
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const updatedPost = await response.json();
+
+                showAlert('put-alert', 'success',
+                    `<strong>Updated!</strong> Post #${updatedPost.id} was updated successfully.`);
+
+                // Display the updated post
+                const container = document.getElementById('updated-post-container');
+                container.innerHTML = `
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <strong>Server Response (Updated Post)</strong>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">${updatedPost.title}</h5>
+                            <p class="card-text">${updatedPost.body}</p>
+                            <p class="text-muted mb-0">Post ID: ${updatedPost.id}</p>
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('PUT Error:', error);
+                showAlert('put-alert', 'danger',
+                    `<strong>Error!</strong> Failed to update: ${error.message}`);
+            } finally {
+                hideSpinner('update-spinner', 'btn-update-post');
+            }
+        }
+
+        /*
+         * ================================================================
+         * SECTION 4: DELETE REQUESTS
+         * ================================================================
+         *
+         * DELETE removes a resource. The URL specifies which resource
+         * to delete: DELETE /posts/1
+         *
+         * No body is needed. The server typically returns:
+         *   - 200 OK with an empty object {}
+         *   - 204 No Content (empty response body)
+         *
+         * IMPORTANT: Always confirm before deleting. We use a Bootstrap
+         * modal as a confirmation dialog.
+         * ================================================================
+         */
+
+        /**
+         * When the delete confirmation modal opens, update the displayed
+         * post ID so the user knows exactly what they're deleting.
+         *
+         * Bootstrap fires 'show.bs.modal' when the modal is about to show.
+         * We can listen for this event to update modal content dynamically.
+         */
+        document.getElementById('deleteConfirmModal').addEventListener('show.bs.modal', function () {
+            const postId = document.getElementById('delete-post-id').value;
+            document.getElementById('modal-delete-id-display').textContent = `#${postId}`;
+        });
+
+        /**
+         * Sends a DELETE request after the user confirms.
+         * Called when the user clicks "Yes, Delete" in the modal.
+         */
+        async function deletePost() {
+            const postId = document.getElementById('delete-post-id').value;
+
+            showSpinner('delete-spinner', 'btn-confirm-delete');
+            hideAlert('delete-alert');
+
+            try {
+                /*
+                 * DELETE request - note there is no body.
+                 * The resource to delete is identified by the URL path.
+                 *
+                 * fetch defaults to method: 'GET', so we must explicitly
+                 * set method: 'DELETE'.
+                 */
+                const response = await fetch(`${API_BASE}/posts/${postId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                /*
+                 * JSONPlaceholder returns {} (empty object) for DELETE.
+                 * Some APIs return 204 No Content with no body at all.
+                 */
+                const result = await response.json();
+
+                // Close the modal programmatically
+                const modalEl = document.getElementById('deleteConfirmModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+
+                showAlert('delete-alert', 'success',
+                    `<strong>Deleted!</strong> Post #${postId} was removed successfully.`);
+
+            } catch (error) {
+                console.error('DELETE Error:', error);
+                showAlert('delete-alert', 'danger',
+                    `<strong>Error!</strong> Failed to delete: ${error.message}`);
+            } finally {
+                hideSpinner('delete-spinner', 'btn-confirm-delete');
+            }
+        }
+
+        /*
+         * ================================================================
+         * SECTION 5: FULL CRUD TABLE APPLICATION
+         * ================================================================
+         *
+         * This combines all four operations into a single table view.
+         *   - READ: Fetch all posts, render in a <table>
+         *   - CREATE: Add a row via POST, prepend to table
+         *   - UPDATE: Edit a row via PUT, update the table row
+         *   - DELETE: Remove a row via DELETE, remove from table
+         *
+         * We store the posts in an array (crudPosts) to enable
+         * re-rendering after updates without re-fetching.
+         * ================================================================
+         */
+        let crudPosts = [];  // In-memory cache of loaded posts
+
+        /**
+         * Loads all posts into the CRUD table.
+         * Uses GET to fetch up to 20 posts.
+         */
+        async function loadCrudTable() {
+            showSpinner('crud-load-spinner', null);
+            hideAlert('crud-alert');
+
+            try {
+                const response = await fetch(`${API_BASE}/posts?_limit=20`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                crudPosts = await response.json();
+                renderCrudTable();
+
+                showAlert('crud-alert', 'success',
+                    `Loaded ${crudPosts.length} posts into the table.`);
+
+            } catch (error) {
+                console.error('CRUD Load Error:', error);
+                showAlert('crud-alert', 'danger',
+                    `<strong>Error!</strong> ${error.message}`);
+            } finally {
+                hideSpinner('crud-load-spinner', null);
+            }
+        }
+
+        /**
+         * Renders the posts array as table rows.
+         * Each row has Edit and Delete action buttons.
+         */
+        function renderCrudTable() {
+            const tbody = document.getElementById('crud-table-body');
+            tbody.innerHTML = '';
+
+            crudPosts.forEach(post => {
+                /*
+                 * Truncate the body text for the table preview.
+                 * substring(0, 60) takes the first 60 characters.
+                 */
+                const bodyPreview = post.body.length > 60
+                    ? post.body.substring(0, 60) + '...'
+                    : post.body;
+
+                const row = `
+                    <tr>
+                        <td><strong>${post.id}</strong></td>
+                        <td>${post.title}</td>
+                        <td class="text-muted">${bodyPreview}</td>
+                        <td class="text-center">
+                            <!--
+                                Edit button: Opens the edit modal with post data.
+                                data-bs-toggle and data-bs-target trigger the modal.
+                            -->
+                            <button class="btn btn-sm btn-outline-info me-1"
+                                    onclick="openCrudEdit(${post.id})">
+                                Edit
+                            </button>
+                            <!--
+                                Delete button: Opens the delete confirmation modal.
+                            -->
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="openCrudDelete(${post.id})">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        /**
+         * Opens the edit modal and populates it with the post data.
+         *
+         * @param {number} id - The post ID to edit
+         */
+        function openCrudEdit(id) {
+            const post = crudPosts.find(p => p.id === id);
+            if (!post) return;
+
+            document.getElementById('crud-edit-id').value = post.id;
+            document.getElementById('crud-edit-title').value = post.title;
+            document.getElementById('crud-edit-body').value = post.body;
+
+            // Show the modal using Bootstrap's JS API
+            const modal = new bootstrap.Modal(document.getElementById('crudEditModal'));
+            modal.show();
+        }
+
+        /**
+         * Saves the edited post via PUT and updates the table.
+         */
+        async function crudSaveEdit() {
+            const id = parseInt(document.getElementById('crud-edit-id').value);
+            const title = document.getElementById('crud-edit-title').value.trim();
+            const body = document.getElementById('crud-edit-body').value.trim();
+
+            showSpinner('crud-save-spinner', 'btn-crud-save');
+
+            try {
+                // PUT request to update the post on the server
+                const response = await fetch(`${API_BASE}/posts/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, title, body, userId: 1 })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const updatedPost = await response.json();
+
+                // Update the local cache
+                const index = crudPosts.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    crudPosts[index] = updatedPost;
+                }
+
+                // Re-render the table with updated data
+                renderCrudTable();
+
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('crudEditModal'));
+                modal.hide();
+
+                showAlert('crud-alert', 'success',
+                    `<strong>Updated!</strong> Post #${id} was updated.`);
+
+            } catch (error) {
+                console.error('CRUD Update Error:', error);
+                showAlert('crud-alert', 'danger',
+                    `<strong>Error!</strong> ${error.message}`);
+            } finally {
+                hideSpinner('crud-save-spinner', 'btn-crud-save');
+            }
+        }
+
+        /**
+         * Opens the delete confirmation modal for a specific post.
+         *
+         * @param {number} id - The post ID to delete
+         */
+        function openCrudDelete(id) {
+            document.getElementById('crud-delete-id-display').textContent = `#${id}`;
+            // Store the ID in a data attribute for retrieval during confirmation
+            document.getElementById('btn-crud-confirm-delete').setAttribute('data-delete-id', id);
+
+            const modal = new bootstrap.Modal(document.getElementById('crudDeleteModal'));
+            modal.show();
+        }
+
+        /**
+         * Confirms and executes the delete operation.
+         * Sends a DELETE request and removes the row from the table.
+         */
+        async function crudConfirmDelete() {
+            const id = parseInt(
+                document.getElementById('btn-crud-confirm-delete').getAttribute('data-delete-id')
+            );
+
+            showSpinner('crud-delete-spinner', 'btn-crud-confirm-delete');
+
+            try {
+                const response = await fetch(`${API_BASE}/posts/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // Remove from local cache
+                crudPosts = crudPosts.filter(p => p.id !== id);
+
+                // Re-render the table without the deleted row
+                renderCrudTable();
+
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('crudDeleteModal'));
+                modal.hide();
+
+                showAlert('crud-alert', 'success',
+                    `<strong>Deleted!</strong> Post #${id} was removed.`);
+
+            } catch (error) {
+                console.error('CRUD Delete Error:', error);
+                showAlert('crud-alert', 'danger',
+                    `<strong>Error!</strong> ${error.message}`);
+            } finally {
+                hideSpinner('crud-delete-spinner', 'btn-crud-confirm-delete');
+            }
+        }
+
+        /*
+         * ================================================================
+         * ADDITIONAL CONCEPTS & BEST PRACTICES
+         * ================================================================
+         *
+         * 1. ASYNC/AWAIT vs .then()
+         *    Both are valid. async/await is generally more readable for
+         *    sequential operations. Use .then() for fire-and-forget or
+         *    when chaining multiple independent calls with Promise.all().
+         *
+         * 2. ABORT CONTROLLER
+         *    To cancel a fetch request, use AbortController:
+         *      const controller = new AbortController();
+         *      fetch(url, { signal: controller.signal });
+         *      controller.abort(); // Cancels the request
+         *
+         * 3. CORS (Cross-Origin Resource Sharing)
+         *    Browsers block requests to different domains unless the
+         *    server sends appropriate CORS headers. JSONPlaceholder
+         *    allows all origins (Access-Control-Allow-Origin: *).
+         *
+         * 4. AUTHENTICATION
+         *    Real APIs often require tokens. Add them to headers:
+         *      headers: { 'Authorization': 'Bearer <token>' }
+         *
+         * 5. RATE LIMITING
+         *    Production APIs limit request frequency. Respect
+         *    X-RateLimit-* headers and implement exponential backoff
+         *    for retries.
+         *
+         * 6. ERROR HANDLING PATTERNS
+         *    - Network errors: catch block (TypeError)
+         *    - HTTP errors: check response.ok / response.status
+         *    - Business errors: check response body for error fields
+         *
+         * 7. BOOTSTRAP COMPONENTS USED IN THIS DEMO
+         *    - Cards: Display fetched data visually
+         *    - Tables: Structured data display with .table-responsive
+         *    - Alerts: Success/error feedback messages
+         *    - Spinners: Loading indicators during requests
+         *    - Modals: Confirmation dialogs for destructive actions
+         *    - Forms: Input collection for POST/PUT requests
+         *    - Badges: HTTP method labels
+         *    - Navbar: Page section navigation
+         * ================================================================
+         */
+    </script>
+</body>
+</html>

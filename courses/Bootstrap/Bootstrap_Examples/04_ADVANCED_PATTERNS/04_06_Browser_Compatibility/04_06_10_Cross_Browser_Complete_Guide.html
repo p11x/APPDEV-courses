@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_06_10_Cross_Browser_Complete_Guide.html                    -->
+<!-- Complete Cross-Browser Compatibility Reference                -->
+<!-- Comprehensive guide combining all browser compatibility      -->
+<!-- topics: testing, polyfills, feature detection, prefixes,     -->
+<!-- debugging, performance, a11y, and integration testing        -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>04_06_10 - Complete Browser Compatibility Guide</title>
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* ======================================================== */
+        /* COMPREHENSIVE CROSS-BROWSER CSS                         */
+        /* Combines all best practices from previous files         */
+        /* ======================================================== */
+
+        /* CSS Custom Properties with fallbacks */
+        :root {
+            --brand-primary: #0d6efd;
+            --brand-success: #198754;
+            --brand-warning: #ffc107;
+            --brand-danger: #dc3545;
+            --brand-info: #0dcaf0;
+            --brand-dark: #212529;
+            --brand-light: #f8f9fa;
+            --spacing-base: 1rem;
+        }
+
+        /* Consistent box model across browsers */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        /* Focus-visible with fallback */
+        :focus-visible {
+            outline: 3px solid var(--brand-primary, #0d6efd);
+            outline-offset: 2px;
+        }
+        @supports not selector(:focus-visible) {
+            :focus {
+                outline: 3px solid var(--brand-primary, #0d6efd);
+                outline-offset: 2px;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (forced-colors: active) {
+            .card, .btn {
+                border: 1px solid ButtonText;
+            }
+        }
+
+        /* Reference card styles */
+        .ref-card {
+            border-left: 4px solid #0d6efd;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .ref-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+        }
+
+        /* Browser support badges */
+        .support-yes { background: #198754; color: white; }
+        .support-partial { background: #ffc107; color: #333; }
+        .support-no { background: #dc3545; color: white; }
+
+        /* Quick reference table */
+        .compat-table th { white-space: nowrap; }
+
+        /* TOC sidebar */
+        .toc-link {
+            display: block;
+            padding: 0.25rem 0.5rem;
+            color: #495057;
+            text-decoration: none;
+            border-left: 2px solid transparent;
+            font-size: 0.9rem;
+        }
+        .toc-link:hover, .toc-link.active {
+            color: #0d6efd;
+            border-left-color: #0d6efd;
+            background: #f8f9fa;
+        }
+
+        /* Print optimization */
+        @media print {
+            .no-print { display: none !important; }
+            .print-break { page-break-before: always; }
+            body { font-size: 10pt; }
+            a[href]::after { content: " (" attr(href) ")"; font-size: 8pt; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- SKIP LINK                                                    -->
+    <!-- ============================================================ -->
+    <a href="#main-content" class="visually-hidden-focusable">Skip to main content</a>
+
+    <!-- ============================================================ -->
+    <!-- NAVIGATION                                                   -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top no-print">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">Complete Browser Compat Guide</a>
+            <button class="navbar-toggler" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#navContent"
+                    aria-controls="navContent" aria-expanded="false" 
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#overview">Overview</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#cssCompat">CSS</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#jsCompat">JavaScript</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#bootstrapCompat">Bootstrap</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#checklist">Checklist</a></li>
+                </ul>
+                <span class="badge bg-info" id="browserBadge">Detecting...</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HERO                                                         -->
+    <!-- ============================================================ -->
+    <header class="bg-dark text-white py-5">
+        <div class="container">
+            <h1 class="display-3 fw-bold">Complete Browser Compatibility Guide</h1>
+            <p class="lead">
+                The definitive reference for cross-browser compatibility with Bootstrap 5.
+                CSS features, JavaScript APIs, polyfills, testing strategies, and best practices.
+            </p>
+            <div class="mt-3">
+                <span class="badge bg-light text-dark me-1">Chrome 90+</span>
+                <span class="badge bg-light text-dark me-1">Firefox 90+</span>
+                <span class="badge bg-light text-dark me-1">Safari 15+</span>
+                <span class="badge bg-light text-dark me-1">Edge 90+</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- MAIN CONTENT                                                 -->
+    <!-- ============================================================ -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- ==================================================== -->
+            <!-- SIDEBAR: TABLE OF CONTENTS                           -->
+            <!-- ==================================================== -->
+            <nav class="col-md-3 col-lg-2 d-none d-md-block bg-light sidebar py-4 no-print sticky-top" 
+                 style="height:100vh;overflow-y:auto;top:56px;" aria-label="Table of contents">
+                <h6 class="px-3 text-uppercase text-muted fw-bold small">Table of Contents</h6>
+                <a class="toc-link" href="#overview">1. Overview</a>
+                <a class="toc-link" href="#cssCompat">2. CSS Compatibility</a>
+                <a class="toc-link" href="#jsCompat">3. JavaScript Compatibility</a>
+                <a class="toc-link" href="#bootstrapCompat">4. Bootstrap 5 Support</a>
+                <a class="toc-link" href="#polyfillGuide">5. Polyfill Guide</a>
+                <a class="toc-link" href="#vendorPrefix">6. Vendor Prefixes</a>
+                <a class="toc-link" href="#featureDetection">7. Feature Detection</a>
+                <a class="toc-link" href="#performanceGuide">8. Performance</a>
+                <a class="toc-link" href="#a11yGuide">9. Accessibility</a>
+                <a class="toc-link" href="#testingGuide">10. Testing Strategy</a>
+                <a class="toc-link" href="#checklist">11. Deployment Checklist</a>
+                <a class="toc-link" href="#resources">12. Resources</a>
+            </nav>
+
+            <!-- ==================================================== -->
+            <!-- MAIN CONTENT AREA                                    -->
+            <!-- ==================================================== -->
+            <main class="col-md-9 col-lg-10 px-md-4 py-4" id="main-content">
+
+                <!-- ============================================ -->
+                <!-- SECTION 1: OVERVIEW                           -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="overview">
+                    <h2 class="border-bottom pb-2 mb-4">1. Browser Compatibility Overview</h2>
+                    
+                    <!-- Bootstrap 5 browser support matrix -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover compat-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Browser</th>
+                                    <th>Minimum Version</th>
+                                    <th>CSS Support</th>
+                                    <th>JS Support</th>
+                                    <th>Market Share (2024)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Chrome</strong></td>
+                                    <td>90+</td>
+                                    <td><span class="badge support-yes">Full</span></td>
+                                    <td><span class="badge support-yes">Full</span></td>
+                                    <td>~65%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Firefox</strong></td>
+                                    <td>90+</td>
+                                    <td><span class="badge support-yes">Full</span></td>
+                                    <td><span class="badge support-yes">Full</span></td>
+                                    <td>~3%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Safari</strong></td>
+                                    <td>15+</td>
+                                    <td><span class="badge support-partial">Partial*</span></td>
+                                    <td><span class="badge support-yes">Full</span></td>
+                                    <td>~19%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Edge</strong></td>
+                                    <td>90+</td>
+                                    <td><span class="badge support-yes">Full</span></td>
+                                    <td><span class="badge support-yes">Full</span></td>
+                                    <td>~5%</td>
+                                </tr>
+                                <tr class="table-secondary">
+                                    <td><strong>IE 11</strong></td>
+                                    <td>N/A</td>
+                                    <td><span class="badge support-no">No</span></td>
+                                    <td><span class="badge support-no">No</span></td>
+                                    <td>&lt;0.1%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="small text-muted">
+                        * Safari may need <code>-webkit-backdrop-filter</code> and <code>-webkit-user-select</code> prefixes.
+                        Bootstrap 5 officially dropped IE 11 support.
+                    </p>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 2: CSS COMPATIBILITY                 -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="cssCompat">
+                    <h2 class="border-bottom pb-2 mb-4">2. CSS Feature Compatibility</h2>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm compat-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>CSS Feature</th>
+                                    <th>Chrome</th>
+                                    <th>Firefox</th>
+                                    <th>Safari</th>
+                                    <th>Edge</th>
+                                    <th>Fallback</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>display: grid</code></td>
+                                    <td><span class="badge support-yes">57+</span></td>
+                                    <td><span class="badge support-yes">52+</span></td>
+                                    <td><span class="badge support-yes">10.1+</span></td>
+                                    <td><span class="badge support-yes">16+</span></td>
+                                    <td>Flexbox</td>
+                                </tr>
+                                <tr>
+                                    <td><code>display: flex</code></td>
+                                    <td><span class="badge support-yes">29+</span></td>
+                                    <td><span class="badge support-yes">28+</span></td>
+                                    <td><span class="badge support-yes">9+</span></td>
+                                    <td><span class="badge support-yes">12+</span></td>
+                                    <td>Float/table</td>
+                                </tr>
+                                <tr>
+                                    <td><code>var(--x)</code></td>
+                                    <td><span class="badge support-yes">49+</span></td>
+                                    <td><span class="badge support-yes">31+</span></td>
+                                    <td><span class="badge support-yes">9.1+</span></td>
+                                    <td><span class="badge support-yes">15+</span></td>
+                                    <td>Static values</td>
+                                </tr>
+                                <tr>
+                                    <td><code>clamp()</code></td>
+                                    <td><span class="badge support-yes">79+</span></td>
+                                    <td><span class="badge support-yes">75+</span></td>
+                                    <td><span class="badge support-yes">13.1+</span></td>
+                                    <td><span class="badge support-yes">79+</span></td>
+                                    <td>Media queries</td>
+                                </tr>
+                                <tr>
+                                    <td><code>aspect-ratio</code></td>
+                                    <td><span class="badge support-yes">88+</span></td>
+                                    <td><span class="badge support-yes">89+</span></td>
+                                    <td><span class="badge support-yes">15+</span></td>
+                                    <td><span class="badge support-yes">88+</span></td>
+                                    <td>Padding hack</td>
+                                </tr>
+                                <tr>
+                                    <td><code>backdrop-filter</code></td>
+                                    <td><span class="badge support-yes">76+</span></td>
+                                    <td><span class="badge support-yes">103+</span></td>
+                                    <td><span class="badge support-partial">-webkit-</span></td>
+                                    <td><span class="badge support-yes">79+</span></td>
+                                    <td>Solid bg</td>
+                                </tr>
+                                <tr>
+                                    <td><code>:focus-visible</code></td>
+                                    <td><span class="badge support-yes">86+</span></td>
+                                    <td><span class="badge support-yes">85+</span></td>
+                                    <td><span class="badge support-yes">15.4+</span></td>
+                                    <td><span class="badge support-yes">86+</span></td>
+                                    <td>:focus</td>
+                                </tr>
+                                <tr>
+                                    <td><code>gap</code> (flex)</td>
+                                    <td><span class="badge support-yes">84+</span></td>
+                                    <td><span class="badge support-yes">63+</span></td>
+                                    <td><span class="badge support-yes">14.1+</span></td>
+                                    <td><span class="badge support-yes">84+</span></td>
+                                    <td>Margin</td>
+                                </tr>
+                                <tr>
+                                    <td><code>container-type</code></td>
+                                    <td><span class="badge support-yes">105+</span></td>
+                                    <td><span class="badge support-yes">110+</span></td>
+                                    <td><span class="badge support-yes">16+</span></td>
+                                    <td><span class="badge support-yes">105+</span></td>
+                                    <td>Media queries</td>
+                                </tr>
+                                <tr>
+                                    <td><code>user-select</code></td>
+                                    <td><span class="badge support-yes">54+</span></td>
+                                    <td><span class="badge support-yes">69+</span></td>
+                                    <td><span class="badge support-partial">-webkit-</span></td>
+                                    <td><span class="badge support-yes">79+</span></td>
+                                    <td>Prefixes</td>
+                                </tr>
+                                <tr>
+                                    <td><code>scroll-behavior</code></td>
+                                    <td><span class="badge support-yes">61+</span></td>
+                                    <td><span class="badge support-yes">36+</span></td>
+                                    <td><span class="badge support-yes">15.4+</span></td>
+                                    <td><span class="badge support-yes">79+</span></td>
+                                    <td>JS smooth scroll</td>
+                                </tr>
+                                <tr>
+                                    <td><code>content-visibility</code></td>
+                                    <td><span class="badge support-yes">85+</span></td>
+                                    <td><span class="badge support-yes">125+</span></td>
+                                    <td><span class="badge support-no">No</span></td>
+                                    <td><span class="badge support-yes">85+</span></td>
+                                    <td>None</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 3: JAVASCRIPT COMPATIBILITY          -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="jsCompat">
+                    <h2 class="border-bottom pb-2 mb-4">3. JavaScript API Compatibility</h2>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm compat-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>API</th>
+                                    <th>Chrome</th>
+                                    <th>Firefox</th>
+                                    <th>Safari</th>
+                                    <th>Edge</th>
+                                    <th>Polyfill</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>fetch()</code></td>
+                                    <td><span class="badge support-yes">42+</span></td>
+                                    <td><span class="badge support-yes">39+</span></td>
+                                    <td><span class="badge support-yes">10.1+</span></td>
+                                    <td><span class="badge support-yes">14+</span></td>
+                                    <td>whatwg-fetch</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Promise</code></td>
+                                    <td><span class="badge support-yes">32+</span></td>
+                                    <td><span class="badge support-yes">29+</span></td>
+                                    <td><span class="badge support-yes">8+</span></td>
+                                    <td><span class="badge support-yes">12+</span></td>
+                                    <td>es6-promise</td>
+                                </tr>
+                                <tr>
+                                    <td><code>async/await</code></td>
+                                    <td><span class="badge support-yes">55+</span></td>
+                                    <td><span class="badge support-yes">52+</span></td>
+                                    <td><span class="badge support-yes">10.1+</span></td>
+                                    <td><span class="badge support-yes">15+</span></td>
+                                    <td>regenerator-runtime</td>
+                                </tr>
+                                <tr>
+                                    <td><code>IntersectionObserver</code></td>
+                                    <td><span class="badge support-yes">51+</span></td>
+                                    <td><span class="badge support-yes">55+</span></td>
+                                    <td><span class="badge support-yes">12.1+</span></td>
+                                    <td><span class="badge support-yes">15+</span></td>
+                                    <td>intersection-observer</td>
+                                </tr>
+                                <tr>
+                                    <td><code>ResizeObserver</code></td>
+                                    <td><span class="badge support-yes">64+</span></td>
+                                    <td><span class="badge support-yes">69+</span></td>
+                                    <td><span class="badge support-yes">13.1+</span></td>
+                                    <td><span class="badge support-yes">79+</span></td>
+                                    <td>resize-observer-polyfill</td>
+                                </tr>
+                                <tr>
+                                    <td><code>structuredClone()</code></td>
+                                    <td><span class="badge support-yes">98+</span></td>
+                                    <td><span class="badge support-yes">94+</span></td>
+                                    <td><span class="badge support-yes">15.4+</span></td>
+                                    <td><span class="badge support-yes">98+</span></td>
+                                    <td>None simple</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Object.hasOwn()</code></td>
+                                    <td><span class="badge support-yes">93+</span></td>
+                                    <td><span class="badge support-yes">92+</span></td>
+                                    <td><span class="badge support-yes">15.4+</span></td>
+                                    <td><span class="badge support-yes">93+</span></td>
+                                    <td>core-js</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Array.at()</code></td>
+                                    <td><span class="badge support-yes">92+</span></td>
+                                    <td><span class="badge support-yes">90+</span></td>
+                                    <td><span class="badge support-yes">15.4+</span></td>
+                                    <td><span class="badge support-yes">92+</span></td>
+                                    <td>core-js</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Clipboard API</code></td>
+                                    <td><span class="badge support-yes">66+</span></td>
+                                    <td><span class="badge support-yes">63+</span></td>
+                                    <td><span class="badge support-yes">13.1+</span></td>
+                                    <td><span class="badge support-yes">79+</span></td>
+                                    <td>clipboard-polyfill</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Web Animations API</code></td>
+                                    <td><span class="badge support-yes">84+</span></td>
+                                    <td><span class="badge support-yes">75+</span></td>
+                                    <td><span class="badge support-yes">16+</span></td>
+                                    <td><span class="badge support-yes">84+</span></td>
+                                    <td>web-animations-js</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 4: BOOTSTRAP 5 SUPPORT               -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="bootstrapCompat">
+                    <h2 class="border-bottom pb-2 mb-4">4. Bootstrap 5 Compatibility Details</h2>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card ref-card h-100">
+                                <div class="card-body">
+                                    <h5>What Bootstrap 5 Requires</h5>
+                                    <ul class="mb-0">
+                                        <li>CSS Flexbox (grid system)</li>
+                                        <li>CSS Custom Properties (theming)</li>
+                                        <li>ES6 JavaScript (let, const, arrow, classes)</li>
+                                        <li>Native Popper.js for tooltips/dropdowns</li>
+                                        <li>CSS transitions (animations)</li>
+                                        <li>CSS calc() (utilities)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card ref-card h-100">
+                                <div class="card-body">
+                                    <h5>What Bootstrap 5 Does NOT Support</h5>
+                                    <ul class="mb-0 text-danger">
+                                        <li>Internet Explorer (any version)</li>
+                                        <li>Opera Mini</li>
+                                        <li>Browsers without ES6 support</li>
+                                        <li>Browsers without Flexbox support</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 5: POLYFILL GUIDE                    -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="polyfillGuide">
+                    <h2 class="border-bottom pb-2 mb-4">5. Quick Polyfill Reference</h2>
+                    
+                    <div class="alert alert-info">
+                        <strong>Modern approach:</strong> Bootstrap 5 doesn't need polyfills for its 
+                        target browsers. Only add polyfills if you need to support older browsers
+                        beyond Bootstrap's official support.
+                    </div>
+                    
+                    <pre class="bg-dark text-light p-3 rounded small"><code>&lt;!-- Conditional polyfill loading pattern --&gt;
+&lt;script&gt;
+// Load polyfills only when needed
+(function() {
+  var polyfills = [];
+  
+  if (!window.Promise) polyfills.push('es6-promise');
+  if (!window.fetch) polyfills.push('whatwg-fetch');
+  if (!CSS.supports || !CSS.supports('color','var(--x)')) polyfills.push('css-vars-ponyfill');
+  
+  if (polyfills.length > 0) {
+    document.write('&lt;script src="polyfills.bundle.js"&gt;&lt;\/script&gt;');
+  }
+})();
+&lt;/script&gt;
+
+&lt;!-- Then load your app --&gt;
+&lt;script src="app.js"&gt;&lt;/script&gt;</code></pre>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 6: VENDOR PREFIX QUICK REF           -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="vendorPrefix">
+                    <h2 class="border-bottom pb-2 mb-4">6. Vendor Prefix Quick Reference</h2>
+                    
+                    <div class="alert alert-warning">
+                        <strong>Use Autoprefixer!</strong> Add it to your build process and never
+                        manually write vendor prefixes again. Configure via <code>browserslist</code>.
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Prefix</th>
+                                    <th>Browser</th>
+                                    <th>Still Needed For</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>-webkit-</code></td>
+                                    <td>Chrome, Safari, Edge</td>
+                                    <td><code>backdrop-filter</code>, <code>user-select</code>, <code>mask</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>-moz-</code></td>
+                                    <td>Firefox</td>
+                                    <td><code>user-select</code> (rare)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>-ms-</code></td>
+                                    <td>IE, Legacy Edge</td>
+                                    <td>Only if supporting IE (not recommended)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>-o-</code></td>
+                                    <td>Legacy Opera</td>
+                                    <td>Never needed (2024)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 7: FEATURE DETECTION                 -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="featureDetection">
+                    <h2 class="border-bottom pb-2 mb-4">7. Feature Detection Quick Reference</h2>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header">CSS @supports</div>
+                                <div class="card-body">
+                                    <pre class="bg-light p-2 rounded small mb-0"><code>/* Check for CSS Grid */
+@supports (display: grid) {
+  .container { display: grid; }
+}
+
+/* Check for custom properties */
+@supports (color: var(--x)) {
+  .themed { color: var(--brand); }
+}
+
+/* Compound check */
+@supports (display: grid) and 
+          (color: var(--x)) {
+  .enhanced { /* ... */ }
+}
+
+/* Negation */
+@supports not (aspect-ratio: 1) {
+  .ratio { padding-bottom: 56.25%; }
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header">JavaScript Detection</div>
+                                <div class="card-body">
+                                    <pre class="bg-light p-2 rounded small mb-0"><code>// CSS feature detection
+CSS.supports('display', 'grid')
+CSS.supports('color', 'var(--x)')
+
+// API detection
+typeof fetch === 'function'
+'IntersectionObserver' in window
+'serviceWorker' in navigator
+
+// Element support
+'loading' in HTMLImageElement.prototype
+
+// Media query detection
+window.matchMedia('(prefers-reduced-motion: reduce)').matches</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 8: PERFORMANCE                       -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="performanceGuide">
+                    <h2 class="border-bottom pb-2 mb-4">8. Cross-Browser Performance Tips</h2>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card ref-card h-100">
+                                <div class="card-body">
+                                    <h5>CSS Performance</h5>
+                                    <ul class="small mb-0">
+                                        <li>Use class selectors (fast)</li>
+                                        <li>Avoid deep nesting</li>
+                                        <li>Use <code>contain</code> property</li>
+                                        <li>Use <code>content-visibility: auto</code></li>
+                                        <li>Animate only transform/opacity</li>
+                                        <li>Use <code>will-change</code> sparingly</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card ref-card h-100">
+                                <div class="card-body">
+                                    <h5>Loading Performance</h5>
+                                    <ul class="small mb-0">
+                                        <li>Preconnect to CDN origins</li>
+                                        <li>Lazy-load below-fold images</li>
+                                        <li>Use <code>loading="lazy"</code></li>
+                                        <li>Defer non-critical JS</li>
+                                        <li>Inline critical CSS</li>
+                                        <li>Use skeleton screens</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card ref-card h-100">
+                                <div class="card-body">
+                                    <h5>Core Web Vitals</h5>
+                                    <ul class="small mb-0">
+                                        <li><strong>LCP</strong> &lt; 2.5s</li>
+                                        <li><strong>INP</strong> &lt; 200ms</li>
+                                        <li><strong>CLS</strong> &lt; 0.1</li>
+                                        <li>Set image dimensions</li>
+                                        <li>Reserve space for ads/embeds</li>
+                                        <li>Use font-display: swap</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 9: ACCESSIBILITY                     -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="a11yGuide">
+                    <h2 class="border-bottom pb-2 mb-4">9. Cross-Browser Accessibility</h2>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card ref-card h-100">
+                                <div class="card-body">
+                                    <h5>Essential A11y Checklist</h5>
+                                    <ul class="small mb-0">
+                                        <li>All images have alt text</li>
+                                        <li>All form inputs have labels</li>
+                                        <li>Color contrast meets WCAG AA (4.5:1)</li>
+                                        <li>All interactive elements are keyboard accessible</li>
+                                        <li>Focus indicators are visible</li>
+                                        <li>Heading hierarchy is correct (h1-h6)</li>
+                                        <li>ARIA attributes used correctly</li>
+                                        <li>Skip navigation link present</li>
+                                        <li>Reduced motion is respected</li>
+                                        <li>Touch targets are at least 44x44px</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card ref-card h-100">
+                                <div class="card-body">
+                                    <h5>Browser-Specific A11y Concerns</h5>
+                                    <ul class="small mb-0">
+                                        <li><strong>Safari:</strong> VoiceOver may not announce all live regions</li>
+                                        <li><strong>Firefox:</strong> Different focus ring style</li>
+                                        <li><strong>Chrome:</strong> Autofill can confuse screen readers</li>
+                                        <li><strong>All:</strong> Test with actual assistive technology</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 10: TESTING STRATEGY                 -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="testingGuide">
+                    <h2 class="border-bottom pb-2 mb-4">10. Testing Strategy</h2>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Test Type</th>
+                                    <th>Tool</th>
+                                    <th>What It Tests</th>
+                                    <th>Frequency</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Unit Tests</strong></td>
+                                    <td>Jest, Vitest</td>
+                                    <td>Individual functions, utilities</td>
+                                    <td>Every commit</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Component Tests</strong></td>
+                                    <td>Testing Library</td>
+                                    <td>Component rendering, behavior</td>
+                                    <td>Every commit</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>E2E Tests</strong></td>
+                                    <td>Playwright, Cypress</td>
+                                    <td>Full user workflows</td>
+                                    <td>Every PR</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Visual Regression</strong></td>
+                                    <td>BackstopJS, Percy</td>
+                                    <td>Layout consistency</td>
+                                    <td>Every PR</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Accessibility</strong></td>
+                                    <td>axe-core, Lighthouse</td>
+                                    <td>A11y compliance</td>
+                                    <td>Every PR</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Manual Testing</strong></td>
+                                    <td>BrowserStack</td>
+                                    <td>Real browser behavior</td>
+                                    <td>Before release</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Performance</strong></td>
+                                    <td>Lighthouse, WebPageTest</td>
+                                    <td>Core Web Vitals</td>
+                                    <td>Weekly</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 11: DEPLOYMENT CHECKLIST             -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="checklist">
+                    <h2 class="border-bottom pb-2 mb-4">11. Pre-Deployment Checklist</h2>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5>CSS Checklist</h5>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="c1">
+                                        <label class="form-check-label" for="c1">
+                                            Autoprefixer configured with browserslist
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="c2">
+                                        <label class="form-check-label" for="c2">
+                                            @supports fallbacks for critical features
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="c3">
+                                        <label class="form-check-label" for="c3">
+                                            No layout shifts (CLS &lt; 0.1)
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="c4">
+                                        <label class="form-check-label" for="c4">
+                                            prefers-reduced-motion respected
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="c5">
+                                        <label class="form-check-label" for="c5">
+                                            forced-colors (high contrast) tested
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>JavaScript Checklist</h5>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="c6">
+                                        <label class="form-check-label" for="c6">
+                                            Feature detection used, not UA sniffing
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="c7">
+                                        <label class="form-check-label" for="c7">
+                                            Polyfills loaded conditionally
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="c8">
+                                        <label class="form-check-label" for="c8">
+                                            Error boundaries for unsupported features
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="c9">
+                                        <label class="form-check-label" for="c9">
+                                            All Bootstrap components tested
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="c10">
+                                        <label class="form-check-label" for="c10">
+                                            Keyboard navigation works for all interactive elements
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ============================================ -->
+                <!-- SECTION 12: RESOURCES                        -->
+                <!-- ============================================ -->
+                <section class="mb-5" id="resources">
+                    <h2 class="border-bottom pb-2 mb-4">12. Resources & Tools</h2>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card ref-card h-100">
+                                <div class="card-body">
+                                    <h5>Reference Sites</h5>
+                                    <ul class="small mb-0">
+                                        <li>Can I Use (caniuse.com)</li>
+                                        <li>MDN Web Docs</li>
+                                        <li>Bootstrap Documentation</li>
+                                        <li>Web.dev</li>
+                                        <li>CSS-Tricks</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card ref-card h-100">
+                                <div class="card-body">
+                                    <h5>Testing Tools</h5>
+                                    <ul class="small mb-0">
+                                        <li>BrowserStack</li>
+                                        <li>Sauce Labs</li>
+                                        <li>LambdaTest</li>
+                                        <li>Playwright</li>
+                                        <li>Cypress</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card ref-card h-100">
+                                <div class="card-body">
+                                    <h5>Build Tools</h5>
+                                    <ul class="small mb-0">
+                                        <li>Autoprefixer</li>
+                                        <li>Browserslist</li>
+                                        <li>PostCSS</li>
+                                        <li>core-js</li>
+                                        <li>Babel</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                       -->
+    <!-- ============================================================ -->
+    <footer class="bg-dark text-white py-4 no-print">
+        <div class="container text-center">
+            <p class="mb-0">
+                Complete Browser Compatibility Guide &copy; 2024 | Bootstrap 5.3.3
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- BROWSER DETECTION                                            -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // BROWSER DETECTION FOR BADGE
+        // ============================================================
+        (function() {
+            var ua = navigator.userAgent;
+            var browser = 'Unknown';
+            
+            if (ua.includes('Edg/')) browser = 'Edge';
+            else if (ua.includes('Chrome/')) browser = 'Chrome';
+            else if (ua.includes('Firefox/')) browser = 'Firefox';
+            else if (ua.includes('Safari/') && !ua.includes('Chrome')) browser = 'Safari';
+            
+            var version = ua.match(new RegExp(browser === 'Edge' ? 'Edg\\/([\\d.]+)' : 
+                           browser + '\\/([\\d.]+)'));
+            var verStr = version ? version[1].split('.')[0] : '';
+            
+            document.getElementById('browserBadge').textContent = browser + ' ' + verStr;
+        })();
+
+        // ============================================================
+        // SMOOTH SCROLL FOR TOC
+        // ============================================================
+        document.querySelectorAll('.toc-link').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                var target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Update active state
+                    document.querySelectorAll('.toc-link').forEach(function(l) {
+                        l.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                }
+            });
+        });
+
+        // ============================================================
+        // INTERSECTION OBSERVER FOR TOC HIGHLIGHTING
+        // Updates sidebar TOC as user scrolls through sections
+        // ============================================================
+        if ('IntersectionObserver' in window) {
+            var sections = document.querySelectorAll('section[id]');
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        var id = entry.target.id;
+                        document.querySelectorAll('.toc-link').forEach(function(link) {
+                            link.classList.toggle('active', 
+                                link.getAttribute('href') === '#' + id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-100px 0px -60% 0px' });
+            
+            sections.forEach(function(section) {
+                observer.observe(section);
+            });
+        }
+
+        // ============================================================
+        // PRINT SUPPORT
+        // Adds print-friendly behavior
+        // ============================================================
+        window.addEventListener('beforeprint', function() {
+            // Expand all collapsed sections for printing
+            document.querySelectorAll('[hidden]').forEach(function(el) {
+                el.removeAttribute('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

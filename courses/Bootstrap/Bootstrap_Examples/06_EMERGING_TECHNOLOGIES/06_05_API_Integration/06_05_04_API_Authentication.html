@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  API AUTHENTICATION WITH BOOTSTRAP 5
+  ============================================================================
+  This file demonstrates various API authentication patterns using Bootstrap 5
+  components. It covers JWT tokens, OAuth flows, API key management, token
+  storage, and protected route simulation — all in a single HTML file.
+
+  Topics covered:
+    1. JWT (JSON Web Token) login flow
+    2. OAuth 2.0 authorization simulation
+    3. API key input, generation, and management
+    4. Token storage and retrieval (localStorage/sessionStorage simulation)
+    5. Authenticated vs unauthenticated API request demos
+    6. Token expiry indicator with progress bar
+    7. Logout functionality and session cleanup
+    8. Protected route UI simulation with guards
+
+  Dependencies:
+    - Bootstrap 5.3.3 CSS & JS (CDN)
+    - Vanilla JavaScript (no frameworks)
+  ============================================================================
+-->
+<html lang="en">
+<head>
+  <!-- ================================================================
+       META & DOCUMENT SETUP
+       charset defines character encoding; viewport ensures responsive
+       scaling on mobile devices; title sets the browser tab label.
+       ================================================================ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Authentication — Bootstrap 5 Demo</title>
+
+  <!-- ================================================================
+       BOOTSTRAP 5.3.3 CSS (CDN)
+       Provides all styling utilities, grid system, components.
+       ================================================================ -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- ================================================================
+       CUSTOM STYLES
+       Minimal overrides for demo-specific UI elements.
+       ================================================================ -->
+  <style>
+    /* Status dot — small colored circle indicating auth state */
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .status-dot.authenticated { background-color: #198754; }
+    .status-dot.unauthenticated { background-color: #dc3545; }
+
+    /* Monospace token display area */
+    .token-display {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      word-break: break-all;
+      background: #1e1e2e;
+      color: #a6e3a1;
+      padding: 12px;
+      border-radius: 6px;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+
+    /* Smooth collapse transitions for sections */
+    .auth-section { transition: opacity 0.3s ease; }
+  </style>
+</head>
+
+<body class="bg-light">
+
+  <!-- ================================================================
+       NAVBAR — GLOBAL AUTH STATUS INDICATOR
+       The navbar shows the current authentication state and provides
+       a global logout button when a session is active.
+       ================================================================ -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#">API Auth Demo</a>
+
+      <!-- Auth status badge — dynamically updated by JavaScript -->
+      <span class="badge bg-secondary" id="globalAuthStatus">
+        <span class="status-dot unauthenticated" id="statusDot"></span>
+        Not Authenticated
+      </span>
+
+      <!-- Global logout button — only visible when authenticated -->
+      <button class="btn btn-outline-light btn-sm ms-auto d-none" id="globalLogoutBtn" onclick="logout()">
+        Logout
+      </button>
+    </div>
+  </nav>
+
+  <!-- ================================================================
+       MAIN CONTENT CONTAINER
+       ================================================================ -->
+  <main class="container py-5">
+
+    <!-- ==============================================================
+         PAGE HEADER
+         ============================================================== -->
+    <div class="text-center mb-5">
+      <h1 class="display-5 fw-bold">API Authentication</h1>
+      <p class="lead text-muted">
+        Interactive demos for JWT login, OAuth simulation, API keys,
+        token management, and protected-route guards.
+      </p>
+    </div>
+
+    <!-- ==============================================================
+         ROW 1 — JWT LOGIN & OAUTH SIMULATION (side by side)
+         ============================================================== -->
+    <div class="row g-4 mb-5">
+
+      <!-- ============================================================
+           SECTION 1: JWT TOKEN LOGIN FORM
+           ============================================================
+           JSON Web Tokens (JWT) are compact, URL-safe tokens used for
+           stateless authentication. The flow is:
+             1. User submits credentials (email + password).
+             2. Server validates and returns a signed JWT.
+             3. Client stores the JWT (localStorage / sessionStorage).
+             4. Subsequent requests include the JWT in the Authorization
+                header as:  Bearer <token>
+             5. Server verifies the signature and grants access.
+           ============================================================ -->
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm auth-section">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">1 &mdash; JWT Token Login</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Enter any email and password to simulate a JWT login.
+              The "server" will return a mock signed token.
+            </p>
+
+            <!-- Login form -->
+            <form id="jwtLoginForm" onsubmit="return handleJwtLogin(event)">
+              <!-- Email input with Bootstrap validation styling -->
+              <div class="mb-3">
+                <label for="jwtEmail" class="form-label">Email address</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="jwtEmail"
+                  placeholder="user@example.com"
+                  required
+                >
+              </div>
+
+              <!-- Password input -->
+              <div class="mb-3">
+                <label for="jwtPassword" class="form-label">Password</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="jwtPassword"
+                  placeholder="••••••••"
+                  required
+                >
+              </div>
+
+              <!-- Submit button with loading state -->
+              <button type="submit" class="btn btn-primary w-100" id="jwtLoginBtn">
+                Sign In with JWT
+              </button>
+            </form>
+
+            <!-- Token output area — populated after successful login -->
+            <div class="mt-3 d-none" id="jwtTokenOutput">
+              <label class="form-label fw-bold">Received JWT:</label>
+              <div class="token-display" id="jwtTokenValue"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION 2: OAUTH 2.0 FLOW SIMULATION
+           ============================================================
+           OAuth 2.0 is an authorization framework that allows third-party
+           applications to obtain limited access to a user's resources
+           without exposing their credentials. The typical flow:
+             1. App redirects user to the authorization server.
+             2. User logs in and grants permission (consent screen).
+             3. Authorization server redirects back with an auth code.
+             4. App exchanges the code for an access token.
+             5. App uses the access token to call APIs on behalf of the user.
+           This demo simulates each step visually.
+           ============================================================ -->
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm auth-section">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">2 &mdash; OAuth 2.0 Flow Simulation</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Click through each step to simulate the OAuth 2.0
+              authorization code flow.
+            </p>
+
+            <!-- Step 1: Redirect to provider -->
+            <div class="d-grid mb-2">
+              <button class="btn btn-outline-info" id="oauthStep1" onclick="oauthStepOne()">
+                Step 1: Redirect to Provider
+              </button>
+            </div>
+
+            <!-- Step 2: Consent screen (collapsible) -->
+            <div class="collapse mb-2" id="oauthConsent">
+              <div class="card card-body bg-light">
+                <p class="mb-2 fw-bold">App "Demo Dashboard" requests:</p>
+                <ul class="small mb-2">
+                  <li>Read your profile</li>
+                  <li>Access your email address</li>
+                  <li>Read repository data</li>
+                </ul>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-success btn-sm flex-fill" onclick="oauthStepTwo(true)">
+                    Allow
+                  </button>
+                  <button class="btn btn-danger btn-sm flex-fill" onclick="oauthStepTwo(false)">
+                    Deny
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Auth code display -->
+            <div class="d-none mb-2" id="oauthCodeArea">
+              <div class="alert alert-info py-2 small mb-2">
+                <strong>Auth Code Received:</strong>
+                <code id="oauthAuthCode"></code>
+              </div>
+              <button class="btn btn-outline-info btn-sm w-100" onclick="oauthStepThree()">
+                Step 3: Exchange Code for Token
+              </button>
+            </div>
+
+            <!-- Step 4: Access token display -->
+            <div class="d-none" id="oauthTokenArea">
+              <label class="form-label fw-bold">OAuth Access Token:</label>
+              <div class="token-display" id="oauthTokenValue"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================================
+         ROW 2 — API KEY MANAGEMENT & TOKEN STORAGE
+         ============================================================== -->
+    <div class="row g-4 mb-5">
+
+      <!-- ============================================================
+           SECTION 3: API KEY INPUT & MANAGEMENT
+           ============================================================
+           API keys are simple opaque strings that identify the calling
+           application. They are typically passed as:
+             - Query parameter:  ?api_key=xxxx
+             - Header:           X-API-Key: xxxx
+           API keys are less secure than OAuth/JWT because they do not
+           expire by default and grant broad access. Best practices:
+             - Regenerate keys periodically.
+             - Restrict keys by IP or referrer.
+             - Never expose keys in client-side code.
+           ============================================================ -->
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm auth-section">
+          <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">3 &mdash; API Key Management</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Enter an existing API key or generate a new one.
+              Keys can be stored and cleared from the local session.
+            </p>
+
+            <!-- API key input field -->
+            <div class="input-group mb-3">
+              <span class="input-group-text">API Key</span>
+              <input
+                type="text"
+                class="form-control"
+                id="apiKeyInput"
+                placeholder="sk-xxxxxxxxxxxxxxxx"
+              >
+              <button class="btn btn-outline-warning" onclick="saveApiKey()">
+                Save
+              </button>
+            </div>
+
+            <!-- Generate a random key -->
+            <div class="d-grid gap-2 mb-3">
+              <button class="btn btn-warning" onclick="generateApiKey()">
+                Generate New Key
+              </button>
+            </div>
+
+            <!-- Stored key display -->
+            <div class="d-none" id="apiKeyDisplay">
+              <label class="form-label fw-bold">Stored API Key:</label>
+              <div class="d-flex align-items-center gap-2">
+                <div class="token-display flex-grow-1" id="apiKeyValue"></div>
+                <button class="btn btn-outline-danger btn-sm" onclick="clearApiKey()">
+                  Revoke
+                </button>
+              </div>
+              <small class="text-muted">Created: <span id="apiKeyTimestamp"></span></small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION 4: TOKEN STORAGE & RETRIEVAL SIMULATION
+           ============================================================
+           Tokens can be stored in several ways on the client:
+             - localStorage: persists across sessions (less secure).
+             - sessionStorage: cleared when the tab closes.
+             - HttpOnly cookies: inaccessible to JavaScript (most secure).
+             - In-memory: lost on page refresh, but safest against XSS.
+
+           This demo lets you switch between storage strategies and
+           inspect what is currently stored.
+           ============================================================ -->
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm auth-section">
+          <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">4 &mdash; Token Storage & Retrieval</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Choose where to store the JWT and inspect the current
+              storage contents.
+            </p>
+
+            <!-- Storage strategy selector -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Storage Strategy</label>
+              <select class="form-select" id="storageStrategy" onchange="switchStorageStrategy()">
+                <option value="localStorage">localStorage (persistent)</option>
+                <option value="sessionStorage">sessionStorage (tab-scoped)</option>
+                <option value="memory">In-memory (safest)</option>
+              </select>
+            </div>
+
+            <!-- Store / Retrieve buttons -->
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-outline-secondary flex-fill" onclick="storeToken()">
+                Store Current Token
+              </button>
+              <button class="btn btn-outline-secondary flex-fill" onclick="retrieveToken()">
+                Retrieve Token
+              </button>
+            </div>
+
+            <!-- Storage contents display -->
+            <div id="storageDisplay">
+              <label class="form-label fw-bold">Storage Contents:</label>
+              <div class="token-display" id="storageContents">
+                <span class="text-muted">No token stored yet.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================================
+         ROW 3 — AUTH REQUESTS, TOKEN EXPIRY & PROTECTED ROUTES
+         ============================================================== -->
+    <div class="row g-4 mb-5">
+
+      <!-- ============================================================
+           SECTION 5: AUTHENTICATED VS UNAUTHENTICATED REQUEST DEMO
+           ============================================================
+           API endpoints may require authentication. Without a valid
+           token the server responds with 401 Unauthorized or
+           403 Forbidden. With a valid token the server returns 200 OK
+           and the requested data.
+
+           This demo simulates both scenarios with mock responses so
+           you can see the difference in headers and payloads.
+           ============================================================ -->
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm auth-section">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">5 &mdash; Auth vs Unauth Requests</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Fire mock API requests with and without an auth token to
+              compare the server responses.
+            </p>
+
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-outline-danger flex-fill" onclick="sendUnauthenticatedRequest()">
+                Send Without Token
+              </button>
+              <button class="btn btn-success flex-fill" onclick="sendAuthenticatedRequest()">
+                Send With Token
+              </button>
+            </div>
+
+            <!-- Mock response display -->
+            <label class="form-label fw-bold">Response:</label>
+            <div class="token-display" id="requestResponse">
+              <span class="text-muted">Click a button to send a request.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION 6: TOKEN EXPIRY INDICATOR
+           ============================================================
+           JWTs contain an "exp" (expiry) claim — a Unix timestamp after
+           which the token is invalid. Clients should track the remaining
+           lifetime and either refresh the token or prompt re-login.
+
+           This demo creates a token with a short 30-second lifespan
+           and shows a Bootstrap progress bar counting down.
+           ============================================================ -->
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm auth-section">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">6 &mdash; Token Expiry Indicator</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Issue a short-lived token (30 s) and watch the progress bar
+              count down to expiry.
+            </p>
+
+            <div class="d-grid mb-3">
+              <button class="btn btn-danger" onclick="issueShortLivedToken()" id="issueTokenBtn">
+                Issue 30-Second Token
+              </button>
+            </div>
+
+            <!-- Expiry progress bar — animated via JavaScript -->
+            <div class="d-none" id="expiryArea">
+              <div class="d-flex justify-content-between mb-1">
+                <small class="fw-bold">Token Lifetime</small>
+                <small id="expiryCountdown">30s remaining</small>
+              </div>
+              <div class="progress" style="height: 24px;">
+                <div
+                  class="progress-bar bg-danger progress-bar-striped progress-bar-animated"
+                  role="progressbar"
+                  id="expiryProgressBar"
+                  style="width: 100%"
+                  aria-valuenow="100"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+              <small class="text-muted mt-1 d-block" id="expiryStatus">Token is valid.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================================
+         ROW 4 — LOGOUT & PROTECTED ROUTE SIMULATION
+         ============================================================== -->
+    <div class="row g-4 mb-5">
+
+      <!-- ============================================================
+           SECTION 7: LOGOUT FUNCTIONALITY
+           ============================================================
+           Logging out should:
+             1. Clear all stored tokens (localStorage, sessionStorage, memory).
+             2. Reset the UI to the unauthenticated state.
+             3. Optionally notify the server to invalidate the token
+                (token blacklisting / revocation endpoint).
+
+           This demo performs a full cleanup and shows what was removed.
+           ============================================================ -->
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm auth-section">
+          <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">7 &mdash; Logout &amp; Session Cleanup</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Clicking logout clears tokens from every storage location
+              and resets the authentication state.
+            </p>
+
+            <div class="d-grid mb-3">
+              <button class="btn btn-dark" onclick="logout()">
+                Logout &amp; Clear All Tokens
+              </button>
+            </div>
+
+            <!-- Cleanup log -->
+            <label class="form-label fw-bold">Cleanup Log:</label>
+            <div class="token-display" id="logoutLog">
+              <span class="text-muted">No logout performed yet.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           SECTION 8: PROTECTED ROUTE UI SIMULATION
+           ============================================================
+           Protected routes require a valid token. Without one the user
+           sees a "403 Forbidden" or a login prompt. With a valid token
+           the route content is displayed.
+
+           This demo uses a simulated router that checks auth state
+           before rendering the "dashboard" content.
+           ============================================================ -->
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm auth-section">
+          <div class="card-header bg-purple text-white" style="background:#6f42c1;">
+            <h5 class="mb-0">8 &mdash; Protected Route Simulation</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small">
+              Attempt to access a protected dashboard route. The guard
+              checks for a valid token before rendering content.
+            </p>
+
+            <div class="d-grid mb-3">
+              <button class="btn btn-outline-primary" onclick="navigateToProtectedRoute()">
+                Navigate to /dashboard
+              </button>
+            </div>
+
+            <!-- Route content area -->
+            <div id="protectedRouteContent">
+              <div class="alert alert-secondary small mb-0">
+                Press the button above to attempt navigation.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================================
+         QUICK-REFERENCE CHEAT SHEET
+         ============================================================== -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Quick Reference — Auth Headers &amp; Patterns</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- JWT header example -->
+          <div class="col-md-4 mb-3">
+            <h6 class="fw-bold">JWT Bearer Header</h6>
+            <pre class="bg-dark text-light p-3 rounded small mb-0"><code>Authorization: Bearer &lt;JWT&gt;</code></pre>
+          </div>
+          <!-- API key header example -->
+          <div class="col-md-4 mb-3">
+            <h6 class="fw-bold">API Key Header</h6>
+            <pre class="bg-dark text-light p-3 rounded small mb-0"><code>X-API-Key: sk-xxxxxxxxxxxx</code></pre>
+          </div>
+          <!-- OAuth header example -->
+          <div class="col-md-4 mb-3">
+            <h6 class="fw-bold">OAuth Access Token</h6>
+            <pre class="bg-dark text-light p-3 rounded small mb-0"><code>Authorization: Bearer &lt;access_token&gt;</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================================================================
+       FOOTER
+       ================================================================ -->
+  <footer class="bg-dark text-center text-muted py-3">
+    <small>API Authentication Demo &copy; 2026 — Bootstrap 5.3.3</small>
+  </footer>
+
+  <!-- ================================================================
+       BOOTSTRAP 5.3.3 JS BUNDLE (includes Popper.js)
+       Required for interactive components (collapse, tooltips, etc.).
+       ================================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ================================================================
+       APPLICATION JAVASCRIPT
+       All authentication logic, mock API calls, and UI updates.
+       ================================================================ -->
+  <script>
+    // ==================================================================
+    // GLOBAL STATE
+    // ==================================================================
+    // In-memory token storage (used when strategy is set to "memory").
+    let inMemoryToken = null;
+
+    // Expiry interval reference — used to clean up the countdown timer.
+    let expiryIntervalId = null;
+
+    // ==================================================================
+    // UTILITY: Generate a mock JWT
+    // ==================================================================
+    // A real JWT has three Base64URL-encoded parts separated by dots:
+    //   header.payload.signature
+    // This function creates a realistic-looking mock token with a
+    // payload containing sub (subject), iat (issued at), and exp (expiry).
+    // ==================================================================
+    function generateMockJwt(expirySeconds = 3600) {
+      // Create header — specifies algorithm and token type.
+      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+
+      // Create payload — contains claims about the user and token.
+      const now = Math.floor(Date.now() / 1000);
+      const payload = btoa(JSON.stringify({
+        sub: 'user_12345',                    // Subject (user ID)
+        name: 'Demo User',                     // Custom claim
+        email: document.getElementById('jwtEmail')?.value || 'demo@example.com',
+        iat: now,                              // Issued At (Unix timestamp)
+        exp: now + expirySeconds,              // Expiry (Unix timestamp)
+        iss: 'api-auth-demo',                  // Issuer
+        aud: 'demo-dashboard'                  // Audience
+      }));
+
+      // Create a fake signature (in production this is a cryptographic HMAC).
+      const signature = btoa('mock_signature_' + Math.random().toString(36).slice(2));
+
+      // Combine all three parts.
+      return `${header}.${payload}.${signature}`;
+    }
+
+    // ==================================================================
+    // UTILITY: Decode a mock JWT payload (Base64)
+    // ==================================================================
+    function decodeJwtPayload(token) {
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        return JSON.parse(atob(parts[1]));
+      } catch {
+        return null;
+      }
+    }
+
+    // ==================================================================
+    // 1. JWT LOGIN HANDLER
+    // ==================================================================
+    // Validates form inputs, simulates a server response with a JWT,
+    // stores the token, and updates the UI to reflect authentication.
+    // ==================================================================
+    function handleJwtLogin(event) {
+      // Prevent the form from submitting (page reload).
+      event.preventDefault();
+
+      // Grab form values.
+      const email = document.getElementById('jwtEmail').value;
+      const password = document.getElementById('jwtPassword').value;
+
+      // Simple client-side validation.
+      if (!email || !password) {
+        alert('Please enter both email and password.');
+        return false;
+      }
+
+      // Show loading state on the button.
+      const btn = document.getElementById('jwtLoginBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Signing in…';
+
+      // Simulate network delay (500 ms).
+      setTimeout(() => {
+        // Generate a mock JWT valid for 1 hour.
+        const token = generateMockJwt(3600);
+
+        // Store the token in the current storage strategy.
+        storeTokenByStrategy(token);
+
+        // Update the token output area.
+        const outputArea = document.getElementById('jwtTokenOutput');
+        outputArea.classList.remove('d-none');
+        document.getElementById('jwtTokenValue').textContent = token;
+
+        // Mark the user as authenticated globally.
+        setAuthenticatedState(true);
+
+        // Reset the button.
+        btn.disabled = false;
+        btn.textContent = 'Sign In with JWT';
+      }, 500);
+
+      return false;
+    }
+
+    // ==================================================================
+    // 2. OAUTH 2.0 FLOW — STEP HANDLERS
+    // ==================================================================
+    // Step 1: Simulate redirecting the user to an OAuth provider.
+    // Step 2: Show a consent screen; user allows or denies.
+    // Step 3: Exchange the authorization code for an access token.
+    // ==================================================================
+    function oauthStepOne() {
+      // Disable the step-1 button and show the consent screen.
+      document.getElementById('oauthStep1').disabled = true;
+      document.getElementById('oauthStep1').textContent = 'Redirecting…';
+
+      // Simulate redirect delay, then reveal the consent screen.
+      setTimeout(() => {
+        const consent = new bootstrap.Collapse('#oauthConsent', { show: true });
+        document.getElementById('oauthStep1').textContent = 'Waiting for consent…';
+      }, 600);
+    }
+
+    function oauthStepTwo(granted) {
+      if (!granted) {
+        // User denied — reset the flow.
+        alert('Access denied. OAuth flow aborted.');
+        resetOAuthFlow();
+        return;
+      }
+
+      // Generate a random authorization code.
+      const authCode = 'auth_' + Math.random().toString(36).slice(2, 14);
+      document.getElementById('oauthAuthCode').textContent = authCode;
+
+      // Hide consent, show auth code area.
+      bootstrap.Collapse.getInstance('#oauthConsent')?.hide();
+      document.getElementById('oauthCodeArea').classList.remove('d-none');
+    }
+
+    function oauthStepThree() {
+      // Simulate exchanging the code for an access token.
+      const btn = document.querySelector('#oauthCodeArea button');
+      btn.disabled = true;
+      btn.textContent = 'Exchanging code…';
+
+      setTimeout(() => {
+        const accessToken = generateMockJwt(7200);
+
+        // Display the token.
+        document.getElementById('oauthTokenValue').textContent = accessToken;
+        document.getElementById('oauthTokenArea').classList.remove('d-none');
+        document.getElementById('oauthCodeArea').classList.add('d-none');
+
+        // Store and set authenticated state.
+        storeTokenByStrategy(accessToken);
+        setAuthenticatedState(true);
+
+        // Allow restarting the flow.
+        btn.textContent = 'Step 3: Exchange Code for Token';
+        btn.disabled = false;
+      }, 800);
+    }
+
+    function resetOAuthFlow() {
+      document.getElementById('oauthStep1').disabled = false;
+      document.getElementById('oauthStep1').textContent = 'Step 1: Redirect to Provider';
+      bootstrap.Collapse.getInstance('#oauthConsent')?.hide();
+      document.getElementById('oauthCodeArea').classList.add('d-none');
+      document.getElementById('oauthTokenArea').classList.add('d-none');
+    }
+
+    // ==================================================================
+    // 3. API KEY MANAGEMENT
+    // ==================================================================
+    // Functions to save, generate, and revoke API keys.
+    // Keys are persisted via the selected storage strategy.
+    // ==================================================================
+    function saveApiKey() {
+      const input = document.getElementById('apiKeyInput');
+      const key = input.value.trim();
+
+      if (!key) {
+        alert('Please enter an API key.');
+        return;
+      }
+
+      // Store the key.
+      storeTokenByStrategy(key);
+      showApiKey(key);
+
+      // Clear the input.
+      input.value = '';
+    }
+
+    function generateApiKey() {
+      // Generate a realistic-looking API key.
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let key = 'sk-';
+      for (let i = 0; i < 48; i++) {
+        key += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
+      // Store and display.
+      storeTokenByStrategy(key);
+      showApiKey(key);
+    }
+
+    function showApiKey(key) {
+      document.getElementById('apiKeyDisplay').classList.remove('d-none');
+      document.getElementById('apiKeyValue').textContent = key;
+      document.getElementById('apiKeyTimestamp').textContent = new Date().toLocaleString();
+      setAuthenticatedState(true);
+    }
+
+    function clearApiKey() {
+      // Remove from all storage locations.
+      localStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_token');
+      inMemoryToken = null;
+
+      document.getElementById('apiKeyDisplay').classList.add('d-none');
+      updateStorageDisplay();
+    }
+
+    // ==================================================================
+    // 4. TOKEN STORAGE & RETRIEVAL
+    // ==================================================================
+    // The storage strategy determines where the token is persisted.
+    //   - localStorage: survives browser restarts (XSS risk).
+    //   - sessionStorage: scoped to a single tab.
+    //   - memory: safest, but lost on refresh.
+    // ==================================================================
+    function getStorageStrategy() {
+      return document.getElementById('storageStrategy').value;
+    }
+
+    function storeTokenByStrategy(token) {
+      const strategy = getStorageStrategy();
+
+      switch (strategy) {
+        case 'localStorage':
+          localStorage.setItem('auth_token', token);
+          break;
+        case 'sessionStorage':
+          sessionStorage.setItem('auth_token', token);
+          break;
+        case 'memory':
+          inMemoryToken = token;
+          break;
+      }
+
+      updateStorageDisplay();
+    }
+
+    function storeToken() {
+      // Use the current JWT or generate a new one.
+      const token = generateMockJwt();
+      storeTokenByStrategy(token);
+      setAuthenticatedState(true);
+    }
+
+    function retrieveToken() {
+      updateStorageDisplay();
+    }
+
+    function updateStorageDisplay() {
+      const strategy = getStorageStrategy();
+      let token = null;
+
+      switch (strategy) {
+        case 'localStorage':
+          token = localStorage.getItem('auth_token');
+          break;
+        case 'sessionStorage':
+          token = sessionStorage.getItem('auth_token');
+          break;
+        case 'memory':
+          token = inMemoryToken;
+          break;
+      }
+
+      const display = document.getElementById('storageContents');
+      if (token) {
+        display.textContent = token;
+      } else {
+        display.innerHTML = '<span class="text-muted">No token stored in ' + strategy + '.</span>';
+      }
+    }
+
+    function switchStorageStrategy() {
+      updateStorageDisplay();
+    }
+
+    // ==================================================================
+    // 5. AUTHENTICATED VS UNAUTHENTICATED REQUESTS
+    // ==================================================================
+    // Simulates sending HTTP requests to an API endpoint.
+    // Without a token the server returns 401 Unauthorized.
+    // With a valid token the server returns 200 OK with data.
+    // ==================================================================
+    function sendUnauthenticatedRequest() {
+      const display = document.getElementById('requestResponse');
+
+      // Show loading state.
+      display.textContent = 'GET /api/data …';
+
+      setTimeout(() => {
+        // Simulated 401 response.
+        const response = {
+          status: 401,
+          statusText: 'Unauthorized',
+          headers: {
+            'Content-Type': 'application/json',
+            'WWW-Authenticate': 'Bearer realm="api"'
+          },
+          body: {
+            error: 'authentication_required',
+            message: 'No valid token provided. Include an Authorization header.'
+          }
+        };
+
+        display.textContent = JSON.stringify(response, null, 2);
+      }, 400);
+    }
+
+    function sendAuthenticatedRequest() {
+      const display = document.getElementById('requestResponse');
+
+      // Check if we have a token.
+      const token = getTokenFromAnyStorage();
+      if (!token) {
+        display.textContent = 'No token available. Please log in first.';
+        return;
+      }
+
+      display.textContent = 'GET /api/data\nAuthorization: Bearer ' + token.slice(0, 20) + '…\n';
+
+      setTimeout(() => {
+        // Simulated 200 OK response.
+        const response = {
+          status: 200,
+          statusText: 'OK',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Request-Id': 'req_' + Math.random().toString(36).slice(2, 10)
+          },
+          body: {
+            data: [
+              { id: 1, name: 'Project Alpha', status: 'active' },
+              { id: 2, name: 'Project Beta', status: 'completed' },
+              { id: 3, name: 'Project Gamma', status: 'pending' }
+            ],
+            meta: { total: 3, page: 1, per_page: 10 }
+          }
+        };
+
+        display.textContent = JSON.stringify(response, null, 2);
+      }, 400);
+    }
+
+    // ==================================================================
+    // UTILITY: Retrieve token from any storage location
+    // ==================================================================
+    function getTokenFromAnyStorage() {
+      return (
+        inMemoryToken ||
+        localStorage.getItem('auth_token') ||
+        sessionStorage.getItem('auth_token')
+      );
+    }
+
+    // ==================================================================
+    // 6. TOKEN EXPIRY INDICATOR
+    // ==================================================================
+    // Issues a token with a 30-second lifespan and displays a live
+    // countdown progress bar. When the token expires the UI updates
+    // to indicate re-authentication is required.
+    // ==================================================================
+    function issueShortLivedToken() {
+      // Clear any existing interval.
+      if (expiryIntervalId) clearInterval(expiryIntervalId);
+
+      // Generate a 30-second token.
+      const token = generateMockJwt(30);
+      storeTokenByStrategy(token);
+      setAuthenticatedState(true);
+
+      // Show the expiry area.
+      document.getElementById('expiryArea').classList.remove('d-none');
+
+      const totalSeconds = 30;
+      const startTime = Date.now();
+      const bar = document.getElementById('expiryProgressBar');
+      const countdown = document.getElementById('expiryCountdown');
+      const status = document.getElementById('expiryStatus');
+      const btn = document.getElementById('issueTokenBtn');
+
+      btn.disabled = true;
+      status.textContent = 'Token is valid.';
+      status.className = 'text-success mt-1 d-block';
+
+      // Update every 200 ms for smooth animation.
+      expiryIntervalId = setInterval(() => {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const remaining = Math.max(0, totalSeconds - elapsed);
+        const percent = (remaining / totalSeconds) * 100;
+
+        // Update progress bar width and aria attributes.
+        bar.style.width = percent + '%';
+        bar.setAttribute('aria-valuenow', Math.round(percent));
+
+        // Update countdown text.
+        countdown.textContent = Math.ceil(remaining) + 's remaining';
+
+        // Change color as time runs out.
+        if (percent > 50) {
+          bar.className = 'progress-bar bg-success progress-bar-striped progress-bar-animated';
+        } else if (percent > 20) {
+          bar.className = 'progress-bar bg-warning progress-bar-striped progress-bar-animated';
+        } else {
+          bar.className = 'progress-bar bg-danger progress-bar-striped progress-bar-animated';
+        }
+
+        // Token expired.
+        if (remaining <= 0) {
+          clearInterval(expiryIntervalId);
+          expiryIntervalId = null;
+          status.textContent = 'Token expired — please re-authenticate.';
+          status.className = 'text-danger mt-1 d-block fw-bold';
+          countdown.textContent = 'Expired';
+          btn.disabled = false;
+          setAuthenticatedState(false);
+        }
+      }, 200);
+    }
+
+    // ==================================================================
+    // 7. LOGOUT & SESSION CLEANUP
+    // ==================================================================
+    // Clears tokens from every storage mechanism and resets all UI
+    // sections to their default unauthenticated state.
+    // ==================================================================
+    function logout() {
+      const log = [];
+      const now = new Date().toLocaleTimeString();
+
+      // Clear localStorage token.
+      if (localStorage.getItem('auth_token')) {
+        localStorage.removeItem('auth_token');
+        log.push(`[${now}] Cleared localStorage auth_token`);
+      }
+
+      // Clear sessionStorage token.
+      if (sessionStorage.getItem('auth_token')) {
+        sessionStorage.removeItem('auth_token');
+        log.push(`[${now}] Cleared sessionStorage auth_token`);
+      }
+
+      // Clear in-memory token.
+      if (inMemoryToken) {
+        inMemoryToken = null;
+        log.push(`[${now}] Cleared in-memory token`);
+      }
+
+      // Stop any expiry timer.
+      if (expiryIntervalId) {
+        clearInterval(expiryIntervalId);
+        expiryIntervalId = null;
+        log.push(`[${now}] Stopped expiry countdown`);
+      }
+
+      // If nothing was cleared.
+      if (log.length === 0) {
+        log.push(`[${now}] No active tokens found — already clean.`);
+      }
+
+      // Display the cleanup log.
+      document.getElementById('logoutLog').textContent = log.join('\n');
+
+      // Reset UI sections.
+      setAuthenticatedState(false);
+      document.getElementById('jwtTokenOutput').classList.add('d-none');
+      document.getElementById('jwtLoginForm').reset();
+      document.getElementById('apiKeyDisplay').classList.add('d-none');
+      document.getElementById('apiKeyInput').value = '';
+      document.getElementById('expiryArea').classList.add('d-none');
+      document.getElementById('issueTokenBtn').disabled = false;
+      document.getElementById('protectedRouteContent').innerHTML =
+        '<div class="alert alert-secondary small mb-0">Press the button above to attempt navigation.</div>';
+      resetOAuthFlow();
+      updateStorageDisplay();
+    }
+
+    // ==================================================================
+    // 8. PROTECTED ROUTE SIMULATION
+    // ==================================================================
+    // Simulates a client-side route guard. Before rendering the
+    // "dashboard" it checks for a valid token. If missing or expired
+    // the user sees a 403-style message with a login prompt.
+    // ==================================================================
+    function navigateToProtectedRoute() {
+      const container = document.getElementById('protectedRouteContent');
+      const token = getTokenFromAnyStorage();
+
+      // Check if a token exists.
+      if (!token) {
+        container.innerHTML = `
+          <div class="alert alert-danger">
+            <h6 class="alert-heading">403 Forbidden</h6>
+            <p class="mb-0 small">You must be authenticated to access <code>/dashboard</code>.
+            Please log in first.</p>
+          </div>`;
+        return;
+      }
+
+      // Check if the token is expired.
+      const payload = decodeJwtPayload(token);
+      if (payload && payload.exp) {
+        const now = Math.floor(Date.now() / 1000);
+        if (now >= payload.exp) {
+          container.innerHTML = `
+            <div class="alert alert-warning">
+              <h6 class="alert-heading">401 Token Expired</h6>
+              <p class="mb-0 small">Your session has expired. Please log in again.</p>
+            </div>`;
+          setAuthenticatedState(false);
+          return;
+        }
+      }
+
+      // Token is valid — render the protected content.
+      container.innerHTML = `
+        <div class="alert alert-success">
+          <h6 class="alert-heading">Access Granted — /dashboard</h6>
+          <p class="small mb-2">Token verified. Here is your protected content:</p>
+        </div>
+        <ul class="list-group">
+          <li class="list-group-item d-flex justify-content-between">
+            Active Projects <span class="badge bg-primary rounded-pill">5</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            Pending Tasks <span class="badge bg-warning rounded-pill">12</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            Completed This Week <span class="badge bg-success rounded-pill">8</span>
+          </li>
+        </ul>`;
+    }
+
+    // ==================================================================
+    // GLOBAL AUTH STATE MANAGEMENT
+    // ==================================================================
+    // Updates the navbar badge and logout button to reflect the
+    // current authentication status.
+    // ==================================================================
+    function setAuthenticatedState(isAuthenticated) {
+      const badge = document.getElementById('globalAuthStatus');
+      const dot = document.getElementById('statusDot');
+      const logoutBtn = document.getElementById('globalLogoutBtn');
+
+      if (isAuthenticated) {
+        badge.className = 'badge bg-success';
+        badge.innerHTML = '<span class="status-dot authenticated" id="statusDot"></span> Authenticated';
+        logoutBtn.classList.remove('d-none');
+      } else {
+        badge.className = 'badge bg-secondary';
+        badge.innerHTML = '<span class="status-dot unauthenticated" id="statusDot"></span> Not Authenticated';
+        logoutBtn.classList.add('d-none');
+      }
+    }
+
+    // ==================================================================
+    // INITIALIZATION
+    // ==================================================================
+    // On page load, check if a token already exists in any storage and
+    // restore the authenticated state if so.
+    // ==================================================================
+    (function init() {
+      const existingToken = getTokenFromAnyStorage();
+      if (existingToken) {
+        const payload = decodeJwtPayload(existingToken);
+        if (payload && payload.exp) {
+          const now = Math.floor(Date.now() / 1000);
+          if (now < payload.exp) {
+            setAuthenticatedState(true);
+          }
+        }
+      }
+      updateStorageDisplay();
+    })();
+  </script>
+</body>
+</html>

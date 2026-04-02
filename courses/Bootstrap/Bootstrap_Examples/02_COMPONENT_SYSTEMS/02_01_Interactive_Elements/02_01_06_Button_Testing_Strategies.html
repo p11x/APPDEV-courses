@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ========================================== -->
+    <!-- 02_01_06: Button Testing Strategies         -->
+    <!-- Unit tests, visual regression, integration  -->
+    <!-- tests, accessibility testing               -->
+    <!-- ========================================== -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02_01_06 - Button Testing Strategies</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* Visual regression test baseline markers */
+        .vrt-baseline {
+            border: 2px dashed #0d6efd;
+            padding: 8px;
+            margin: 4px;
+            display: inline-block;
+        }
+
+        /* Test result display */
+        .test-pass { color: #198754; }
+        .test-fail { color: #dc3545; }
+        .test-skip { color: #ffc107; }
+
+        /* Snapshot container for visual regression */
+        .snapshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold text-primary mb-4">Button Testing Strategies</h1>
+        <p class="lead text-muted mb-5">
+            Unit tests, visual regression tests, integration tests, and accessibility audits.
+        </p>
+
+        <!-- ========================================== -->
+        <!-- SECTION 1: TESTABLE BUTTON PATTERNS       -->
+        <!-- Buttons with data-testid attributes for   -->
+        <!-- reliable test selectors.                  -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Testable Button Patterns (data-testid)</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    Use <code>data-testid</code> attributes for stable test selectors that
+                    don't break when classes or structure change.
+                </p>
+                <!-- Buttons with test identifiers -->
+                <button type="button" class="btn btn-primary me-2" data-testid="btn-submit"
+                        id="testSubmit">Submit</button>
+                <button type="button" class="btn btn-danger me-2" data-testid="btn-delete"
+                        id="testDelete">Delete</button>
+                <button type="button" class="btn btn-success" data-testid="btn-save"
+                        id="testSave">Save</button>
+
+                <pre class="bg-dark text-light p-3 rounded small mt-3"><code>// Test selector pattern (Jest/Cypress/Playwright)
+// Preferred: data-testid (stable, semantic)
+cy.get('[data-testid="btn-submit"]').click();
+document.querySelector('[data-testid="btn-submit"]');
+
+// Avoid: class-based selectors (break easily)
+cy.get('.btn.btn-primary').click(); // Fragile!</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 2: UNIT TEST EXAMPLES             -->
+        <!-- Inline test demonstrations for button     -->
+        <!-- behavior verification.                    -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Unit Test Examples (Runnable)</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-primary me-2" id="counterBtn"
+                        onclick="incrementCounter()">
+                    Clicks: <span id="counterValue">0</span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary me-2" id="resetBtn"
+                        onclick="resetCounter()">
+                    Reset
+                </button>
+                <button type="button" class="btn btn-success" onclick="runUnitTests()">
+                    Run Unit Tests
+                </button>
+                <div id="unitTestResults" class="mt-3"></div>
+
+                <pre class="bg-dark text-light p-3 rounded small mt-3"><code>// Jest-style unit test examples
+describe('Counter Button', () => {
+  test('starts at 0', () => {
+    expect(getCounterValue()).toBe(0);
+  });
+
+  test('increments on click', () => {
+    clickButton('#counterBtn');
+    expect(getCounterValue()).toBe(1);
+  });
+
+  test('resets to 0', () => {
+    clickButton('#counterBtn');
+    clickButton('#resetBtn');
+    expect(getCounterValue()).toBe(0);
+  });
+
+  test('is disabled during processing', () => {
+    startProcessing();
+    expect(isDisabled('#counterBtn')).toBe(true);
+  });
+});</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 3: VISUAL REGRESSION SNAPSHOTS    -->
+        <!-- Button state snapshots for visual diff    -->
+        <!-- testing with tools like Percy/Chromatic.  -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Visual Regression Snapshot Matrix</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    All button states rendered side-by-side for visual comparison.
+                    Use with tools like Percy, Chromatic, or BackstopJS.
+                </p>
+                <div class="snapshot-grid">
+                    <!-- Default state -->
+                    <div class="text-center">
+                        <div class="vrt-baseline">
+                            <button type="button" class="btn btn-primary btn-sm">Default</button>
+                        </div>
+                        <small class="text-muted">Default</small>
+                    </div>
+                    <!-- Hover state (simulated) -->
+                    <div class="text-center">
+                        <div class="vrt-baseline">
+                            <button type="button" class="btn btn-primary btn-sm" style="filter: brightness(0.85);">Hover</button>
+                        </div>
+                        <small class="text-muted">Hover</small>
+                    </div>
+                    <!-- Active state -->
+                    <div class="text-center">
+                        <div class="vrt-baseline">
+                            <button type="button" class="btn btn-primary btn-sm active">Active</button>
+                        </div>
+                        <small class="text-muted">Active</small>
+                    </div>
+                    <!-- Focus state -->
+                    <div class="text-center">
+                        <div class="vrt-baseline">
+                            <button type="button" class="btn btn-primary btn-sm" style="box-shadow: 0 0 0 0.25rem rgba(13,110,253,0.5);">Focus</button>
+                        </div>
+                        <small class="text-muted">Focus</small>
+                    </div>
+                    <!-- Disabled state -->
+                    <div class="text-center">
+                        <div class="vrt-baseline">
+                            <button type="button" class="btn btn-primary btn-sm" disabled>Disabled</button>
+                        </div>
+                        <small class="text-muted">Disabled</small>
+                    </div>
+                    <!-- Loading state -->
+                    <div class="text-center">
+                        <div class="vrt-baseline">
+                            <button type="button" class="btn btn-primary btn-sm" disabled>
+                                <span class="spinner-border spinner-border-sm"></span> Loading
+                            </button>
+                        </div>
+                        <small class="text-muted">Loading</small>
+                    </div>
+                    <!-- Small size -->
+                    <div class="text-center">
+                        <div class="vrt-baseline">
+                            <button type="button" class="btn btn-primary btn-sm">Small</button>
+                        </div>
+                        <small class="text-muted">Small</small>
+                    </div>
+                    <!-- Large size -->
+                    <div class="text-center">
+                        <div class="vrt-baseline">
+                            <button type="button" class="btn btn-primary btn-lg">Large</button>
+                        </div>
+                        <small class="text-muted">Large</small>
+                    </div>
+                    <!-- Outline default -->
+                    <div class="text-center">
+                        <div class="vrt-baseline">
+                            <button type="button" class="btn btn-outline-primary btn-sm">Outline</button>
+                        </div>
+                        <small class="text-muted">Outline</small>
+                    </div>
+                    <!-- Outline active -->
+                    <div class="text-center">
+                        <div class="vrt-baseline">
+                            <button type="button" class="btn btn-outline-primary btn-sm active">OA Active</button>
+                        </div>
+                        <small class="text-muted">Outline Active</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 4: ACCESSIBILITY TESTING          -->
+        <!-- Automated a11y checks for buttons.        -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Accessibility Testing (Runnable)</h2>
+            <div class="card p-4">
+                <button type="button" class="btn btn-success" onclick="runA11yTests()">
+                    Run Accessibility Audit
+                </button>
+                <div id="a11yResults" class="mt-3"></div>
+
+                <!-- Buttons with various a11y issues for testing -->
+                <div class="mt-3 p-3 border rounded" id="a11yTestArea">
+                    <!-- Good: properly labeled button -->
+                    <button type="button" class="btn btn-primary me-2 mb-2" data-testid="good-btn-1">Properly Labeled</button>
+
+                    <!-- Bad: icon-only without aria-label -->
+                    <button type="button" class="btn btn-danger me-2 mb-2" data-testid="bad-btn-no-label">&times;</button>
+
+                    <!-- Bad: very low contrast text -->
+                    <button type="button" class="btn me-2 mb-2" style="background:#ffff00; color:#ffff01;" data-testid="bad-btn-contrast">Low Contrast</button>
+
+                    <!-- Good: icon button with aria-label -->
+                    <button type="button" class="btn btn-outline-secondary me-2 mb-2" aria-label="Search" data-testid="good-icon-btn">
+                        <span aria-hidden="true">&#128269;</span>
+                    </button>
+
+                    <!-- Bad: clickable div (not a button) -->
+                    <div class="btn btn-warning me-2 mb-2" data-testid="bad-div-btn" onclick="void(0)">Div as Button</div>
+
+                    <!-- Good: toggle with aria-pressed -->
+                    <button type="button" class="btn btn-outline-info mb-2" aria-pressed="false" data-testid="good-toggle">Toggle</button>
+                </div>
+
+                <pre class="bg-dark text-light p-3 rounded small mt-3"><code>// axe-core style accessibility checks
+// Each test verifies a WCAG requirement
+const checks = [
+  { rule: 'button-name', desc: 'Buttons must have accessible text' },
+  { rule: 'color-contrast', desc: 'Text must have 4.5:1 contrast ratio' },
+  { rule: 'aria-pressed', desc: 'Toggle buttons need aria-pressed' },
+  { rule: 'semantic-role', desc: 'Use &lt;button&gt; not &lt;div&gt;' },
+  { rule: 'keyboard-accessible', desc: 'Buttons must be keyboard focusable' },
+];</code></pre>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 5: INTEGRATION TEST PATTERNS      -->
+        <!-- Testing button interactions with forms,   -->
+        <!-- modals, and other components.             -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Integration Test Patterns</h2>
+            <div class="card p-4">
+                <p class="text-muted small mb-3">
+                    Test button behavior in context: form submissions, modal triggers, state changes.
+                </p>
+
+                <!-- Integration: Button submits form -->
+                <h6>Form Submission Integration</h6>
+                <form id="integrationForm" class="mb-3">
+                    <div class="input-group" style="max-width:400px;">
+                        <input type="text" class="form-control" id="integrationInput" placeholder="Enter value">
+                        <button type="button" class="btn btn-primary" data-testid="form-submit"
+                                onclick="integrationSubmit()">Submit</button>
+                    </div>
+                </form>
+                <div id="integrationResult" class="text-muted small mb-3"></div>
+
+                <!-- Integration: Button opens modal -->
+                <h6>Modal Trigger Integration</h6>
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal"
+                        data-bs-target="#testModal" data-testid="modal-trigger">
+                    Open Modal
+                </button>
+
+                <button type="button" class="btn btn-info ms-2" onclick="runIntegrationTests()">
+                    Run Integration Tests
+                </button>
+                <div id="integrationTestResults" class="mt-3"></div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SECTION 6: TEST SNAPSHOT GALLERY          -->
+        <!-- All variants rendered for screenshot      -->
+        <!-- comparison testing.                       -->
+        <!-- ========================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Complete Variant Snapshot Gallery</h2>
+            <div class="card p-4" id="snapshotGallery">
+                <!-- All color variants -->
+                <h6 class="text-muted">Solid Variants</h6>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary me-1">Primary</button>
+                    <button type="button" class="btn btn-secondary me-1">Secondary</button>
+                    <button type="button" class="btn btn-success me-1">Success</button>
+                    <button type="button" class="btn btn-danger me-1">Danger</button>
+                    <button type="button" class="btn btn-warning me-1">Warning</button>
+                    <button type="button" class="btn btn-info me-1">Info</button>
+                    <button type="button" class="btn btn-light me-1">Light</button>
+                    <button type="button" class="btn btn-dark">Dark</button>
+                </div>
+
+                <!-- All outline variants -->
+                <h6 class="text-muted">Outline Variants</h6>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-primary me-1">Primary</button>
+                    <button type="button" class="btn btn-outline-secondary me-1">Secondary</button>
+                    <button type="button" class="btn btn-outline-success me-1">Success</button>
+                    <button type="button" class="btn btn-outline-danger me-1">Danger</button>
+                    <button type="button" class="btn btn-outline-warning me-1">Warning</button>
+                    <button type="button" class="btn btn-outline-info me-1">Info</button>
+                    <button type="button" class="btn btn-outline-light me-1">Light</button>
+                    <button type="button" class="btn btn-outline-dark">Dark</button>
+                </div>
+
+                <!-- All sizes -->
+                <h6 class="text-muted">Size Variants</h6>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary btn-sm me-1">Small</button>
+                    <button type="button" class="btn btn-primary me-1">Default</button>
+                    <button type="button" class="btn btn-primary btn-lg">Large</button>
+                </div>
+
+                <!-- Button groups -->
+                <h6 class="text-muted">Group Variants</h6>
+                <div class="btn-group mb-2" role="group">
+                    <button type="button" class="btn btn-primary">Left</button>
+                    <button type="button" class="btn btn-primary">Middle</button>
+                    <button type="button" class="btn btn-primary">Right</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Test Modal for integration testing -->
+    <div class="modal fade" id="testModal" tabindex="-1" aria-labelledby="testModalLabel">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="testModalLabel">Test Modal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    This modal was triggered by a button integration test.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-testid="modal-confirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        /* ========================================== */
+        /* TEST RUNNER JAVASCRIPT                     */
+        /* ========================================== */
+
+        let counter = 0;
+        function incrementCounter() { counter++; updateDisplay(); }
+        function resetCounter() { counter = 0; updateDisplay(); }
+        function getCounterValue() { return counter; }
+        function updateDisplay() {
+            document.getElementById('counterValue').textContent = counter;
+        }
+
+        /* Simple test assertion helpers */
+        function assert(condition, testName) {
+            return { pass: !!condition, name: testName };
+        }
+
+        function assertEqual(actual, expected, testName) {
+            return { pass: actual === expected, name: testName, actual, expected };
+        }
+
+        function renderResults(containerId, results) {
+            const container = document.getElementById(containerId);
+            const passed = results.filter(r => r.pass).length;
+            const total = results.length;
+
+            let html = '<div class="alert alert-' + (passed === total ? 'success' : 'warning') + '">';
+            html += '<strong>' + passed + '/' + total + ' tests passed</strong><br>';
+
+            results.forEach(r => {
+                html += '<span class="' + (r.pass ? 'test-pass' : 'test-fail') + '">';
+                html += (r.pass ? '\u2713' : '\u2717') + ' ' + r.name;
+                if (!r.pass && r.actual !== undefined) {
+                    html += ' (expected: ' + r.expected + ', got: ' + r.actual + ')';
+                }
+                html += '</span><br>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        /* Run unit tests */
+        function runUnitTests() {
+            const results = [];
+
+            /* Test 1: Counter starts at 0 */
+            resetCounter();
+            results.push(assertEqual(getCounterValue(), 0, 'Counter starts at 0'));
+
+            /* Test 2: Increment works */
+            incrementCounter();
+            results.push(assertEqual(getCounterValue(), 1, 'Counter increments to 1'));
+
+            /* Test 3: Multiple increments */
+            incrementCounter();
+            incrementCounter();
+            results.push(assertEqual(getCounterValue(), 3, 'Counter reaches 3 after 3 clicks'));
+
+            /* Test 4: Reset works */
+            resetCounter();
+            results.push(assertEqual(getCounterValue(), 0, 'Counter resets to 0'));
+
+            /* Test 5: Button exists with correct data-testid */
+            const btn = document.querySelector('[data-testid="btn-submit"]');
+            results.push(assert(btn !== null, 'Submit button exists with data-testid'));
+
+            /* Test 6: Button has correct type */
+            results.push(assertEqual(btn?.type, 'submit' || 'button', 'Button has proper type'));
+
+            renderResults('unitTestResults', results);
+        }
+
+        /* Run accessibility tests */
+        function runA11yTests() {
+            const results = [];
+            const testArea = document.getElementById('a11yTestArea');
+
+            /* Check 1: All buttons have accessible names */
+            const buttons = testArea.querySelectorAll('button');
+            buttons.forEach((btn, i) => {
+                const hasName = btn.textContent.trim() !== '' || btn.getAttribute('aria-label') || btn.getAttribute('aria-labelledby');
+                const testId = btn.getAttribute('data-testid') || 'btn-' + i;
+                results.push(assert(hasName, 'Accessible name: ' + testId));
+            });
+
+            /* Check 2: Icon-only buttons have aria-label */
+            const iconButtons = testArea.querySelectorAll('button:not(:empty)');
+            iconButtons.forEach(btn => {
+                const text = btn.textContent.trim();
+                const testId = btn.getAttribute('data-testid') || 'unknown';
+                if (text.length <= 2) {
+                    results.push(
+                        assert(btn.getAttribute('aria-label'), 'Icon button has aria-label: ' + testId)
+                    );
+                }
+            });
+
+            /* Check 3: Check for divs pretending to be buttons */
+            const divButtons = testArea.querySelectorAll('div.btn');
+            results.push(
+                assertEqual(divButtons.length, 0, 'No div elements styled as buttons (' + divButtons.length + ' found)')
+            );
+
+            /* Check 4: Toggle buttons have aria-pressed */
+            const toggles = testArea.querySelectorAll('[aria-pressed]');
+            results.push(assert(toggles.length > 0, 'Toggle buttons have aria-pressed'));
+
+            /* Check 5: Keyboard focusable */
+            const focusableBtns = Array.from(buttons).filter(b => b.tabIndex >= 0);
+            results.push(
+                assertEqual(focusableBtns.length, buttons.length, 'All buttons are keyboard focusable')
+            );
+
+            renderResults('a11yResults', results);
+        }
+
+        /* Form integration test */
+        function integrationSubmit() {
+            const input = document.getElementById('integrationInput').value;
+            document.getElementById('integrationResult').textContent =
+                'Submitted: "' + input + '"';
+        }
+
+        /* Run integration tests */
+        function runIntegrationTests() {
+            const results = [];
+
+            /* Test: Form submission with value */
+            document.getElementById('integrationInput').value = 'test data';
+            integrationSubmit();
+            results.push(
+                assert(
+                    document.getElementById('integrationResult').textContent.includes('test data'),
+                    'Form submit passes input value'
+                )
+            );
+
+            /* Test: Empty form submission */
+            document.getElementById('integrationInput').value = '';
+            integrationSubmit();
+            results.push(
+                assert(
+                    document.getElementById('integrationResult').textContent.includes('""'),
+                    'Form submit handles empty input'
+                )
+            );
+
+            /* Test: Modal trigger exists */
+            const modalTrigger = document.querySelector('[data-testid="modal-trigger"]');
+            results.push(assert(modalTrigger !== null, 'Modal trigger button exists'));
+
+            /* Test: Modal target exists */
+            const modalTarget = modalTrigger?.getAttribute('data-bs-target');
+            results.push(assert(modalTarget === '#testModal', 'Modal trigger targets correct modal'));
+
+            /* Test: Modal element exists in DOM */
+            const modal = document.querySelector('#testModal');
+            results.push(assert(modal !== null, 'Modal element exists'));
+
+            renderResults('integrationTestResults', results);
+        }
+    </script>
+</body>
+</html>

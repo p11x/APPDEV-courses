@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_03_Code_Splitting.html
+     Topic: Code Splitting Strategies for Bootstrap Applications
+     
+     Code splitting divides your application into smaller chunks that
+     are loaded on demand. This reduces initial load time and improves
+     perceived performance for users.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Code Splitting - Bootstrap 5</title>
+
+    <style>
+        /* Critical styles only - above the fold */
+        .hero-gradient {
+            background: linear-gradient(135deg, #6610f2 0%, #0d6efd 100%);
+            color: white;
+            padding: 4rem 0;
+        }
+        .chunk-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .chunk-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .code-example {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+        .route-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation with offcanvas for mobile -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Code Splitting</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas"
+                    data-bs-target="#offcanvasNav" aria-controls="offcanvasNav"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse d-none d-lg-flex" id="navbarDesktop">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#strategies">Strategies</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#routes">Route Splitting</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#dynamic">Dynamic Import</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#demo">Demo</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Offcanvas navigation for mobile devices -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNav" aria-labelledby="offcanvasNavLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasNavLabel">Navigation</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <nav class="nav flex-column">
+                <a class="nav-link" href="#strategies">Strategies</a>
+                <a class="nav-link" href="#routes">Route Splitting</a>
+                <a class="nav-link" href="#dynamic">Dynamic Import</a>
+                <a class="nav-link" href="#demo">Demo</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Code Splitting</h1>
+            <p class="lead mt-2">Load only what users need, when they need it.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: SPLITTING STRATEGIES
+         Cards explaining different code splitting approaches.
+         ============================================================ -->
+    <section id="strategies" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Splitting Strategies</h2>
+            <div class="row g-4">
+
+                <!-- Route-based splitting -->
+                <div class="col-md-6">
+                    <div class="card h-100 chunk-card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Route-Based Splitting</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Each page/route loads its own JavaScript chunk. Users only download code for the page they visit.</p>
+                            <ul class="list-group list-group-flush mb-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>/home</span> <span class="badge bg-primary route-badge">home.chunk.js</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>/dashboard</span> <span class="badge bg-success route-badge">dashboard.chunk.js</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>/settings</span> <span class="badge bg-warning route-badge">settings.chunk.js</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Component-based splitting -->
+                <div class="col-md-6">
+                    <div class="card h-100 chunk-card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Component-Based Splitting</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Heavy components are loaded on demand. A modal with a rich editor loads only when opened.</p>
+                            <div class="code-example">
+<span class="text-success">// Lazy-load heavy modal component</span>
+<span style="color:#569cd6">const</span> RichEditor = React.lazy(
+  () => <span style="color:#569cd6">import</span>(<span style="color:#ce9178">'./RichEditor'</span>)
+);
+                            </div>
+                            <div class="mt-3">
+                                <span class="badge bg-light text-dark">~40KB saved on initial load</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vendor splitting -->
+                <div class="col-md-6">
+                    <div class="card h-100 chunk-card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Vendor Splitting</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Separate third-party libraries into a vendor chunk. This chunk changes rarely, so it benefits from long-term caching.</p>
+                            <div class="code-example">
+<span class="text-success">// Webpack splitChunks config</span>
+optimization: {
+  splitChunks: {
+    cacheGroups: {
+      vendor: {
+        test: /[\\/]node_modules[\\/]/,
+        name: <span style="color:#ce9178">'vendors'</span>,
+        chunks: <span style="color:#ce9178">'all'</span>
+      }
+    }
+  }
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prefetch/Preload splitting -->
+                <div class="col-md-6">
+                    <div class="card h-100 chunk-card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Prefetch &amp; Preload</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Hint the browser to prefetch chunks for likely next navigations during idle time.</p>
+                            <div class="code-example">
+<span class="text-success">// Webpack magic comments</span>
+<span style="color:#569cd6">import</span>(
+  <span style="color:#ce9178">'./Dashboard'</span>
+  <span style="color:#ce9178">/* webpackPrefetch: true */</span>
+);
+<span class="text-success">// Adds &lt;link rel="prefetch"&gt; to HTML</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: ROUTE SPLITTING VISUAL
+         Visual representation of how route splitting works.
+         ============================================================ -->
+    <section id="routes" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Route Splitting Architecture</h2>
+
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <!-- Flow diagram using Bootstrap cards and arrows -->
+                    <div class="card mb-3 border-primary">
+                        <div class="card-body text-center">
+                            <strong>Initial Load</strong><br>
+                            <code>main.js</code> (15 KB) + <code>vendor.js</code> (45 KB)<br>
+                            <small class="text-muted">Shared code loaded on every page</small>
+                        </div>
+                    </div>
+
+                    <div class="text-center my-2"><span class="badge bg-secondary">User navigates</span></div>
+
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="card border-success text-center">
+                                <div class="card-body p-2">
+                                    <small><strong>/home</strong></small><br>
+                                    <code class="small">home.js</code><br>
+                                    <span class="badge bg-success">8 KB</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card border-info text-center">
+                                <div class="card-body p-2">
+                                    <small><strong>/products</strong></small><br>
+                                    <code class="small">products.js</code><br>
+                                    <span class="badge bg-info">12 KB</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card border-warning text-center">
+                                <div class="card-body p-2">
+                                    <small><strong>/checkout</strong></small><br>
+                                    <code class="small">checkout.js</code><br>
+                                    <span class="badge bg-warning text-dark">18 KB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mt-4 mt-lg-0">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Benefits</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <span class="text-success fw-bold">&#10003;</span>
+                                    <strong>Faster initial load:</strong> Only shared + home chunk loaded
+                                </li>
+                                <li class="mb-2">
+                                    <span class="text-success fw-bold">&#10003;</span>
+                                    <strong>Better caching:</strong> Vendor chunk cached separately
+                                </li>
+                                <li class="mb-2">
+                                    <span class="text-success fw-bold">&#10003;</span>
+                                    <strong>Parallel downloads:</strong> Multiple small chunks load faster
+                                </li>
+                                <li class="mb-2">
+                                    <span class="text-success fw-bold">&#10003;</span>
+                                    <strong>Progressive loading:</strong> Users see content sooner
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: DYNAMIC IMPORT DEMO
+         Interactive demo showing dynamic import behavior.
+         ============================================================ -->
+    <section id="dynamic" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Dynamic Import Demo</h2>
+            <p class="text-muted mb-4">Click buttons to simulate loading different chunks on demand.</p>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Chart Module</h5>
+                            <p class="card-text small text-muted">Simulates loading a charting library (~120 KB) only when user views analytics.</p>
+                            <button class="btn btn-primary w-100" id="loadChartBtn" onclick="loadModule('chart')">
+                                Load Chart Module
+                            </button>
+                            <div id="chartResult" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Editor Module</h5>
+                            <p class="card-text small text-muted">Simulates loading a rich text editor (~85 KB) only when user opens compose.</p>
+                            <button class="btn btn-success w-100" id="loadEditorBtn" onclick="loadModule('editor')">
+                                Load Editor Module
+                            </button>
+                            <div id="editorResult" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Map Module</h5>
+                            <p class="card-text small text-muted">Simulates loading a mapping library (~200 KB) only when user needs location.</p>
+                            <button class="btn btn-warning w-100" id="loadMapBtn" onclick="loadModule('map')">
+                                Load Map Module
+                            </button>
+                            <div id="mapResult" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: SPLITTING CONFIGURATION REFERENCE
+         Table of configuration options for popular bundlers.
+         ============================================================ -->
+    <section id="demo" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Configuration Reference</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Bundler</th>
+                            <th>Config Property</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Webpack</strong></td>
+                            <td><code>splitChunks.chunks</code></td>
+                            <td>Controls which chunks are split (async, initial, all)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Webpack</strong></td>
+                            <td><code>splitChunks.maxSize</code></td>
+                            <td>Maximum chunk size before further splitting</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Vite</strong></td>
+                            <td><code>build.rollupOptions.output.manualChunks</code></td>
+                            <td>Manually assign modules to specific chunks</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rollup</strong></td>
+                            <td><code>output.manualChunks</code></td>
+                            <td>Function or object mapping module paths to chunk names</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Next.js</strong></td>
+                            <td><code>dynamic()</code></td>
+                            <td>Built-in dynamic import wrapper with SSR support</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Code Splitting &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+
+    <!-- Simulated dynamic import behavior -->
+    <script>
+        // Module simulation data - represents what real dynamic imports would load
+        const moduleData = {
+            chart: { name: 'Chart.js', size: '120 KB', time: 800, icon: 'bar-chart' },
+            editor: { name: 'TinyMCE', size: '85 KB', time: 600, icon: 'pencil-square' },
+            map: { name: 'Leaflet', size: '200 KB', time: 1200, icon: 'geo-alt' }
+        };
+
+        // Simulate dynamic import with loading state
+        function loadModule(type) {
+            const data = moduleData[type];
+            const resultEl = document.getElementById(`${type}Result`);
+            const btnEl = document.getElementById(`load${type.charAt(0).toUpperCase() + type.slice(1)}Btn`);
+
+            // Disable button and show loading state
+            btnEl.disabled = true;
+            btnEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>Loading...`;
+
+            resultEl.innerHTML = `
+                <div class="alert alert-info py-2 mb-0">
+                    <small>Loading ${data.name} (${data.size})...</small>
+                </div>`;
+
+            // Simulate network delay for chunk loading
+            setTimeout(() => {
+                btnEl.disabled = false;
+                btnEl.innerHTML = 'Loaded!';
+                btnEl.classList.remove('btn-primary', 'btn-success', 'btn-warning');
+                btnEl.classList.add('btn-outline-secondary');
+
+                resultEl.innerHTML = `
+                    <div class="alert alert-success py-2 mb-0">
+                        <strong>${data.name}</strong> loaded (${data.size})<br>
+                        <small class="text-muted">Chunk downloaded in ${data.time}ms</small>
+                    </div>`;
+            }, data.time);
+        }
+    </script>
+</body>
+</html>

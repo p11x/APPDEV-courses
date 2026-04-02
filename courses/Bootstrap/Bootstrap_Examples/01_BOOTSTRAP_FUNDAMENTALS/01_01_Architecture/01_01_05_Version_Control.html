@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================ -->
+    <!-- CORE META TAGS                               -->
+    <!-- ============================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bootstrap 5 Version Control Best Practices - Git workflows for Bootstrap projects">
+    <meta name="author" content="Bootstrap Course">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- ============================================ -->
+    <!-- TITLE                                        -->
+    <!-- ============================================ -->
+    <title>01_01_05 - Version Control</title>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 CSS CDN                          -->
+    <!-- ============================================ -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aV76Ug"
+        crossorigin="anonymous"
+    >
+
+    <!-- Bootstrap Icons CDN -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <!-- ============================================ -->
+    <!-- CUSTOM STYLES                                -->
+    <!-- ============================================ -->
+    <style>
+        /*
+            Git flow diagram styling.
+            Creates a visual representation of git branches.
+        */
+        .git-branch {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        .git-branch--main { background-color: #198754; color: white; }
+        .git-branch--develop { background-color: #0d6efd; color: white; }
+        .git-branch--feature { background-color: #ffc107; color: #212529; }
+        .git-branch--hotfix { background-color: #dc3545; color: white; }
+        .git-branch--release { background-color: #6f42c1; color: white; }
+
+        /*
+            Terminal styling for git commands.
+        */
+        .git-terminal {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        .git-terminal .branch { color: #6a9955; }
+        .git-terminal .cmd { color: #dcdcaa; }
+        .git-terminal .hash { color: #ce9178; }
+        .git-terminal .msg { color: #9cdcfe; }
+
+        /*
+            .gitignore entry styling.
+        */
+        .gitignore-entry {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            margin: 0.15rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+        .gitignore-entry--dist { background-color: #f8d7da; color: #842029; }
+        .gitignore-entry--deps { background-color: #cff4fc; color: #055160; }
+        .gitignore-entry--env { background-color: #fff3cd; color: #664d03; }
+        .gitignore-entry--build { background-color: #d1e7dd; color: #0f5132; }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================ -->
+    <!-- NAVIGATION BAR                               -->
+    <!-- ============================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-git me-2"></i>Version Control
+            </a>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#gitignore">.gitignore</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#branching">Branching</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#commits">Commits</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#workflows">Workflows</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================ -->
+    <!-- HERO SECTION                                 -->
+    <!-- ============================================ -->
+    <header class="bg-success text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Version Control Best Practices</h1>
+            <p class="lead mb-0">
+                Git workflows, .gitignore configuration, branching strategies, and commit conventions
+                for Bootstrap projects.
+            </p>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT                                 -->
+    <!-- ============================================ -->
+    <main class="container py-5">
+
+        <!-- ============================================ -->
+        <!-- .GITIGNORE SECTION                           -->
+        <!-- ============================================ -->
+        <!--
+            .gitignore tells Git which files and directories to exclude from version control.
+            For Bootstrap projects, this includes build artifacts, dependencies, and environment files.
+        -->
+        <section class="mb-5" id="gitignore">
+            <h2 class="mb-4">
+                <i class="bi bi-file-earmark-x me-2"></i>.gitignore Configuration
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">What to Ignore</h5>
+                            <p class="card-text">
+                                A proper <code>.gitignore</code> prevents committing files that should
+                                not be in version control. These include build outputs, dependencies,
+                                and sensitive configuration.
+                            </p>
+
+                            <!--
+                                Categorized .gitignore entries.
+                                Each category uses a different color for visual distinction.
+                            -->
+                            <h6 class="mt-4">Dependencies</h6>
+                            <div class="mb-3">
+                                <span class="gitignore-entry gitignore-entry--deps">node_modules/</span>
+                                <span class="gitignore-entry gitignore-entry--deps">bower_components/</span>
+                                <span class="gitignore-entry gitignore-entry--deps">vendor/</span>
+                            </div>
+                            <p class="text-muted small">
+                                Dependencies are installed via <code>npm install</code>. They can be
+                                rebuilt from <code>package-lock.json</code>, so they should never be committed.
+                            </p>
+
+                            <h6>Build Output</h6>
+                            <div class="mb-3">
+                                <span class="gitignore-entry gitignore-entry--build">dist/</span>
+                                <span class="gitignore-entry gitignore-entry--build">build/</span>
+                                <span class="gitignore-entry gitignore-entry--build">*.min.css</span>
+                                <span class="gitignore-entry gitignore-entry--build">*.min.js</span>
+                            </div>
+                            <p class="text-muted small">
+                                Compiled/built files are generated from source. Commit the source,
+                                not the output. Rebuild with <code>npm run build</code>.
+                            </p>
+
+                            <h6>Environment & Secrets</h6>
+                            <div class="mb-3">
+                                <span class="gitignore-entry gitignore-entry--env">.env</span>
+                                <span class="gitignore-entry gitignore-entry--env">.env.local</span>
+                                <span class="gitignore-entry gitignore-entry--env">.env.*.local</span>
+                                <span class="gitignore-entry gitignore-entry--env">*.pem</span>
+                            </div>
+                            <p class="text-muted small">
+                                Environment files often contain API keys and secrets. Never commit
+                                credentials to version control.
+                            </p>
+
+                            <h6>Editor & OS Files</h6>
+                            <div class="mb-0">
+                                <span class="gitignore-entry gitignore-entry--dist">.vscode/</span>
+                                <span class="gitignore-entry gitignore-entry--dist">.idea/</span>
+                                <span class="gitignore-entry gitignore-entry--dist">.DS_Store</span>
+                                <span class="gitignore-entry gitignore-entry--dist">Thumbs.db</span>
+                                <span class="gitignore-entry gitignore-entry--dist">*.log</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <!--
+                        Sample .gitignore file for a Bootstrap project.
+                        Shows a complete, practical .gitignore.
+                    -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-file-earmark-text me-2"></i>Sample .gitignore
+                            </h5>
+                            <div class="git-terminal small">
+                                <div><span class="branch"># Dependencies</span></div>
+                                <div>node_modules/</div>
+                                <div>package-lock.json</div>
+                                <div class="mt-1"><span class="branch"># Build output</span></div>
+                                <div>dist/</div>
+                                <div>build/</div>
+                                <div>css/bootstrap*.css</div>
+                                <div>css/bootstrap*.css.map</div>
+                                <div class="mt-1"><span class="branch"># Environment</span></div>
+                                <div>.env</div>
+                                <div>.env.local</div>
+                                <div class="mt-1"><span class="branch"># IDE</span></div>
+                                <div>.vscode/</div>
+                                <div>.idea/</div>
+                                <div>*.swp</div>
+                                <div class="mt-1"><span class="branch"># OS</span></div>
+                                <div>.DS_Store</div>
+                                <div>Thumbs.db</div>
+                                <div class="mt-1"><span class="branch"># Logs</span></div>
+                                <div>*.log</div>
+                                <div>npm-debug.log*</div>
+                            </div>
+                            <div class="alert alert-info mt-3 mb-0 small">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>Tip:</strong> Use <a href="https://gitignore.io" target="_blank">gitignore.io</a>
+                                to generate .gitignore files for your specific stack.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- BRANCHING STRATEGY SECTION                   -->
+        <!-- ============================================ -->
+        <!--
+            Branching strategies define how teams organize work in Git.
+            A good strategy prevents conflicts and keeps history clean.
+        -->
+        <section class="mb-5" id="branching">
+            <h2 class="mb-4">
+                <i class="bi bi-diagram-2 me-2"></i>Branching Strategy
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Git Flow for Bootstrap Projects</h5>
+                            <p class="card-text">
+                                A common branching model uses multiple branch types for different purposes:
+                            </p>
+
+                            <!--
+                                Visual representation of branch hierarchy.
+                            -->
+                            <div class="git-branch git-branch--main">
+                                <i class="bi bi-git me-2"></i>
+                                <strong>main</strong> - Production-ready code
+                            </div>
+                            <div class="git-branch git-branch--develop ms-4">
+                                <i class="bi bi-git me-2"></i>
+                                <strong>develop</strong> - Integration branch for features
+                            </div>
+                            <div class="git-branch git-branch--feature ms-5">
+                                <i class="bi bi-git me-2"></i>
+                                <strong>feature/navbar-redesign</strong> - New feature work
+                            </div>
+                            <div class="git-branch git-branch--feature ms-5">
+                                <i class="bi bi-git me-2"></i>
+                                <strong>feature/add-dark-mode</strong> - Another feature
+                            </div>
+                            <div class="git-branch git-branch--release ms-4">
+                                <i class="bi bi-git me-2"></i>
+                                <strong>release/v1.2.0</strong> - Release preparation
+                            </div>
+                            <div class="git-branch git-branch--hotfix ms-4">
+                                <i class="bi bi-git me-2"></i>
+                                <strong>hotfix/fix-modal-z-index</strong> - Urgent production fix
+                            </div>
+
+                            <div class="mt-4">
+                                <h6>Branch Naming Convention</h6>
+                                <p class="text-muted small">
+                                    Use the format: <code>type/short-description</code>
+                                </p>
+                                <table class="table table-sm small">
+                                    <thead>
+                                        <tr>
+                                            <th>Prefix</th>
+                                            <th>Use For</th>
+                                            <th>Example</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><code>feature/</code></td>
+                                            <td>New functionality</td>
+                                            <td><code>feature/user-auth</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>bugfix/</code></td>
+                                            <td>Bug fixes</td>
+                                            <td><code>bugfix/fix-navbar-toggle</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>hotfix/</code></td>
+                                            <td>Urgent production fixes</td>
+                                            <td><code>hotfix/security-patch</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>release/</code></td>
+                                            <td>Release preparation</td>
+                                            <td><code>release/v2.0.0</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><code>docs/</code></td>
+                                            <td>Documentation only</td>
+                                            <td><code>docs/update-readme</code></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!--
+                        Git commands for common branch operations.
+                    -->
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Branch Commands</h5>
+                            <div class="git-terminal small">
+                                <div><span class="branch"># Create & switch</span></div>
+                                <div><span class="cmd">git checkout -b</span> feature/new-theme</div>
+                                <div class="mt-1"><span class="branch"># List branches</span></div>
+                                <div><span class="cmd">git branch</span> -a</div>
+                                <div class="mt-1"><span class="branch"># Switch branch</span></div>
+                                <div><span class="cmd">git switch</span> develop</div>
+                                <div class="mt-1"><span class="branch"># Delete branch</span></div>
+                                <div><span class="cmd">git branch</span> -d feature/done</div>
+                                <div class="mt-1"><span class="branch"># Merge branch</span></div>
+                                <div><span class="cmd">git merge</span> feature/new-theme</div>
+                                <div class="mt-1"><span class="branch"># Rebase (rewrite)</span></div>
+                                <div><span class="cmd">git rebase</span> develop</div>
+                                <div class="mt-1"><span class="branch"># Push branch</span></div>
+                                <div><span class="cmd">git push</span> -u origin feature/new-theme</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- COMMIT CONVENTIONS SECTION                   -->
+        <!-- ============================================ -->
+        <!--
+            Good commit messages make history readable and enable automated changelogs.
+            Conventional Commits is a widely adopted standard.
+        -->
+        <section class="mb-5" id="commits">
+            <h2 class="mb-4">
+                <i class="bi bi-chat-left-text me-2"></i>Commit Conventions
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Conventional Commits</h5>
+                            <p class="card-text">
+                                The Conventional Commits specification provides a lightweight
+                                convention on top of commit messages.
+                            </p>
+                            <div class="git-terminal small">
+                                <div><span class="cmd">type</span>(<span class="msg">scope</span>): description</div>
+                                <div class="mt-2"><span class="branch"># Examples:</span></div>
+                                <div><span class="cmd">feat</span>(navbar): add dark mode toggle</div>
+                                <div><span class="cmd">fix</span>(modal): correct z-index stacking</div>
+                                <div><span class="cmd">docs</span>(readme): update installation steps</div>
+                                <div><span class="cmd">style</span>: format SCSS with prettier</div>
+                                <div><span class="cmd">refactor</span>(grid): simplify column calc</div>
+                                <div><span class="cmd">test</span>(button): add unit tests</div>
+                                <div><span class="cmd">chore</span>: update dependencies</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Commit Types</h5>
+                            <p class="card-text text-muted small">
+                                Standard types for conventional commits:
+                            </p>
+                            <table class="table table-sm small">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>feat</code></td>
+                                        <td>New feature</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>fix</code></td>
+                                        <td>Bug fix</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>docs</code></td>
+                                        <td>Documentation changes</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>style</code></td>
+                                        <td>Code style (no logic change)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>refactor</code></td>
+                                        <td>Code refactoring</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>test</code></td>
+                                        <td>Adding/fixing tests</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>chore</code></td>
+                                        <td>Maintenance tasks</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>perf</code></td>
+                                        <td>Performance improvements</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="alert alert-warning mb-0 small">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                <strong>Breaking changes:</strong> Add <code>!</code> after type:
+                                <code>feat!: remove deprecated API</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- WORKFLOW EXAMPLES SECTION                    -->
+        <!-- ============================================ -->
+        <!--
+            Practical workflow examples showing day-to-day Git operations
+            in a Bootstrap project context.
+        -->
+        <section id="workflows">
+            <h2 class="mb-4">
+                <i class="bi bi-arrow-repeat me-2"></i>Common Workflows
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Starting a New Feature</h5>
+                            <div class="git-terminal small">
+                                <div><span class="branch"># 1. Update your local main</span></div>
+                                <div><span class="cmd">git checkout</span> main</div>
+                                <div><span class="cmd">git pull</span> origin main</div>
+                                <div class="mt-1"><span class="branch"># 2. Create feature branch</span></div>
+                                <div><span class="cmd">git checkout -b</span> feature/custom-theme</div>
+                                <div class="mt-1"><span class="branch"># 3. Do your work...</span></div>
+                                <div><span class="cmd">git add</span> .</div>
+                                <div><span class="cmd">git commit -m</span> <span class="msg">"feat(theme): add custom color scheme"</span></div>
+                                <div class="mt-1"><span class="branch"># 4. Push and create PR</span></div>
+                                <div><span class="cmd">git push</span> -u origin feature/custom-theme</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Syncing with Upstream</h5>
+                            <div class="git-terminal small">
+                                <div><span class="branch"># 1. Fetch latest changes</span></div>
+                                <div><span class="cmd">git fetch</span> origin</div>
+                                <div class="mt-1"><span class="branch"># 2. Rebase your branch</span></div>
+                                <div><span class="cmd">git rebase</span> origin/main</div>
+                                <div class="mt-1"><span class="branch"># 3. Resolve conflicts if any</span></div>
+                                <div><span class="cmd">git add</span> resolved-file.html</div>
+                                <div><span class="cmd">git rebase</span> --continue</div>
+                                <div class="mt-1"><span class="branch"># 4. Force-push rebased branch</span></div>
+                                <div><span class="cmd">git push</span> --force-with-lease</div>
+                            </div>
+                            <div class="alert alert-warning mt-3 mb-0 small">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Use <code>--force-with-lease</code> instead of <code>--force</code>.
+                                It prevents overwriting others' work.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <!--
+                        Files to track vs files to ignore summary.
+                    -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-check2-square me-2"></i>What to Track vs Ignore
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-success"><i class="bi bi-check-circle me-1"></i>Commit These</h6>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="bi bi-check text-success me-2"></i>Source files (.scss, .js, .html)</li>
+                                        <li><i class="bi bi-check text-success me-2"></i>package.json (not package-lock.json)</li>
+                                        <li><i class="bi bi-check text-success me-2"></i>Configuration files (.browserslistrc)</li>
+                                        <li><i class="bi bi-check text-success me-2"></i>Documentation (README, docs/)</li>
+                                        <li><i class="bi bi-check text-success me-2"></i>.gitignore</li>
+                                        <li><i class="bi bi-check text-success me-2"></i>CI/CD config (.github/workflows/)</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-danger"><i class="bi bi-x-circle me-1"></i>Don't Commit These</h6>
+                                    <ul class="list-unstyled small">
+                                        <li><i class="bi bi-x text-danger me-2"></i>node_modules/</li>
+                                        <li><i class="bi bi-x text-danger me-2"></i>dist/ or build/ directories</li>
+                                        <li><i class="bi bi-x text-danger me-2"></i>.env files with secrets</li>
+                                        <li><i class="bi bi-x text-danger me-2"></i>IDE configuration (.vscode/)</li>
+                                        <li><i class="bi bi-x text-danger me-2"></i>OS files (.DS_Store, Thumbs.db)</li>
+                                        <li><i class="bi bi-x text-danger me-2"></i>Log files (*.log)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================ -->
+    <!-- FOOTER                                       -->
+    <!-- ============================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Version Control</h5>
+                    <p class="text-muted mb-0">
+                        Git best practices for Bootstrap projects: .gitignore, branching, and commit conventions.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-github"></i></a>
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <p class="text-center text-muted mb-0">
+                &copy; 2024 Bootstrap Course. Built with Bootstrap 5.3.3
+            </p>
+        </div>
+    </footer>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 JAVASCRIPT BUNDLE CDN            -->
+    <!-- ============================================ -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- ============================================ -->
+    <!-- CUSTOM JAVASCRIPT                            -->
+    <!-- ============================================ -->
+    <script>
+        console.log('Bootstrap version:', bootstrap.Tooltip.VERSION || '5.3.3');
+
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(
+            tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl)
+        );
+    </script>
+</body>
+</html>

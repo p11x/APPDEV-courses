@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<!-- Form testing strategies: unit testing patterns, test-driven form development -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Testing Strategies - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-section { margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 0.5rem; }
+        .test-pass { color: #198754; }
+        .test-fail { color: #dc3545; }
+        .test-code { background: #212529; color: #f8f9fa; padding: 1rem; border-radius: 0.25rem; font-size: 0.85rem; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Form Testing Strategies</h1>
+                <p class="lead text-muted">Testing patterns for form controls, validation, accessibility, and user interactions.</p>
+                <hr>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Testable Form Structure -->
+        <!-- Forms should be structured to be easily testable -->
+        <section class="demo-section" id="testable-structure">
+            <h2 class="h4 mb-3">1. Testable Form Structure</h2>
+            <p class="text-muted">Use data-testid attributes and semantic structure for reliable test selectors.</p>
+
+            <!-- data-testid attributes provide stable selectors for tests -->
+            <form id="testableForm" data-testid="registration-form">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="testFirstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="testFirstName" data-testid="first-name-input" required>
+                        <div class="invalid-feedback" data-testid="first-name-error">First name is required.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="testLastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="testLastName" data-testid="last-name-input" required>
+                        <div class="invalid-feedback" data-testid="last-name-error">Last name is required.</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="testEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="testEmail" data-testid="email-input" required>
+                    <div class="invalid-feedback" data-testid="email-error">Valid email is required.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="testPassword" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="testPassword" data-testid="password-input" minlength="8" required>
+                    <div class="invalid-feedback" data-testid="password-error">Password must be at least 8 characters.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="testRole" class="form-label">Role</label>
+                    <select class="form-select" id="testRole" data-testid="role-select" required>
+                        <option value="" data-testid="role-placeholder">Choose...</option>
+                        <option value="admin" data-testid="role-admin">Admin</option>
+                        <option value="user" data-testid="role-user">User</option>
+                        <option value="guest" data-testid="role-guest">Guest</option>
+                    </select>
+                    <div class="invalid-feedback" data-testid="role-error">Please select a role.</div>
+                </div>
+                <div class="mb-3" data-testid="interests-group">
+                    <label class="form-label">Interests</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="testCoding" value="coding" data-testid="interest-coding">
+                        <label class="form-check-label" for="testCoding">Coding</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="testDesign" value="design" data-testid="interest-design">
+                        <label class="form-check-label" for="testDesign">Design</label>
+                    </div>
+                </div>
+                <div class="mb-3 form-check">
+                    <input class="form-check-input" type="checkbox" id="testTerms" data-testid="terms-checkbox" required>
+                    <label class="form-check-label" for="testTerms">Accept terms</label>
+                    <div class="invalid-feedback" data-testid="terms-error">You must accept terms.</div>
+                </div>
+                <button type="submit" class="btn btn-primary" data-testid="submit-button">Register</button>
+                <button type="reset" class="btn btn-outline-secondary" data-testid="reset-button">Reset</button>
+            </form>
+
+            <div class="mt-3">
+                <h5>Test Selectors Used:</h5>
+                <ul class="small">
+                    <li><code>data-testid="registration-form"</code> - Form element</li>
+                    <li><code>data-testid="email-input"</code> - Email field</li>
+                    <li><code>data-testid="submit-button"</code> - Submit button</li>
+                    <li><code>data-testid="email-error"</code> - Email error message</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Test Runner (In-Browser) -->
+        <!-- Simple in-browser test runner for demonstration -->
+        <section class="demo-section" id="test-runner">
+            <h2 class="h4 mb-3">2. In-Browser Test Runner</h2>
+            <p class="text-muted">Run tests directly in the browser. Tests validate form behavior, validation, and accessibility.</p>
+
+            <button class="btn btn-success mb-3" id="runTests">Run All Tests</button>
+            <button class="btn btn-outline-secondary mb-3" id="clearTests">Clear Results</button>
+
+            <!-- Test results display area -->
+            <div id="testResults" class="border rounded p-3" style="min-height: 200px; font-family: monospace; font-size: 0.85rem;">
+                <div class="text-muted">Click "Run All Tests" to execute tests...</div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: Validation Test Cases -->
+        <!-- Document test cases for form validation -->
+        <section class="demo-section" id="validation-tests">
+            <h2 class="h4 mb-3">3. Validation Test Matrix</h2>
+
+            <table class="table table-bordered table-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Field</th>
+                        <th>Test Case</th>
+                        <th>Input</th>
+                        <th>Expected</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="testMatrix">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+
+            <button class="btn btn-outline-primary btn-sm" id="runMatrix">Run Validation Matrix</button>
+        </section>
+
+        <!-- SECTION 4: Accessibility Tests -->
+        <!-- Automated accessibility checks for forms -->
+        <section class="demo-section" id="a11y-tests">
+            <h2 class="h4 mb-3">4. Accessibility Test Suite</h2>
+            <p class="text-muted">Automated checks for WCAG compliance in forms.</p>
+
+            <button class="btn btn-outline-primary mb-3" id="runA11y">Run Accessibility Tests</button>
+            <div id="a11yResults" class="border rounded p-3" style="font-family: monospace; font-size: 0.85rem;">
+                <div class="text-muted">Click "Run Accessibility Tests" to check...</div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: Test Patterns Documentation -->
+        <!-- Code examples for common test patterns -->
+        <section class="demo-section" id="test-patterns">
+            <h2 class="h4 mb-3">5. Test Pattern Examples</h2>
+
+            <h5>Pattern: Test Form Submission</h5>
+            <pre class="test-code">// Test: Valid form submission
+function testValidSubmission() {
+    // 1. Fill in all required fields
+    fillField('email', 'test@example.com');
+    fillField('password', 'SecurePass123!');
+
+    // 2. Click submit
+    clickButton('submit');
+
+    // 3. Assert no errors shown
+    assertNoErrors();
+
+    // 4. Assert form was submitted
+    assertFormSubmitted();
+}</pre>
+
+            <h5 class="mt-3">Pattern: Test Validation Errors</h5>
+            <pre class="test-code">// Test: Validation error display
+function testValidationErrors() {
+    // 1. Leave required fields empty
+    clearAllFields();
+
+    // 2. Click submit
+    clickButton('submit');
+
+    // 3. Assert error messages appear
+    assertError('email', 'Email is required');
+    assertError('password', 'Password is required');
+
+    // 4. Assert error fields have is-invalid class
+    assert.hasClass('email-input', 'is-invalid');
+
+    // 5. Assert focus moved to first error
+    assertFocused('email-input');
+}</pre>
+
+            <h5 class="mt-3">Pattern: Test Accessibility</h5>
+            <pre class="test-code">// Test: Form accessibility
+function testAccessibility() {
+    // 1. All inputs have labels
+    document.querySelectorAll('input').forEach(input => {
+        const label = document.querySelector(`label[for="${input.id}"]`);
+        assert.notNull(label, `Input ${input.id} has no label`);
+    });
+
+    // 2. All fieldsets have legends
+    document.querySelectorAll('fieldset').forEach(fs => {
+        assert.notNull(fs.querySelector('legend'));
+    });
+
+    // 3. Error messages use aria-describedby
+    document.querySelectorAll('.invalid-feedback').forEach(fb => {
+        const input = fb.previousElementSibling;
+        assert.equals(input.getAttribute('aria-describedby'), fb.id);
+    });
+
+    // 4. Form is keyboard navigable
+    const focusable = form.querySelectorAll('input, button, select');
+    focusable.forEach(el => {
+        assert.greaterThanOrEqual(el.tabIndex, 0);
+    });
+}</pre>
+        </section>
+
+        <!-- SECTION 6: Test Data Fixtures -->
+        <!-- Reusable test data for form testing -->
+        <section class="demo-section" id="test-fixtures">
+            <h2 class="h4 mb-3">6. Test Data Fixtures</h2>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Valid Data</h5>
+                    <pre class="test-code small">const VALID_DATA = {
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john@example.com',
+    password: 'SecurePass123!',
+    role: 'user',
+    terms: true
+};</pre>
+                </div>
+                <div class="col-md-4">
+                    <h5>Invalid Data</h5>
+                    <pre class="test-code small">const INVALID_DATA = {
+    firstName: '',
+    lastName: '',
+    email: 'not-an-email',
+    password: '123',
+    role: '',
+    terms: false
+};</pre>
+                </div>
+                <div class="col-md-4">
+                    <h5>Edge Cases</h5>
+                    <pre class="test-code small">const EDGE_DATA = {
+    firstName: 'A', // min length
+    lastName: 'x'.repeat(100), // max length
+    email: 'a@b.c', // minimal valid
+    password: '!@#$%^&*()Ab1', // special chars
+    role: 'guest',
+    terms: true
+};</pre>
+                </div>
+            </div>
+
+            <button class="btn btn-outline-primary mt-3" id="loadValid">Load Valid Data</button>
+            <button class="btn btn-outline-warning mt-3" id="loadInvalid">Load Invalid Data</button>
+            <button class="btn btn-outline-info mt-3" id="loadEdge">Load Edge Cases</button>
+        </section>
+
+        <!-- SECTION 7: Mock Form Handler -->
+        <!-- Simulated form submission for testing without backend -->
+        <section class="demo-section" id="mock-handler">
+            <h2 class="h4 mb-3">7. Mock Form Handler</h2>
+            <p class="text-muted">Simulate server responses for testing form behavior without a backend.</p>
+
+            <form id="mockForm" novalidate>
+                <div class="mb-3">
+                    <label for="mockEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="mockEmail" data-testid="mock-email" required>
+                    <div class="invalid-feedback">Valid email required.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Simulated Response</label>
+                    <select class="form-select" id="mockResponse">
+                        <option value="success">200 - Success</option>
+                        <option value="error">400 - Validation Error</option>
+                        <option value="server-error">500 - Server Error</option>
+                        <option value="timeout">Timeout (3s delay)</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" type="submit" data-testid="mock-submit">Submit</button>
+            </form>
+
+            <div id="mockResult" class="mt-3"></div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================
+        // Simple test framework
+        // ============================================
+        const TestRunner = {
+            results: [],
+            passed: 0,
+            failed: 0,
+
+            // Assert equality
+            assertEqual: function(actual, expected, message) {
+                if (actual === expected) {
+                    this.pass(message);
+                } else {
+                    this.fail(message, 'Expected: ' + expected + ', Got: ' + actual);
+                }
+            },
+
+            // Assert truthy
+            assertTrue: function(value, message) {
+                if (value) {
+                    this.pass(message);
+                } else {
+                    this.fail(message, 'Expected truthy, got: ' + value);
+                }
+            },
+
+            // Assert element has class
+            assertClass: function(selector, className, message) {
+                const el = document.querySelector(selector);
+                if (el && el.classList.contains(className)) {
+                    this.pass(message);
+                } else {
+                    this.fail(message, 'Element missing class: ' + className);
+                }
+            },
+
+            // Assert element is visible
+            assertVisible: function(selector, message) {
+                const el = document.querySelector(selector);
+                if (el && !el.classList.contains('d-none') && el.offsetParent !== null) {
+                    this.pass(message);
+                } else {
+                    this.fail(message, 'Element not visible: ' + selector);
+                }
+            },
+
+            // Assert element has attribute
+            assertAttribute: function(selector, attr, value, message) {
+                const el = document.querySelector(selector);
+                if (el && el.getAttribute(attr) === value) {
+                    this.pass(message);
+                } else {
+                    this.fail(message, 'Attribute ' + attr + ' = ' + (el ? el.getAttribute(attr) : 'null'));
+                }
+            },
+
+            pass: function(message) {
+                this.passed++;
+                this.results.push({ status: 'PASS', message: message });
+            },
+
+            fail: function(message, detail) {
+                this.failed++;
+                this.results.push({ status: 'FAIL', message: message, detail: detail });
+            },
+
+            display: function(container) {
+                let html = '<div class="mb-2"><strong>Results: ' + this.passed + ' passed, ' + this.failed + ' failed</strong></div>';
+                this.results.forEach(function(r) {
+                    const cls = r.status === 'PASS' ? 'test-pass' : 'test-fail';
+                    const icon = r.status === 'PASS' ? '✅' : '❌';
+                    html += '<div class="' + cls + '">' + icon + ' ' + r.message;
+                    if (r.detail) html += ' <small>(' + r.detail + ')</small>';
+                    html += '</div>';
+                });
+                container.innerHTML = html;
+            },
+
+            reset: function() {
+                this.results = [];
+                this.passed = 0;
+                this.failed = 0;
+            }
+        };
+
+        // ============================================
+        // Run Tests Button
+        // ============================================
+        document.getElementById('runTests').addEventListener('click', function() {
+            TestRunner.reset();
+            const form = document.getElementById('testableForm');
+            const results = document.getElementById('testResults');
+
+            // Test 1: Form element exists
+            TestRunner.assertTrue(form !== null, 'Form element exists');
+
+            // Test 2: data-testid on form
+            TestRunner.assertEqual(form.getAttribute('data-testid'), 'registration-form', 'Form has correct data-testid');
+
+            // Test 3: All required inputs exist
+            ['testFirstName', 'testLastName', 'testEmail', 'testPassword', 'testRole'].forEach(function(id) {
+                const el = document.getElementById(id);
+                TestRunner.assertTrue(el !== null, 'Input #' + id + ' exists');
+                TestRunner.assertTrue(el.hasAttribute('required'), 'Input #' + id + ' is required');
+            });
+
+            // Test 4: Email input type is email
+            TestRunner.assertEqual(document.getElementById('testEmail').type, 'email', 'Email input has type="email"');
+
+            // Test 5: Password has minlength
+            TestRunner.assertEqual(document.getElementById('testPassword').getAttribute('minlength'), '8', 'Password has minlength=8');
+
+            // Test 6: Submit button exists
+            const submitBtn = document.querySelector('[data-testid="submit-button"]');
+            TestRunner.assertTrue(submitBtn !== null, 'Submit button exists');
+            TestRunner.assertEqual(submitBtn.type, 'submit', 'Submit button has type="submit"');
+
+            // Test 7: Labels exist for all inputs
+            ['testFirstName', 'testLastName', 'testEmail', 'testPassword'].forEach(function(id) {
+                const label = document.querySelector('label[for="' + id + '"]');
+                TestRunner.assertTrue(label !== null, 'Label exists for #' + id);
+            });
+
+            // Test 8: Checkboxes exist
+            TestRunner.assertTrue(document.getElementById('testTerms') !== null, 'Terms checkbox exists');
+            TestRunner.assertEqual(document.getElementById('testTerms').type, 'checkbox', 'Terms is a checkbox');
+
+            // Test 9: Select has options
+            const roleOptions = document.getElementById('testRole').options;
+            TestRunner.assertTrue(roleOptions.length >= 3, 'Role select has at least 3 options');
+
+            // Test 10: Invalid feedback divs exist
+            TestRunner.assertTrue(document.querySelector('[data-testid="email-error"]') !== null, 'Email error element exists');
+
+            TestRunner.display(results);
+        });
+
+        document.getElementById('clearTests').addEventListener('click', function() {
+            TestRunner.reset();
+            document.getElementById('testResults').innerHTML = '<div class="text-muted">Results cleared.</div>';
+        });
+
+        // ============================================
+        // Validation Matrix
+        // ============================================
+        const testCases = [
+            { field: 'Email', test: 'Empty value', input: '', expected: 'Invalid', type: 'required' },
+            { field: 'Email', test: 'Valid email', input: 'test@example.com', expected: 'Valid', type: 'email' },
+            { field: 'Email', test: 'Invalid format', input: 'not-email', expected: 'Invalid', type: 'email' },
+            { field: 'Password', test: 'Too short', input: '123', expected: 'Invalid', type: 'minlength' },
+            { field: 'Password', test: 'Valid length', input: 'password123', expected: 'Valid', type: 'minlength' },
+            { field: 'Name', test: 'Empty', input: '', expected: 'Invalid', type: 'required' },
+            { field: 'Name', test: 'Single char', input: 'A', expected: 'Valid', type: 'required' },
+            { field: 'Role', test: 'No selection', input: '', expected: 'Invalid', type: 'required' },
+            { field: 'Role', test: 'Selected', input: 'admin', expected: 'Valid', type: 'required' },
+            { field: 'Terms', test: 'Unchecked', input: false, expected: 'Invalid', type: 'checkbox' },
+            { field: 'Terms', test: 'Checked', input: true, expected: 'Valid', type: 'checkbox' },
+        ];
+
+        // Render test matrix
+        const testMatrix = document.getElementById('testMatrix');
+        testCases.forEach(function(tc, i) {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td>' + tc.field + '</td><td>' + tc.test + '</td><td><code>' + tc.input + '</code></td><td>' + tc.expected + '</td><td id="matrixResult' + i + '">-</td>';
+            testMatrix.appendChild(row);
+        });
+
+        document.getElementById('runMatrix').addEventListener('click', function() {
+            testCases.forEach(function(tc, i) {
+                let result;
+                switch (tc.type) {
+                    case 'required':
+                        result = tc.input.length > 0 ? 'Valid' : 'Invalid';
+                        break;
+                    case 'email':
+                        result = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tc.input) ? 'Valid' : 'Invalid';
+                        break;
+                    case 'minlength':
+                        result = tc.input.length >= 8 ? 'Valid' : 'Invalid';
+                        break;
+                    case 'checkbox':
+                        result = tc.input ? 'Valid' : 'Invalid';
+                        break;
+                }
+
+                const cell = document.getElementById('matrixResult' + i);
+                if (result === tc.expected) {
+                    cell.innerHTML = '<span class="test-pass">PASS</span>';
+                } else {
+                    cell.innerHTML = '<span class="test-fail">FAIL (got ' + result + ')</span>';
+                }
+            });
+        });
+
+        // ============================================
+        // Accessibility Tests
+        // ============================================
+        document.getElementById('runA11y').addEventListener('click', function() {
+            const container = document.getElementById('a11yResults');
+            let html = '';
+
+            // Check 1: All inputs have labels
+            const inputs = document.querySelectorAll('#testableForm input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"])');
+            let labelsOk = true;
+            inputs.forEach(function(input) {
+                const label = document.querySelector('label[for="' + input.id + '"]');
+                if (!label) {
+                    labelsOk = false;
+                    html += '<div class="test-fail">❌ Input #' + input.id + ' has no associated label</div>';
+                }
+            });
+            if (labelsOk) html += '<div class="test-pass">✅ All text inputs have associated labels</div>';
+
+            // Check 2: Form has a submit button
+            const submitBtn = document.querySelector('#testableForm button[type="submit"]');
+            html += submitBtn ? '<div class="test-pass">✅ Form has a submit button</div>' : '<div class="test-fail">❌ No submit button found</div>';
+
+            // Check 3: Required fields have aria-required
+            const requiredInputs = document.querySelectorAll('#testableForm [required]');
+            html += '<div class="test-pass">✅ ' + requiredInputs.length + ' fields marked as required</div>';
+
+            // Check 4: Invalid feedback elements have IDs
+            const feedbacks = document.querySelectorAll('#testableForm .invalid-feedback');
+            let feedbackOk = true;
+            feedbacks.forEach(function(fb) {
+                if (!fb.id) feedbackOk = false;
+            });
+            html += feedbackOk ? '<div class="test-pass">✅ All feedback elements have IDs</div>' : '<div class="test-fail">❌ Some feedback elements missing IDs</div>';
+
+            // Check 5: Checkboxes have labels
+            const checkboxes = document.querySelectorAll('#testableForm input[type="checkbox"]');
+            let cbOk = true;
+            checkboxes.forEach(function(cb) {
+                const label = document.querySelector('label[for="' + cb.id + '"]');
+                if (!label) cbOk = false;
+            });
+            html += cbOk ? '<div class="test-pass">✅ All checkboxes have labels</div>' : '<div class="test-fail">❌ Some checkboxes missing labels</div>';
+
+            // Check 6: Select has label
+            const selects = document.querySelectorAll('#testableForm select');
+            selects.forEach(function(sel) {
+                const label = document.querySelector('label[for="' + sel.id + '"]');
+                html += label ? '<div class="test-pass">✅ Select #' + sel.id + ' has label</div>' : '<div class="test-fail">❌ Select #' + sel.id + ' missing label</div>';
+            });
+
+            container.innerHTML = html;
+        });
+
+        // ============================================
+        // Test Data Fixtures
+        // ============================================
+        document.getElementById('loadValid').addEventListener('click', function() {
+            document.getElementById('testFirstName').value = 'John';
+            document.getElementById('testLastName').value = 'Doe';
+            document.getElementById('testEmail').value = 'john@example.com';
+            document.getElementById('testPassword').value = 'SecurePass123!';
+            document.getElementById('testRole').value = 'user';
+            document.getElementById('testTerms').checked = true;
+        });
+
+        document.getElementById('loadInvalid').addEventListener('click', function() {
+            document.getElementById('testFirstName').value = '';
+            document.getElementById('testLastName').value = '';
+            document.getElementById('testEmail').value = 'not-an-email';
+            document.getElementById('testPassword').value = '123';
+            document.getElementById('testRole').value = '';
+            document.getElementById('testTerms').checked = false;
+        });
+
+        document.getElementById('loadEdge').addEventListener('click', function() {
+            document.getElementById('testFirstName').value = 'A';
+            document.getElementById('testLastName').value = 'x'.repeat(100);
+            document.getElementById('testEmail').value = 'a@b.c';
+            document.getElementById('testPassword').value = '!@#$%^&*()Ab1';
+            document.getElementById('testRole').value = 'guest';
+            document.getElementById('testTerms').checked = true;
+        });
+
+        // ============================================
+        // Mock Form Handler
+        // ============================================
+        document.getElementById('mockForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('mockEmail');
+            const response = document.getElementById('mockResponse').value;
+            const resultDiv = document.getElementById('mockResult');
+
+            // Validate email first
+            if (!email.checkValidity()) {
+                email.classList.add('is-invalid');
+                return;
+            }
+            email.classList.remove('is-invalid');
+            email.classList.add('is-valid');
+
+            // Simulate server response
+            switch (response) {
+                case 'success':
+                    resultDiv.innerHTML = '<div class="alert alert-success"><strong>200 OK:</strong> Form submitted successfully! Data: { email: "' + email.value + '" }</div>';
+                    break;
+                case 'error':
+                    resultDiv.innerHTML = '<div class="alert alert-danger"><strong>400 Bad Request:</strong> Validation failed. Server says: "Email already registered."</div>';
+                    email.classList.add('is-invalid');
+                    email.classList.remove('is-valid');
+                    break;
+                case 'server-error':
+                    resultDiv.innerHTML = '<div class="alert alert-danger"><strong>500 Internal Server Error:</strong> Something went wrong on the server.</div>';
+                    break;
+                case 'timeout':
+                    resultDiv.innerHTML = '<div class="alert alert-warning"><strong>Loading...</strong> Simulating 3 second timeout...</div>';
+                    setTimeout(function() {
+                        resultDiv.innerHTML = '<div class="alert alert-success"><strong>200 OK:</strong> Response received after 3s delay.</div>';
+                    }, 3000);
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>

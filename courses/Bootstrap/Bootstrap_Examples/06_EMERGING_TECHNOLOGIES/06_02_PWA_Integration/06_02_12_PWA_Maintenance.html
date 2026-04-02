@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d6efd">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>PWA Maintenance | Bootstrap 5</title>
+    <style>
+        .pwa-card { border-left: 4px solid #0d6efd; transition: transform 0.3s ease; }
+        .pwa-card:hover { transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">&#128260; PWA Maintenance</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#updates">Updates</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#invalidation">Cache Invalidation</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#versioning">Versioning</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#lifecycle">Lifecycle</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-primary text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">PWA Maintenance</h1>
+            <p class="lead">Update strategies, cache invalidation, versioning, and lifecycle management for production PWAs.</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- Section 1: Update Strategies -->
+        <section id="updates" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128260; Update Strategies</h2>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header bg-success text-white">Immediate Update</div>
+                        <div class="card-body">
+                            <p class="small">New SW activates immediately. User sees changes instantly.</p>
+                            <pre class="small mb-0"><code>// sw.js
+self.addEventListener('install', e => {
+    self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+    e.waitUntil(self.clients.claim());
+});</code></pre>
+                            <div class="mt-2">
+                                <span class="badge bg-success">Best for: Critical fixes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header bg-warning text-dark">Prompt to Update</div>
+                        <div class="card-body">
+                            <p class="small">Notify user of update, let them choose when to refresh.</p>
+                            <pre class="small mb-0"><code>// Page script
+navigator.serviceWorker
+    .addEventListener(
+        'controllerchange', () => {
+            // SW changed, show prompt
+            showUpdateToast();
+    });</code></pre>
+                            <div class="mt-2">
+                                <span class="badge bg-warning">Best for: Most apps</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header bg-info text-white">Background Update</div>
+                        <div class="card-body">
+                            <p class="small">Download update silently, apply on next visit.</p>
+                            <pre class="small mb-0"><code>// sw.js - Don't skip waiting
+self.addEventListener('install', e => {
+    // New SW waits until old one
+    // is no longer controlling pages
+});
+
+// Update on next navigation
+navigator.serviceWorker
+    .register('/sw.js', {
+        updateViaCache: 'none'
+    });</code></pre>
+                            <div class="mt-2">
+                                <span class="badge bg-info">Best for: Content sites</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Cache Invalidation -->
+        <section id="invalidation" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128230; Cache Invalidation</h2>
+
+            <div class="card pwa-card">
+                <div class="card-header bg-dark text-white"><code>Cache Versioning & Invalidation</code></div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>// Cache versioning strategy
+// Change CACHE_VERSION to force cache refresh
+
+const CACHE_VERSION = 'v2.3.1';
+const CACHE_NAME = `app-${CACHE_VERSION}`;
+
+// Precache with version
+const PRECACHE_URLS = [
+    { url: '/', revision: CACHE_VERSION },
+    { url: '/css/app.css', revision: 'abc123' },
+    { url: '/js/app.js', revision: 'def456' }
+];
+
+// Install new cache version
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll(PRECACHE_URLS.map(item => item.url));
+        })
+    );
+});
+
+// Delete old cache versions on activate
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames
+                    .filter(name => name.startsWith('app-') && name !== CACHE_NAME)
+                    .map(name => {
+                        console.log('Deleting old cache:', name);
+                        return caches.delete(name);
+                    })
+            );
+        })
+    );
+});
+
+// URL-based cache busting
+// Add version query parameter to force refresh
+function versionedUrl(url) {
+    return `${url}?v=${CACHE_VERSION}`;
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-4">
+                <strong>&#128161; Best Practice:</strong> Use content hashes in filenames (e.g., <code>app.abc123.js</code>) for automatic cache busting. When the file content changes, the filename changes, naturally invalidating the cache.
+            </div>
+        </section>
+
+        <!-- Section 3: Version Management -->
+        <section id="versioning" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128196; Version Management</h2>
+
+            <div class="card pwa-card">
+                <div class="card-body">
+                    <!-- Version display -->
+                    <div class="row text-center mb-4">
+                        <div class="col-md-3">
+                            <h5 id="currentVersion">2.3.1</h5>
+                            <small class="text-muted">Current Version</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h5 id="swVersion">v2.3.1</h5>
+                            <small class="text-muted">SW Cache Version</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h5 id="lastUpdate">--</h5>
+                            <small class="text-muted">Last Update Check</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h5 id="updateStatus">--</h5>
+                            <small class="text-muted">Update Status</small>
+                        </div>
+                    </div>
+
+                    <pre class="mb-0"><code>// Version management with update checking
+class VersionManager {
+    constructor(versionUrl) {
+        this.versionUrl = versionUrl;
+        this.currentVersion = null;
+    }
+
+    // Check for new version from server
+    async checkForUpdate() {
+        try {
+            const response = await fetch(this.versionUrl, {
+                cache: 'no-cache' // Always get fresh version
+            });
+            const { version } = await response.json();
+
+            if (this.currentVersion && version !== this.currentVersion) {
+                this.onUpdateAvailable(version);
+            }
+
+            this.currentVersion = version;
+            return version;
+        } catch (error) {
+            console.log('Version check failed:', error);
+        }
+    }
+
+    // Handle update available
+    onUpdateAvailable(newVersion) {
+        // Show Bootstrap alert
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-info alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+        alert.style.zIndex = '1060';
+        alert.innerHTML = `
+            &lt;strong&gt;Update Available!&lt;/strong&gt; Version ${newVersion} is ready.
+            &lt;button class="btn btn-sm btn-primary ms-2" onclick="location.reload()"&gt;Update&lt;/button&gt;
+            &lt;button type="button" class="btn-close" data-bs-dismiss="alert"&gt;&lt;/button&gt;
+        `;
+        document.body.appendChild(alert);
+    }
+
+    // Periodic version check
+    startPolling(intervalMs = 60000) {
+        this.checkForUpdate();
+        setInterval(() => this.checkForUpdate(), intervalMs);
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: SW Lifecycle Management -->
+        <section id="lifecycle" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128260; Service Worker Lifecycle</h2>
+
+            <div class="card pwa-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
+                        <div class="badge bg-secondary p-3">Registered</div>
+                        <span class="display-6">&#8594;</span>
+                        <div class="badge bg-info p-3">Installing</div>
+                        <span class="display-6">&#8594;</span>
+                        <div class="badge bg-warning p-3">Installed</div>
+                        <span class="display-6">&#8594;</span>
+                        <div class="badge bg-primary p-3">Activating</div>
+                        <span class="display-6">&#8594;</span>
+                        <div class="badge bg-success p-3">Activated</div>
+                        <span class="display-6">&#8594;</span>
+                        <div class="badge bg-danger p-3">Redundant</div>
+                    </div>
+
+                    <pre class="mb-0"><code>// Complete lifecycle management
+class SWLifecycleManager {
+    async init() {
+        if (!('serviceWorker' in navigator)) return;
+
+        const registration = await navigator.serviceWorker.register('/sw.js');
+
+        // Track SW state changes
+        if (registration.installing) {
+            this.trackState(registration.installing, 'installing');
+        }
+        if (registration.waiting) {
+            this.trackState(registration.waiting, 'waiting');
+        }
+        if (registration.active) {
+            this.trackState(registration.active, 'active');
+        }
+
+        // Listen for updates
+        registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            this.trackState(newWorker, 'update-found');
+        });
+    }
+
+    trackState(worker, label) {
+        worker.addEventListener('statechange', () => {
+            console.log(`[SW ${label}] State: ${worker.state}`);
+            this.updateUI(worker.state);
+        });
+    }
+
+    updateUI(state) {
+        const el = document.getElementById('swState');
+        if (el) el.textContent = state;
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="text-muted mb-0">PWA Maintenance Module | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            document.getElementById('updateStatus').textContent = 'Up to date';
+        });
+    </script>
+</body>
+</html>

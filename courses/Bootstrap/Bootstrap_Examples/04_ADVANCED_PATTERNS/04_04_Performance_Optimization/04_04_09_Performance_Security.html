@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_09_Performance_Security.html
+     Topic: Performance and Security Intersection
+     
+     Covers security headers that impact performance, CSP policies,
+     SRI hashes, HTTPS performance implications, and secure caching.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <!--
+        SRI (Subresource Integrity): The integrity attribute ensures the
+        CDN file hasn't been tampered with. If the hash doesn't match,
+        the browser refuses to load the resource.
+        crossorigin="anonymous" is required for SRI on CDN resources.
+    -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa"
+          crossorigin="anonymous">
+
+    <title>Performance &amp; Security - Bootstrap 5</title>
+
+    <style>
+        .hero-sec { background: linear-gradient(135deg, #198754 0%, #20c997 50%, #0dcaf0 100%); color: white; padding: 4rem 0; }
+        .code-dark { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.82rem; overflow-x: auto; }
+        .header-card { border-left: 4px solid; padding: 1rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Perf + Security</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#sri">SRI</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#csp">CSP</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#headers">Headers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#https">HTTPS</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-sec text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Performance &amp; Security</h1>
+            <p class="lead mt-2">Security measures that enhance performance, not hinder it.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: SUBRESOURCE INTEGRITY (SRI)
+         ============================================================ -->
+    <section id="sri" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Subresource Integrity (SRI)</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">How SRI Works</h5></div>
+                        <div class="card-body">
+                            <ol>
+                                <li>Generate a cryptographic hash of the resource</li>
+                                <li>Add the <code>integrity</code> attribute to the <code>&lt;link&gt;</code> or <code>&lt;script&gt;</code> tag</li>
+                                <li>Browser computes the hash of the downloaded file</li>
+                                <li>If hashes don't match, the resource is blocked</li>
+                            </ol>
+                            <div class="alert alert-warning small">
+                                <strong>Performance note:</strong> SRI adds negligible overhead (hash computation) but prevents loading compromised resources that could inject malicious code and degrade performance.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Generating SRI Hashes</h5></div>
+                        <div class="card-body">
+                            <div class="code-dark">
+# Generate SHA-384 hash for SRI<br>
+cat bootstrap.min.css | openssl dgst \<br>
+&nbsp;&nbsp;-sha384 -binary | openssl base64 \<br>
+&nbsp;&nbsp;-A<br><br>
+# Output: sha384-QWTKZyjp...<br><br>
+# Use in HTML:<br>
+&lt;link href="bootstrap.min.css"<br>
+&nbsp;&nbsp;integrity="sha384-QWTKZyjp..."<br>
+&nbsp;&nbsp;crossorigin="anonymous"&gt;
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: CONTENT SECURITY POLICY (CSP)
+         ============================================================ -->
+    <section id="csp" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Content Security Policy (CSP)</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white"><h5 class="mb-0">Performance-Friendly CSP</h5></div>
+                        <div class="card-body">
+                            <div class="code-dark">
+# HTTP header (server-side)<br>
+Content-Security-Policy:<br>
+&nbsp;&nbsp;default-src 'self';<br>
+&nbsp;&nbsp;script-src 'self' cdn.jsdelivr.net;<br>
+&nbsp;&nbsp;style-src 'self' cdn.jsdelivr.net<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'unsafe-inline';<br>
+&nbsp;&nbsp;img-src 'self' picsum.photos;<br>
+&nbsp;&nbsp;font-src 'self' cdn.jsdelivr.net;<br>
+&nbsp;&nbsp;connect-src 'self' api.example.com;
+                            </div>
+                            <p class="small mt-3">A well-configured CSP prevents unauthorized script injection that could add performance overhead.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning text-dark"><h5 class="mb-0">CSP Performance Impact</h5></div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Inline scripts</strong></td>
+                                    <td>Blocked by default. Use nonces or hashes.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Eval</strong></td>
+                                    <td>Blocked. Forces better code practices.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Third-party resources</strong></td>
+                                    <td>Must be explicitly allowed.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Overhead</strong></td>
+                                    <td>Negligible browser-side cost.</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: SECURITY HEADERS THAT AFFECT PERFORMANCE
+         ============================================================ -->
+    <section id="headers" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Security Headers &amp; Performance</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="header-card bg-light border-success">
+                        <h6><code>HSTS</code> - HTTP Strict Transport Security</h6>
+                        <p class="small mb-1">Forces HTTPS, eliminating HTTP redirect overhead.</p>
+                        <code class="small">Strict-Transport-Security: max-age=31536000; includeSubDomains</code>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="header-card bg-light border-info">
+                        <h6><code>Cache-Control</code> - Secure Caching</h6>
+                        <p class="small mb-1">Controls caching behavior to prevent stale sensitive data.</p>
+                        <code class="small">Cache-Control: public, max-age=31536000, immutable</code>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="header-card bg-light border-warning">
+                        <h6><code>Permissions-Policy</code></h6>
+                        <p class="small mb-1">Disables unused browser features, reducing attack surface.</p>
+                        <code class="small">Permissions-Policy: camera=(), microphone=(), geolocation=()</code>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="header-card bg-light border-danger">
+                        <h6><code>X-Content-Type-Options</code></h6>
+                        <p class="small mb-1">Prevents MIME sniffing, avoids unnecessary re-downloads.</p>
+                        <code class="small">X-Content-Type-Options: nosniff</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: HTTPS PERFORMANCE
+         HTTP/2, HTTP/3, TLS optimization.
+         ============================================================ -->
+    <section id="https" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">HTTPS &amp; Protocol Performance</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Protocol</th>
+                            <th>Multiplexing</th>
+                            <th>Header Compression</th>
+                            <th>Server Push</th>
+                            <th>Connection Setup</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>HTTP/1.1</strong></td>
+                            <td class="text-danger">No (6 conn limit)</td>
+                            <td class="text-danger">No</td>
+                            <td class="text-danger">No</td>
+                            <td>TCP + TLS 1.2</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HTTP/2</strong></td>
+                            <td class="text-success">Yes</td>
+                            <td class="text-success">HPACK</td>
+                            <td class="text-success">Yes (deprecated)</td>
+                            <td>TCP + TLS 1.2/1.3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HTTP/3 (QUIC)</strong></td>
+                            <td class="text-success">Yes</td>
+                            <td class="text-success">QPACK</td>
+                            <td class="text-warning">Proposed</td>
+                            <td>0-RTT (QUIC)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <strong>Key insight:</strong> HTTP/3 with QUIC reduces connection setup from 2-3 round trips (TCP+TLS) to 0-1 round trips, significantly improving mobile performance.
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Performance &amp; Security &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+</body>
+</html>

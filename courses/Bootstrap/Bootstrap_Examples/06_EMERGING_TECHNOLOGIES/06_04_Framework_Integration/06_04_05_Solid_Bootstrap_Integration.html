@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_04_05: SolidJS Bootstrap Integration                       -->
+<!-- Demonstrates SolidJS patterns with Bootstrap 5, signals,      -->
+<!-- fine-grained reactivity, createSignal, createEffect, JSX      -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolidJS Bootstrap Integration</title>
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- ============================================================= -->
+    <!-- SolidJS Bootstrap Integration Reference                       -->
+    <!-- SolidJS uses fine-grained reactivity - only updates DOM      -->
+    <!-- nodes that depend on changed signals, no virtual DOM diffing  -->
+    <!-- ============================================================= -->
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold" style="color: #446b9e;">SolidJS + Bootstrap 5</h1>
+            <p class="lead text-muted">Signals, Fine-Grained Reactivity, and JSX</p>
+        </div>
+
+        <div class="alert" style="background: #446b9e; color: white;" role="alert">
+            <strong>SolidJS Pattern:</strong> Uses signals for reactive state. Components run once - reactivity is in the template via signals, not re-renders.
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SolidJS createSignal                                         -->
+        <!-- Signals are the core primitive - getter and setter pair       -->
+        <!-- that notify subscribers when value changes                    -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header text-white" style="background: #446b9e;">
+                <h5 class="mb-0">SolidJS createSignal</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>import { createSignal, createMemo } from 'solid-js';
+
+function Counter() {
+  // createSignal returns [getter, setter] - not [value, setter]
+  // IMPORTANT: call count() to read, not just count
+  const [count, setCount] = createSignal(0);
+
+  // createMemo caches derived values (like computed)
+  const badgeClass = createMemo(() => {
+    if (count() > 0) return 'bg-success';
+    if (count() < 0) return 'bg-danger';
+    return 'bg-secondary';
+  });
+
+  return (
+    &lt;div class="card shadow-sm"&gt;
+      &lt;div class="card-body text-center"&gt;
+        {/* count() is a function call - triggers reactivity */}
+        &lt;p class="display-4"&gt;
+          Count: &lt;span class={`badge ${badgeClass()}`}&gt;{count()}&lt;/span&gt;
+        &lt;/p&gt;
+        &lt;div class="btn-group"&gt;
+          {/* setCount with function for prev value */}
+          &lt;button class="btn btn-outline-danger"
+                  onClick={() => setCount(c => c - 1)}&gt;- Decrement&lt;/button&gt;
+          &lt;button class="btn btn-outline-secondary"
+                  onClick={() => setCount(0)}&gt;Reset&lt;/button&gt;
+          &lt;button class="btn btn-outline-success"
+                  onClick={() => setCount(c => c + 1)}&gt;+ Increment&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+                <!-- Working simulation -->
+                <div class="border p-3 rounded bg-light mt-3">
+                    <h6>Simulated Output:</h6>
+                    <div class="text-center">
+                        <p class="display-4">Count: <span class="badge bg-secondary" id="solid-count">0</span></p>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-danger" onclick="solidCountDemo(-1)">- Decrement</button>
+                            <button class="btn btn-outline-secondary" onclick="solidCountDemo(0)">Reset</button>
+                            <button class="btn btn-outline-success" onclick="solidCountDemo(1)">+ Increment</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SolidJS createEffect                                         -->
+        <!-- Effects run when their signal dependencies change             -->
+        <!-- Unlike React useEffect, effects track dependencies automatically -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">SolidJS createEffect & createResource</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>import { createSignal, createEffect, createResource } from 'solid-js';
+
+// createEffect - runs when any signal inside it changes
+function DataLogger() {
+  const [query, setQuery] = createSignal('');
+
+  // Effect automatically tracks query() dependency
+  createEffect(() => {
+    console.log('Query changed:', query());
+    // No dependency array needed - Solid tracks automatically!
+  });
+
+  // createResource - handles async data fetching
+  // Re-fetches when source signal (query) changes
+  const [users] = createResource(query, async (q) => {
+    if (!q) return [];
+    const res = await fetch(
+      `https://jsonplaceholder.typicode.com/users`
+    );
+    return res.json();
+  });
+
+  return (
+    &lt;div&gt;
+      &lt;input
+        class="form-control"
+        value={query()}
+        onInput={(e) => setQuery(e.target.value)}
+        placeholder="Search users..."
+      /&gt;
+
+      {/* Show loading spinner while fetching */}
+      {users.loading && (
+        &lt;div class="text-center mt-3"&gt;
+          &lt;div class="spinner-border text-primary"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      )}
+
+      {/* Show error if fetch fails */}
+      {users.error && (
+        &lt;div class="alert alert-danger mt-3"&gt;{users.error.message}&lt;/div&gt;
+      )}
+
+      {/* Render user cards when data loads */}
+      &lt;div class="row mt-3"&gt;
+        {/* Show wraps content in a Suspense boundary */}
+        &lt;Show when={!users.loading}&gt;
+          &lt;For each={users()}&gt;
+            {(user) =&gt; (
+              &lt;div class="col-md-4 mb-3"&gt;
+                &lt;div class="card h-100"&gt;
+                  &lt;div class="card-body"&gt;
+                    &lt;h6&gt;{user.name}&lt;/h6&gt;
+                    &lt;p class="text-muted"&gt;{user.email}&lt;/p&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            )}
+          &lt;/For&gt;
+        &lt;/Show&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SolidJS Control Flow Components                              -->
+        <!-- <For>, <Show>, <Switch> are reactive control flow components  -->
+        <!-- They don't re-render - they update DOM nodes directly         -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">SolidJS Control Flow (&lt;For&gt;, &lt;Show&gt;, &lt;Switch&gt;)</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>import { For, Show, Switch, Match } from 'solid-js';
+
+function TodoList() {
+  const [todos, setTodos] = createSignal([
+    { id: 1, text: 'Learn Solid signals', completed: false },
+    { id: 2, text: 'Integrate Bootstrap', completed: true },
+  ]);
+
+  // &lt;For&gt; - keyed list iteration (efficient DOM reuse)
+  return (
+    &lt;ul class="list-group"&gt;
+      {/* each is called once per item - not re-run on every change */}
+      &lt;For each={todos()} fallback={&lt;li class="list-group-item text-muted"&gt;No items&lt;/li&gt;}&gt;
+        {(todo) =&gt; (
+          &lt;li class="list-group-item d-flex justify-content-between"
+              class:list-group-item-success={todo.completed}&gt;
+            &lt;span onClick={() =&gt; toggleTodo(todo.id)}&gt;{todo.text}&lt;/span&gt;
+            &lt;button class="btn btn-sm btn-outline-danger"
+                    onClick={() =&gt; removeTodo(todo.id)}&gt;Remove&lt;/button&gt;
+          &lt;/li&gt;
+        )}
+      &lt;/For&gt;
+    &lt;/ul&gt;
+  );
+
+  // &lt;Show&gt; - conditional rendering with fallback
+  // &lt;Show when={condition()} fallback={&lt;Loading /&gt;}&gt;
+  //   &lt;Content /&gt;
+  // &lt;/Show&gt;
+
+  // &lt;Switch&gt;/&lt;Match&gt; - multi-branch conditional
+  // &lt;Switch fallback={&lt;p&gt;Default&lt;/p&gt;}&gt;
+  //   &lt;Match when={status() === 'loading'}&gt;
+  //     &lt;div class="spinner-border"&gt;&lt;/div&gt;
+  //   &lt;/Match&gt;
+  //   &lt;Match when={status() === 'error'}&gt;
+  //     &lt;div class="alert alert-danger"&gt;Error&lt;/div&gt;
+  //   &lt;/Match&gt;
+  //   &lt;Match when={status() === 'success'}&gt;
+  //     &lt;DataView /&gt;
+  //   &lt;/Match&gt;
+  // &lt;/Switch&gt;
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SolidJS Context & Stores                                     -->
+        <!-- createContext provides dependency injection                   -->
+        <!-- createStore for nested reactive objects                       -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">SolidJS Context & Stores</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>import { createContext, useContext } from 'solid-js';
+import { createStore, produce } from 'solid-js/store';
+
+// Create context for theme sharing
+const ThemeContext = createContext();
+
+// Provider component wraps children with context value
+function ThemeProvider(props) {
+  const [theme, setTheme] = createStore({
+    primary: 'primary',
+    dark: false,
+  });
+
+  return (
+    &lt;ThemeContext.Provider value={[theme, setTheme]}&gt;
+      {props.children}
+    &lt;/ThemeContext.Provider&gt;
+  );
+}
+
+// Consumer component reads from context
+function ThemedCard() {
+  const [theme] = useContext(ThemeContext);
+
+  return (
+    &lt;div class={`card border-${theme.primary}`}&gt;
+      &lt;div class={`card-header bg-${theme.primary} text-white`}&gt;
+        Themed Header
+      &lt;/div&gt;
+      &lt;div class="card-body"&gt;
+        &lt;p&gt;This card uses context-provided theme&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+// createStore for complex nested state (path-based updates)
+function ShoppingCart() {
+  const [store, setStore] = createStore({
+    items: [
+      { id: 1, name: 'Bootstrap Book', price: 29.99, qty: 1 },
+      { id: 2, name: 'SolidJS Course', price: 49.99, qty: 2 },
+    ],
+    discount: 0,
+  });
+
+  // produce() enables mutable-style updates on immutable store
+  const updateQty = (id, delta) => {
+    setStore(
+      'items',
+      item => item.id === id,
+      'qty',
+      qty => Math.max(0, qty + delta)
+    );
+  };
+
+  // Path-based store access for fine-grained reactivity
+  return (
+    &lt;ul class="list-group"&gt;
+      &lt;For each={store.items}&gt;
+        {(item) =&gt; (
+          &lt;li class="list-group-item d-flex justify-content-between"&gt;
+            &lt;span&gt;{item.name} (${item.price})&lt;/span&gt;
+            &lt;div class="btn-group btn-group-sm"&gt;
+              &lt;button class="btn btn-outline-secondary"
+                      onClick={() =&gt; updateQty(item.id, -1)}&gt;-&lt;/button&gt;
+              &lt;span class="btn btn-outline-secondary disabled"&gt;{item.qty}&lt;/span&gt;
+              &lt;button class="btn btn-outline-secondary"
+                      onClick={() =&gt; updateQty(item.id, 1)}&gt;+&lt;/button&gt;
+            &lt;/div&gt;
+          &lt;/li&gt;
+        )}
+      &lt;/For&gt;
+    &lt;/ul&gt;
+  );
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SolidJS vs React Comparison                                  -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">SolidJS vs React: Key Differences</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr><th>Concept</th><th>React</th><th>SolidJS</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>State</td><td>useState(value)</td><td>createSignal() [getter, setter]</td></tr>
+                        <tr><td>Derived</td><td>useMemo(() =&gt; ...)</td><td>createMemo(() =&gt; ...)</td></tr>
+                        <tr><td>Effects</td><td>useEffect(fn, [deps])</td><td>createEffect(fn) - auto-tracks</td></tr>
+                        <tr><td>Lists</td><td>.map() + key prop</td><td>&lt;For each={}&gt; - keyed DOM</td></tr>
+                        <tr><td>Conditionals</td><td>{cond &amp;&amp; &lt;Comp /&gt;}</td><td>&lt;Show when={}&gt;</td></tr>
+                        <tr><td>Re-render</td><td>Entire component subtree</td><td>Only affected DOM nodes</td></tr>
+                        <tr><td>Async</td><td>useEffect + loading state</td><td>createResource(signal, fetcher)</td></tr>
+                        <tr><td>Context</td><td>createContext/useContext</td><td>createContext/useContext</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SolidJS Bootstrap Component Patterns                         -->
+        <!-- ============================================================= -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">SolidJS + Bootstrap Component Patterns</h5>
+            </div>
+            <div class="card-body">
+                <pre class="bg-dark text-light p-3 rounded"><code>// SolidJS Modal component with Bootstrap
+function Modal(props) {
+  return (
+    &lt;Show when={props.show}&gt;
+      &lt;div class="modal fade show d-block" tabindex="-1"&gt;
+        &lt;div class="modal-dialog"&gt;
+          &lt;div class="modal-content"&gt;
+            &lt;div class="modal-header"&gt;
+              &lt;h5 class="modal-title"&gt;{props.title}&lt;/h5&gt;
+              &lt;button class="btn-close" onClick={() =&gt; props.onClose()}&gt;&lt;/button&gt;
+            &lt;/div&gt;
+            &lt;div class="modal-body"&gt;
+              {props.children}
+            &lt;/div&gt;
+            &lt;div class="modal-footer"&gt;
+              &lt;button class="btn btn-secondary" onClick={() =&gt; props.onClose()}&gt;Close&lt;/button&gt;
+              &lt;button class="btn btn-primary" onClick={() =&gt; props.onConfirm()}&gt;Confirm&lt;/button&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="modal-backdrop fade show"&gt;&lt;/div&gt;
+    &lt;/Show&gt;
+  );
+}
+
+// Usage:
+// &lt;Modal show={showModal()} title="Confirm" onClose={...} onConfirm={...}&gt;
+//   &lt;p&gt;Are you sure?&lt;/p&gt;
+// &lt;/Modal&gt;</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let solidCount = 0;
+        function solidCountDemo(action) {
+            if (action === 0) solidCount = 0;
+            else solidCount += action;
+            const badge = document.getElementById('solid-count');
+            badge.textContent = solidCount;
+            badge.className = 'badge ' + (solidCount > 0 ? 'bg-success' : solidCount < 0 ? 'bg-danger' : 'bg-secondary');
+        }
+    </script>
+</body>
+</html>

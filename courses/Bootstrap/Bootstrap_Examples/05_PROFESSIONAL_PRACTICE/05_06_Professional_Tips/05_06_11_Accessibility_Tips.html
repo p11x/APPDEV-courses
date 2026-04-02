@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 05_06_11_Accessibility_Tips.html                              -->
+<!-- Quick A11y Wins, ARIA Patterns, Keyboard Navigation          -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Tips - ARIA Patterns &amp; Keyboard Navigation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .a11y-focus-demo *:focus {
+            outline: 3px solid #ffc107 !important;
+            outline-offset: 2px;
+        }
+        .a11y-skip-link {
+            position: absolute;
+            top: -100px;
+            left: 0;
+            z-index: 10000;
+            padding: 0.75rem 1.5rem;
+            background: #0d6efd;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 0 0 0.375rem 0;
+            transition: top 0.2s;
+        }
+        .a11y-skip-link:focus {
+            top: 0;
+        }
+        .a11y-bad-example {
+            border-left: 4px solid #dc3545;
+            padding-left: 1rem;
+            background: #f8d7da;
+            padding: 1rem;
+            border-radius: 0 0.375rem 0.375rem 0;
+        }
+        .a11y-good-example {
+            border-left: 4px solid #198754;
+            padding-left: 1rem;
+            background: #d1e7dd;
+            padding: 1rem;
+            border-radius: 0 0.375rem 0.375rem 0;
+        }
+        .a11y-key-demo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2rem;
+            height: 2rem;
+            padding: 0 0.5rem;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            box-shadow: 0 2px 0 #dee2e6;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip navigation link - first focusable element on page -->
+    <a href="#main-content" class="a11y-skip-link">Skip to main content</a>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Accessibility Tips</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#a11yNav" aria-controls="a11yNav"
+                    aria-expanded="false" aria-label="Toggle navigation menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="a11yNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#quick-wins">Quick Wins</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#aria-patterns">ARIA</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#keyboard">Keyboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#forms">Forms</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main landmark for skip link target -->
+    <main id="main-content">
+        <header class="bg-primary text-white py-5">
+            <div class="container text-center">
+                <h1 class="display-5 fw-bold">&#129485; Accessibility Tips</h1>
+                <p class="lead">Quick wins, ARIA patterns, and keyboard navigation for inclusive Bootstrap sites.</p>
+            </div>
+        </header>
+
+        <!-- ============================================================ -->
+        <!-- QUICK WINS                                                   -->
+        <!-- ============================================================ -->
+        <section id="quick-wins" class="py-5" aria-labelledby="qw-heading">
+            <div class="container">
+                <h2 id="qw-heading" class="mb-4">1. Quick A11y Wins</h2>
+
+                <div class="row g-4">
+                    <!-- Win 1: Language attribute -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>&#127760; lang Attribute</h5>
+                                <div class="a11y-bad-example mb-2"><code>&lt;html&gt;</code></div>
+                                <div class="a11y-good-example"><code>&lt;html lang="en"&gt;</code></div>
+                                <p class="mt-2 small text-muted">Screen readers need this to use the correct pronunciation.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Win 2: Image alt text -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>&#128247; Image Alt Text</h5>
+                                <div class="a11y-bad-example mb-2"><code>&lt;img src="photo.jpg"&gt;</code></div>
+                                <div class="a11y-good-example"><code>&lt;img src="photo.jpg" alt="Team meeting"&gt;</code></div>
+                                <p class="mt-2 small text-muted">Decorative images use <code>alt=""</code>. Meaningful images get descriptive text.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Win 3: Semantic HTML -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>&#128203; Semantic Elements</h5>
+                                <div class="a11y-bad-example mb-2"><code>&lt;div class="nav"&gt;...&lt;/div&gt;</code></div>
+                                <div class="a11y-good-example"><code>&lt;nav aria-label="Main"&gt;...&lt;/nav&gt;</code></div>
+                                <p class="mt-2 small text-muted">Use <code>&lt;main&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;article&gt;</code>.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Win 4: Color contrast -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>&#127912; Color Contrast</h5>
+                                <div class="a11y-bad-example mb-2">
+                                    <span style="color:#aaa">Light gray on white</span>
+                                </div>
+                                <div class="a11y-good-example">
+                                    <span style="color:#333">Dark gray on white (4.5:1+)</span>
+                                </div>
+                                <p class="mt-2 small text-muted">WCAG AA: 4.5:1 for text, 3:1 for large text. Use WebAIM Contrast Checker.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Win 5: Form labels -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>&#128221; Form Labels</h5>
+                                <div class="a11y-bad-example mb-2"><code>&lt;input placeholder="Name"&gt;</code></div>
+                                <div class="a11y-good-example"><code>&lt;label for="name"&gt;Name&lt;/label&gt;<br>&lt;input id="name"&gt;</code></div>
+                                <p class="mt-2 small text-muted">Placeholders disappear - always use visible or associated labels.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Win 6: Focus indicators -->
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5>&#128065; Focus Indicators</h5>
+                                <div class="a11y-bad-example mb-2"><code>:focus { outline: none; }</code></div>
+                                <div class="a11y-good-example"><code>:focus-visible { outline: 3px solid blue; }</code></div>
+                                <p class="mt-2 small text-muted">Never remove focus indicators. Use <code>:focus-visible</code> for keyboard-only focus styles.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- ARIA PATTERNS                                                -->
+        <!-- ============================================================ -->
+        <section id="aria-patterns" class="py-5 bg-light" aria-labelledby="aria-heading">
+            <div class="container">
+                <h2 id="aria-heading" class="mb-4">2. ARIA Patterns with Bootstrap</h2>
+                <p class="text-muted mb-4">Bootstrap 5 includes ARIA attributes in its components. Here's how to use them correctly.</p>
+
+                <div class="row g-4">
+                    <!-- Alert role -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0">Alerts (role="alert")</h5></div>
+                            <div class="card-body">
+                                <p>Bootstrap alerts use <code>role="alert"</code> automatically for screen reader announcements:</p>
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    <strong>Warning!</strong> This alert will be announced by screen readers.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close warning alert"></button>
+                                </div>
+                                <pre class="bg-dark text-success p-2 rounded"><code>&lt;div class="alert alert-warning"
+     role="alert"&gt;
+  &lt;button aria-label="Close
+    warning alert"&gt;...&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live region -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0">Live Regions (aria-live)</h5></div>
+                            <div class="card-body">
+                                <p>For dynamic content updates, use <code>aria-live</code> regions:</p>
+                                <div class="mb-3">
+                                    <button class="btn btn-primary" onclick="updateLiveRegion()">Update Status</button>
+                                </div>
+                                <div id="liveRegion" aria-live="polite" aria-atomic="true"
+                                     class="alert alert-info p-2">
+                                    Status: Ready
+                                </div>
+                                <pre class="bg-dark text-success p-2 rounded mt-3"><code>&lt;div aria-live="polite"
+     aria-atomic="true"&gt;
+  Status updates announced
+  without interrupting
+&lt;/div&gt;
+
+&lt;!-- assertive = interrupts --&gt;
+&lt;div aria-live="assertive"&gt;
+  Critical error messages
+&lt;/div&gt;</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accessible modal -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0">Modal A11y</h5></div>
+                            <div class="card-body">
+                                <p>Bootstrap modals handle focus trap and ARIA automatically. Ensure proper labeling:</p>
+                                <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                                        data-bs-target="#a11yModal">
+                                    Open Accessible Modal
+                                </button>
+                                <pre class="bg-dark text-success p-2 rounded mt-3"><code>&lt;!-- aria-labelledby points to
+     modal title --&gt;
+&lt;div class="modal" role="dialog"
+     aria-labelledby="modalTitle"
+     aria-modal="true"&gt;
+  &lt;h5 id="modalTitle"&gt;...&lt;/h5&gt;
+&lt;/div&gt;</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab panel -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0">Tab Panel A11y</h5></div>
+                            <div class="card-body">
+                                <p>Bootstrap tabs include proper ARIA. Each tab has <code>role="tab"</code>:</p>
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="tab1" data-bs-toggle="tab"
+                                                data-bs-target="#panel1" type="button"
+                                                role="tab" aria-controls="panel1"
+                                                aria-selected="true">Tab 1</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="tab2" data-bs-toggle="tab"
+                                                data-bs-target="#panel2" type="button"
+                                                role="tab" aria-controls="panel2"
+                                                aria-selected="false">Tab 2</button>
+                                    </li>
+                                </ul>
+                                <div class="tab-content border border-top-0 p-3">
+                                    <div class="tab-pane fade show active" id="panel1" role="tabpanel" aria-labelledby="tab1" tabindex="0">
+                                        Panel 1 content
+                                    </div>
+                                    <div class="tab-pane fade" id="panel2" role="tabpanel" aria-labelledby="tab2" tabindex="0">
+                                        Panel 2 content
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- KEYBOARD NAVIGATION                                          -->
+        <!-- ============================================================ -->
+        <section id="keyboard" class="py-5" aria-labelledby="kb-heading">
+            <div class="container">
+                <h2 id="kb-heading" class="mb-4">3. Keyboard Navigation</h2>
+
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0">Essential Keyboard Patterns</h5></div>
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <thead><tr><th>Key</th><th>Action</th></tr></thead>
+                                    <tbody>
+                                        <tr><td><span class="a11y-key-demo">Tab</span></td><td>Move to next interactive element</td></tr>
+                                        <tr><td><span class="a11y-key-demo">Shift+Tab</span></td><td>Move to previous element</td></tr>
+                                        <tr><td><span class="a11y-key-demo">Enter</span></td><td>Activate links, buttons, submit forms</td></tr>
+                                        <tr><td><span class="a11y-key-demo">Space</span></td><td>Activate buttons, toggle checkboxes</td></tr>
+                                        <tr><td><span class="a11y-key-demo">Esc</span></td><td>Close modals, dropdowns, menus</td></tr>
+                                        <tr><td><span class="a11y-key-demo">&darr; &uarr;</span></td><td>Navigate dropdown items, tabs</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100 a11y-focus-demo">
+                            <div class="card-header"><h5 class="mb-0">Try It: Tab Through These</h5></div>
+                            <div class="card-body">
+                                <p>Use <kbd>Tab</kbd> to navigate through these elements:</p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="#" class="btn btn-primary">Link Button</a>
+                                    <button class="btn btn-success">Regular Button</button>
+                                    <button class="btn btn-warning">Another Button</button>
+                                    <input type="text" class="form-control" style="max-width:200px" placeholder="Text input" aria-label="Demo text input">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="kbCheck">
+                                        <label class="form-check-label" for="kbCheck">Checkbox</label>
+                                    </div>
+                                </div>
+                                <p class="mt-3 text-muted small">Notice how focus moves in order. Focus indicators are highlighted for visibility.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skip link explanation -->
+                <div class="mt-4 p-4 border rounded bg-light">
+                    <h5>Skip Navigation Link</h5>
+                    <p>Press <kbd>Tab</kbd> on this page (before interacting with anything else) to see the "Skip to main content" link. This helps keyboard users bypass the navigation.</p>
+                    <pre class="bg-dark text-success p-2 rounded"><code>&lt;!-- First element in body --&gt;
+&lt;a href="#main-content"
+   class="skip-link"&gt;
+  Skip to main content
+&lt;/a&gt;
+
+&lt;!-- Target section --&gt;
+&lt;main id="main-content"&gt;
+  ...
+&lt;/main&gt;
+
+/* CSS: hide until focused */
+.skip-link {
+  position: absolute;
+  top: -100px;
+}
+.skip-link:focus {
+  top: 0;
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- FORM ACCESSIBILITY                                           -->
+        <!-- ============================================================ -->
+        <section id="forms" class="py-5 bg-light" aria-labelledby="forms-heading">
+            <div class="container">
+                <h2 id="forms-heading" class="mb-4">4. Accessible Forms</h2>
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0">Accessible Form Example</h5></div>
+                            <div class="card-body">
+                                <form novalidate>
+                                    <div class="mb-3">
+                                        <!-- Labels are associated via for/id -->
+                                        <label for="a11yName" class="form-label">
+                                            Full Name <span class="text-danger" aria-hidden="true">*</span>
+                                        </label>
+                                        <input type="text" class="form-control" id="a11yName"
+                                               required aria-required="true"
+                                               aria-describedby="nameHelp">
+                                        <div id="nameHelp" class="form-text">Enter your first and last name.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="a11yEmail" class="form-label">
+                                            Email <span class="text-danger" aria-hidden="true">*</span>
+                                        </label>
+                                        <input type="email" class="form-control" id="a11yEmail"
+                                               required aria-required="true"
+                                               aria-invalid="false"
+                                               aria-describedby="emailError">
+                                        <div id="emailError" class="invalid-feedback" role="alert">
+                                            Please enter a valid email address.
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="a11ySelect" class="form-label">Topic</label>
+                                        <select class="form-select" id="a11ySelect">
+                                            <option value="">Choose a topic</option>
+                                            <option value="1">General</option>
+                                            <option value="2">Support</option>
+                                            <option value="3">Feedback</option>
+                                        </select>
+                                    </div>
+                                    <fieldset class="mb-3">
+                                        <legend class="form-label">Notification preference</legend>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="notify" id="notifyEmail" checked>
+                                            <label class="form-check-label" for="notifyEmail">Email</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="notify" id="notifySMS">
+                                            <label class="form-check-label" for="notifySMS">SMS</label>
+                                        </div>
+                                    </fieldset>
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0">Key A11y Patterns for Forms</h5></div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <code>&lt;label for="id"&gt;</code> - Associates label with input
+                                    </li>
+                                    <li class="list-group-item">
+                                        <code>aria-required="true"</code> - Marks required fields
+                                    </li>
+                                    <li class="list-group-item">
+                                        <code>aria-invalid="true"</code> - Indicates validation errors
+                                    </li>
+                                    <li class="list-group-item">
+                                        <code>aria-describedby</code> - Links to help/error text
+                                    </li>
+                                    <li class="list-group-item">
+                                        <code>&lt;fieldset&gt; + &lt;legend&gt;</code> - Groups related inputs
+                                    </li>
+                                    <li class="list-group-item">
+                                        <code>role="alert"</code> on error messages - Announced immediately
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Accessible Modal -->
+    <div class="modal fade" id="a11yModal" tabindex="-1" aria-labelledby="a11yModalLabel" aria-modal="true" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="a11yModalLabel">Accessible Modal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This modal has proper ARIA attributes: <code>aria-labelledby</code>, <code>aria-modal="true"</code>, and <code>role="dialog"</code>.</p>
+                    <p>Focus is trapped inside the modal. Press <kbd>Esc</kbd> to close.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Accessibility Tips. Professional Practice Series.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateLiveRegion() {
+            const region = document.getElementById('liveRegion');
+            const time = new Date().toLocaleTimeString();
+            region.textContent = 'Status: Updated at ' + time;
+        }
+    </script>
+</body>
+</html>

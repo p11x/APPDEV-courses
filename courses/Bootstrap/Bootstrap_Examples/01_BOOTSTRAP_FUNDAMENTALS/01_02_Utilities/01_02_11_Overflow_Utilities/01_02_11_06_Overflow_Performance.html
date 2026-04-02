@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--
+        Overflow Performance - 01_02_11_06
+        ===================================
+        Performance considerations when using overflow utilities.
+        Covers GPU acceleration, paint costs, scroll event optimization,
+        and best practices for smooth scrolling experiences.
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overflow Performance - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .perf-box { height: 200px; border: 2px solid #0d6efd; }
+        .gpu-accelerated { 
+            will-change: scroll-position;
+            -webkit-overflow-scrolling: touch;
+        }
+        .item { padding: 10px; border-bottom: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+    <div class="bg-info text-white text-center py-5">
+        <div class="container">
+            <h1 class="display-4">Overflow Performance</h1>
+            <p class="lead">Optimizing Scroll Performance in Bootstrap 5</p>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <!-- Performance Tips -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <h4 class="alert-heading">Key Performance Considerations</h4>
+                    <ul class="mb-0">
+                        <li><strong>overflow: auto</strong> is cheaper than <strong>overflow: scroll</strong> (no always-present scrollbar repaint)</li>
+                        <li><strong>overflow: hidden</strong> is the cheapest - no scrollbar management at all</li>
+                        <li>Scroll events trigger <strong>repaints</strong>, not reflows, which is faster</li>
+                        <li>Use <strong>will-change: scroll-position</strong> to hint GPU acceleration</li>
+                        <li>Avoid nesting many scrollable containers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- GPU Acceleration -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h3>Standard Scrolling</h3>
+                <p class="text-muted">No GPU hints - CPU handles rendering</p>
+                <!-- Standard overflow without GPU hints -->
+                <div class="perf-box overflow-auto">
+                    <div class="p-3">
+                        <h5>Standard Scroll Container</h5>
+                        <p>This container uses default overflow-auto.</p>
+                        <p>Scrolling relies on CPU-based compositing.</p>
+                        <p>May show janky scrolling on complex pages.</p>
+                        <p>Fine for simple content with few elements.</p>
+                        <p>Lorem ipsum dolor sit amet.</p>
+                        <p>Consectetur adipiscing elit.</p>
+                        <p>Sed do eiusmod tempor incididunt.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h3>GPU-Accelerated Scrolling</h3>
+                <p class="text-muted">will-change hints for GPU compositing</p>
+                <!-- 
+                    will-change: scroll-position tells the browser to promote
+                    this element to its own compositor layer.
+                    -webkit-overflow-scrolling: touch enables momentum scrolling on iOS.
+                -->
+                <div class="perf-box overflow-auto gpu-accelerated">
+                    <div class="p-3">
+                        <h5>GPU-Accelerated Scroll Container</h5>
+                        <p>This container uses will-change: scroll-position.</p>
+                        <p>The browser promotes it to a GPU layer.</p>
+                        <p>Scrolling is smoother, especially on mobile.</p>
+                        <p>Use for frequently scrolled containers.</p>
+                        <p>Lorem ipsum dolor sit amet.</p>
+                        <p>Consectetur adipiscing elit.</p>
+                        <p>Sed do eiusmod tempor incididunt.</p>
+                    </div>
+                </div>
+                <div class="bg-light p-2 rounded mt-2">
+                    <code>will-change: scroll-position</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Event Throttling -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="mb-3">Scroll Event Optimization</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">Bad: Unthrottled Scroll Handler</h5>
+                            </div>
+                            <div class="card-body overflow-auto perf-box" id="badScroll" onscroll="badScrollHandler()">
+                                <div class="p-3">
+                                    <p>Scroll this container.</p>
+                                    <p>Every scroll event fires immediately.</p>
+                                    <p>This can cause performance issues.</p>
+                                    <p>Check the console to see event frequency.</p>
+                                    <p>Events fire 60+ times per second!</p>
+                                    <p>This wastes CPU cycles.</p>
+                                    <p>Lorem ipsum dolor sit amet.</p>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <small>Events fired: <span id="badCount">0</span></small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Good: Throttled Scroll Handler</h5>
+                            </div>
+                            <div class="card-body overflow-auto perf-box" id="goodScroll">
+                                <div class="p-3">
+                                    <p>Scroll this container.</p>
+                                    <p>Scroll events are throttled with requestAnimationFrame.</p>
+                                    <p>Handler only fires once per frame (60fps).</p>
+                                    <p>This dramatically reduces CPU usage.</p>
+                                    <p>User experience remains smooth.</p>
+                                    <p>Best practice for production code.</p>
+                                    <p>Lorem ipsum dolor sit amet.</p>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <small>Events processed: <span id="goodCount">0</span></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Virtual Scrolling Concept -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="mb-3">Virtual Scrolling for Large Lists</h3>
+                <div class="alert alert-info">
+                    <p class="mb-0">
+                        When dealing with thousands of items, render only visible items plus a small buffer.
+                        This is called <strong>virtual scrolling</strong> or <strong>windowing</strong>.
+                        Libraries like <code>react-window</code> and <code>vue-virtual-scroller</code> implement this pattern.
+                    </p>
+                </div>
+                <!-- Simulated virtual scroll - only shows visible items -->
+                <div class="border rounded overflow-auto" style="height: 300px;" id="virtualContainer">
+                    <!-- 
+                        In real virtual scrolling, only items in viewport are rendered.
+                        Here we simulate with a smaller dataset for demonstration.
+                    -->
+                    <div id="virtualContent"></div>
+                </div>
+                <div class="bg-light p-2 rounded mt-2">
+                    <small>Total items: 10,000 | Rendered: <span id="renderedCount">~20</span> (virtual scrolling)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Comparison Table -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="mb-3">Overflow Property Performance Comparison</h3>
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Property</th>
+                            <th>Scrollbar Cost</th>
+                            <th>Paint Cost</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>overflow: visible</code></td>
+                            <td>None</td>
+                            <td>Low</td>
+                            <td>Default behavior, no container constraints</td>
+                        </tr>
+                        <tr>
+                            <td><code>overflow: hidden</code></td>
+                            <td>None</td>
+                            <td>Lowest</td>
+                            <td>Clipping decorative overflow, image crops</td>
+                        </tr>
+                        <tr>
+                            <td><code>overflow: auto</code></td>
+                            <td>Conditional</td>
+                            <td>Medium</td>
+                            <td>Most use cases - smart scrollbar management</td>
+                        </tr>
+                        <tr>
+                            <td><code>overflow: scroll</code></td>
+                            <td>Always</td>
+                            <td>Medium-High</td>
+                            <td>Rarely - when always-visible scrollbars are needed</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="row">
+            <div class="col-12">
+                <h3 class="mb-3">Performance Tips</h3>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Use will-change Sparingly</h5>
+                                <p class="card-text">Only apply will-change to containers that scroll frequently. Overusing it consumes GPU memory.</p>
+                                <code class="d-block p-2 bg-light rounded">will-change: scroll-position</code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Avoid Deep Nesting</h5>
+                                <p class="card-text">Nesting scrollable containers creates complex paint regions. Flatten your layout where possible.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Use contain: layout</h5>
+                                <p class="card-text">The CSS contain property limits the scope of layout/paint operations to the container.</p>
+                                <code class="d-block p-2 bg-light rounded">contain: layout paint</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3">
+        <p class="mb-0">Overflow Performance - Bootstrap 5</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Performance demo: unthrottled scroll handler
+        let badCount = 0;
+        function badScrollHandler() {
+            badCount++;
+            document.getElementById('badCount').textContent = badCount;
+        }
+
+        // Performance demo: throttled scroll handler using requestAnimationFrame
+        let goodCount = 0;
+        let ticking = false;
+        document.getElementById('goodScroll').addEventListener('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(function() {
+                    goodCount++;
+                    document.getElementById('goodCount').textContent = goodCount;
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+
+        // Virtual scrolling demo - renders only visible items
+        const totalItems = 10000;
+        const itemHeight = 40;
+        const container = document.getElementById('virtualContainer');
+        const content = document.getElementById('virtualContent');
+        
+        // Set total height to simulate all items
+        content.style.height = (totalItems * itemHeight) + 'px';
+        content.style.position = 'relative';
+
+        function renderVisibleItems() {
+            const scrollTop = container.scrollTop;
+            const viewportHeight = container.clientHeight;
+            const startIndex = Math.floor(scrollTop / itemHeight);
+            const endIndex = Math.min(totalItems, startIndex + Math.ceil(viewportHeight / itemHeight) + 5);
+            
+            let html = '';
+            for (let i = startIndex; i < endIndex; i++) {
+                html += '<div class="item" style="position:absolute;top:' + (i * itemHeight) + 'px;width:100%;height:' + itemHeight + 'px;line-height:' + itemHeight + 'px;">Item ' + (i + 1) + ' of ' + totalItems + '</div>';
+            }
+            content.innerHTML = html;
+            document.getElementById('renderedCount').textContent = '~' + (endIndex - startIndex);
+        }
+
+        container.addEventListener('scroll', renderVisibleItems);
+        renderVisibleItems();
+    </script>
+</body>
+</html>

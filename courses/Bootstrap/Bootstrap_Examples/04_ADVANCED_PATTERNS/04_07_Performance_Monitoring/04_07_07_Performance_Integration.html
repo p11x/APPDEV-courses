@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_07_07_Performance_Integration.html
+     Performance Monitoring Integration Guide with Bootstrap 5
+     
+     Demonstrates integrating multiple performance monitoring
+     tools (RUM, synthetic, budgets, alerts) into a unified
+     dashboard and CI/CD pipeline.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Integration - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Integration flow diagram connectors */
+        .flow-step {
+            position: relative;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            background: white;
+            border: 2px solid #dee2e6;
+        }
+        .flow-step.active {
+            border-color: #0d6efd;
+            background: #f0f6ff;
+        }
+        .flow-arrow {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #6c757d;
+            padding: 0.5rem 0;
+        }
+        /* Pipeline stage styling */
+        .pipeline-stage {
+            border-top: 3px solid;
+            padding-top: 1rem;
+        }
+        .stage-dev { border-color: #0dcaf0; }
+        .stage-build { border-color: #ffc107; }
+        .stage-deploy { border-color: #198754; }
+        .stage-prod { border-color: #dc3545; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Perf Integration</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#intNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="intNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Pipeline</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Data Flow</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Config</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+
+        <!-- Page header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-5 fw-bold">Performance Integration</h1>
+                <p class="text-muted lead">
+                    Unified monitoring across development, CI/CD, and production.
+                </p>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             INTEGRATION ARCHITECTURE
+             Visual flow showing how data moves through the system
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Integration Architecture</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <!-- Source: Browser -->
+                            <div class="col-md-2">
+                                <div class="flow-step active text-center">
+                                    <strong>Browser</strong><br>
+                                    <small class="text-muted">web-vitals<br>PerformanceObserver</small>
+                                </div>
+                            </div>
+                            <div class="col-md-1 flow-arrow">&rarr;</div>
+                            <!-- Collection: API -->
+                            <div class="col-md-2">
+                                <div class="flow-step text-center">
+                                    <strong>Collection API</strong><br>
+                                    <small class="text-muted">/api/vitals<br>Beacon endpoint</small>
+                                </div>
+                            </div>
+                            <div class="col-md-1 flow-arrow">&rarr;</div>
+                            <!-- Storage: Data store -->
+                            <div class="col-md-2">
+                                <div class="flow-step text-center">
+                                    <strong>Data Store</strong><br>
+                                    <small class="text-muted">Time-series DB<br>Analytics pipeline</small>
+                                </div>
+                            </div>
+                            <div class="col-md-1 flow-arrow">&rarr;</div>
+                            <!-- Output: Dashboard/Alerts -->
+                            <div class="col-md-2">
+                                <div class="flow-step text-center">
+                                    <strong>Output</strong><br>
+                                    <small class="text-muted">Dashboard<br>Alerts & Reports</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             CI/CD PIPELINE STAGES
+             Four stages of the deployment pipeline with perf checks
+             ============================================================ -->
+        <div class="row g-4 mb-5">
+            <!-- Development stage -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 pipeline-stage stage-dev">
+                    <div class="card-body">
+                        <h6 class="text-info">Development</h6>
+                        <ul class="list-unstyled small">
+                            <li>&check; ESLint perf rules</li>
+                            <li>&check; Bundle size pre-commit hook</li>
+                            <li>&check; DevTools profiling</li>
+                            <li>&check; Local Lighthouse runs</li>
+                        </ul>
+                        <!-- Code snippet for pre-commit hook -->
+                        <div class="bg-light p-2 rounded small">
+                            <code>.husky/pre-commit</code><br>
+                            <code>npx size-limit</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Build stage -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 pipeline-stage stage-build">
+                    <div class="card-body">
+                        <h6 class="text-warning">Build</h6>
+                        <ul class="list-unstyled small">
+                            <li>&check; Webpack bundle analysis</li>
+                            <li>&check; Tree-shaking verification</li>
+                            <li>&check; Asset optimization</li>
+                            <li>&check; Budget size checks</li>
+                        </ul>
+                        <!-- Code snippet for build step -->
+                        <div class="bg-light p-2 rounded small">
+                            <code>npm run build</code><br>
+                            <code>npm run analyze</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Deploy stage -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 pipeline-stage stage-deploy">
+                    <div class="card-body">
+                        <h6 class="text-success">Staging Deploy</h6>
+                        <ul class="list-unstyled small">
+                            <li>&check; Lighthouse CI on staging</li>
+                            <li>&check; Synthetic monitoring</li>
+                            <li>&check; Performance regression tests</li>
+                            <li>&check; PR comment with scores</li>
+                        </ul>
+                        <!-- Code snippet for deploy step -->
+                        <div class="bg-light p-2 rounded small">
+                            <code>lhci autorun</code><br>
+                            <code>--assert.preset=lighthouse:recommended</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Production stage -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 pipeline-stage stage-prod">
+                    <div class="card-body">
+                        <h6 class="text-danger">Production</h6>
+                        <ul class="list-unstyled small">
+                            <li>&check; RUM data collection</li>
+                            <li>&check; CWV tracking</li>
+                            <li>&check; Performance alerting</li>
+                            <li>&check; Regression detection</li>
+                        </ul>
+                        <!-- Code snippet for prod step -->
+                        <div class="bg-light p-2 rounded small">
+                            <code>web-vitals</code><br>
+                            <code>sendBeacon('/api/vitals')</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SAMPLE INTEGRATION CODE
+             Code examples for integrating web-vitals with reporting
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Integration Code Example</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-tabs" id="codeTabs" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="tab"
+                                        data-bs-target="#tabRUM" type="button">RUM Collection</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab"
+                                        data-bs-target="#tabBudget" type="button">Budget Check</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab"
+                                        data-bs-target="#tabAlert" type="button">Alert Handler</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-3">
+                            <!-- RUM collection code -->
+                            <div class="tab-pane fade show active" id="tabRUM">
+                                <pre class="bg-dark text-light p-3 rounded mb-0"><code>// RUM data collection with web-vitals
+import { onLCP, onINP, onCLS } from 'web-vitals';
+
+function sendToAnalytics(metric) {
+  const body = JSON.stringify({
+    name: metric.name,
+    value: metric.value,
+    delta: metric.delta,
+    id: metric.id,
+    navigationType: metric.navigationType,
+    // Add context about the user session
+    url: window.location.href,
+    userAgent: navigator.userAgent,
+    connectionType: navigator.connection?.effectiveType,
+    timestamp: Date.now()
+  });
+
+  // Use Beacon API for reliable delivery
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon('/api/vitals', body);
+  } else {
+    fetch('/api/vitals', { method: 'POST', body });
+  }
+}
+
+onLCP(sendToAnalytics);
+onINP(sendToAnalytics);
+onCLS(sendToAnalytics);</code></pre>
+                            </div>
+                            <!-- Budget check code -->
+                            <div class="tab-pane fade" id="tabBudget">
+                                <pre class="bg-dark text-light p-3 rounded mb-0"><code>// CI/CD budget enforcement with size-limit
+// .size-limit.json
+[
+  {
+    "name": "Main Bundle",
+    "path": "dist/main.*.js",
+    "limit": "150 KB",
+    "webpack": false
+  },
+  {
+    "name": "CSS",
+    "path": "dist/*.css",
+    "limit": "50 KB"
+  },
+  {
+    "name": "Total Page Weight",
+    "path": "dist/**/*",
+    "limit": "500 KB"
+  }
+]
+
+// package.json scripts
+{
+  "scripts": {
+    "size": "size-limit",
+    "size:check": "size-limit --why"
+  }
+}
+
+// In CI: fail build if budget exceeded
+// npx size-limit || exit 1</code></pre>
+                            </div>
+                            <!-- Alert handler code -->
+                            <div class="tab-pane fade" id="tabAlert">
+                                <pre class="bg-dark text-light p-3 rounded mb-0"><code>// Server-side alert handler
+app.post('/api/vitals', (req, res) => {
+  const { name, value, url } = req.body;
+  
+  // Define thresholds
+  const thresholds = {
+    LCP: { warning: 2500, critical: 4000 },
+    INP: { warning: 200, critical: 500 },
+    CLS: { warning: 0.1, critical: 0.25 }
+  };
+  
+  const threshold = thresholds[name];
+  if (!threshold) return res.sendStatus(200);
+  
+  // Check if metric exceeds threshold
+  if (value > threshold.critical) {
+    sendAlert({
+      severity: 'critical',
+      metric: name,
+      value,
+      url,
+      message: `${name} is ${value} on ${url}`
+    });
+  } else if (value > threshold.warning) {
+    sendAlert({
+      severity: 'warning',
+      metric: name,
+      value,
+      url
+    });
+  }
+  
+  // Store in time-series DB
+  storeMetric(req.body);
+  res.sendStatus(204);
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             INTEGRATION STATUS
+             Current health of all monitoring integrations
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Integration Status</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>RUM Collection</strong>
+                                <p class="mb-0 small text-muted">web-vitals sending to /api/vitals</p>
+                            </div>
+                            <span class="badge bg-success">Active - 24.5K events/day</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Lighthouse CI</strong>
+                                <p class="mb-0 small text-muted">Running on every PR</p>
+                            </div>
+                            <span class="badge bg-success">Active - Last run 12 min ago</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Bundle Size Check</strong>
+                                <p class="mb-0 small text-muted">size-limit in CI pipeline</p>
+                            </div>
+                            <span class="badge bg-warning text-dark">Warning - JS over budget</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Slack Alerts</strong>
+                                <p class="mb-0 small text-muted">Posting to #perf-alerts channel</p>
+                            </div>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 Performance Integration Guide</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

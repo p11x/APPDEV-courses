@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_04_Image_Optimization.html
+     Topic: Image Optimization Techniques in Bootstrap Layouts
+     
+     Images are often the largest assets on a page. This file covers
+     responsive images, lazy loading, modern formats, and sizing
+     strategies using Bootstrap 5 classes and native HTML features.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Image Optimization - Bootstrap 5</title>
+
+    <style>
+        .hero-bg {
+            background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+            color: white;
+            padding: 4rem 0;
+        }
+        /* Placeholder skeleton while images load */
+        .img-skeleton {
+            background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .format-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.65rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Image Optimization</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#responsive">Responsive</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#lazy">Lazy Load</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#formats">Formats</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#techniques">Techniques</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-bg text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Image Optimization</h1>
+            <p class="lead mt-2">Serve the right image, at the right size, to every device.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: RESPONSIVE IMAGES
+         Bootstrap's .img-fluid and the srcset attribute work together
+         to serve appropriately sized images based on viewport width.
+         ============================================================ -->
+    <section id="responsive" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Responsive Images</h2>
+
+            <div class="row g-4">
+                <!-- img-fluid demo -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">.img-fluid Class</h5></div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                Bootstrap's <code>.img-fluid</code> applies <code>max-width: 100%</code> and
+                                <code>height: auto</code> so images scale with their parent container.
+                            </p>
+                            <!--
+                                .img-fluid: sets max-width:100%; height:auto;
+                                This prevents the image from overflowing its container on small screens.
+                            -->
+                            <img src="https://picsum.photos/800/400?random=1"
+                                 class="img-fluid rounded"
+                                 alt="Responsive image using .img-fluid class"
+                                 loading="lazy"
+                                 width="800" height="400">
+                            <div class="mt-2">
+                                <code>&lt;img class="img-fluid" ...&gt;</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- srcset demo -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">srcset Attribute</h5></div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                The <code>srcset</code> attribute provides multiple image resolutions.
+                                The browser picks the best one based on device pixel density and viewport.
+                            </p>
+                            <!--
+                                srcset: comma-separated list of "url widthDescriptor" entries.
+                                sizes: media query hints telling the browser which image slot width to use.
+                                The browser automatically selects the optimal image.
+                            -->
+                            <img src="https://picsum.photos/800/400?random=2"
+                                 srcset="https://picsum.photos/400/200?random=2 400w,
+                                         https://picsum.photos/800/400?random=2 800w,
+                                         https://picsum.photos/1200/600?random=2 1200w"
+                                 sizes="(max-width: 576px) 100vw,
+                                        (max-width: 992px) 50vw,
+                                        33vw"
+                                 class="img-fluid rounded"
+                                 alt="Image with srcset for multiple resolutions"
+                                 loading="lazy"
+                                 width="800" height="400">
+                            <div class="mt-2">
+                                <code>&lt;img srcset="400w, 800w, 1200w" sizes="..."&gt;</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: LAZY LOADING
+         Native lazy loading with the loading="lazy" attribute.
+         Images below the fold are deferred until user scrolls near them.
+         ============================================================ -->
+    <section id="lazy" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Lazy Loading</h2>
+            <p class="text-muted mb-4">
+                The <code>loading="lazy"</code> attribute defers off-screen images until the user scrolls near them.
+                This reduces initial page weight and improves Largest Contentful Paint (LCP).
+            </p>
+
+            <div class="row g-4">
+                <!-- Eager (default) -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-danger text-white">
+                            <h6 class="mb-0">Eager (Default)</h6>
+                        </div>
+                        <!--
+                            Without loading="lazy", the browser downloads this image
+                            immediately, even if it's below the fold. This is fine for
+                            above-the-fold hero images but wasteful for distant content.
+                        -->
+                        <img src="https://picsum.photos/400/250?random=3"
+                             class="card-img-top"
+                             alt="Eager loaded image - loads immediately"
+                             width="400" height="250">
+                        <div class="card-body">
+                            <p class="card-text small">Loads immediately. Use for above-the-fold hero images.</p>
+                            <code>&lt;img loading="eager"&gt;</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lazy -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">Lazy Loaded</h6>
+                        </div>
+                        <!--
+                            loading="lazy": browser defers loading until image is near viewport.
+                            The browser calculates a distance threshold (typically ~1250px on fast connections).
+                        -->
+                        <img src="https://picsum.photos/400/250?random=4"
+                             class="card-img-top"
+                             alt="Lazy loaded image - deferred until near viewport"
+                             loading="lazy"
+                             width="400" height="250">
+                        <div class="card-body">
+                            <p class="card-text small">Deferred until near viewport. Use for below-the-fold content.</p>
+                            <code>&lt;img loading="lazy"&gt;</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lazy with placeholder -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">Lazy + Skeleton</h6>
+                        </div>
+                        <!--
+                            Combine lazy loading with a CSS skeleton placeholder.
+                            The skeleton provides visual feedback while the image loads.
+                        -->
+                        <div class="img-skeleton" style="height: 250px;">
+                            <img src="https://picsum.photos/400/250?random=5"
+                                 class="card-img-top"
+                                 alt="Lazy image with skeleton placeholder"
+                                 loading="lazy"
+                                 width="400" height="250"
+                                 onload="this.parentElement.classList.remove('img-skeleton')"
+                                 onerror="this.parentElement.classList.remove('img-skeleton')">
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text small">Skeleton placeholder shown until image finishes loading.</p>
+                            <code>CSS shimmer + loading="lazy"</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: MODERN IMAGE FORMATS
+         Comparison of image formats with size estimates.
+         ============================================================ -->
+    <section id="formats" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Modern Image Formats</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Format</th>
+                            <th>Compression</th>
+                            <th>Transparency</th>
+                            <th>Animation</th>
+                            <th>Browser Support</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>JPEG</strong></td>
+                            <td>Lossy</td>
+                            <td class="text-danger">No</td>
+                            <td class="text-danger">No</td>
+                            <td>Universal</td>
+                            <td>Photographs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PNG</strong></td>
+                            <td>Lossless</td>
+                            <td class="text-success">Yes</td>
+                            <td class="text-danger">No</td>
+                            <td>Universal</td>
+                            <td>Graphics with transparency</td>
+                        </tr>
+                        <tr>
+                            <td><strong>WebP</strong></td>
+                            <td>Lossy + Lossless</td>
+                            <td class="text-success">Yes</td>
+                            <td class="text-success">Yes</td>
+                            <td>97%+ browsers</td>
+                            <td>General purpose, smaller files</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AVIF</strong></td>
+                            <td>Lossy + Lossless</td>
+                            <td class="text-success">Yes</td>
+                            <td class="text-success">Yes</td>
+                            <td>85%+ browsers</td>
+                            <td>Best compression ratio</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SVG</strong></td>
+                            <td>Vector</td>
+                            <td class="text-success">Yes</td>
+                            <td class="text-success">Yes (CSS/SMIL)</td>
+                            <td>Universal</td>
+                            <td>Icons, logos, illustrations</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Picture element demo -->
+            <h4 class="mt-5 mb-3">Using &lt;picture&gt; for Format Fallback</h4>
+            <div class="row">
+                <div class="col-lg-8">
+                    <!--
+                        The <picture> element provides art direction and format fallback.
+                        The browser evaluates <source> elements in order and uses the first match.
+                        AVIF > WebP > JPEG fallback chain.
+                    -->
+                    <picture>
+                        <!-- AVIF: best compression, newest format -->
+                        <source srcset="https://picsum.photos/800/400?random=6" type="image/avif">
+                        <!-- WebP: good compression, wide support -->
+                        <source srcset="https://picsum.photos/800/400?random=6" type="image/webp">
+                        <!-- JPEG: universal fallback -->
+                        <img src="https://picsum.photos/800/400?random=6"
+                             class="img-fluid rounded"
+                             alt="Image with modern format fallback using picture element"
+                             loading="lazy"
+                             width="800" height="400">
+                    </picture>
+                    <div class="mt-2 code bg-dark text-light p-3 rounded small">
+                        &lt;picture&gt;<br>
+                        &nbsp;&nbsp;&lt;source srcset="image.avif" type="image/avif"&gt;<br>
+                        &nbsp;&nbsp;&lt;source srcset="image.webp" type="image/webp"&gt;<br>
+                        &nbsp;&nbsp;&lt;img src="image.jpg" alt="..."&gt;<br>
+                        &lt;/picture&gt;
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: IMAGE OPTIMIZATION TECHNIQUES
+         Additional techniques for image performance.
+         ============================================================ -->
+    <section id="techniques" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Optimization Techniques</h2>
+
+            <div class="row g-4">
+                <!-- Width/Height attributes -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Explicit Dimensions</h5>
+                            <p class="card-text">
+                                Always set <code>width</code> and <code>height</code> attributes.
+                                This prevents Cumulative Layout Shift (CLS) by reserving space before the image loads.
+                            </p>
+                            <div class="bg-dark text-light p-2 rounded small">
+                                &lt;img src="photo.jpg"<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;width="800" height="400"<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;class="img-fluid"&gt;
+                            </div>
+                            <span class="badge bg-success mt-2">CLS: 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decoding async -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Async Decoding</h5>
+                            <p class="card-text">
+                                <code>decoding="async"</code> allows the browser to decode images off the main thread,
+                                preventing jank during page rendering.
+                            </p>
+                            <div class="bg-dark text-light p-2 rounded small">
+                                &lt;img src="photo.jpg"<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;decoding="async"&gt;
+                            </div>
+                            <span class="badge bg-info mt-2">Non-blocking decode</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fetchpriority -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Fetch Priority</h5>
+                            <p class="card-text">
+                                <code>fetchpriority="high"</code> on LCP images tells the browser to prioritize
+                                downloading the most important visual element.
+                            </p>
+                            <div class="bg-dark text-light p-2 rounded small">
+                                &lt;img src="hero.jpg"<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;fetchpriority="high"&gt;<br><br>
+                                &lt;img src="below-fold.jpg"<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;fetchpriority="low"&gt;
+                            </div>
+                            <span class="badge bg-warning text-dark mt-2">Priority hints</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bootstrap object-fit utilities -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Object Fit</h5>
+                            <p class="card-text">
+                                Bootstrap 5 utility classes for <code>object-fit</code> control how images fill their containers.
+                            </p>
+                            <div class="d-flex gap-2 mb-2">
+                                <div style="width:80px;height:60px;overflow:hidden">
+                                    <img src="https://picsum.photos/200/150?random=7" class="w-100 h-100 object-fit-cover rounded" alt="Cover">
+                                </div>
+                                <div style="width:80px;height:60px;overflow:hidden">
+                                    <img src="https://picsum.photos/200/150?random=8" class="w-100 h-100 object-fit-contain rounded" alt="Contain">
+                                </div>
+                            </div>
+                            <code>.object-fit-cover</code> / <code>.object-fit-contain</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Placeholder colors -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Placeholder Colors</h5>
+                            <p class="card-text">
+                                Use a dominant color as <code>background-color</code> on the image container
+                                to provide a visual placeholder while loading.
+                            </p>
+                            <div class="rounded mb-2" style="background:#6c757d; height:80px;">
+                                <img src="https://picsum.photos/200/80?random=9"
+                                     class="img-fluid rounded"
+                                     alt="Image with background placeholder"
+                                     loading="lazy"
+                                     style="display:block"
+                                     width="200" height="80">
+                            </div>
+                            <code>background-color: #dominant</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CDN Image optimization -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">CDN Image Transforms</h5>
+                            <p class="card-text">
+                                Use image CDNs (Cloudinary, Imgix, Cloudflare Images) to auto-resize, convert
+                                formats, and optimize quality on the fly.
+                            </p>
+                            <div class="bg-dark text-light p-2 rounded small">
+                                // Cloudinary URL-based transform<br>
+                                res.cloudinary.com/demo/<br>
+                                w_400,h_300,c_fill/<br>
+                                f_webp/photo.jpg
+                            </div>
+                            <span class="badge bg-primary mt-2">Server-side optimization</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Image Optimization &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+</body>
+</html>

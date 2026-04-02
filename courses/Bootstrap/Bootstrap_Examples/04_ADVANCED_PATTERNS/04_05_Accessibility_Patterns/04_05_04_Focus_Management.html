@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_05_04_Focus_Management.html
+     Topic: Focus Management Patterns for Bootstrap Applications
+     
+     Covers focus trapping, focus restoration, roving focus,
+     and programmatic focus management for modals, drawers, and
+     dynamic content updates.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Focus Management - Bootstrap 5 Accessibility</title>
+
+    <style>
+        .hero-focus { background: linear-gradient(135deg, #fd7e14 0%, #dc3545 100%); color: white; padding: 4rem 0; }
+        .code-dark { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.82rem; overflow-x: auto; }
+        .focus-ring-demo *:focus-visible { outline: 4px solid #fd7e14; outline-offset: 3px; }
+        .trap-zone { border: 3px dashed #dc3545; padding: 1.5rem; border-radius: 0.5rem; }
+    </style>
+</head>
+<body>
+
+    <a href="#main-content" class="visually-hidden-focusable btn btn-primary position-absolute" style="z-index:9999">
+        Skip to main content
+    </a>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand" href="#">Focus Mgmt</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#trap">Trapping</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#restore">Restoration</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#dynamic">Dynamic</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#demo">Demo</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content">
+        <section class="hero-focus text-center">
+            <div class="container">
+                <h1 class="display-5 fw-bold">Focus Management</h1>
+                <p class="lead mt-2">Control keyboard focus for accessible dynamic interfaces.</p>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 1: FOCUS TRAPPING
+             ============================================================ -->
+        <section id="trap" class="py-5">
+            <div class="container">
+                <h2 class="mb-4">Focus Trapping</h2>
+                <p class="text-muted mb-4">
+                    When a modal or drawer opens, focus must be trapped inside it. Tab should cycle through the modal's focusable elements without escaping to the page behind.
+                </p>
+
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-danger text-white"><h5 class="mb-0">Focus Trap Rules</h5></div>
+                            <div class="card-body">
+                                <ol>
+                                    <li>Move focus to the first focusable element when opening</li>
+                                    <li>Tab cycles through focusable elements within the trap</li>
+                                    <li>Shift+Tab from first element wraps to last</li>
+                                    <li>Tab from last element wraps to first</li>
+                                    <li>Escape key closes and restores focus</li>
+                                    <li>Background elements get <code>aria-hidden="true"</code> and <code>inert</code></li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0">Manual Focus Trap Code</h5></div>
+                            <div class="card-body">
+                                <div class="code-dark">
+function trapFocus(container) {<br>
+&nbsp;&nbsp;const focusable = container.querySelectorAll(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'button, [href], input, select, '<br>
+&nbsp;&nbsp;&nbsp;&nbsp;+ 'textarea, [tabindex]:not(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[tabindex="-1"])'<br>
+&nbsp;&nbsp;);<br>
+&nbsp;&nbsp;const first = focusable[0];<br>
+&nbsp;&nbsp;const last = focusable[focusable.length - 1];<br><br>
+&nbsp;&nbsp;container.addEventListener('keydown', e => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (e.key !== 'Tab') return;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (e.shiftKey &&<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.activeElement === first) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e.preventDefault();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;last.focus();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;} else if (!e.shiftKey &&<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.activeElement === last) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e.preventDefault();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;first.focus();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;});<br>
+}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 2: FOCUS RESTORATION
+             ============================================================ -->
+        <section id="restore" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="mb-4">Focus Restoration</h2>
+                <p class="text-muted mb-4">
+                    When a modal/drawer closes, return focus to the element that triggered it. This maintains the user's place in the page.
+                </p>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="code-dark">
+// Store reference to triggering element<br>
+let previouslyFocused = null;<br><br>
+function openModal() {<br>
+&nbsp;&nbsp;// Save current focus<br>
+&nbsp;&nbsp;previouslyFocused = document.activeElement;<br>
+&nbsp;&nbsp;// Show modal and focus first element<br>
+&nbsp;&nbsp;const modal = document.getElementById('myModal');<br>
+&nbsp;&nbsp;modal.classList.add('show');<br>
+&nbsp;&nbsp;modal.querySelector('button, input').focus();<br>
+}<br><br>
+function closeModal() {<br>
+&nbsp;&nbsp;// Hide modal<br>
+&nbsp;&nbsp;const modal = document.getElementById('myModal');<br>
+&nbsp;&nbsp;modal.classList.remove('show');<br>
+&nbsp;&nbsp;// Restore focus to trigger<br>
+&nbsp;&nbsp;if (previouslyFocused) previouslyFocused.focus();<br>
+}
+                        </div>
+                        <div class="alert alert-info mt-3 mb-0">
+                            <strong>Note:</strong> Bootstrap's Modal component handles focus trapping and restoration automatically. This code shows the underlying pattern for custom components.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 3: DYNAMIC CONTENT FOCUS
+             ============================================================ -->
+        <section id="dynamic" class="py-5">
+            <div class="container">
+                <h2 class="mb-4">Dynamic Content Focus</h2>
+
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0">Move Focus on Update</h5></div>
+                            <div class="card-body">
+                                <p class="small">When content changes dynamically (e.g., form validation), move focus to the error message or new content.</p>
+                                <div id="validationDemo">
+                                    <div class="mb-3">
+                                        <label for="demoEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="demoEmail" aria-describedby="demoEmailError">
+                                        <div id="demoEmailError" class="invalid-feedback" role="alert" tabindex="-1"></div>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="validateDemo()">Validate</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-header"><h5 class="mb-0">Live Region Announcements</h5></div>
+                            <div class="card-body">
+                                <p class="small">Use <code>aria-live</code> regions when content changes but focus shouldn't move.</p>
+                                <div class="code-dark">
+// Announce without moving focus<br>
+function announce(message) {<br>
+&nbsp;&nbsp;const region = document.getElementById(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'announcement'<br>
+&nbsp;&nbsp;);<br>
+&nbsp;&nbsp;region.textContent = '';<br>
+&nbsp;&nbsp;// Small delay ensures screen readers<br>
+&nbsp;&nbsp;// detect the change<br>
+&nbsp;&nbsp;setTimeout(() => {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;region.textContent = message;<br>
+&nbsp;&nbsp;}, 100);<br>
+}<br><br>
+&lt;div id="announcement"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;aria-live="polite"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;aria-atomic="true"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class="visually-hidden"&gt;<br>
+&lt;/div&gt;
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+             SECTION 4: INTERACTIVE FOCUS TRAP DEMO
+             ============================================================ -->
+        <section id="demo" class="py-5 bg-light">
+            <div class="container">
+                <h2 class="mb-4">Interactive Focus Trap Demo</h2>
+
+                <p class="text-muted mb-3">
+                    Click "Open Trap" to activate a focus trap zone. Tab will cycle only through elements inside the trap.
+                </p>
+
+                <button class="btn btn-primary mb-3" id="openTrapBtn" onclick="openFocusTrap()">Open Focus Trap</button>
+
+                <div class="trap-zone focus-ring-demo" id="trapZone" style="display:none" role="dialog"
+                     aria-label="Focus trap demonstration" aria-modal="true">
+                    <h5>Focus Trap Active</h5>
+                    <p class="small text-muted">Tab cycles only through these elements. Press Escape to close.</p>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" placeholder="First input" id="trapInput1">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" placeholder="Second input" id="trapInput2">
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" onclick="alert('Confirmed!')">Confirm</button>
+                        <button class="btn btn-secondary" onclick="closeFocusTrap()" id="closeTrapBtn">Close</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Focus Management &mdash; Bootstrap 5 Accessibility Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+
+    <script>
+        // Validation demo
+        function validateDemo() {
+            const input = document.getElementById('demoEmail');
+            const error = document.getElementById('demoEmailError');
+            if (!input.value.includes('@')) {
+                input.classList.add('is-invalid');
+                error.textContent = 'Please enter a valid email address containing @.';
+                error.focus(); // Move focus to error message
+            } else {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+                error.textContent = '';
+            }
+        }
+
+        // Focus trap demo
+        let trapPreviousFocus = null;
+
+        function openFocusTrap() {
+            trapPreviousFocus = document.activeElement;
+            const zone = document.getElementById('trapZone');
+            zone.style.display = 'block';
+            document.getElementById('openTrapBtn').style.display = 'none';
+            document.getElementById('trapInput1').focus();
+
+            zone.addEventListener('keydown', handleTrapKeys);
+        }
+
+        function closeFocusTrap() {
+            const zone = document.getElementById('trapZone');
+            zone.style.display = 'none';
+            document.getElementById('openTrapBtn').style.display = '';
+            zone.removeEventListener('keydown', handleTrapKeys);
+            if (trapPreviousFocus) trapPreviousFocus.focus();
+        }
+
+        function handleTrapKeys(e) {
+            if (e.key === 'Escape') {
+                closeFocusTrap();
+                return;
+            }
+            if (e.key !== 'Tab') return;
+
+            const zone = document.getElementById('trapZone');
+            const focusable = zone.querySelectorAll('input, button, [tabindex]:not([tabindex="-1"])');
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+    </script>
+</body>
+</html>

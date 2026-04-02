@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_02_12_Component_Maintenance.html                           -->
+<!-- Bootstrap 5 Maintaining JavaScript Code                       -->
+<!-- Code organization, documentation, versioning, refactoring     -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap JS Maintenance Patterns</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <h1 class="mb-4">Maintaining JavaScript Code</h1>
+        <p class="lead text-muted">
+            Patterns for organizing, documenting, and maintaining Bootstrap JavaScript in production.
+        </p>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 1: Module Pattern for Component Organization         -->
+        <!-- Group related functionality into self-contained modules      -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>1. Module Pattern</h2>
+            <p>Organize Bootstrap component code into reusable modules.</p>
+
+            <div class="card">
+                <div class="card-header">Module Pattern Example</div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>const ModalManager = (() => {
+    const _instances = new Map();
+
+    function create(id, options) {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        const modal = new bootstrap.Modal(el, options);
+        _instances.set(id, modal);
+        return modal;
+    }
+
+    function get(id) {
+        return _instances.get(id) || null;
+    }
+
+    function destroy(id) {
+        const modal = _instances.get(id);
+        if (modal) { modal.dispose(); _instances.delete(id); }
+    }
+
+    return { create, get, destroy };
+})();</code></pre>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <h5>Live Demo</h5>
+                <div class="d-flex gap-2 mb-2">
+                    <button class="btn btn-primary" id="createModuleModal">Create Modal</button>
+                    <button class="btn btn-success" id="showModuleModal">Show Modal</button>
+                    <button class="btn btn-danger" id="destroyModuleModal">Destroy Modal</button>
+                </div>
+                <span class="badge bg-secondary" id="moduleStatus">Status: No modal</span>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 2: Configuration Objects                             -->
+        <!-- Centralize component configuration for easy maintenance      -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>2. Configuration Objects</h2>
+            <p>Centralize all component options in a configuration object.</p>
+
+            <div class="card">
+                <div class="card-body">
+                    <pre class="mb-0"><code>const AppConfig = {
+    components: {
+        toast: { autohide: true, delay: 5000 },
+        modal: { backdrop: 'static', keyboard: false },
+        tooltip: { trigger: 'hover', placement: 'top' },
+        dropdown: { autoClose: true }
+    },
+    animation: {
+        duration: 300,
+        easing: 'ease-in-out'
+    }
+};</code></pre>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <h5>Configuration Applied</h5>
+                <button class="btn btn-info" id="configToastBtn">Show Configured Toast</button>
+                <button class="btn btn-warning ms-2" id="configTooltipBtn" data-bs-toggle="tooltip" title="Configured tooltip">Hover for Configured Tooltip</button>
+                <div class="toast-container position-fixed bottom-0 end-0 p-3">
+                    <div id="configToast" class="toast" role="alert">
+                        <div class="toast-header"><strong class="me-auto">Config Toast</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">This toast was created using AppConfig settings.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 3: Event Cleanup Registry                            -->
+        <!-- Track and clean up all event listeners to prevent leaks      -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>3. Event Cleanup Registry</h2>
+            <p>Track all event listeners for proper cleanup on component destruction.</p>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <pre class="mb-0"><code>class EventRegistry {
+    constructor() { this._handlers = []; }
+
+    on(element, event, handler) {
+        element.addEventListener(event, handler);
+        this._handlers.push({ element, event, handler });
+    }
+
+    cleanup() {
+        this._handlers.forEach(({ element, event, handler }) => {
+            element.removeEventListener(event, handler);
+        });
+        this._handlers = [];
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary" id="attachEvents">Attach Events (3 listeners)</button>
+                <button class="btn btn-warning" id="cleanupEvents">Cleanup All Events</button>
+            </div>
+            <div class="mt-2">
+                <span class="badge bg-info" id="eventCount">Listeners: 0</span>
+            </div>
+            <div id="eventTarget" class="border rounded p-3 mt-2" style="min-height:60px;">
+                Click/hover this area. Events are tracked and can be cleaned up.
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 4: Version Tracking                                  -->
+        <!-- Track component versions and Bootstrap version for debugging -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>4. Version Tracking</h2>
+            <p>Log component and framework versions for debugging.</p>
+
+            <div class="card">
+                <div class="card-body" id="versionInfo">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 5: Lazy Module Loading                               -->
+        <!-- Load component modules only when needed to reduce initial    -->
+        <!-- bundle size.                                                 -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>5. Lazy Module Loading</h2>
+            <p>Load component code on-demand rather than all at once.</p>
+
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-outline-primary" id="loadChart">Load Chart Module</button>
+                <button class="btn btn-outline-success" id="loadMap">Load Map Module</button>
+                <button class="btn btn-outline-info" id="loadEditor">Load Editor Module</button>
+            </div>
+            <div id="lazyModuleOutput" class="border rounded p-3" style="min-height:80px;">
+                <em class="text-muted">Modules load on demand...</em>
+            </div>
+            <div class="mt-2" id="loadedModules"></div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 6: Debug Mode Toggle                                 -->
+        <!-- Enable/disable verbose logging for production debugging      -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>6. Debug Mode Toggle</h2>
+            <p>Toggle debug logging on/off for different environments.</p>
+
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="debugToggle">
+                <label class="form-check-label" for="debugToggle">Debug Mode</label>
+            </div>
+
+            <div class="d-flex gap-2 mb-2">
+                <button class="btn btn-primary" id="debugAction1">Action 1</button>
+                <button class="btn btn-secondary" id="debugAction2">Action 2</button>
+                <button class="btn btn-dark" id="debugAction3">Action 3</button>
+            </div>
+
+            <div class="card" style="height:150px; overflow-y:auto;">
+                <div class="card-body font-monospace" id="debugLog" style="font-size:0.8rem;">
+                    <div class="text-muted">// Debug log appears here when debug mode is enabled</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- Pattern 7: Graceful Degradation                              -->
+        <!-- Handle missing dependencies and provide fallback behavior    -->
+        <!-- ============================================================ -->
+        <section class="mb-5">
+            <h2>7. Graceful Degradation</h2>
+            <p>Check for Bootstrap availability and provide fallbacks.</p>
+
+            <div class="card">
+                <div class="card-body" id="degradationCheck">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ============================================================
+        // Pattern 1: Module Pattern (IIFE)
+        // Self-contained module for managing Bootstrap modals
+        // ============================================================
+        const ModalManager = (function () {
+            const _instances = new Map();
+
+            function create(id, options) {
+                const el = document.getElementById(id);
+                if (!el) return null;
+                const modal = new bootstrap.Modal(el, options);
+                _instances.set(id, modal);
+                return modal;
+            }
+
+            function get(id) {
+                return _instances.get(id) || null;
+            }
+
+            function destroy(id) {
+                const modal = _instances.get(id);
+                if (modal) {
+                    modal.dispose();
+                    _instances.delete(id);
+                }
+            }
+
+            function has(id) {
+                return _instances.has(id);
+            }
+
+            function list() {
+                return Array.from(_instances.keys());
+            }
+
+            return { create, get, destroy, has, list };
+        })();
+
+        // Demo: Create a dynamic modal
+        let modalCounter = 0;
+        document.getElementById('createModuleModal').addEventListener('click', function () {
+            modalCounter++;
+            const id = 'moduleModal_' + modalCounter;
+
+            // Create modal DOM dynamically
+            const modalEl = document.createElement('div');
+            modalEl.className = 'modal fade';
+            modalEl.id = id;
+            modalEl.tabIndex = -1;
+            modalEl.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Managed Modal #${modalCounter}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">This modal is managed by the ModalManager module.</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modalEl);
+
+            const modal = ModalManager.create(id, { backdrop: true });
+            document.getElementById('moduleStatus').textContent = `Status: Modal "${id}" created`;
+            document.getElementById('moduleStatus').className = 'badge bg-success';
+        });
+
+        document.getElementById('showModuleModal').addEventListener('click', function () {
+            const ids = ModalManager.list();
+            if (ids.length > 0) {
+                const modal = ModalManager.get(ids[ids.length - 1]);
+                if (modal) modal.show();
+            } else {
+                document.getElementById('moduleStatus').textContent = 'Status: No modal to show';
+                document.getElementById('moduleStatus').className = 'badge bg-warning text-dark';
+            }
+        });
+
+        document.getElementById('destroyModuleModal').addEventListener('click', function () {
+            const ids = ModalManager.list();
+            if (ids.length > 0) {
+                const id = ids[ids.length - 1];
+                ModalManager.destroy(id);
+                document.getElementById('moduleStatus').textContent = `Status: Modal "${id}" destroyed`;
+                document.getElementById('moduleStatus').className = 'badge bg-danger';
+            }
+        });
+
+        // ============================================================
+        // Pattern 2: Configuration Objects
+        // Centralized configuration for all Bootstrap components
+        // ============================================================
+        const AppConfig = {
+            components: {
+                toast: { autohide: true, delay: 5000 },
+                modal: { backdrop: 'static', keyboard: false },
+                tooltip: { trigger: 'hover', placement: 'top', delay: { show: 200, hide: 100 } },
+                dropdown: { autoClose: true }
+            },
+            animation: {
+                duration: 300,
+                easing: 'ease-in-out'
+            }
+        };
+
+        document.getElementById('configToastBtn').addEventListener('click', function () {
+            const el = document.getElementById('configToast');
+            const toast = new bootstrap.Toast(el, AppConfig.components.toast);
+            toast.show();
+        });
+
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+            new bootstrap.Tooltip(el, AppConfig.components.tooltip);
+        });
+
+        // ============================================================
+        // Pattern 3: Event Cleanup Registry
+        // Track all listeners so they can be removed on cleanup
+        // ============================================================
+        class EventRegistry {
+            constructor() {
+                this._handlers = [];
+            }
+
+            on(element, event, handler) {
+                element.addEventListener(event, handler);
+                this._handlers.push({ element, event, handler });
+            }
+
+            cleanup() {
+                this._handlers.forEach(function (h) {
+                    h.element.removeEventListener(h.event, h.handler);
+                });
+                this._handlers = [];
+            }
+
+            count() {
+                return this._handlers.length;
+            }
+        }
+
+        const registry = new EventRegistry();
+        const eventTarget = document.getElementById('eventTarget');
+
+        document.getElementById('attachEvents').addEventListener('click', function () {
+            if (registry.count() > 0) {
+                alert('Events already attached. Cleanup first.');
+                return;
+            }
+
+            registry.on(eventTarget, 'click', function () {
+                eventTarget.style.background = '#e3f2fd';
+                setTimeout(function () { eventTarget.style.background = ''; }, 300);
+            });
+
+            registry.on(eventTarget, 'mouseenter', function () {
+                eventTarget.style.borderColor = '#0d6efd';
+            });
+
+            registry.on(eventTarget, 'mouseleave', function () {
+                eventTarget.style.borderColor = '';
+            });
+
+            document.getElementById('eventCount').textContent = 'Listeners: ' + registry.count();
+            document.getElementById('eventCount').className = 'badge bg-success';
+        });
+
+        document.getElementById('cleanupEvents').addEventListener('click', function () {
+            registry.cleanup();
+            document.getElementById('eventCount').textContent = 'Listeners: 0';
+            document.getElementById('eventCount').className = 'badge bg-secondary';
+        });
+
+        // ============================================================
+        // Pattern 4: Version Tracking
+        // ============================================================
+        document.getElementById('versionInfo').innerHTML = `
+            <table class="table table-sm mb-0">
+                <tr><td>Bootstrap Version</td><td><code>${bootstrap.Modal.VERSION}</code></td></tr>
+                <tr><td>Popper Version</td><td><code>${bootstrap.Tooltip.VERSION ? 'bundled' : 'unknown'}</code></td></tr>
+                <tr><td>User Agent</td><td><small>${navigator.userAgent.substring(0, 80)}...</small></td></tr>
+                <tr><td>Page Loaded</td><td><code>${new Date().toISOString()}</code></td></tr>
+            </table>
+        `;
+
+        // ============================================================
+        // Pattern 5: Lazy Module Loading
+        // Simulate dynamic import of modules
+        // ============================================================
+        const loadedModules = new Set();
+
+        function simulateLazyLoad(moduleName) {
+            return new Promise(function (resolve) {
+                setTimeout(function () {
+                    loadedModules.add(moduleName);
+                    resolve({ name: moduleName, version: '1.0.0' });
+                }, 500 + Math.random() * 500);
+            });
+        }
+
+        document.getElementById('loadChart').addEventListener('click', function () {
+            const output = document.getElementById('lazyModuleOutput');
+            output.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Loading chart module...';
+            simulateLazyLoad('ChartModule').then(function (mod) {
+                output.innerHTML = `<div class="alert alert-success mb-0">${mod.name} v${mod.version} loaded.</div>`;
+                updateLoadedModules();
+            });
+        });
+
+        document.getElementById('loadMap').addEventListener('click', function () {
+            const output = document.getElementById('lazyModuleOutput');
+            output.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Loading map module...';
+            simulateLazyLoad('MapModule').then(function (mod) {
+                output.innerHTML = `<div class="alert alert-success mb-0">${mod.name} v${mod.version} loaded.</div>`;
+                updateLoadedModules();
+            });
+        });
+
+        document.getElementById('loadEditor').addEventListener('click', function () {
+            const output = document.getElementById('lazyModuleOutput');
+            output.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Loading editor module...';
+            simulateLazyLoad('EditorModule').then(function (mod) {
+                output.innerHTML = `<div class="alert alert-success mb-0">${mod.name} v${mod.version} loaded.</div>`;
+                updateLoadedModules();
+            });
+        });
+
+        function updateLoadedModules() {
+            document.getElementById('loadedModules').innerHTML =
+                'Loaded: ' + Array.from(loadedModules).map(function (m) {
+                    return '<span class="badge bg-success me-1">' + m + '</span>';
+                }).join('');
+        }
+
+        // ============================================================
+        // Pattern 6: Debug Mode
+        // ============================================================
+        let debugMode = false;
+
+        function debugLog(source, message) {
+            if (!debugMode) return;
+            const log = document.getElementById('debugLog');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.innerHTML = `<span class="text-muted">[${time}]</span> <span class="text-primary">${source}:</span> ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        document.getElementById('debugToggle').addEventListener('change', function () {
+            debugMode = this.checked;
+            debugLog('System', 'Debug mode ' + (debugMode ? 'ENABLED' : 'DISABLED'));
+        });
+
+        document.getElementById('debugAction1').addEventListener('click', function () {
+            debugLog('Action1', 'User clicked Action 1 button');
+        });
+
+        document.getElementById('debugAction2').addEventListener('click', function () {
+            debugLog('Action2', 'User clicked Action 2 button');
+        });
+
+        document.getElementById('debugAction3').addEventListener('click', function () {
+            debugLog('Action3', 'User clicked Action 3 button');
+        });
+
+        // ============================================================
+        // Pattern 7: Graceful Degradation
+        // Check for Bootstrap and provide fallback
+        // ============================================================
+        (function () {
+            const check = document.getElementById('degradationCheck');
+
+            if (typeof bootstrap === 'undefined') {
+                check.innerHTML = `
+                    <div class="alert alert-danger mb-0">
+                        <strong>Bootstrap JS not loaded!</strong>
+                        <p class="mb-0">Components will degrade gracefully. Interactive features require Bootstrap JS.</p>
+                    </div>
+                `;
+            } else {
+                check.innerHTML = `
+                    <div class="alert alert-success mb-0">
+                        <strong>Bootstrap JS loaded successfully.</strong>
+                        <p class="mb-0 mt-2">Version: ${bootstrap.Modal.VERSION}<br>
+                        Components available: Modal, Toast, Tooltip, Popover, Dropdown, Collapse, Tab, Carousel, Offcanvas, Alert, Scrollspy</p>
+                    </div>
+                `;
+            }
+        })();
+    </script>
+</body>
+</html>

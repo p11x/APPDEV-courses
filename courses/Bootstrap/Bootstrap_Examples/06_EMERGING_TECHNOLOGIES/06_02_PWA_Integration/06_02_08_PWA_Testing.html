@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d6efd">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>PWA Testing | Bootstrap 5</title>
+    <style>
+        .pwa-card { border-left: 4px solid #0d6efd; transition: transform 0.3s ease; }
+        .pwa-card:hover { transform: translateY(-3px); }
+        .checklist-item { padding: 0.75rem; border-bottom: 1px solid #dee2e6; }
+        .checklist-item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">&#128300; PWA Testing</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#lighthouse">Lighthouse</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#offline-test">Offline</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#cache-test">Cache</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#automated">Automated</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-primary text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">PWA Testing</h1>
+            <p class="lead">Comprehensive testing strategies for Progressive Web Apps. Lighthouse audits, offline testing, cache validation, and automated testing.</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- Section 1: Lighthouse -->
+        <section id="lighthouse" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128269; Lighthouse PWA Audit</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">Running Lighthouse</div>
+                        <div class="card-body">
+                            <h6>Chrome DevTools:</h6>
+                            <ol>
+                                <li>Open Chrome DevTools (F12)</li>
+                                <li>Go to <strong>Lighthouse</strong> tab</li>
+                                <li>Select <strong>Progressive Web App</strong> category</li>
+                                <li>Click <strong>Analyze page load</strong></li>
+                            </ol>
+                            <h6 class="mt-3">CLI:</h6>
+                            <pre class="small mb-0"><code># Install Lighthouse globally
+npm install -g lighthouse
+
+# Run PWA audit
+lighthouse https://example.com --only-categories=pwa --output=json
+
+# Run full audit
+lighthouse https://example.com --output=html</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">PWA Checklist (Lighthouse)</div>
+                        <div class="card-body p-0">
+                            <div class="checklist-item">
+                                <div class="d-flex justify-content-between">
+                                    <span>Installable</span>
+                                    <span class="badge" id="checkInstall">Checking...</span>
+                                </div>
+                                <small class="text-muted">manifest.json + service worker</small>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="d-flex justify-content-between">
+                                    <span>Service Worker</span>
+                                    <span class="badge" id="checkSW">Checking...</span>
+                                </div>
+                                <small class="text-muted">Registered and controlling page</small>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="d-flex justify-content-between">
+                                    <span>Manifest</span>
+                                    <span class="badge" id="checkManifest">Checking...</span>
+                                </div>
+                                <small class="text-muted">Valid manifest with required fields</small>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="d-flex justify-content-between">
+                                    <span>HTTPS</span>
+                                    <span class="badge" id="checkHTTPS">Checking...</span>
+                                </div>
+                                <small class="text-muted">Served over secure connection</small>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="d-flex justify-content-between">
+                                    <span>Offline Support</span>
+                                    <span class="badge" id="checkOffline">Checking...</span>
+                                </div>
+                                <small class="text-muted">Page loads without network</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Offline Testing -->
+        <section id="offline-test" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128268; Offline Testing</h2>
+
+            <div class="card pwa-card">
+                <div class="card-header bg-dark text-white"><code>Automated Offline Test Suite</code></div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>// PWA Offline Testing with Puppeteer
+// Tests that the app works correctly when offline
+
+const puppeteer = require('puppeteer');
+
+describe('PWA Offline Tests', () => {
+    let browser, page;
+
+    beforeAll(async () => {
+        browser = await puppeteer.launch();
+        page = await browser.newPage();
+    });
+
+    // Test 1: Page loads when online
+    test('loads successfully when online', async () => {
+        await page.goto('https://example.com');
+        const title = await page.title();
+        expect(title).toBeTruthy();
+    });
+
+    // Test 2: Service worker registers
+    test('service worker registers', async () => {
+        await page.goto('https://example.com');
+        const swRegistered = await page.evaluate(() => {
+            return navigator.serviceWorker.getRegistration();
+        });
+        expect(swRegistered).toBeTruthy();
+    });
+
+    // Test 3: Page works offline
+    test('works offline', async () => {
+        // First visit while online to cache
+        await page.goto('https://example.com');
+        await page.waitForTimeout(2000); // Wait for caching
+
+        // Go offline
+        await page.setOfflineMode(true);
+
+        // Reload and check it still works
+        await page.reload();
+        const title = await page.title();
+        expect(title).toBeTruthy();
+
+        // Reset
+        await page.setOfflineMode(false);
+    });
+
+    // Test 4: Offline fallback page
+    test('shows offline page for uncached routes', async () => {
+        await page.setOfflineMode(true);
+        await page.goto('https://example.com/uncached-page');
+        const content = await page.content();
+        expect(content).toContain('offline');
+        await page.setOfflineMode(false);
+    });
+
+    afterAll(async () => {
+        await browser.close();
+    });
+});</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Cache Testing -->
+        <section id="cache-test" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#128230; Cache Testing</h2>
+
+            <div class="card pwa-card">
+                <div class="card-body">
+                    <!-- Cache testing interface -->
+                    <div class="mb-4">
+                        <h5>Live Cache Inspector</h5>
+                        <button class="btn btn-primary mb-3" onclick="inspectCaches()">Inspect Caches</button>
+                        <div id="cacheResults" class="bg-light rounded p-3" style="min-height: 100px;">
+                            <p class="text-muted mb-0">Click "Inspect Caches" to see cached resources</p>
+                        </div>
+                    </div>
+
+                    <pre class="mb-0"><code>// Cache testing utilities
+class CacheTester {
+    // List all caches
+    static async listCaches() {
+        const names = await caches.keys();
+        return names;
+    }
+
+    // Count entries in a cache
+    static async countEntries(cacheName) {
+        const cache = await caches.open(cacheName);
+        const keys = await cache.keys();
+        return keys.length;
+    }
+
+    // Check if a URL is cached
+    static async isCached(url) {
+        const response = await caches.match(url);
+        return response !== undefined;
+    }
+
+    // Get cache size estimation
+    static async getCacheSize(cacheName) {
+        const cache = await caches.open(cacheName);
+        const keys = await cache.keys();
+        let totalSize = 0;
+
+        for (const request of keys) {
+            const response = await cache.match(request);
+            const blob = await response.clone().blob();
+            totalSize += blob.size;
+        }
+
+        return totalSize;
+    }
+
+    // Clear a specific cache
+    static async clearCache(cacheName) {
+        return await caches.delete(cacheName);
+    }
+
+    // Clear all caches
+    static async clearAllCaches() {
+        const names = await caches.keys();
+        return Promise.all(names.map(name => caches.delete(name)));
+    }
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Automated Testing -->
+        <section id="automated" class="mb-5">
+            <h2 class="border-bottom pb-2 mb-4">&#129302; Automated PWA Testing</h2>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">Unit Tests</div>
+                        <div class="card-body">
+                            <pre class="small mb-0"><code>// Jest unit tests for SW
+describe('Service Worker', () => {
+    test('caches app shell on install', async () => {
+        const cache = await caches.open('v1');
+        expect(cache).toBeDefined();
+    });
+
+    test('serves from cache offline', async () => {
+        const response = await caches.match('/');
+        expect(response).toBeTruthy();
+    });
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">Integration Tests</div>
+                        <div class="card-body">
+                            <pre class="small mb-0"><code>// Playwright integration tests
+test('PWA installs correctly', async ({ page }) => {
+    await page.goto('/');
+    const swScope = await page.evaluate(
+        () => navigator.serviceWorker
+            .getRegistration()
+            .then(r => r?.scope)
+    );
+    expect(swScope).toBeDefined();
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card pwa-card h-100">
+                        <div class="card-header">E2E Tests</div>
+                        <div class="card-body">
+                            <pre class="small mb-0"><code>// Cypress E2E test
+describe('Offline E2E', () => {
+    it('works offline', () => {
+        cy.visit('/');
+        cy.window().then(win => {
+            // Simulate offline
+            cy.stub(win, 'fetch').rejects();
+        });
+        cy.reload();
+        cy.contains('offline');
+    });
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="text-muted mb-0">PWA Testing Module | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // PWA status checks
+            document.getElementById('checkHTTPS').textContent = location.protocol === 'https:' || location.hostname === 'localhost' ? 'Pass' : 'Fail';
+            document.getElementById('checkHTTPS').className = 'badge bg-success';
+            document.getElementById('checkSW').textContent = 'serviceWorker' in navigator ? 'Pass' : 'Fail';
+            document.getElementById('checkSW').className = 'badge ' + ('serviceWorker' in navigator ? 'bg-success' : 'bg-danger');
+            document.getElementById('checkInstall').textContent = 'Demo Mode';
+            document.getElementById('checkInstall').className = 'badge bg-info';
+            document.getElementById('checkManifest').textContent = document.querySelector('link[rel="manifest"]') ? 'Pass' : 'Missing';
+            document.getElementById('checkManifest').className = 'badge bg-warning';
+            document.getElementById('checkOffline').textContent = 'Demo Mode';
+            document.getElementById('checkOffline').className = 'badge bg-info';
+        });
+
+        async function inspectCaches() {
+            const results = document.getElementById('cacheResults');
+            if ('caches' in window) {
+                const names = await caches.keys();
+                if (names.length === 0) {
+                    results.innerHTML = '<p class="text-muted">No caches found. Register a service worker to create caches.</p>';
+                } else {
+                    let html = '<ul class="list-group">';
+                    for (const name of names) {
+                        const cache = await caches.open(name);
+                        const keys = await cache.keys();
+                        html += `<li class="list-group-item d-flex justify-content-between"><strong>${name}</strong><span class="badge bg-primary">${keys.length} entries</span></li>`;
+                    }
+                    html += '</ul>';
+                    results.innerHTML = html;
+                }
+            } else {
+                results.innerHTML = '<p class="text-danger">Cache API not supported</p>';
+            }
+        }
+    </script>
+</body>
+</html>

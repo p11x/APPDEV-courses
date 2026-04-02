@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_08_04_Error_Boundaries.html
+     Error Boundary Patterns with Bootstrap 5
+     
+     Demonstrates isolating failures to prevent cascading errors,
+     using try/catch wrappers, fallback UI, and compartmentalized
+     error handling for different page sections.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Boundaries - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Error boundary wrapper styling */
+        .error-boundary {
+            position: relative;
+            min-height: 100px;
+        }
+        /* Fallback UI overlay */
+        .error-fallback {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 10;
+            border-radius: 0.5rem;
+            border: 2px dashed #dc3545;
+        }
+        .error-boundary.has-error .error-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-boundary.has-error .error-content {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        /* Compartment isolation border */
+        .compartment {
+            border: 2px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            position: relative;
+        }
+        .compartment-label {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: white;
+            padding: 0 0.5rem;
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Error Boundaries</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#ebNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="ebNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Demo</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Patterns</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+
+        <!-- Page header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-5 fw-bold">Error Boundaries</h1>
+                <p class="text-muted lead">
+                    Isolate failures to prevent one broken component from crashing the entire page.
+                </p>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             CONCEPT EXPLANATION
+             Why error boundaries matter
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Without Error Boundaries</h5>
+                                <div class="alert alert-danger">
+                                    <p class="mb-1"><strong>One component crashes = entire page breaks.</strong></p>
+                                    <p class="mb-0 small">
+                                        A single JavaScript error in any widget can cause a blank
+                                        white screen for the user, losing all page state.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>With Error Boundaries</h5>
+                                <div class="alert alert-success">
+                                    <p class="mb-1"><strong>One component fails = graceful fallback shown.</strong></p>
+                                    <p class="mb-0 small">
+                                        The error is contained to the affected section. Other parts
+                                        of the page continue to function normally.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             INTERACTIVE DEMO
+             Click buttons to trigger errors in isolated compartments
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h4 class="mb-3">Interactive Demo</h4>
+                <p class="text-muted">Click the "Trigger Error" buttons to see error boundaries in action.</p>
+            </div>
+
+            <!-- Compartment A: Header Widget -->
+            <div class="col-md-4">
+                <div class="compartment error-boundary" id="boundaryA">
+                    <span class="compartment-label">Compartment A</span>
+                    <div class="error-content">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6>User Stats</h6>
+                                <div class="fs-3 fw-bold text-primary">1,234</div>
+                                <p class="text-muted small">Active Users</p>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        onclick="triggerError('boundaryA')">
+                                    Trigger Error
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Fallback UI shown when error occurs -->
+                    <div class="error-fallback flex-column p-3">
+                        <span class="text-danger fs-1">&#9888;</span>
+                        <h6 class="text-danger mt-2">Widget Failed</h6>
+                        <p class="small text-muted">This section encountered an error.</p>
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="resetError('boundaryA')">
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compartment B: Chart Widget -->
+            <div class="col-md-4">
+                <div class="compartment error-boundary" id="boundaryB">
+                    <span class="compartment-label">Compartment B</span>
+                    <div class="error-content">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6>Revenue Chart</h6>
+                                <!-- Simple bar chart visual -->
+                                <div class="d-flex justify-content-center align-items-end gap-1 mb-3"
+                                     style="height: 80px;">
+                                    <div class="bg-primary" style="width: 20px; height: 40%;"></div>
+                                    <div class="bg-primary" style="width: 20px; height: 60%;"></div>
+                                    <div class="bg-primary" style="width: 20px; height: 45%;"></div>
+                                    <div class="bg-primary" style="width: 20px; height: 80%;"></div>
+                                    <div class="bg-primary" style="width: 20px; height: 65%;"></div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        onclick="triggerError('boundaryB')">
+                                    Trigger Error
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="error-fallback flex-column p-3">
+                        <span class="text-danger fs-1">&#9888;</span>
+                        <h6 class="text-danger mt-2">Chart Failed</h6>
+                        <p class="small text-muted">Unable to render chart data.</p>
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="resetError('boundaryB')">
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compartment C: Activity Feed -->
+            <div class="col-md-4">
+                <div class="compartment error-boundary" id="boundaryC">
+                    <span class="compartment-label">Compartment C</span>
+                    <div class="error-content">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Activity Feed</h6>
+                                <ul class="list-unstyled small mb-2">
+                                    <li class="mb-1">&#128204; New user registered</li>
+                                    <li class="mb-1">&#128176; Payment received</li>
+                                    <li>&#128221; Report generated</li>
+                                </ul>
+                                <button class="btn btn-sm btn-outline-danger"
+                                        onclick="triggerError('boundaryC')">
+                                    Trigger Error
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="error-fallback flex-column p-3">
+                        <span class="text-danger fs-1">&#9888;</span>
+                        <h6 class="text-danger mt-2">Feed Failed</h6>
+                        <p class="small text-muted">Activity data unavailable.</p>
+                        <button class="btn btn-sm btn-outline-danger"
+                                onclick="resetError('boundaryC')">
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             ERROR BOUNDARY CODE PATTERNS
+             JavaScript implementation of error boundaries
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Error Boundary Implementation</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre class="bg-dark text-light p-3 rounded"><code>// Error Boundary wrapper function
+function withErrorBoundary(element, fallbackFn) {
+  return async function() {
+    try {
+      // Attempt to render the component
+      await renderComponent(element);
+    } catch (error) {
+      // Log the error for monitoring
+      console.error(`Error in ${element.id}:`, error);
+
+      // Show fallback UI
+      element.classList.add('has-error');
+      const fallback = element.querySelector('.error-fallback');
+      if (fallback) {
+        fallback.querySelector('.error-message').textContent = error.message;
+      }
+
+      // Report to error tracking service
+      reportError({
+        boundary: element.id,
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+}
+
+// Reset function to retry failed component
+function resetError(boundaryId) {
+  const element = document.getElementById(boundaryId);
+  element.classList.remove('has-error');
+  // Re-attempt rendering
+  renderComponent(element);
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             PAGE-LEVEL ERROR BOUNDARY
+             Full page layout with compartmentalized error zones
+             ============================================================ -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h4 class="mb-3">Page-Level Compartmentalization</h4>
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <!-- Visual representation of page zones -->
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <div class="bg-primary bg-opacity-10 border border-primary rounded p-2 text-center small">
+                                    <strong>Header Zone</strong> - Critical: Never fails
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="bg-warning bg-opacity-10 border border-warning rounded p-2 text-center small" style="min-height: 80px;">
+                                    <strong>Main Content Zone</strong> - Isolated boundary<br>
+                                    Fallback: Skeleton + retry button
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="bg-info bg-opacity-10 border border-info rounded p-2 text-center small" style="min-height: 80px;">
+                                    <strong>Sidebar Zone</strong> - Optional<br>
+                                    Fallback: Hidden if broken
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="bg-success bg-opacity-10 border border-success rounded p-2 text-center small">
+                                    <strong>Footer Zone</strong> - Static: Rarely fails
+                                </div>
+                            </div>
+                        </div>
+                        <p class="small text-muted mt-2 mb-0">
+                            Each zone has its own error boundary. Critical zones (header, footer)
+                            use static HTML that doesn't depend on JavaScript.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 Error Boundaries Guide</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Error boundary demo scripts -->
+    <script>
+        // Trigger an error in the specified boundary
+        function triggerError(boundaryId) {
+            const el = document.getElementById(boundaryId);
+            el.classList.add('has-error');
+        }
+
+        // Reset and retry the specified boundary
+        function resetError(boundaryId) {
+            const el = document.getElementById(boundaryId);
+            el.classList.remove('has-error');
+        }
+    </script>
+</body>
+</html>

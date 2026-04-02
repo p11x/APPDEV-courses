@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         04_03_05 - Grid Customization
+         ============================================
+         Demonstrates customizing Bootstrap's grid system:
+         - Custom breakpoints
+         - Modified container widths
+         - Custom column counts
+         - Responsive gutter adjustments
+         - Grid debugging utilities
+         ============================================ -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Grid Customization</title>
+
+    <style>
+        /* ============================================
+           SECTION 1: CONTAINER MAX-WIDTH OVERRIDES
+           ============================================
+           Override Bootstrap's container max-widths
+           at each breakpoint for wider/narrower layouts.
+           ============================================ */
+
+        /* Default Bootstrap container widths:
+           sm: 540px, md: 720px, lg: 960px, xl: 1140px, xxl: 1320px */
+
+        /* Wider containers for large displays */
+        @media (min-width: 1400px) {
+            .container, .container-xxl {
+                max-width: 1440px;
+            }
+        }
+
+        @media (min-width: 1600px) {
+            .container {
+                max-width: 1560px;
+            }
+        }
+
+        /* Narrow container variant for focused content */
+        .container-narrow {
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: var(--bs-gutter-x, 0.75rem);
+            padding-right: var(--bs-gutter-x, 0.75rem);
+        }
+
+        /* Wide container variant */
+        .container-wide {
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: var(--bs-gutter-x, 0.75rem);
+            padding-right: var(--bs-gutter-x, 0.75rem);
+        }
+
+        /* Full-width container with padding */
+        .container-fluid-padded {
+            padding-left: 3rem;
+            padding-right: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .container-fluid-padded {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+
+        /* ============================================
+           SECTION 2: CUSTOM BREAKPOINT VARIABLES
+           ============================================
+           You can add custom breakpoints by defining
+           them and creating responsive utilities.
+           ============================================ */
+
+        :root {
+            /* Custom breakpoint: extra-extra-extra-wide */
+            --bp-xxxl: 1600px;
+            /* Custom breakpoint: ultra-wide */
+            --bp-ultra: 1920px;
+        }
+
+        /* Custom breakpoint utilities */
+        @media (min-width: 1600px) {
+            .d-xxxl-none { display: none !important; }
+            .d-xxxl-block { display: block !important; }
+            .d-xxxl-flex { display: flex !important; }
+            .d-xxxl-grid { display: grid !important; }
+        }
+
+        @media (min-width: 1920px) {
+            .d-ultra-none { display: none !important; }
+            .d-ultra-block { display: block !important; }
+            .d-ultra-flex { display: flex !important; }
+        }
+
+        /* ============================================
+           SECTION 3: GUTTER CUSTOMIZATION
+           ============================================
+           Custom gutter sizes using CSS variables.
+           ============================================ */
+
+        /* Small gutters */
+        .gutter-sm {
+            --bs-gutter-x: 0.5rem;
+            --bs-gutter-y: 0.5rem;
+        }
+
+        /* Large gutters */
+        .gutter-lg {
+            --bs-gutter-x: 2rem;
+            --bs-gutter-y: 2rem;
+        }
+
+        /* Extra-large gutters */
+        .gutter-xl {
+            --bs-gutter-x: 3rem;
+            --bs-gutter-y: 3rem;
+        }
+
+        /* Asymmetric gutters - horizontal only */
+        .gutter-x-only {
+            --bs-gutter-y: 0;
+        }
+
+        /* ============================================
+           SECTION 4: GRID VISUALIZATION
+           ============================================
+           Helper classes to visualize the grid.
+           ============================================ */
+
+        .grid-demo-col {
+            background: rgba(13, 110, 253, 0.15);
+            border: 1px solid rgba(13, 110, 253, 0.3);
+            padding: 1rem;
+            text-align: center;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            color: #0d6efd;
+            font-weight: 500;
+        }
+
+        .grid-demo-col-alt {
+            background: rgba(25, 135, 84, 0.15);
+            border: 1px solid rgba(25, 135, 84, 0.3);
+            padding: 1rem;
+            text-align: center;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            color: #198754;
+            font-weight: 500;
+        }
+
+        /* Grid overlay for debugging */
+        .grid-debug {
+            position: relative;
+        }
+
+        .grid-debug::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.03) 0px,
+                rgba(255, 0, 0, 0.03) calc(100% / 12),
+                transparent calc(100% / 12)
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ============================================
+           SECTION 5: RESPONSIVE VISIBILITY HELPERS
+           ============================================ */
+
+        .breakpoint-indicator {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            z-index: 9999;
+            font-family: var(--bs-font-monospace, monospace);
+        }
+
+        .breakpoint-indicator .bp-xs { color: #dc3545; }
+        .breakpoint-indicator .bp-sm { color: #fd7e14; }
+        .breakpoint-indicator .bp-md { color: #ffc107; }
+        .breakpoint-indicator .bp-lg { color: #198754; }
+        .breakpoint-indicator .bp-xl { color: #0dcaf0; }
+        .breakpoint-indicator .bp-xxl { color: #6f42c1; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Grid Customization</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#">Containers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Gutters</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Breakpoints</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="py-5 text-center bg-light">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Grid Customization</h1>
+            <p class="lead text-muted">
+                Custom containers, gutters, breakpoints, and responsive utilities.
+            </p>
+        </div>
+    </section>
+
+    <!-- Container width demos -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Container Variants</h2>
+
+            <div class="mb-4">
+                <h5>Default <code>.container</code></h5>
+                <div class="bg-light border rounded p-3">
+                    <code>max-width</code> changes at each breakpoint
+                </div>
+            </div>
+
+            <div class="container-narrow mb-4">
+                <h5><code>.container-narrow</code> (720px max)</h5>
+                <div class="bg-light border rounded p-3">
+                    Ideal for articles and focused content
+                </div>
+            </div>
+
+            <div class="container-wide mb-4">
+                <h5><code>.container-wide</code> (1600px max)</h5>
+                <div class="bg-light border rounded p-3">
+                    For dashboards and data-heavy layouts
+                </div>
+            </div>
+
+            <div class="container-fluid-padded mb-4">
+                <h5><code>.container-fluid-padded</code></h5>
+                <div class="bg-light border rounded p-3">
+                    Full-width with generous padding
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Grid visualization -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">12-Column Grid Visualization</h2>
+
+            <h5 class="mb-3">Equal columns</h5>
+            <div class="row mb-4">
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+                <div class="col"><div class="grid-demo-col">col</div></div>
+            </div>
+
+            <h5 class="mb-3">Explicit column widths</h5>
+            <div class="row mb-3">
+                <div class="col-6"><div class="grid-demo-col">col-6</div></div>
+                <div class="col-6"><div class="grid-demo-col">col-6</div></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-4"><div class="grid-demo-col">col-4</div></div>
+                <div class="col-4"><div class="grid-demo-col">col-4</div></div>
+                <div class="col-4"><div class="grid-demo-col">col-4</div></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-3"><div class="grid-demo-col">col-3</div></div>
+                <div class="col-3"><div class="grid-demo-col">col-3</div></div>
+                <div class="col-3"><div class="grid-demo-col">col-3</div></div>
+                <div class="col-3"><div class="grid-demo-col">col-3</div></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-8"><div class="grid-demo-col">col-8</div></div>
+                <div class="col-4"><div class="grid-demo-col">col-4</div></div>
+            </div>
+            <div class="row">
+                <div class="col-3"><div class="grid-demo-col">col-3</div></div>
+                <div class="col-6"><div class="grid-demo-col">col-6</div></div>
+                <div class="col-3"><div class="grid-demo-col">col-3</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Responsive columns -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Responsive Columns</h2>
+            <p class="mb-4">Resize your browser to see columns change width.</p>
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="grid-demo-col">col-12 col-md-6 col-lg-4</div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="grid-demo-col">col-12 col-md-6 col-lg-4</div>
+                </div>
+                <div class="col-12 col-md-12 col-lg-4">
+                    <div class="grid-demo-col">col-12 col-md-12 col-lg-4</div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                    <div class="grid-demo-col-alt">Responsive</div>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                    <div class="grid-demo-col-alt">Responsive</div>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                    <div class="grid-demo-col-alt">Responsive</div>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                    <div class="grid-demo-col-alt">Responsive</div>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                    <div class="grid-demo-col-alt">Responsive</div>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                    <div class="grid-demo-col-alt">Responsive</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Custom gutters -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Custom Gutter Sizes</h2>
+
+            <h5 class="mb-3">Small gutters (0.5rem)</h5>
+            <div class="row gutter-sm mb-4">
+                <div class="col-4"><div class="grid-demo-col">Small</div></div>
+                <div class="col-4"><div class="grid-demo-col">Small</div></div>
+                <div class="col-4"><div class="grid-demo-col">Small</div></div>
+            </div>
+
+            <h5 class="mb-3">Default gutters (1.5rem)</h5>
+            <div class="row mb-4">
+                <div class="col-4"><div class="grid-demo-col">Default</div></div>
+                <div class="col-4"><div class="grid-demo-col">Default</div></div>
+                <div class="col-4"><div class="grid-demo-col">Default</div></div>
+            </div>
+
+            <h5 class="mb-3">Large gutters (2rem)</h5>
+            <div class="row gutter-lg mb-4">
+                <div class="col-4"><div class="grid-demo-col">Large</div></div>
+                <div class="col-4"><div class="grid-demo-col">Large</div></div>
+                <div class="col-4"><div class="grid-demo-col">Large</div></div>
+            </div>
+
+            <h5 class="mb-3">Extra-large gutters (3rem)</h5>
+            <div class="row gutter-xl">
+                <div class="col-4"><div class="grid-demo-col">XL</div></div>
+                <div class="col-4"><div class="grid-demo-col">XL</div></div>
+                <div class="col-4"><div class="grid-demo-col">XL</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Offset and ordering -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Offset & Order</h2>
+
+            <h5 class="mb-3">Offsets</h5>
+            <div class="row mb-3">
+                <div class="col-4"><div class="grid-demo-col">col-4</div></div>
+                <div class="col-4 offset-4"><div class="grid-demo-col">col-4 offset-4</div></div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-3 offset-3"><div class="grid-demo-col">col-3 offset-3</div></div>
+                <div class="col-3 offset-3"><div class="grid-demo-col">col-3 offset-3</div></div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-4 offset-md-4"><div class="grid-demo-col">col-md-4 offset-md-4</div></div>
+            </div>
+
+            <h5 class="mb-3">Order (resize to see reorder)</h5>
+            <div class="row">
+                <div class="col-md-4 order-md-3"><div class="grid-demo-col-alt">1st element, order-md-3</div></div>
+                <div class="col-md-4 order-md-1"><div class="grid-demo-col-alt">2nd element, order-md-1</div></div>
+                <div class="col-md-4 order-md-2"><div class="grid-demo-col-alt">3rd element, order-md-2</div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nesting -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Nested Grids</h2>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="grid-demo-col mb-3">Parent col-md-8</div>
+                    <!-- Nested row inside parent column -->
+                    <div class="row">
+                        <div class="col-6"><div class="grid-demo-col-alt">Nested col-6</div></div>
+                        <div class="col-6"><div class="grid-demo-col-alt">Nested col-6</div></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="grid-demo-col">Parent col-md-4</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Breakpoint reference -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Bootstrap Breakpoint Reference</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Breakpoint</th>
+                            <th>Abbreviation</th>
+                            <th>Min Width</th>
+                            <th>Container Max</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Extra small</td><td><code>xs</code></td><td>0</td><td>100%</td></tr>
+                        <tr><td>Small</td><td><code>sm</code></td><td>576px</td><td>540px</td></tr>
+                        <tr><td>Medium</td><td><code>md</code></td><td>768px</td><td>720px</td></tr>
+                        <tr><td>Large</td><td><code>lg</code></td><td>992px</td><td>960px</td></tr>
+                        <tr><td>Extra large</td><td><code>xl</code></td><td>1200px</td><td>1140px</td></tr>
+                        <tr><td>Extra extra large</td><td><code>xxl</code></td><td>1400px</td><td>1320px</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live breakpoint indicator -->
+    <div class="breakpoint-indicator">
+        <span class="bp-xs d-sm-none">XS (&lt;576px)</span>
+        <span class="bp-sm d-none d-sm-inline d-md-none">SM (576px+)</span>
+        <span class="bp-md d-none d-md-inline d-lg-none">MD (768px+)</span>
+        <span class="bp-lg d-none d-lg-inline d-xl-none">LG (992px+)</span>
+        <span class="bp-xl d-none d-xl-inline d-xxl-none">XL (1200px+)</span>
+        <span class="bp-xxl d-none d-xxl-inline">XXL (1400px+)</span>
+    </div>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Grid Customization Demo</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 04_01_15_Animation_Advanced_Patterns.html                      -->
+<!-- Advanced Animation Techniques with Bootstrap 5                 -->
+<!-- Covers: Web Animations API, parallax, morphing,                -->
+<!--         physics-based animations, choreography,                -->
+<!--         timeline sequencing, gesture-driven animations          -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_01_15 - Advanced Animation Patterns</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* WEB ANIMATIONS API + CSS HYBRID                               */
+        /* CSS defines the keyframes, JS controls playback via WAAPI    */
+        /* ============================================================= */
+        @keyframes morphShape {
+            0%   { border-radius: 50%; background: #0d6efd; transform: rotate(0deg) scale(1); }
+            25%  { border-radius: 20% 80% 20% 80%; background: #6610f2; transform: rotate(90deg) scale(1.1); }
+            50%  { border-radius: 50%; background: #d63384; transform: rotate(180deg) scale(1); }
+            75%  { border-radius: 80% 20% 80% 20%; background: #fd7e14; transform: rotate(270deg) scale(1.1); }
+            100% { border-radius: 50%; background: #0d6efd; transform: rotate(360deg) scale(1); }
+        }
+
+        @keyframes revealText {
+            from { clip-path: inset(0 100% 0 0); }
+            to   { clip-path: inset(0 0 0 0); }
+        }
+
+        @keyframes elasticIn {
+            0%   { transform: scale(0); opacity: 0; }
+            55%  { transform: scale(1.1); }
+            70%  { transform: scale(0.95); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pathMotion {
+            offset-distance: 0%;
+        }
+
+        @keyframes particleBurst {
+            0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--px), var(--py)) scale(0); opacity: 0; }
+        }
+
+        @keyframes waveMotion {
+            0%   { transform: translateY(0); }
+            25%  { transform: translateY(-15px); }
+            50%  { transform: translateY(0); }
+            75%  { transform: translateY(15px); }
+            100% { transform: translateY(0); }
+        }
+
+        @keyframes drawPath {
+            from { stroke-dashoffset: 1000; }
+            to   { stroke-dashoffset: 0; }
+        }
+
+        @keyframes gradientText {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --------------------------------------------------------- */
+        /* MORPHING SHAPE                                            */
+        /* Shape morphs continuously with border-radius animation    */
+        /* --------------------------------------------------------- */
+        .morph-shape {
+            width: 120px;
+            height: 120px;
+            animation: morphShape 6s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        /* --------------------------------------------------------- */
+        /* PATH-BASED MOTION (offset-path)                           */
+        /* Element moves along a defined SVG-like path               */
+        /* --------------------------------------------------------- */
+        .path-element {
+            width: 30px;
+            height: 30px;
+            background: #0d6efd;
+            border-radius: 50%;
+            offset-path: path('M10,80 C40,10 65,10 95,80 S150,150 180,80');
+            offset-rotate: auto;
+            animation: pathMotion 3s linear infinite;
+        }
+
+        /* Fallback for browsers without offset-path */
+        @supports not (offset-path: path('M0,0')) {
+            .path-element {
+                animation: waveMotion 2s ease-in-out infinite;
+            }
+        }
+
+        /* --------------------------------------------------------- */
+        /* SVG PATH DRAWING                                          */
+        /* stroke-dasharray + stroke-dashoffset creates drawing      */
+        /* --------------------------------------------------------- */
+        .draw-svg path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawPath 3s ease forwards;
+        }
+
+        /* --------------------------------------------------------- */
+        /* CHOREOGRAPHED SEQUENCE                                    */
+        /* Multiple elements animated in sequence with delays        */
+        /* --------------------------------------------------------- */
+        .choreo-item {
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+        }
+        .choreo-item.active {
+            animation: elasticIn 0.6s ease-out forwards;
+        }
+
+        /* --------------------------------------------------------- */
+        /* PARALLAX LAYERS                                           */
+        /* Multiple layers move at different speeds on scroll        */
+        /* --------------------------------------------------------- */
+        .parallax-container {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+        .parallax-layer {
+            position: absolute;
+            width: 100%;
+            transition: transform 0.1s linear;
+        }
+
+        /* --------------------------------------------------------- */
+        /* PARTICLE BURST                                            */
+        /* Particles fly outward from a click point                  */
+        /* --------------------------------------------------------- */
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleBurst 0.8s ease-out forwards;
+        }
+
+        /* --------------------------------------------------------- */
+        /* SPRING PHYSICS (simulated with cubic-bezier)              */
+        /* Different spring "tensions" create different bounces      */
+        /* --------------------------------------------------------- */
+        .spring-light {
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .spring-medium {
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .spring-heavy {
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .spring-light:hover,
+        .spring-medium:hover,
+        .spring-heavy:hover {
+            transform: scale(1.15);
+        }
+
+        /* --------------------------------------------------------- */
+        /* GRADIENT TEXT ANIMATION                                    */
+        /* Animated gradient clipped to text shape                   */
+        /* --------------------------------------------------------- */
+        .gradient-text {
+            background: linear-gradient(90deg, #0d6efd, #6610f2, #d63384, #fd7e14, #0d6efd);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientText 4s linear infinite;
+        }
+
+        /* --------------------------------------------------------- */
+        /* STAGGERED WAVE                                            */
+        /* Elements create a wave pattern using animation-delay      */
+        /* --------------------------------------------------------- */
+        .wave-char {
+            display: inline-block;
+            animation: waveMotion 2s ease-in-out infinite;
+        }
+
+        /* --------------------------------------------------------- */
+        /* INTERACTIVE TIMELINE                                      */
+        /* Visual timeline with animated progress                    */
+        /* --------------------------------------------------------- */
+        .timeline-track {
+            position: relative;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+        }
+        .timeline-progress {
+            height: 100%;
+            background: #0d6efd;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+        .timeline-marker {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #0d6efd;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 2px #0d6efd;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+        .timeline-marker.active {
+            transform: translate(-50%, -50%) scale(1.3);
+            background: #198754;
+            box-shadow: 0 0 0 2px #198754;
+        }
+
+        /* --------------------------------------------------------- */
+        /* TOOLTIP FOLLOW CURSOR                                     */
+        /* Smooth tooltip that follows mouse with easing             */
+        /* --------------------------------------------------------- */
+        .cursor-tooltip {
+            position: fixed;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.15s ease-out, opacity 0.2s ease;
+            opacity: 0;
+        }
+        .cursor-tooltip.visible {
+            opacity: 1;
+        }
+
+        /* --------------------------------------------------------- */
+        /* REDUCED MOTION                                            */
+        /* --------------------------------------------------------- */
+        @media (prefers-reduced-motion: reduce) {
+            .morph-shape,
+            .path-element,
+            .draw-svg path,
+            .wave-char,
+            .gradient-text {
+                animation: none !important;
+            }
+            .choreo-item {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+            .spring-light:hover,
+            .spring-medium:hover,
+            .spring-heavy:hover {
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Cursor Tooltip -->
+    <div class="cursor-tooltip" id="cursorTooltip">Web Animations API</div>
+
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">Advanced Animation Patterns</h1>
+                <p class="lead text-muted">
+                    Web Animations API, morphing, path motion, physics springs, choreography, and particle effects.
+                </p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: MORPHING SHAPE                                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Shape Morphing</h2>
+            <p class="text-muted">
+                Animate <code>border-radius</code> with multiple values to morph between organic shapes.
+            </p>
+            <div class="text-center">
+                <div class="morph-shape"></div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: SVG PATH DRAWING                                   -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. SVG Path Drawing Animation</h2>
+            <p class="text-muted">
+                Uses <code>stroke-dasharray</code> and <code>stroke-dashoffset</code> to animate SVG paths as if being drawn.
+            </p>
+            <button class="btn btn-primary mb-3" id="replayDrawBtn">Replay Drawing</button>
+            <div class="bg-white p-4 rounded shadow-sm text-center">
+                <svg class="draw-svg" width="300" height="100" viewBox="0 0 300 100" id="drawSvg">
+                    <path d="M10,50 Q50,10 90,50 T170,50 T250,50"
+                          fill="none" stroke="#0d6efd" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M10,70 C50,30 100,90 150,50 S250,10 290,70"
+                          fill="none" stroke="#6610f2" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: WEB ANIMATIONS API                                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Web Animations API (WAAPI)</h2>
+            <p class="text-muted">
+                WAAPI gives JavaScript full control over CSS animations — play, pause, reverse, seek, and adjust speed.
+            </p>
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3">
+                    <button class="btn btn-success w-100" id="waapiPlay">Play</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <button class="btn btn-warning w-100" id="waapiPause">Pause</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <button class="btn btn-info w-100" id="waapiReverse">Reverse</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <button class="btn btn-danger w-100" id="waapiCancel">Cancel</button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Playback Rate: <span id="rateValue">1</span>x</label>
+                <input type="range" class="form-range" id="waapiRate" min="0.1" max="4" step="0.1" value="1">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Seek (0-100%): <span id="seekValue">--</span></label>
+                <input type="range" class="form-range" id="waapiSeek" min="0" max="100" step="1" value="0" disabled>
+            </div>
+            <div class="bg-white p-4 rounded shadow-sm text-center">
+                <div class="bg-primary text-white p-4 rounded d-inline-block" id="waapiTarget" style="min-width:200px">
+                    Web Animations API Target
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: CHOREOGRAPHED SEQUENCE                             -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Choreographed Element Sequence</h2>
+            <p class="text-muted">
+                Elements animate in a carefully timed sequence, creating a cinematic entrance.
+            </p>
+            <button class="btn btn-primary mb-3" id="playChoreoBtn">Play Sequence</button>
+            <div class="row g-3" id="choreoRow">
+                <div class="col-md-3 choreo-item">
+                    <div class="card"><div class="card-body text-center"><h6>Step 1</h6><p class="small mb-0">0ms</p></div></div>
+                </div>
+                <div class="col-md-3 choreo-item">
+                    <div class="card"><div class="card-body text-center"><h6>Step 2</h6><p class="small mb-0">150ms</p></div></div>
+                </div>
+                <div class="col-md-3 choreo-item">
+                    <div class="card"><div class="card-body text-center"><h6>Step 3</h6><p class="small mb-0">300ms</p></div></div>
+                </div>
+                <div class="col-md-3 choreo-item">
+                    <div class="card"><div class="card-body text-center"><h6>Step 4</h6><p class="small mb-0">450ms</p></div></div>
+                </div>
+                <div class="col-md-4 choreo-item">
+                    <div class="card"><div class="card-body text-center"><h6>Step 5</h6><p class="small mb-0">600ms</p></div></div>
+                </div>
+                <div class="col-md-4 choreo-item">
+                    <div class="card"><div class="card-body text-center"><h6>Step 6</h6><p class="small mb-0">750ms</p></div></div>
+                </div>
+                <div class="col-md-4 choreo-item">
+                    <div class="card"><div class="card-body text-center"><h6>Step 7</h6><p class="small mb-0">900ms</p></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: SPRING PHYSICS                                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Spring Physics (Simulated)</h2>
+            <p class="text-muted">
+                Different cubic-bezier values simulate spring tension. Hover each box.
+            </p>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card text-center spring-light" style="cursor:pointer">
+                        <div class="card-body">
+                            <h6>Light Spring</h6>
+                            <div class="bg-primary text-white p-3 rounded d-inline-block" style="font-size:2rem">&#9889;</div>
+                            <p class="small mt-2 mb-0">Gentle bounce</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center spring-medium" style="cursor:pointer">
+                        <div class="card-body">
+                            <h6>Medium Spring</h6>
+                            <div class="bg-success text-white p-3 rounded d-inline-block" style="font-size:2rem">&#9889;</div>
+                            <p class="small mt-2 mb-0">Moderate overshoot</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center spring-heavy" style="cursor:pointer">
+                        <div class="card-body">
+                            <h6>Heavy Spring</h6>
+                            <div class="bg-danger text-white p-3 rounded d-inline-block" style="font-size:2rem">&#9889;</div>
+                            <p class="small mt-2 mb-0">Strong elastic</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 6: GRADIENT TEXT                                      -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Animated Gradient Text</h2>
+            <h1 class="gradient-text display-3 fw-bold text-center">
+                Animated Gradient
+            </h1>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 7: WAVE TEXT                                          -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Wave Text Animation</h2>
+            <h3 class="text-center" id="waveText"></h3>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 8: PARALLAX CONTAINER                                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Parallax Layers</h2>
+            <p class="text-muted">Move your mouse over the container. Layers move at different speeds.</p>
+            <div class="parallax-container" id="parallaxContainer">
+                <div class="parallax-layer text-white text-center" style="top:20%;z-index:1" data-speed="0.02">
+                    <span style="font-size:3rem">&#9728;</span>
+                </div>
+                <div class="parallax-layer text-white text-center" style="top:40%;z-index:2" data-speed="0.05">
+                    <span style="font-size:4rem">&#9729;</span>
+                </div>
+                <div class="parallax-layer text-white text-center" style="top:60%;z-index:3" data-speed="0.08">
+                    <span style="font-size:5rem">&#9730;</span>
+                </div>
+                <div class="parallax-layer text-white text-center" style="top:75%;z-index:4" data-speed="0.12">
+                    <span style="font-size:3rem">&#127795;</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 9: PARTICLE BURST                                     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">9. Particle Burst on Click</h2>
+            <p class="text-muted">Click anywhere in the box below to create a particle burst.</p>
+            <div class="bg-white p-4 rounded shadow-sm position-relative" id="particleBox"
+                 style="height:200px;cursor:crosshair;overflow:hidden">
+                <p class="text-muted text-center m-0">Click here for particles</p>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 10: ANIMATED TIMELINE                                 -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">10. Interactive Animation Timeline</h2>
+            <div class="mb-4">
+                <div class="timeline-track">
+                    <div class="timeline-progress" id="timelineProgress" style="width: 0%"></div>
+                    <div class="timeline-marker" style="left: 0%" data-step="1"></div>
+                    <div class="timeline-marker" style="left: 25%" data-step="2"></div>
+                    <div class="timeline-marker" style="left: 50%" data-step="3"></div>
+                    <div class="timeline-marker" style="left: 75%" data-step="4"></div>
+                    <div class="timeline-marker" style="left: 100%" data-step="5"></div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary" data-step="1">0%</button>
+                <button class="btn btn-sm btn-outline-primary" data-step="2">25%</button>
+                <button class="btn btn-sm btn-outline-primary" data-step="3">50%</button>
+                <button class="btn btn-sm btn-outline-primary" data-step="4">75%</button>
+                <button class="btn btn-sm btn-outline-primary" data-step="5">100%</button>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 11: CURSOR TOOLTIP                                    -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">11. Smooth Cursor-Following Tooltip</h2>
+            <p class="text-muted">
+                Move your mouse over this section. The tooltip smoothly follows the cursor with easing.
+            </p>
+            <div class="bg-white p-5 rounded shadow-sm text-center" id="tooltipArea" style="min-height:150px">
+                Move your mouse here to see the smooth tooltip follow.
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 12: WAAPI CODE EXAMPLES                               -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">12. Web Animations API Code Examples</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Basic WAAPI Usage</h6>
+                            <pre class="bg-dark text-light p-2 rounded small"><code>const anim = el.animate([
+    { transform: 'translateX(0)', opacity: 1 },
+    { transform: 'translateX(100px)', opacity: 0.5 },
+    { transform: 'translateX(0)', opacity: 1 }
+], {
+    duration: 1000,
+    easing: 'ease-in-out',
+    iterations: Infinity,
+    direction: 'alternate'
+});
+
+// Control playback
+anim.pause();
+anim.play();
+anim.reverse();
+anim.playbackRate = 2;
+anim.cancel();</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Choreography with WAAPI</h6>
+                            <pre class="bg-dark text-light p-2 rounded small"><code>const elements = document.querySelectorAll('.item');
+
+elements.forEach((el, i) => {
+    const anim = el.animate([
+        { opacity: 0, transform: 'translateY(20px)' },
+        { opacity: 1, transform: 'translateY(0)' }
+    ], {
+        duration: 400,
+        delay: i * 100,
+        easing: 'ease-out',
+        fill: 'forwards'
+    });
+
+    // Wait for completion
+    anim.onfinish = () => {
+        console.log(`Item ${i} done`);
+    };
+});</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ----------------------------------------------------------- */
+        /* SVG PATH DRAWING REPLAY                                     */
+        /* ----------------------------------------------------------- */
+        document.getElementById('replayDrawBtn').addEventListener('click', function () {
+            const paths = document.querySelectorAll('#drawSvg path');
+            paths.forEach(function (p) {
+                p.style.animation = 'none';
+                void p.offsetWidth;
+                p.style.animation = '';
+            });
+        });
+
+        /* ----------------------------------------------------------- */
+        /* WEB ANIMATIONS API CONTROLS                                 */
+        /* Creates a WAAPI animation and exposes full playback control */
+        /* ----------------------------------------------------------- */
+        const waapiTarget = document.getElementById('waapiTarget');
+        const waapiAnim = waapiTarget.animate([
+            { transform: 'translateX(0) rotate(0deg) scale(1)', backgroundColor: '#0d6efd' },
+            { transform: 'translateX(100px) rotate(10deg) scale(1.1)', backgroundColor: '#6610f2' },
+            { transform: 'translateX(-50px) rotate(-5deg) scale(0.95)', backgroundColor: '#d63384' },
+            { transform: 'translateX(0) rotate(0deg) scale(1)', backgroundColor: '#0d6efd' }
+        ], {
+            duration: 2000,
+            easing: 'ease-in-out',
+            iterations: Infinity
+        });
+
+        document.getElementById('waapiPlay').addEventListener('click', () => waapiAnim.play());
+        document.getElementById('waapiPause').addEventListener('click', () => waapiAnim.pause());
+        document.getElementById('waapiReverse').addEventListener('click', () => waapiAnim.reverse());
+        document.getElementById('waapiCancel').addEventListener('click', () => waapiAnim.cancel());
+
+        document.getElementById('waapiRate').addEventListener('input', function () {
+            waapiAnim.playbackRate = parseFloat(this.value);
+            document.getElementById('rateValue').textContent = this.value;
+        });
+
+        /* ----------------------------------------------------------- */
+        /* CHOREOGRAPHED SEQUENCE                                      */
+        /* Animates elements one by one using setTimeout staggering    */
+        /* ----------------------------------------------------------- */
+        document.getElementById('playChoreoBtn').addEventListener('click', function () {
+            const items = document.querySelectorAll('.choreo-item');
+            items.forEach(function (item) {
+                item.classList.remove('active');
+                item.style.opacity = '0';
+            });
+
+            items.forEach(function (item, i) {
+                setTimeout(function () {
+                    item.classList.add('active');
+                }, i * 150);
+            });
+        });
+
+        /* ----------------------------------------------------------- */
+        /* WAVE TEXT                                                   */
+        /* Creates a wave animation on individual characters           */
+        /* ----------------------------------------------------------- */
+        const waveText = "Wave Animation Effect!";
+        const waveContainer = document.getElementById('waveText');
+        waveText.split('').forEach(function (char, i) {
+            const span = document.createElement('span');
+            span.className = 'wave-char';
+            span.textContent = char === ' ' ? '\u00A0' : char;
+            span.style.animationDelay = (i * 0.05) + 's';
+            waveContainer.appendChild(span);
+        });
+
+        /* ----------------------------------------------------------- */
+        /* PARALLAX MOUSE TRACKING                                     */
+        /* ----------------------------------------------------------- */
+        const parallaxContainer = document.getElementById('parallaxContainer');
+        parallaxContainer.addEventListener('mousemove', function (e) {
+            const rect = this.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+
+            this.querySelectorAll('.parallax-layer').forEach(function (layer) {
+                const speed = parseFloat(layer.dataset.speed) || 0.05;
+                const moveX = x * speed * 200;
+                const moveY = y * speed * 200;
+                layer.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            });
+        });
+
+        /* ----------------------------------------------------------- */
+        /* PARTICLE BURST                                              */
+        /* Creates colorful particles that fly outward from click      */
+        /* ----------------------------------------------------------- */
+        const particleBox = document.getElementById('particleBox');
+        particleBox.addEventListener('click', function (e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const colors = ['#0d6efd', '#6610f2', '#d63384', '#fd7e14', '#198754', '#ffc107'];
+
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const angle = (Math.PI * 2 * i) / 20;
+                const distance = 50 + Math.random() * 80;
+                particle.style.cssText = `
+                    left: ${x}px;
+                    top: ${y}px;
+                    background: ${colors[i % colors.length]};
+                    --px: ${Math.cos(angle) * distance}px;
+                    --py: ${Math.sin(angle) * distance}px;
+                `;
+                this.appendChild(particle);
+                setTimeout(() => particle.remove(), 800);
+            }
+        });
+
+        /* ----------------------------------------------------------- */
+        /* INTERACTIVE TIMELINE                                        */
+        /* ----------------------------------------------------------- */
+        const timelineProgress = document.getElementById('timelineProgress');
+        const markers = document.querySelectorAll('.timeline-marker');
+
+        document.querySelectorAll('[data-step]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const step = parseInt(this.dataset.step);
+                const pcts = [0, 25, 50, 75, 100];
+                timelineProgress.style.width = pcts[step - 1] + '%';
+                markers.forEach(function (m, i) {
+                    m.classList.toggle('active', i < step);
+                });
+            });
+        });
+
+        /* ----------------------------------------------------------- */
+        /* CURSOR TOOLTIP                                              */
+        /* Smooth following with CSS transition on transform           */
+        /* ----------------------------------------------------------- */
+        const tooltip = document.getElementById('cursorTooltip');
+        const tooltipArea = document.getElementById('tooltipArea');
+
+        tooltipArea.addEventListener('mousemove', function (e) {
+            tooltip.style.left = (e.clientX + 15) + 'px';
+            tooltip.style.top = (e.clientY + 15) + 'px';
+            tooltip.classList.add('visible');
+        });
+
+        tooltipArea.addEventListener('mouseleave', function () {
+            tooltip.classList.remove('visible');
+        });
+    </script>
+</body>
+</html>

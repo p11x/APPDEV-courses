@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Security Integration - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>.demo-section { margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 0.5rem; }</style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Form Security Integration</h1>
+                <p class="lead text-muted">Advanced security patterns: CSP, token management, secure submission.</p><hr>
+            </div>
+        </div>
+
+        <section class="demo-section" id="csp-forms">
+            <h2 class="h4 mb-3">1. CSP-Compatible Form Handling</h2>
+            <p class="text-muted">Forms should work with strict Content Security Policies. Avoid inline scripts.</p>
+            <form id="cspForm" data-nonce="abc123">
+                <div class="mb-3">
+                    <label for="csp-name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="csp-name">
+                </div>
+                <div class="mb-3">
+                    <label for="csp-email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="csp-email">
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+            <div class="alert alert-info mt-3">
+                <strong>CSP Headers:</strong><br>
+                <code>Content-Security-Policy: default-src 'self'; form-action 'self'; script-src 'self';</code>
+            </div>
+        </section>
+
+        <section class="demo-section" id="token-refresh">
+            <h2 class="h4 mb-3">2. Token Refresh Pattern</h2>
+            <p class="text-muted">CSRF tokens expire. Implement refresh to prevent stale token rejections.</p>
+            <form id="tokenForm">
+                <div class="mb-3">
+                    <label class="form-label">Current Token</label>
+                    <input type="text" class="form-control" id="currentToken" value="csrf_token_abc123" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Token Expires</label>
+                    <input type="text" class="form-control" id="tokenExpiry" value="5:00 minutes" readonly>
+                </div>
+                <button type="button" class="btn btn-outline-primary" id="refreshToken">Refresh Token</button>
+                <button type="submit" class="btn btn-primary ms-2">Submit Form</button>
+                <div class="mt-2" id="tokenStatus"></div>
+            </form>
+        </section>
+
+        <section class="demo-section" id="secure-upload">
+            <h2 class="h4 mb-3">3. Secure File Upload</h2>
+            <form id="uploadForm">
+                <div class="mb-3">
+                    <label for="secure-file" class="form-label">Upload File</label>
+                    <input class="form-control" type="file" id="secure-file" accept=".jpg,.jpeg,.png,.pdf">
+                    <div class="form-text">Accepted: JPG, PNG, PDF. Max 5MB.</div>
+                </div>
+                <div id="filePreview" class="mb-3 d-none">
+                    <div class="card" style="max-width: 300px;">
+                        <div class="card-body">
+                            <h6>File Details</h6>
+                            <p class="mb-1" id="fileName"></p>
+                            <p class="mb-1" id="fileSize"></p>
+                            <p class="mb-1" id="fileType"></p>
+                            <p class="mb-0" id="fileHash"></p>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary" id="uploadBtn">Upload</button>
+                <div class="mt-2" id="uploadStatus"></div>
+            </form>
+        </section>
+
+        <section class="demo-section" id="input-filters">
+            <h2 class="h4 mb-3">4. Real-Time Input Filtering</h2>
+            <form>
+                <div class="mb-3">
+                    <label for="filter-alpha" class="form-label">Alpha Only</label>
+                    <input type="text" class="form-control" id="filter-alpha" placeholder="Letters only">
+                </div>
+                <div class="mb-3">
+                    <label for="filter-numeric" class="form-label">Numeric Only</label>
+                    <input type="text" class="form-control" id="filter-numeric" placeholder="Numbers only" inputmode="numeric">
+                </div>
+                <div class="mb-3">
+                    <label for="filter-alphanum" class="form-label">Alphanumeric Only</label>
+                    <input type="text" class="form-control" id="filter-alphanum" placeholder="Letters and numbers only">
+                </div>
+                <div class="mb-3">
+                    <label for="filter-nohtml" class="form-label">No HTML Tags</label>
+                    <input type="text" class="form-control" id="filter-nohtml" placeholder="Try typing <script>">
+                    <div class="form-text" id="filter-nohtml-result"></div>
+                </div>
+            </form>
+        </section>
+
+        <section class="demo-section" id="timing-attack">
+            <h2 class="h4 mb-3">5. Timing-Safe Comparison (Concept)</h2>
+            <div class="alert alert-warning">
+                <strong>Timing Attacks:</strong> Always use constant-time comparison for tokens on the server.
+                Client-side timing is not reliable for security, but this demonstrates the concept.
+            </div>
+            <form>
+                <div class="mb-3">
+                    <label for="timing-token" class="form-label">Enter Token</label>
+                    <input type="text" class="form-control" id="timing-token" placeholder="Try: secret123">
+                </div>
+                <button type="button" class="btn btn-primary" id="timingCheck">Verify (Simulated)</button>
+                <div class="mt-2" id="timingResult"></div>
+            </form>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // CSP form (no inline event handlers - uses addEventListener)
+        document.getElementById('cspForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Submitted securely (CSP-compatible).');
+        });
+
+        // Token refresh
+        let tokenExpiryTime = 300; // 5 minutes
+        document.getElementById('refreshToken').addEventListener('click', function() {
+            const newToken = 'csrf_token_' + Math.random().toString(36).substring(2, 15);
+            document.getElementById('currentToken').value = newToken;
+            tokenExpiryTime = 300;
+            document.getElementById('tokenStatus').innerHTML = '<span class="text-success">Token refreshed!</span>';
+        });
+
+        // Token expiry countdown
+        setInterval(function() {
+            if (tokenExpiryTime > 0) {
+                tokenExpiryTime--;
+                const min = Math.floor(tokenExpiryTime / 60);
+                const sec = tokenExpiryTime % 60;
+                document.getElementById('tokenExpiry').value = min + ':' + (sec < 10 ? '0' : '') + sec + ' minutes';
+                if (tokenExpiryTime < 60) {
+                    document.getElementById('tokenStatus').innerHTML = '<span class="text-warning">Token expiring soon! Refresh recommended.</span>';
+                }
+            } else {
+                document.getElementById('tokenStatus').innerHTML = '<span class="text-danger">Token expired! Please refresh.</span>';
+            }
+        }, 1000);
+
+        document.getElementById('tokenForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (tokenExpiryTime <= 0) {
+                alert('Token expired. Please refresh.');
+            } else {
+                alert('Form submitted with valid token.');
+            }
+        });
+
+        // Secure file upload
+        document.getElementById('secure-file').addEventListener('change', function() {
+            const file = this.files[0];
+            const preview = document.getElementById('filePreview');
+            if (!file) { preview.classList.add('d-none'); return; }
+
+            preview.classList.remove('d-none');
+            document.getElementById('fileName').textContent = 'Name: ' + file.name;
+            document.getElementById('fileSize').textContent = 'Size: ' + (file.size / 1024).toFixed(1) + ' KB';
+            document.getElementById('fileType').textContent = 'Type: ' + file.type;
+
+            // Check file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                document.getElementById('uploadStatus').innerHTML = '<div class="alert alert-danger mt-2">File too large. Max 5MB.</div>';
+                return;
+            }
+
+            // Generate simple hash (in production, use server-side verification)
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Simple hash for demo (use crypto.subtle.digest for production)
+                let hash = 0;
+                const arr = new Uint8Array(e.target.result);
+                for (let i = 0; i < Math.min(arr.length, 1000); i++) {
+                    hash = ((hash << 5) - hash) + arr[i];
+                    hash |= 0;
+                }
+                document.getElementById('fileHash').textContent = 'Hash: ' + Math.abs(hash).toString(16).substring(0, 8);
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        document.getElementById('uploadBtn').addEventListener('click', function() {
+            const file = document.getElementById('secure-file').files[0];
+            if (!file) {
+                document.getElementById('uploadStatus').innerHTML = '<div class="alert alert-warning mt-2">Select a file first.</div>';
+                return;
+            }
+            document.getElementById('uploadStatus').innerHTML = '<div class="alert alert-success mt-2">File uploaded securely!</div>';
+        });
+
+        // Input filters
+        document.getElementById('filter-alpha').addEventListener('input', function() {
+            this.value = this.value.replace(/[^a-zA-Z]/g, '');
+        });
+        document.getElementById('filter-numeric').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+        document.getElementById('filter-alphanum').addEventListener('input', function() {
+            this.value = this.value.replace(/[^a-zA-Z0-9]/g, '');
+        });
+        document.getElementById('filter-nohtml').addEventListener('input', function() {
+            // Strip HTML tags and show sanitized version
+            const sanitized = this.value.replace(/<[^>]*>/g, '');
+            document.getElementById('filter-nohtml-result').textContent = 'Sanitized: ' + sanitized;
+        });
+
+        // Timing-safe comparison simulation
+        // In production, use crypto.timingSafeEqual on the server
+        function timingSafeCompare(a, b) {
+            // Constant-time comparison: always compares all characters
+            let result = a.length === b.length ? 0 : 1;
+            const maxLen = Math.max(a.length, b.length);
+            for (let i = 0; i < maxLen; i++) {
+                const aChar = i < a.length ? a.charCodeAt(i) : 0;
+                const bChar = i < b.length ? b.charCodeAt(i) : 0;
+                result |= aChar ^ bChar;
+            }
+            return result === 0;
+        }
+
+        document.getElementById('timingCheck').addEventListener('click', function() {
+            const token = document.getElementById('timing-token').value;
+            const expected = 'secret123';
+            // Add random delay to prevent timing attacks
+            const delay = Math.floor(Math.random() * 50) + 50;
+            setTimeout(function() {
+                if (timingSafeCompare(token, expected)) {
+                    document.getElementById('timingResult').innerHTML = '<span class="text-success">Token valid!</span>';
+                } else {
+                    document.getElementById('timingResult').innerHTML = '<span class="text-danger">Token invalid.</span>';
+                }
+            }, delay);
+        });
+    </script>
+</body>
+</html>

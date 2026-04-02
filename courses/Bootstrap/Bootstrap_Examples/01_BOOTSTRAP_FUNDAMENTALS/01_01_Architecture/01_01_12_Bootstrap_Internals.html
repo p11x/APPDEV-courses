@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================ -->
+    <!-- CORE META TAGS                               -->
+    <!-- ============================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bootstrap 5 Internals - How Bootstrap works under the hood">
+    <meta name="author" content="Bootstrap Course">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- ============================================ -->
+    <!-- TITLE                                        -->
+    <!-- ============================================ -->
+    <title>01_01_12 - Bootstrap Internals</title>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 CSS CDN                          -->
+    <!-- ============================================ -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aV76Ug"
+        crossorigin="anonymous"
+    >
+
+    <!-- Bootstrap Icons CDN -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <!-- ============================================ -->
+    <!-- CUSTOM STYLES                                -->
+    <!-- ============================================ -->
+    <style>
+        /*
+            Architecture diagram styling.
+            Visual representation of Bootstrap's internal structure.
+        */
+        .arch-box {
+            border: 2px solid;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .arch-box:hover { transform: scale(1.02); }
+        .arch-box--core { border-color: #0d6efd; background-color: #e7f1ff; }
+        .arch-box--css { border-color: #198754; background-color: #d1e7dd; }
+        .arch-box--js { border-color: #ffc107; background-color: #fff8e1; }
+        .arch-box--util { border-color: #dc3545; background-color: #f8d7da; }
+        .arch-box--plugin { border-color: #6f42c1; background-color: #e2d9f3; }
+
+        /*
+            Code block styling.
+        */
+        .internals-code {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        .internals-code .kw { color: #569cd6; }
+        .internals-code .str { color: #ce9178; }
+        .internals-code .cm { color: #6a9955; }
+        .internals-code .cls { color: #4ec9b0; }
+        .internals-code .fn { color: #dcdcaa; }
+        .internals-code .prop { color: #9cdcfe; }
+
+        /*
+            Component lifecycle diagram.
+        */
+        .lifecycle-step {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-left: 4px solid;
+            margin-bottom: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 0 0.375rem 0.375rem 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================ -->
+    <!-- NAVIGATION BAR                               -->
+    <!-- ============================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-cpu me-2"></i>Bootstrap Internals
+            </a>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#architecture">Architecture</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#css-internals">CSS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#js-internals">JS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#base-component">Base Class</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================ -->
+    <!-- HERO SECTION                                 -->
+    <!-- ============================================ -->
+    <header class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Bootstrap Internals</h1>
+            <p class="lead mb-0">
+                Understanding how Bootstrap works under the hood: CSS custom properties,
+                JavaScript class hierarchy, the BaseComponent, and the event system.
+            </p>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT                                 -->
+    <!-- ============================================ -->
+    <main class="container py-5">
+
+        <!-- ============================================ -->
+        <!-- ARCHITECTURE OVERVIEW                        -->
+        <!-- ============================================ -->
+        <!--
+            Bootstrap's high-level architecture showing how CSS and JS components
+            relate to each other and to external dependencies.
+        -->
+        <section class="mb-5" id="architecture">
+            <h2 class="mb-4">
+                <i class="bi bi-diagram-3-fill me-2"></i>Architecture Overview
+            </h2>
+
+            <!--
+                Visual architecture diagram using Bootstrap grid.
+            -->
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <div class="arch-box arch-box--core">
+                        <h5 class="mb-1"><i class="bi bi-bootstrap-fill me-2"></i>Bootstrap 5.3.3</h5>
+                        <small class="text-muted">Complete framework with CSS + JS</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="arch-box arch-box--css h-100">
+                        <h6><i class="bi bi-filetype-css me-1"></i>CSS Layer</h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li>Custom Properties (CSS vars)</li>
+                            <li>Reboot (CSS reset)</li>
+                            <li>Grid System</li>
+                            <li>Components</li>
+                            <li>Utilities</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="arch-box arch-box--js h-100">
+                        <h6><i class="bi bi-filetype-js me-1"></i>JavaScript Layer</h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li>BaseComponent</li>
+                            <li>Component Classes</li>
+                            <li>EventHandler</li>
+                            <li>Manipulator</li>
+                            <li>SelectorEngine</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="arch-box arch-box--plugin h-100">
+                        <h6><i class="bi bi-plug me-1"></i>External Dependencies</h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li>@popperjs/core (positioning)</li>
+                            <li>No jQuery (v5 removed it)</li>
+                            <li>No other dependencies</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Key change in v5:</strong> Bootstrap 5 removed the jQuery dependency that existed in v3/v4.
+                All JavaScript is now vanilla JS using ES6 classes and modern browser APIs.
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- CSS INTERNALS SECTION                        -->
+        <!-- ============================================ -->
+        <!--
+            How Bootstrap's CSS works internally: custom properties,
+            reboot, and the utility API.
+        -->
+        <section class="mb-5" id="css-internals">
+            <h2 class="mb-4">
+                <i class="bi bi-filetype-css me-2"></i>CSS Internals
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">CSS Custom Properties</h5>
+                            <p class="card-text text-muted small">
+                                Bootstrap 5.2+ defines CSS custom properties (variables) on <code>:root</code>.
+                                These enable runtime theming without recompiling SASS.
+                            </p>
+                            <div class="internals-code small">
+                                <div><span class="cm">/* Bootstrap defines these on :root */</span></div>
+                                <div>:root {</div>
+                                <div>&nbsp;&nbsp;<span class="prop">--bs-blue</span>: <span class="str">#0d6efd</span>;</div>
+                                <div>&nbsp;&nbsp;<span class="prop">--bs-indigo</span>: <span class="str">#6610f2</span>;</div>
+                                <div>&nbsp;&nbsp;<span class="prop">--bs-purple</span>: <span class="str">#6f42c1</span>;</div>
+                                <div>&nbsp;&nbsp;<span class="prop">--bs-primary</span>: <span class="str">#0d6efd</span>;</div>
+                                <div>&nbsp;&nbsp;<span class="prop">--bs-success</span>: <span class="str">#198754</span>;</div>
+                                <div>&nbsp;&nbsp;<span class="prop">--bs-body-font-family</span>: <span class="str">system-ui, ...</span>;</div>
+                                <div>&nbsp;&nbsp;<span class="prop">--bs-body-bg</span>: <span class="str">#fff</span>;</div>
+                                <div>}</div>
+                            </div>
+
+                            <div class="alert alert-success mt-3 mb-0 small">
+                                <i class="bi bi-lightbulb me-1"></i>
+                                <strong>Runtime theming:</strong> Override CSS custom properties
+                                without recompiling SASS:
+                                <code>:root { --bs-primary: #8b5cf6; }</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Reboot (CSS Reset)</h5>
+                            <p class="card-text text-muted small">
+                                Bootstrap's <code>reboot.scss</code> normalizes browser defaults.
+                                It's based on Normalize.css but goes further with opinionated resets.
+                            </p>
+                            <div class="internals-code small">
+                                <div><span class="cm">/* Key reboot rules */</span></div>
+                                <div class="mt-1"><span class="cm">/* Border-box on everything */</span></div>
+                                <div>*, *::before, *::after {</div>
+                                <div>&nbsp;&nbsp;<span class="prop">box-sizing</span>: <span class="str">border-box</span>;</div>
+                                <div>}</div>
+                                <div class="mt-1"><span class="cm">/* Consistent font rendering */</span></div>
+                                <div>body {</div>
+                                <div>&nbsp;&nbsp;<span class="prop">margin</span>: <span class="str">0</span>;</div>
+                                <div>&nbsp;&nbsp;<span class="prop">font-family</span>: <span class="str">var(--bs-body-font-family)</span>;</div>
+                                <div>&nbsp;&nbsp;<span class="prop">line-height</span>: <span class="str">1.5</span>;</div>
+                                <div>}</div>
+                                <div class="mt-1"><span class="cm">/* Remove default list styles */</span></div>
+                                <div>ul, ol { <span class="prop">list-style</span>: <span class="str">none</span>; }</div>
+                                <div class="mt-1"><span class="cm">/* Consistent table spacing */</span></div>
+                                <div>table { <span class="prop">border-collapse</span>: <span class="str">collapse</span>; }</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--
+                    Utility API explanation.
+                    Bootstrap 5 uses a SASS map + loop to generate utility classes.
+                -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Utility API</h5>
+                            <p class="card-text text-muted">
+                                Bootstrap 5's utility classes are generated programmatically using a SASS API.
+                                This is defined in <code>scss/utilities/_api.scss</code> and uses maps and loops.
+                            </p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="internals-code small">
+                                        <div><span class="cm">// scss/_utilities.scss</span></div>
+                                        <div><span class="prop">$utilities</span>: (</div>
+                                        <div>&nbsp;&nbsp;<span class="str">"display"</span>: (</div>
+                                        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">property</span>: <span class="str">display</span>,</div>
+                                        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">class</span>: <span class="str">d</span>,</div>
+                                        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="prop">values</span>: (</div>
+                                        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">none</span>: <span class="str">none</span>,</div>
+                                        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">inline</span>: <span class="str">inline</span>,</div>
+                                        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">block</span>: <span class="str">block</span>,</div>
+                                        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">flex</span>: <span class="str">flex</span>,</div>
+                                        <div>&nbsp;&nbsp;&nbsp;&nbsp;)</div>
+                                        <div>&nbsp;&nbsp;),</div>
+                                        <div>)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="internals-code small">
+                                        <div><span class="cm">// Generated CSS output:</span></div>
+                                        <div>.d-none { <span class="prop">display</span>: <span class="str">none</span> !important; }</div>
+                                        <div>.d-inline { <span class="prop">display</span>: <span class="str">inline</span> !important; }</div>
+                                        <div>.d-block { <span class="prop">display</span>: <span class="str">block</span> !important; }</div>
+                                        <div>.d-flex { <span class="prop">display</span>: <span class="str">flex</span> !important; }</div>
+                                        <div class="mt-1"><span class="cm">// Responsive variants:</span></div>
+                                        <div>@media (min-width: 768px) {</div>
+                                        <div>&nbsp;&nbsp;.d-md-none { ... }</div>
+                                        <div>&nbsp;&nbsp;.d-md-flex { ... }</div>
+                                        <div>}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- JAVASCRIPT INTERNALS SECTION                 -->
+        <!-- ============================================ -->
+        <!--
+            How Bootstrap's JavaScript works: the class hierarchy,
+            BaseComponent, EventHandler, and the data-api.
+        -->
+        <section class="mb-5" id="js-internals">
+            <h2 class="mb-4">
+                <i class="bi bi-filetype-js me-2"></i>JavaScript Internals
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Class Hierarchy</h5>
+                            <p class="card-text text-muted small">
+                                All Bootstrap JS components extend a <code>BaseComponent</code> class.
+                                This provides common functionality: initialization, disposal, and event handling.
+                            </p>
+                            <!--
+                                Visual class hierarchy.
+                            -->
+                            <div class="internals-code small">
+                                <div><span class="cm">// BaseComponent - foundation for all components</span></div>
+                                <div><span class="kw">class</span> <span class="cls">BaseComponent</span> {</div>
+                                <div>&nbsp;&nbsp;<span class="fn">constructor</span>(element, config) {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>._element = element;</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">this</span>._config = config;</div>
+                                <div>&nbsp;&nbsp;}</div>
+                                <div>&nbsp;&nbsp;<span class="fn">dispose</span>() { ... } <span class="cm">// Cleanup</span></div>
+                                <div>}</div>
+                                <div class="mt-1"><span class="cm">// All components extend BaseComponent</span></div>
+                                <div><span class="kw">class</span> <span class="cls">Modal</span> <span class="kw">extends</span> <span class="cls">BaseComponent</span> { ... }</div>
+                                <div><span class="kw">class</span> <span class="cls">Dropdown</span> <span class="kw">extends</span> <span class="cls">BaseComponent</span> { ... }</div>
+                                <div><span class="kw">class</span> <span class="cls">Tooltip</span> <span class="kw">extends</span> <span class="cls">BaseComponent</span> { ... }</div>
+                                <div><span class="kw">class</span> <span class="cls">Carousel</span> <span class="kw">extends</span> <span class="cls">BaseComponent</span> { ... }</div>
+                                <div><span class="kw">class</span> <span class="cls">Collapse</span> <span class="kw">extends</span> <span class="cls">BaseComponent</span> { ... }</div>
+                                <div><span class="kw">class</span> <span class="cls">Tab</span> <span class="kw">extends</span> <span class="cls">BaseComponent</span> { ... }</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
+                        Event system explanation.
+                    -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Event System</h5>
+                            <p class="card-text text-muted small">
+                                Bootstrap uses native DOM events with a consistent naming pattern.
+                                Each component fires events at specific lifecycle points.
+                            </p>
+                            <div class="internals-code small">
+                                <div><span class="cm">// Event naming pattern: action.bs.component</span></div>
+                                <div class="mt-1"><span class="cm">// Modal events:</span></div>
+                                <div><span class="str">'show.bs.modal'</span> <span class="cm">// Before show</span></div>
+                                <div><span class="str">'shown.bs.modal'</span> <span class="cm">// After show</span></div>
+                                <div><span class="str">'hide.bs.modal'</span> <span class="cm">// Before hide</span></div>
+                                <div><span class="str">'hidden.bs.modal'</span> <span class="cm">// After hide</span></div>
+                                <div><span class="str">'hidePrevented.bs.modal'</span> <span class="cm">// Backdrop click with static</span></div>
+                                <div class="mt-1"><span class="cm">// Listening for events:</span></div>
+                                <div>document.getElementById(<span class="str">'myModal'</span>)</div>
+                                <div>&nbsp;&nbsp;.addEventListener(<span class="str">'show.bs.modal'</span>, (event) => {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;console.log(<span class="str">'Modal is about to show'</span>);</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// event.target = the modal element</span></div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// event.relatedTarget = trigger element</span></div>
+                                <div>&nbsp;&nbsp;});</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <!--
+                        Component lifecycle diagram.
+                    -->
+                    <div class="card sticky-lg-top">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-arrow-repeat me-2"></i>Component Lifecycle
+                            </h5>
+                            <div class="lifecycle-step border-primary">
+                                <i class="bi bi-1-circle-fill text-primary me-3 fs-5"></i>
+                                <div>
+                                    <strong>Initialization</strong>
+                                    <p class="mb-0 small text-muted">
+                                        Constructor reads config from data attributes,
+                                        merges with default options
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="lifecycle-step border-success">
+                                <i class="bi bi-2-circle-fill text-success me-3 fs-5"></i>
+                                <div>
+                                    <strong>Data API Discovery</strong>
+                                    <p class="mb-0 small text-muted">
+                                        <code>data-bs-toggle="modal"</code> triggers
+                                        automatic initialization via the Data API
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="lifecycle-step border-warning">
+                                <i class="bi bi-3-circle-fill text-warning me-3 fs-5"></i>
+                                <div>
+                                    <strong>Event Binding</strong>
+                                    <p class="mb-0 small text-muted">
+                                        Component binds click, keydown, and other
+                                        event handlers to the DOM
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="lifecycle-step border-info">
+                                <i class="bi bi-4-circle-fill text-info me-3 fs-5"></i>
+                                <div>
+                                    <strong>User Interaction</strong>
+                                    <p class="mb-0 small text-muted">
+                                        Events fire, <code>show/hide/toggle</code>
+                                        methods are called
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="lifecycle-step border-danger">
+                                <i class="bi bi-5-circle-fill text-danger me-3 fs-5"></i>
+                                <div>
+                                    <strong>Disposal</strong>
+                                    <p class="mb-0 small text-muted">
+                                        <code>.dispose()</code> removes event listeners,
+                                        clears data, frees memory
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- BASE COMPONENT SECTION                       -->
+        <!-- ============================================ -->
+        <!--
+            Deep dive into BaseComponent - the foundation class.
+        -->
+        <section id="base-component">
+            <h2 class="mb-4">
+                <i class="bi bi-box me-2"></i>BaseComponent Deep Dive
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Static Methods</h5>
+                            <p class="card-text text-muted small">
+                                BaseComponent provides static methods on each component class
+                                for accessing instances from DOM elements.
+                            </p>
+                            <div class="internals-code small">
+                                <div><span class="cm">// Get existing instance</span></div>
+                                <div><span class="kw">const</span> modal = bootstrap.Modal</div>
+                                <div>&nbsp;&nbsp;.<span class="fn">getInstance</span>(element);</div>
+                                <div class="mt-1"><span class="cm">// Get or create instance</span></div>
+                                <div><span class="kw">const</span> modal = bootstrap.Modal</div>
+                                <div>&nbsp;&nbsp;.<span class="fn">getOrCreateInstance</span>(element);</div>
+                                <div class="mt-1"><span class="cm">// jQuery interface (if jQuery loaded)</span></div>
+                                <div><span class="cm">// $(element).modal('show')</span></div>
+                                <div class="mt-1"><span class="cm">// Default config (shared across instances)</span></div>
+                                <div>Modal.Default = {</div>
+                                <div>&nbsp;&nbsp;<span class="prop">backdrop</span>: <span class="str">true</span>,</div>
+                                <div>&nbsp;&nbsp;<span class="prop">focus</span>: <span class="str">true</span>,</div>
+                                <div>&nbsp;&nbsp;<span class="prop">keyboard</span>: <span class="str">true</span></div>
+                                <div>};</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Data API</h5>
+                            <p class="card-text text-muted small">
+                                The Data API automatically initializes components from HTML
+                                attributes. No JavaScript required for basic usage.
+                            </p>
+                            <div class="internals-code small">
+                                <div><span class="cm">&lt;!-- Data API triggers this --&gt;</span></div>
+                                <div>&lt;button <span class="prop">data-bs-toggle</span>=<span class="str">"modal"</span></div>
+                                <div>&nbsp;&nbsp;<span class="prop">data-bs-target</span>=<span class="str">"#myModal"</span>&gt;</div>
+                                <div>&nbsp;&nbsp;Open Modal</div>
+                                <div>&lt;/button&gt;</div>
+                                <div class="mt-1"><span class="cm">// This automatically runs:</span></div>
+                                <div>document.querySelectorAll(</div>
+                                <div>&nbsp;&nbsp;<span class="str">'[data-bs-toggle="modal"]'</span></div>
+                                <div>).forEach(el => {</div>
+                                <div>&nbsp;&nbsp;el.addEventListener(<span class="str">'click'</span>, () => {</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> target = el.getAttribute(</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'data-bs-target'</span>);</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">new</span> <span class="cls">Modal</span>(</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.querySelector(target)</div>
+                                <div>&nbsp;&nbsp;&nbsp;&nbsp;).show();</div>
+                                <div>&nbsp;&nbsp;});</div>
+                                <div>});</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--
+                    Internal helper modules.
+                -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Internal Helper Modules</h5>
+                            <p class="card-text text-muted">
+                                Bootstrap's JS uses several internal utility modules that components rely on:
+                            </p>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="bg-light p-3 rounded h-100">
+                                        <h6 class="text-primary">EventHandler</h6>
+                                        <p class="small text-muted mb-0">
+                                            Manages event listeners with namespace support.
+                                            Enables one-line event delegation.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="bg-light p-3 rounded h-100">
+                                        <h6 class="text-success">Manipulator</h6>
+                                        <p class="small text-muted mb-0">
+                                            Reads/writes <code>data-bs-*</code> attributes
+                                            and CSS custom properties from elements.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="bg-light p-3 rounded h-100">
+                                        <h6 class="text-warning">SelectorEngine</h6>
+                                        <p class="small text-muted mb-0">
+                                            DOM query helpers. Supports <code>:scope</code>
+                                            pseudo-class for scoped queries.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="bg-light p-3 rounded h-100">
+                                        <h6 class="text-danger">Backdrop</h6>
+                                        <p class="small text-muted mb-0">
+                                            Manages modal/offcanvas backdrops.
+                                            Handles click-to-dismiss behavior.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================ -->
+    <!-- FOOTER                                       -->
+    <!-- ============================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Bootstrap Internals</h5>
+                    <p class="text-muted mb-0">
+                        How Bootstrap works under the hood: CSS custom properties, JS class hierarchy, and the event system.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-github"></i></a>
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <p class="text-center text-muted mb-0">
+                &copy; 2024 Bootstrap Course. Built with Bootstrap 5.3.3
+            </p>
+        </div>
+    </footer>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 JAVASCRIPT BUNDLE CDN            -->
+    <!-- ============================================ -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- ============================================ -->
+    <!-- CUSTOM JAVASCRIPT                            -->
+    <!-- ============================================ -->
+    <!--
+        Demonstrates accessing Bootstrap's internal API from the console.
+    -->
+    <script>
+        // Confirm Bootstrap is loaded and log available components
+        console.log('Bootstrap version:', bootstrap.Tooltip.VERSION || '5.3.3');
+        console.log('Available Bootstrap components:', Object.keys(bootstrap));
+
+        // Initialize tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(
+            tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl)
+        );
+
+        /*
+            Demonstrate BaseComponent static methods.
+            These methods allow you to manage component instances programmatically.
+        */
+        // Log the Modal class's static methods
+        console.log('Modal static methods:', Object.getOwnPropertyNames(bootstrap.Modal));
+        console.log('Modal default config:', bootstrap.Modal.Default);
+    </script>
+</body>
+</html>

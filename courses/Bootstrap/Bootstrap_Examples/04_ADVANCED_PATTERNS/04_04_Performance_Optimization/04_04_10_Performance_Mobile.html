@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_10_Performance_Mobile.html
+     Topic: Mobile Performance Optimization for Bootstrap
+     
+     Covers mobile-specific optimizations: viewport configuration,
+     touch targets, network-aware loading, device memory considerations,
+     and responsive image strategies.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport meta: critical for mobile rendering -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Device hints for adaptive loading -->
+    <meta name="theme-color" content="#0d6efd">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Mobile Performance - Bootstrap 5</title>
+
+    <style>
+        .hero-mobile { background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); color: white; padding: 4rem 0; }
+        .code-dark { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.82rem; overflow-x: auto; }
+        .touch-target { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; }
+        .device-frame { border: 8px solid #333; border-radius: 24px; padding: 12px; max-width: 320px; margin: 0 auto; background: #111; }
+        .device-screen { background: white; border-radius: 16px; overflow: hidden; }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Mobile Perf</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#adaptive">Adaptive</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#touch">Touch</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#network">Network</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#demo">Demo</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-mobile text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Mobile Performance</h1>
+            <p class="lead mt-2">Optimize for slower networks, limited memory, and touch interactions.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: ADAPTIVE LOADING
+         Use device capabilities to decide what to load.
+         ============================================================ -->
+    <section id="adaptive" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Adaptive Loading</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Network-Aware Loading</h5></div>
+                        <div class="card-body">
+                            <p>Use the Network Information API to adapt content based on connection quality.</p>
+                            <div class="code-dark">
+// Check connection quality<br>
+const conn = navigator.connection || {};<br>
+const effectiveType = conn.effectiveType; // 4g, 3g, 2g, slow-2g<br>
+const saveData = conn.saveData; // user enabled data saver<br><br>
+if (effectiveType === '4g' && !saveData) {<br>
+&nbsp;&nbsp;// Load high-res images, video autoplay<br>
+&nbsp;&nbsp;loadHighQuality();<br>
+} else {<br>
+&nbsp;&nbsp;// Load low-res images, no video autoplay<br>
+&nbsp;&nbsp;loadLowQuality();<br>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Device Memory-Aware</h5></div>
+                        <div class="card-body">
+                            <p>Use the Device Memory Client Hint to serve lighter experiences on low-memory devices.</p>
+                            <div class="code-dark">
+// Check available device memory (GB)<br>
+const memory = navigator.deviceMemory || 4;<br><br>
+if (memory <= 2) {<br>
+&nbsp;&nbsp;// Low-end device: skip heavy animations<br>
+&nbsp;&nbsp;disableAnimations();<br>
+&nbsp;&nbsp;loadPlaceholderImages();<br>
+} else if (memory <= 4) {<br>
+&nbsp;&nbsp;// Mid-range: moderate quality<br>
+&nbsp;&nbsp;loadMediumQuality();<br>
+} else {<br>
+&nbsp;&nbsp;// High-end: full experience<br>
+&nbsp;&nbsp;loadFullExperience();<br>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Hints headers -->
+            <div class="card mt-4">
+                <div class="card-header"><h5 class="mb-0">Required Client Hints Headers</h5></div>
+                <div class="card-body">
+                    <div class="code-dark">
+# Server must request client hints via Accept-CH header<br>
+Accept-CH: Device-Memory, Downlink, ECT, RTT, Save-Data<br>
+Critical-CH: Device-Memory, ECT
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: TOUCH TARGETS
+         Minimum touch target sizes for mobile usability.
+         ============================================================ -->
+    <section id="touch" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Touch Target Optimization</h2>
+            <p class="text-muted mb-4">
+                WCAG 2.5.8 requires touch targets of at least 24x24 CSS pixels.
+                Apple recommends 44x44pt and Google recommends 48x48dp.
+            </p>
+
+            <div class="row g-4 align-items-center">
+                <div class="col-md-6">
+                    <!-- Device frame mockup -->
+                    <div class="device-frame">
+                        <div class="device-screen p-3">
+                            <div class="d-flex justify-content-around mb-3">
+                                <button class="btn btn-danger touch-target">48</button>
+                                <button class="btn btn-warning touch-target text-dark">48</button>
+                                <button class="btn btn-success touch-target">48</button>
+                            </div>
+                            <div class="d-flex justify-content-around">
+                                <button class="btn btn-outline-primary btn-sm" style="width:24px;height:24px;padding:0;font-size:0.6rem">24</button>
+                                <button class="btn btn-outline-secondary btn-sm" style="width:24px;height:24px;padding:0;font-size:0.6rem">24</button>
+                                <button class="btn btn-outline-success btn-sm" style="width:24px;height:24px;padding:0;font-size:0.6rem">24</button>
+                            </div>
+                            <div class="text-center mt-2 small text-muted">Top: Good (48px). Bottom: Minimum (24px)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Bootstrap Touch-Friendly Classes</h5>
+                            <table class="table table-sm">
+                                <thead><tr><th>Class</th><th>Min Size</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>.btn-sm</code></td><td>~32px (compact)</td></tr>
+                                    <tr><td><code>.btn</code> (default)</td><td>~38px</td></tr>
+                                    <tr><td><code>.btn-lg</code></td><td>~48px (recommended)</td></tr>
+                                    <tr><td><code>.form-control</code></td><td>~38px height</td></tr>
+                                    <tr><td><code>.form-control-lg</code></td><td>~48px height</td></tr>
+                                </tbody>
+                            </table>
+                            <div class="code-dark mt-3">
+/* Custom touch-friendly padding */<br>
+@media (pointer: coarse) {<br>
+&nbsp;&nbsp;.btn { padding: 0.75rem 1.25rem; }<br>
+&nbsp;&nbsp;.nav-link { padding: 0.75rem; }<br>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: NETWORK-AWARE BOOTSTRAP DEMO
+         Interactive demo showing connection-adaptive content.
+         ============================================================ -->
+    <section id="network" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Network Status Detection</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header"><h5 class="mb-0">Your Connection Info</h5></div>
+                        <div class="card-body">
+                            <table class="table table-sm" id="connTable">
+                                <tr><td>Effective Type</td><td id="connType">Checking...</td></tr>
+                                <tr><td>Downlink</td><td id="connDownlink">Checking...</td></tr>
+                                <tr><td>RTT</td><td id="connRtt">Checking...</td></tr>
+                                <tr><td>Save Data</td><td id="connSaveData">Checking...</td></tr>
+                                <tr><td>Device Memory</td><td id="deviceMemory">Checking...</td></tr>
+                            </table>
+                            <div id="connAlert"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header"><h5 class="mb-0">Adaptive Image Loading</h5></div>
+                        <div class="card-body">
+                            <p class="small text-muted">Images adapt based on detected connection:</p>
+                            <div id="adaptiveImageContainer" class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: MOBILE OPTIMIZATION CHECKLIST
+         ============================================================ -->
+    <section id="demo" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Mobile Optimization Checklist</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label"><code>viewport</code> meta tag set</label>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label"><code>loading="lazy"</code> on images</label>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label"><code>width</code>/<code>height</code> on images</label>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">Touch targets &ge; 48px</label>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">Responsive images with <code>srcset</code></label>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">Network-adaptive content</label>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">Deferred non-critical JS</label>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">Gzip/Brotli compression</label>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">Service Worker caching</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Mobile Performance &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+
+    <script>
+        // ============================================================
+        // NETWORK INFORMATION API DEMO
+        // Detects connection quality and adapts content
+        // ============================================================
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        const container = document.getElementById('adaptiveImageContainer');
+
+        function updateConnectionInfo() {
+            if (conn) {
+                document.getElementById('connType').textContent = conn.effectiveType || 'N/A';
+                document.getElementById('connDownlink').textContent = conn.downlink ? conn.downlink + ' Mbps' : 'N/A';
+                document.getElementById('connRtt').textContent = conn.rtt ? conn.rtt + ' ms' : 'N/A';
+                document.getElementById('connSaveData').textContent = conn.saveData ? 'Enabled' : 'Disabled';
+
+                // Load image based on connection
+                const quality = conn.effectiveType === '4g' && !conn.saveData ? 'high' : 'low';
+                const w = quality === 'high' ? 600 : 200;
+                container.innerHTML = `
+                    <img src="https://picsum.photos/${w}/${Math.round(w*0.6)}?random=mobile"
+                         class="img-fluid rounded" alt="Adaptive quality image"
+                         width="${w}" height="${Math.round(w*0.6)}"
+                         loading="lazy">
+                    <div class="mt-2 small text-muted">
+                        Loaded ${quality} quality (${w}px) based on ${conn.effectiveType} connection
+                    </div>`;
+            } else {
+                document.getElementById('connAlert').innerHTML =
+                    '<div class="alert alert-warning small">Network Information API not supported in this browser.</div>';
+                container.innerHTML = '<img src="https://picsum.photos/400/240?random=mobile" class="img-fluid rounded" alt="Default image" loading="lazy">';
+            }
+        }
+
+        // Device memory
+        const memory = navigator.deviceMemory;
+        document.getElementById('deviceMemory').textContent = memory ? memory + ' GB' : 'N/A';
+
+        updateConnectionInfo();
+        if (conn) conn.addEventListener('change', updateConnectionInfo);
+    </script>
+</body>
+</html>

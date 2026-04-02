@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_03_06_CSS_Cascade_Layers.html                                -->
+<!-- @layer for specificity management                               -->
+<!-- Bootstrap 5.3.3 + CSS Cascade Layers (@layer)                  -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06_03_06 - CSS Cascade Layers</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- ============================================================= -->
+    <!-- CASCADE LAYERS DECLARATION                                      -->
+    /*  @layer defines named layers of specificity. The ORDER of       */
+    /*  @layer declarations determines priority: last layer wins.      */
+    /*  Unlayered styles always beat layered styles regardless of      */
+    /*  specificity. This gives you precise control over the cascade.  */
+    <!-- ============================================================= -->
+    <style>
+        /* Declare layer order - last has highest priority */
+        @layer reset, base, components, utilities;
+
+        /* ============================================================= */
+        /* RESET LAYER                                                   */
+        /* Lowest priority. Basic element resets.                        */
+        /* ============================================================= */
+        @layer reset {
+            * { box-sizing: border-box; margin: 0; }
+            body { font-family: system-ui, -apple-system, sans-serif; }
+        }
+
+        /* ============================================================= */
+        /* BASE LAYER                                                    */
+        /* Typography, colors, and foundational styles.                  */
+        /* ============================================================= */
+        @layer base {
+            h1, h2, h3, h4, h5, h6 {
+                color: #2d3436;
+                margin-block-end: 0.5em;
+            }
+
+            p {
+                line-height: 1.6;
+                color: #636e72;
+            }
+
+            .layer-box {
+                padding: 20px;
+                border-radius: 8px;
+                margin-block-end: 16px;
+                font-weight: 500;
+                text-align: center;
+            }
+        }
+
+        /* ============================================================= */
+        /* COMPONENTS LAYER                                              */
+        /* Reusable component styles. Higher priority than base.         */
+        /* ============================================================= */
+        @layer components {
+            .layer-box {
+                /* Even with higher specificity, this is overridden by */
+                /* unlayered styles if they exist */
+                background: #dfe6e9;
+                border: 2px solid #b2bec3;
+                color: #2d3436;
+            }
+
+            /* Higher specificity within components layer */
+            .layer-box.component-styled {
+                background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+                border: 2px solid #6c5ce7;
+                color: white;
+            }
+        }
+
+        /* ============================================================= */
+        /* UTILITIES LAYER                                               */
+        /* Highest priority layer. Overrides all previous layers.        */
+        /* ============================================================= */
+        @layer utilities {
+            .layer-box {
+                /* This overrides the components layer background */
+                background: linear-gradient(135deg, #00b894, #00cec9);
+                border-color: #00b894;
+                color: white;
+            }
+
+            .layer-box.override {
+                background: linear-gradient(135deg, #e17055, #d63031);
+                border-color: #d63031;
+            }
+        }
+
+        /* ============================================================= */
+        /* UNLAYERED STYLES                                              */
+        /* Unlayered styles ALWAYS win against layered styles,           */
+        /* regardless of specificity or layer order.                     */
+        /* ============================================================= */
+
+        /* This style beats ALL layered styles because it is unlayered */
+        .layer-box.unlayered-override {
+            background: linear-gradient(135deg, #fdcb6e, #f39c12) !important;
+            border-color: #e17055 !important;
+            color: #2d3436 !important;
+        }
+
+        /* ============================================================= */
+        /* NESTED LAYERS                                                 */
+        /* Layers can be nested within other layers for fine-grained    */
+        /* control over sub-module specificity.                          */
+        /* ============================================================= */
+        @layer framework {
+            @layer theme {
+                .nested-demo {
+                    background: #74b9ff;
+                    color: white;
+                    padding: 16px;
+                    border-radius: 8px;
+                }
+            }
+
+            @layer layout {
+                .nested-demo {
+                    /* layout sub-layer has higher priority than theme */
+                    background: #a29bfe;
+                    border: 3px solid #6c5ce7;
+                }
+            }
+        }
+
+        /* ============================================================= */
+        /* DEMONSTRATION: LAYER ORDER MATTERS                            */
+        /* When layers are re-declared, their priority changes.          */
+        /* ============================================================= */
+
+        /* These layers show that order determines priority */
+        @layer low-priority {
+            .order-demo { background: #636e72; color: white; }
+        }
+
+        @layer high-priority {
+            .order-demo { background: #e17055; color: white; }
+        }
+
+        /* ============================================================= */
+        /* UTILITY STYLES                                                */
+        /* ============================================================= */
+
+        .layer-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-inline-end: 8px;
+            margin-block-end: 4px;
+        }
+
+        .cascade-arrow {
+            font-size: 2rem;
+            color: #b2bec3;
+            text-align: center;
+            margin-block: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+
+        <!-- Page header -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">CSS Cascade Layers</h1>
+                <p class="lead text-muted">@layer for specificity management</p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: LAYER PRIORITY ORDER                                 -->
+        <!-- Later declared layers override earlier ones. Unlayered beats  -->
+        <!-- all layers. This is the core cascade layers concept.          -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">1. Layer Priority Order</h2>
+            <p class="text-muted mb-3">
+                Styles in later layers override earlier layers. Unlayered styles always win.
+            </p>
+
+            <!-- Priority badges -->
+            <div class="mb-4 text-center">
+                <span class="layer-badge bg-secondary text-white">reset (lowest)</span>
+                <span class="layer-badge bg-info text-white">base</span>
+                <span class="layer-badge bg-primary text-white">components</span>
+                <span class="layer-badge bg-success text-white">utilities</span>
+                <span class="layer-badge bg-warning text-dark">unlayered (highest)</span>
+            </div>
+
+            <!-- Box styled by different layers -->
+            <div class="layer-box">
+                This box is styled by the <strong>utilities</strong> layer (last declared layer).
+            </div>
+
+            <!-- Box with component layer class -->
+            <div class="layer-box component-styled">
+                This box has <code>.component-styled</code> class from the components layer.
+            </div>
+
+            <!-- Box overridden by unlayered style -->
+            <div class="layer-box unlayered-override">
+                This box is overridden by an <strong>unlayered</strong> style (always wins).
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: SPECIFICITY WITHIN LAYERS                            -->
+        /*  Within a single layer, normal specificity rules apply.       */
+        /*  But between layers, layer order always determines the winner. */
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">2. Specificity Within Layers</h2>
+            <p class="text-muted mb-3">
+                Inside a layer, normal specificity applies. Between layers, order wins.
+            </p>
+
+            <!-- Low priority layer wins despite lower specificity -->
+            <div class="order-demo" style="padding: 20px; border-radius: 8px; text-align: center; margin-block-end: 16px;">
+                Styled by <strong>high-priority</strong> layer (declared after low-priority).
+                Even if low-priority had <code>#id</code> specificity, high-priority wins.
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: PRACTICAL EXAMPLE - OVERRIDING FRAMEWORK            -->
+        /*  Cascade layers solve the common problem of overriding a CSS   */
+        /*  framework (like Bootstrap) without using !important.          */
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">3. Framework Override Pattern</h2>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Layer Order Strategy</h5>
+                    <pre class="bg-dark text-success p-3 rounded"><code>/* Declare layer order */
+@layer reset, framework, components, utilities;
+
+/* Framework styles (e.g., Bootstrap) */
+@layer framework {
+    .btn { background: blue; }
+}
+
+/* Your component overrides */
+@layer components {
+    .btn { background: green; }
+    /* Overrides framework without !important */
+}
+
+/* Utility overrides */
+@layer utilities {
+    .btn-urgent { background: red; }
+    /* Highest priority */
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: NESTED LAYERS                                       -->
+        <!-- Layers can be nested for sub-module specificity control.      -->
+        <!-- @layer framework.theme vs @layer framework.layout             -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">4. Nested Layers</h2>
+            <p class="text-muted mb-3">
+                <code>@layer framework { @layer layout { ... } }</code> creates sub-layers.
+            </p>
+
+            <div class="nested-demo">
+                Nested layer demo: <code>@layer framework.layout</code> overrides <code>@layer framework.theme</code>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 5: IMPORT WITH LAYERS                                   -->
+        <!-- @import can assign imported styles to a specific layer.       -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">5. @import with Layers</h2>
+
+            <div class="card">
+                <div class="card-body">
+                    <pre class="bg-dark text-success p-3 rounded"><code>/* Import Bootstrap into a framework layer */
+@import url('bootstrap.css') layer(framework);
+
+/* Import your overrides into a higher layer */
+@import url('overrides.css') layer(utilities);
+
+/* Or use anonymous layers for isolation */
+@import url('third-party.css') layer();
+
+/* Anonymous layers can't be extended later */</code></pre>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

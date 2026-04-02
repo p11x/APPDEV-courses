@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<!-- HTML5 document with advanced Bootstrap 5 form validation patterns -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viewport meta ensures proper rendering on all device sizes -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Validation Advanced - Bootstrap 5</title>
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Demo section container for visual grouping */
+        .demo-section { margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 0.5rem; }
+        /* Custom valid/invalid styling for visual feedback */
+        .form-control.is-valid, .form-select.is-valid { border-color: #198754; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e"); }
+        .form-control.is-invalid, .form-select.is-invalid { border-color: #dc3545; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e"); }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <!-- Page header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Form Validation Advanced</h1>
+                <p class="lead text-muted">Master custom validation with was-validated class, invalid-feedback, valid-feedback, and browser validation APIs.</p>
+                <hr>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Browser Default Validation -->
+        <!-- Browser validation uses HTML5 attributes like required, pattern, min, max -->
+        <section class="demo-section" id="browser-validation">
+            <h2 class="h4 mb-3">1. Browser Default Validation</h2>
+            <p class="text-muted">Uses native HTML5 validation attributes. Add <code>novalidate</code> to form to use Bootstrap custom styles instead.</p>
+
+            <!-- Form WITHOUT novalidate - uses browser default validation popups -->
+            <form class="needs-validation" id="browserForm">
+                <div class="mb-3">
+                    <label for="bName" class="form-label">Name (required)</label>
+                    <!-- required attribute makes field mandatory -->
+                    <input type="text" class="form-control" id="bName" required>
+                    <!-- valid-feedback shown when input passes validation -->
+                    <div class="valid-feedback">Looks good!</div>
+                    <!-- invalid-feedback shown when input fails validation -->
+                    <div class="invalid-feedback">Please enter your name.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="bEmail" class="form-label">Email (required, type=email)</label>
+                    <!-- type="email" adds built-in email format validation -->
+                    <input type="email" class="form-control" id="bEmail" required>
+                    <div class="invalid-feedback">Please provide a valid email.</div>
+                </div>
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
+        </section>
+
+        <!-- SECTION 2: Bootstrap Custom Validation with was-validated -->
+        <!-- The was-validated class enables Bootstrap's custom validation styles -->
+        <section class="demo-section" id="custom-validation">
+            <h2 class="h4 mb-3">2. Custom Validation (was-validated)</h2>
+            <p class="text-muted">Add <code>novalidate</code> to form, then add <code>was-validated</code> on submit via JS for Bootstrap-styled feedback.</p>
+
+            <!-- novalidate prevents browser's default validation UI -->
+            <form class="row g-3 needs-validation" novalidate id="customForm">
+                <div class="col-md-4">
+                    <label for="cvFirstName" class="form-label">First name</label>
+                    <input type="text" class="form-control" id="cvFirstName" required>
+                    <!-- valid-feedback: green text shown when valid -->
+                    <div class="valid-feedback">Looks good!</div>
+                    <!-- invalid-feedback: red text shown when invalid -->
+                    <div class="invalid-feedback">Please provide a valid first name.</div>
+                </div>
+                <div class="col-md-4">
+                    <label for="cvLastName" class="form-label">Last name</label>
+                    <input type="text" class="form-control" id="cvLastName" required>
+                    <div class="valid-feedback">Looks good!</div>
+                    <div class="invalid-feedback">Please provide a valid last name.</div>
+                </div>
+                <div class="col-md-4">
+                    <label for="cvUsername" class="form-label">Username</label>
+                    <!-- input-group works with validation feedback -->
+                    <div class="input-group has-validation">
+                        <span class="input-group-text">@</span>
+                        <input type="text" class="form-control" id="cvUsername" required>
+                        <div class="invalid-feedback">Please choose a username.</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="cvCity" class="form-label">City</label>
+                    <input type="text" class="form-control" id="cvCity" required>
+                    <div class="invalid-feedback">Please provide a valid city.</div>
+                </div>
+                <div class="col-md-3">
+                    <label for="cvState" class="form-label">State</label>
+                    <select class="form-select" id="cvState" required>
+                        <option selected disabled value="">Choose...</option>
+                        <option>California</option>
+                        <option>New York</option>
+                        <option>Texas</option>
+                    </select>
+                    <div class="invalid-feedback">Please select a valid state.</div>
+                </div>
+                <div class="col-md-3">
+                    <label for="cvZip" class="form-label">Zip</label>
+                    <input type="text" class="form-control" id="cvZip" pattern="[0-9]{5}" required>
+                    <!-- pattern attribute uses regex: exactly 5 digits -->
+                    <div class="invalid-feedback">Please provide a valid 5-digit zip code.</div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="cvTerms" required>
+                        <label class="form-check-label" for="cvTerms">Agree to terms and conditions</label>
+                        <div class="invalid-feedback">You must agree before submitting.</div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-primary" type="submit">Submit form</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 3: Manual Validation Classes -->
+        <!-- Manually apply is-valid and is-invalid classes for server-side validation -->
+        <section class="demo-section" id="manual-validation">
+            <h2 class="h4 mb-3">3. Manual Validation Classes</h2>
+            <p class="text-muted">Apply <code>.is-valid</code> or <code>.is-invalid</code> classes directly (useful for server-side validation feedback).</p>
+
+            <form>
+                <div class="mb-3">
+                    <label for="mValid" class="form-label">Valid Input</label>
+                    <!-- is-valid class shows green border and checkmark -->
+                    <input type="text" class="form-control is-valid" id="mValid" value="Correct value">
+                    <div class="valid-feedback">This value is valid.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="mInvalid" class="form-label">Invalid Input</label>
+                    <!-- is-invalid class shows red border and X icon -->
+                    <input type="text" class="form-control is-invalid" id="mInvalid" value="Wrong value">
+                    <div class="invalid-feedback">This value is invalid.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="mValidSelect" class="form-label">Valid Select</label>
+                    <select class="form-select is-valid" id="mValidSelect">
+                        <option>Valid selection</option>
+                    </select>
+                    <div class="valid-feedback">Good choice!</div>
+                </div>
+                <div class="mb-3">
+                    <label for="mInvalidSelect" class="form-label">Invalid Select</label>
+                    <select class="form-select is-invalid" id="mInvalidSelect">
+                        <option selected disabled value="">Choose...</option>
+                    </select>
+                    <div class="invalid-feedback">Please make a selection.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="mValidTextarea" class="form-label">Valid Textarea</label>
+                    <textarea class="form-control is-valid" id="mValidTextarea" rows="2">Good content</textarea>
+                    <div class="valid-feedback">Content looks good.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="mInvalidTextarea" class="form-label">Invalid Textarea</label>
+                    <textarea class="form-control is-invalid" id="mInvalidTextarea" rows="2"></textarea>
+                    <div class="invalid-feedback">Please provide some content.</div>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input is-invalid" type="checkbox" id="mInvalidCheck">
+                    <label class="form-check-label" for="mInvalidCheck">Invalid checkbox</label>
+                    <div class="invalid-feedback">Must be checked.</div>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 4: Pattern-Based Validation -->
+        <!-- Use pattern attribute with regex for custom format validation -->
+        <section class="demo-section" id="pattern-validation">
+            <h2 class="h4 mb-3">4. Pattern-Based Validation</h2>
+
+            <form novalidate id="patternForm">
+                <div class="mb-3">
+                    <label for="pPhone" class="form-label">Phone (format: (123) 456-7890)</label>
+                    <!-- pattern: US phone number format with regex -->
+                    <input type="tel" class="form-control" id="pPhone" pattern="\(\d{3}\) \d{3}-\d{4}" placeholder="(123) 456-7890" required>
+                    <div class="invalid-feedback">Please use format: (123) 456-7890</div>
+                </div>
+                <div class="mb-3">
+                    <label for="pZip" class="form-label">Zip Code (5 digits)</label>
+                    <!-- pattern: exactly 5 digits -->
+                    <input type="text" class="form-control" id="pZip" pattern="[0-9]{5}" required>
+                    <div class="invalid-feedback">Must be exactly 5 digits.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="pUsername" class="form-label">Username (3-16 alphanumeric + underscore)</label>
+                    <!-- pattern: alphanumeric and underscore, 3-16 characters -->
+                    <input type="text" class="form-control" id="pUsername" pattern="^[a-zA-Z0-9_]{3,16}$" required>
+                    <div class="invalid-feedback">3-16 characters, letters, numbers, underscore only.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="pPassword" class="form-label">Password (min 8, 1 uppercase, 1 lowercase, 1 number)</label>
+                    <!-- pattern: at least 8 chars with uppercase, lowercase, and digit -->
+                    <input type="password" class="form-control" id="pPassword" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$" required>
+                    <div class="invalid-feedback">Min 8 chars with uppercase, lowercase, and number.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="pUrl" class="form-label">Website URL</label>
+                    <!-- type="url" validates URL format -->
+                    <input type="url" class="form-control" id="pUrl" placeholder="https://example.com">
+                    <div class="invalid-feedback">Please enter a valid URL.</div>
+                </div>
+                <button class="btn btn-primary" type="submit">Validate</button>
+            </form>
+        </section>
+
+        <!-- SECTION 5: Min/Max Length Validation -->
+        <!-- Constrain input length with minlength and maxlength attributes -->
+        <section class="demo-section" id="length-validation">
+            <h2 class="h4 mb-3">5. Length Validation</h2>
+
+            <form novalidate id="lengthForm">
+                <div class="mb-3">
+                    <label for="lMin" class="form-label">Minimum 5 characters</label>
+                    <!-- minlength enforces minimum character count -->
+                    <input type="text" class="form-control" id="lMin" minlength="5" required>
+                    <div class="invalid-feedback">Must be at least 5 characters.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="lMax" class="form-label">Maximum 10 characters</label>
+                    <!-- maxlength enforces maximum character count -->
+                    <input type="text" class="form-control" id="lMax" maxlength="10" required>
+                    <div class="invalid-feedback">Must be 10 characters or fewer.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="lRange" class="form-label">Between 3 and 20 characters</label>
+                    <!-- Combine minlength and maxlength for range -->
+                    <input type="text" class="form-control" id="lRange" minlength="3" maxlength="20" required>
+                    <div class="invalid-feedback">Must be between 3 and 20 characters.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="lNumMin" class="form-label">Number (min 10)</label>
+                    <!-- min sets minimum numeric value -->
+                    <input type="number" class="form-control" id="lNumMin" min="10" required>
+                    <div class="invalid-feedback">Must be at least 10.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="lNumMax" class="form-label">Number (max 100)</label>
+                    <!-- max sets maximum numeric value -->
+                    <input type="number" class="form-control" id="lNumMax" max="100" required>
+                    <div class="invalid-feedback">Must be 100 or less.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="lNumRange" class="form-label">Number (10-100)</label>
+                    <!-- Combine min and max for numeric range -->
+                    <input type="number" class="form-control" id="lNumRange" min="10" max="100" required>
+                    <div class="invalid-feedback">Must be between 10 and 100.</div>
+                </div>
+                <button class="btn btn-primary" type="submit">Validate</button>
+            </form>
+        </section>
+
+        <!-- SECTION 6: Custom JavaScript Validation -->
+        <!-- Use the Constraint Validation API for complex custom validation logic -->
+        <section class="demo-section" id="js-validation">
+            <h2 class="h4 mb-3">6. JavaScript Custom Validation</h2>
+            <p class="text-muted">Uses the Constraint Validation API (<code>setCustomValidity()</code>) for complex validation rules.</p>
+
+            <form novalidate id="jsForm">
+                <div class="mb-3">
+                    <label for="jsConfirmEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="jsEmail" required>
+                    <div class="invalid-feedback" id="jsEmailFeedback">Please enter a valid email.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="jsConfirmEmail" class="form-label">Confirm Email</label>
+                    <input type="email" class="form-control" id="jsConfirmEmail" required>
+                    <div class="invalid-feedback" id="jsConfirmFeedback">Emails must match.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="jsPassword" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="jsPassword" required>
+                    <div class="invalid-feedback" id="jsPasswordFeedback">Password is required.</div>
+                    <!-- Password strength indicator -->
+                    <div class="progress mt-2" style="height: 5px;">
+                        <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted" id="strengthText">Enter a password</small>
+                </div>
+                <div class="mb-3">
+                    <label for="jsConfirmPass" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="jsConfirmPass" required>
+                    <div class="invalid-feedback" id="jsPassConfirmFeedback">Passwords must match.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="jsAge" class="form-label">Age (must be 18+)</label>
+                    <input type="number" class="form-control" id="jsAge" required>
+                    <div class="invalid-feedback" id="jsAgeFeedback">You must be at least 18 years old.</div>
+                </div>
+                <button class="btn btn-primary" type="submit">Validate</button>
+            </form>
+        </section>
+
+        <!-- SECTION 7: Server-Side Validation Integration -->
+        <!-- Patterns for handling server-side validation responses -->
+        <section class="demo-section" id="server-validation">
+            <h2 class="h4 mb-3">7. Server-Side Validation Pattern</h2>
+            <p class="text-muted">Simulates server-side validation response. In production, validation errors come from the server.</p>
+
+            <form id="serverForm">
+                <div class="mb-3">
+                    <label for="sEmail" class="form-label">Email (try: taken@example.com)</label>
+                    <input type="email" class="form-control" id="sEmail" required>
+                    <div class="invalid-feedback" id="sEmailFeedback">This email is already registered.</div>
+                    <!-- Spinner shown during async validation -->
+                    <div class="spinner-border spinner-border-sm text-primary d-none" id="sEmailSpinner" role="status">
+                        <span class="visually-hidden">Checking...</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="sUsername" class="form-label">Username (try: admin)</label>
+                    <input type="text" class="form-control" id="sUsername" required>
+                    <div class="invalid-feedback" id="sUsernameFeedback">This username is taken.</div>
+                    <div class="spinner-border spinner-border-sm text-primary d-none" id="sUsernameSpinner" role="status">
+                        <span class="visually-hidden">Checking...</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
+        </section>
+
+        <!-- SECTION 8: Multi-Step Form Validation -->
+        <!-- Validation across multiple form steps/sections -->
+        <section class="demo-section" id="multistep-validation">
+            <h2 class="h4 mb-3">8. Multi-Step Validation</h2>
+
+            <!-- Progress indicator for multi-step form -->
+            <div class="progress mb-4" style="height: 25px;">
+                <div class="progress-bar" id="stepProgress" role="progressbar" style="width: 33%;">Step 1 of 3</div>
+            </div>
+
+            <form novalidate id="multiStepForm">
+                <!-- Step 1: Personal Info -->
+                <div class="form-step" id="step1">
+                    <h5>Step 1: Personal Information</h5>
+                    <div class="mb-3">
+                        <label for="msName" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="msName" required>
+                        <div class="invalid-feedback">Name is required.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="msEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="msEmail" required>
+                        <div class="invalid-feedback">Valid email is required.</div>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="nextStep1">Next</button>
+                </div>
+
+                <!-- Step 2: Address -->
+                <div class="form-step d-none" id="step2">
+                    <h5>Step 2: Address</h5>
+                    <div class="mb-3">
+                        <label for="msStreet" class="form-label">Street Address</label>
+                        <input type="text" class="form-control" id="msStreet" required>
+                        <div class="invalid-feedback">Street is required.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="msCity" class="form-label">City</label>
+                        <input type="text" class="form-control" id="msCity" required>
+                        <div class="invalid-feedback">City is required.</div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="prevStep2">Previous</button>
+                    <button type="button" class="btn btn-primary" id="nextStep2">Next</button>
+                </div>
+
+                <!-- Step 3: Confirmation -->
+                <div class="form-step d-none" id="step3">
+                    <h5>Step 3: Confirmation</h5>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="msConfirm" required>
+                            <label class="form-check-label" for="msConfirm">All information is correct</label>
+                            <div class="invalid-feedback">You must confirm.</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="msTerms" required>
+                            <label class="form-check-label" for="msTerms">Accept terms</label>
+                            <div class="invalid-feedback">You must accept terms.</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="prevStep3">Previous</button>
+                    <button type="submit" class="btn btn-success">Submit</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 9: Validation Tooltips -->
+        <!-- Use tooltips instead of feedback divs for validation messages -->
+        <section class="demo-section" id="tooltip-validation">
+            <h2 class="h4 mb-3">9. Tooltip Validation</h2>
+            <p class="text-muted">Uses <code>.invalid-tooltip</code> and <code>.valid-tooltip</code> for tooltip-style feedback.</p>
+
+            <form novalidate id="tooltipForm">
+                <div class="row g-3">
+                    <div class="col-md-6 position-relative">
+                        <label for="ttName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="ttName" required>
+                        <!-- invalid-tooltip appears as a tooltip (requires position-relative on parent) -->
+                        <div class="invalid-tooltip">Please enter your name.</div>
+                    </div>
+                    <div class="col-md-6 position-relative">
+                        <label for="ttEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="ttEmail" required>
+                        <div class="invalid-tooltip">Please enter a valid email.</div>
+                    </div>
+                    <div class="col-md-4 position-relative">
+                        <label for="ttCity" class="form-label">City</label>
+                        <input type="text" class="form-control" id="ttCity" required>
+                        <div class="invalid-tooltip">City is required.</div>
+                    </div>
+                    <div class="col-md-4 position-relative">
+                        <label for="ttState" class="form-label">State</label>
+                        <select class="form-select" id="ttState" required>
+                            <option selected disabled value="">Choose...</option>
+                            <option>California</option>
+                        </select>
+                        <div class="invalid-tooltip">Please select a state.</div>
+                    </div>
+                    <div class="col-md-4 position-relative">
+                        <label for="ttZip" class="form-label">Zip</label>
+                        <input type="text" class="form-control" id="ttZip" pattern="[0-9]{5}" required>
+                        <div class="invalid-tooltip">5-digit zip required.</div>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-primary" type="submit">Submit</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- SECTION 10: Real-Time Validation -->
+        <!-- Validate fields as user types or on blur (focus lost) -->
+        <section class="demo-section" id="realtime-validation">
+            <h2 class="h4 mb-3">10. Real-Time Validation</h2>
+            <p class="text-muted">Validates on input and blur events for immediate feedback.</p>
+
+            <form id="realtimeForm">
+                <div class="mb-3">
+                    <label for="rtEmail" class="form-label">Email (validates on blur)</label>
+                    <input type="email" class="form-control" id="rtEmail">
+                    <div class="valid-feedback">Valid email!</div>
+                    <div class="invalid-feedback">Please enter a valid email.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="rtPassword" class="form-label">Password (validates on input)</label>
+                    <input type="password" class="form-control" id="rtPassword">
+                    <div class="invalid-feedback">Min 8 characters required.</div>
+                    <!-- Live character count -->
+                    <small class="text-muted"><span id="rtCharCount">0</span>/8 minimum characters</small>
+                </div>
+                <div class="mb-3">
+                    <label for="rtUsername" class="form-label">Username (debounced validation)</label>
+                    <input type="text" class="form-control" id="rtUsername">
+                    <div class="valid-feedback">Username available!</div>
+                    <div class="invalid-feedback">Username must be 3-16 characters.</div>
+                    <div class="spinner-border spinner-border-sm d-none" id="rtSpinner" role="status">
+                        <span class="visually-hidden">Checking...</span>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Validation JavaScript -->
+    <script>
+        // ============================================
+        // SECTION 2: Custom Validation (was-validated)
+        // ============================================
+        // Get the custom form element
+        const customForm = document.getElementById('customForm');
+        // Add submit event listener for validation
+        customForm.addEventListener('submit', function(event) {
+            // Check if form is valid using HTML5 constraint validation API
+            if (!customForm.checkValidity()) {
+                // Prevent form submission if invalid
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            // Add was-validated class to show validation feedback
+            // This class activates the :valid and :invalid CSS rules in Bootstrap
+            customForm.classList.add('was-validated');
+        }, false);
+
+        // ============================================
+        // SECTION 4: Pattern Form Validation
+        // ============================================
+        const patternForm = document.getElementById('patternForm');
+        patternForm.addEventListener('submit', function(event) {
+            if (!patternForm.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            patternForm.classList.add('was-validated');
+        });
+
+        // ============================================
+        // SECTION 5: Length Form Validation
+        // ============================================
+        const lengthForm = document.getElementById('lengthForm');
+        lengthForm.addEventListener('submit', function(event) {
+            if (!lengthForm.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            lengthForm.classList.add('was-validated');
+        });
+
+        // ============================================
+        // SECTION 6: JavaScript Custom Validation
+        // ============================================
+        const jsForm = document.getElementById('jsForm');
+        const jsEmail = document.getElementById('jsEmail');
+        const jsConfirmEmail = document.getElementById('jsConfirmEmail');
+        const jsPassword = document.getElementById('jsPassword');
+        const jsConfirmPass = document.getElementById('jsConfirmPass');
+        const jsAge = document.getElementById('jsAge');
+
+        // Email confirmation validation using setCustomValidity
+        // setCustomValidity('') clears the error, setCustomValidity('message') sets it
+        jsConfirmEmail.addEventListener('input', function() {
+            if (this.value !== jsEmail.value) {
+                // Set custom validation message (makes field invalid)
+                this.setCustomValidity('Emails do not match.');
+            } else {
+                // Clear custom validation (field becomes valid if other constraints pass)
+                this.setCustomValidity('');
+            }
+        });
+
+        // Password strength checker
+        jsPassword.addEventListener('input', function() {
+            const val = this.value;
+            let strength = 0;
+            // Check various password criteria
+            if (val.length >= 8) strength += 25;
+            if (/[a-z]/.test(val)) strength += 25;
+            if (/[A-Z]/.test(val)) strength += 25;
+            if (/[0-9]/.test(val)) strength += 25;
+
+            // Update progress bar width and color
+            const bar = document.getElementById('passwordStrength');
+            bar.style.width = strength + '%';
+            // Color changes based on strength level
+            bar.className = 'progress-bar ' + (
+                strength < 50 ? 'bg-danger' :
+                strength < 75 ? 'bg-warning' : 'bg-success'
+            );
+
+            // Update text description
+            const text = document.getElementById('strengthText');
+            text.textContent = strength < 50 ? 'Weak' : strength < 75 ? 'Medium' : 'Strong';
+        });
+
+        // Password confirmation validation
+        jsConfirmPass.addEventListener('input', function() {
+            if (this.value !== jsPassword.value) {
+                this.setCustomValidity('Passwords do not match.');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        // Age validation (must be 18+)
+        jsAge.addEventListener('input', function() {
+            if (parseInt(this.value) < 18) {
+                this.setCustomValidity('You must be at least 18 years old.');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        // Form submission handler
+        jsForm.addEventListener('submit', function(event) {
+            if (!jsForm.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            jsForm.classList.add('was-validated');
+        });
+
+        // ============================================
+        // SECTION 7: Server-Side Validation Simulation
+        // ============================================
+        const serverForm = document.getElementById('serverForm');
+        const sEmail = document.getElementById('sEmail');
+        const sUsername = document.getElementById('sUsername');
+
+        // Simulated "taken" values
+        const takenEmails = ['taken@example.com', 'admin@test.com'];
+        const takenUsernames = ['admin', 'root', 'user'];
+
+        // Debounce function limits how often a function can fire
+        // Prevents excessive API calls during rapid typing
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                // setTimeout delays execution until user stops typing
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // Async email validation (simulates server check)
+        const checkEmail = debounce(function() {
+            const spinner = document.getElementById('sEmailSpinner');
+            spinner.classList.remove('d-none');
+
+            // Simulate network delay with setTimeout
+            setTimeout(() => {
+                spinner.classList.add('d-none');
+                if (takenEmails.includes(sEmail.value.toLowerCase())) {
+                    sEmail.classList.add('is-invalid');
+                    sEmail.classList.remove('is-valid');
+                } else if (sEmail.value) {
+                    sEmail.classList.add('is-valid');
+                    sEmail.classList.remove('is-invalid');
+                }
+            }, 800);
+        }, 500);
+
+        // Async username validation
+        const checkUsername = debounce(function() {
+            const spinner = document.getElementById('sUsernameSpinner');
+            spinner.classList.remove('d-none');
+
+            setTimeout(() => {
+                spinner.classList.add('d-none');
+                if (takenUsernames.includes(sUsername.value.toLowerCase())) {
+                    sUsername.classList.add('is-invalid');
+                    sUsername.classList.remove('is-valid');
+                } else if (sUsername.value.length >= 3) {
+                    sUsername.classList.add('is-valid');
+                    sUsername.classList.remove('is-invalid');
+                }
+            }, 800);
+        }, 500);
+
+        sEmail.addEventListener('input', checkEmail);
+        sUsername.addEventListener('input', checkUsername);
+
+        serverForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            if (sEmail.classList.contains('is-valid') && sUsername.classList.contains('is-valid')) {
+                alert('Form submitted successfully!');
+            }
+        });
+
+        // ============================================
+        // SECTION 8: Multi-Step Form
+        // ============================================
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        // Validate fields in a specific step
+        function validateStep(stepNum) {
+            const step = document.getElementById('step' + stepNum);
+            // Get all inputs and selects in the current step
+            const inputs = step.querySelectorAll('input, select');
+            let valid = true;
+
+            inputs.forEach(function(input) {
+                // checkValidity() checks all HTML5 constraints
+                if (!input.checkValidity()) {
+                    valid = false;
+                    input.classList.add('is-invalid');
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+
+            return valid;
+        }
+
+        // Show a specific step and update progress bar
+        function showStep(stepNum) {
+            // Hide all steps
+            document.querySelectorAll('.form-step').forEach(function(step) {
+                step.classList.add('d-none');
+            });
+            // Show current step
+            document.getElementById('step' + stepNum).classList.remove('d-none');
+
+            // Update progress bar
+            const progress = document.getElementById('stepProgress');
+            const pct = (stepNum / totalSteps) * 100;
+            progress.style.width = pct + '%';
+            progress.textContent = 'Step ' + stepNum + ' of ' + totalSteps;
+        }
+
+        // Navigation button handlers
+        document.getElementById('nextStep1').addEventListener('click', function() {
+            if (validateStep(1)) {
+                currentStep = 2;
+                showStep(currentStep);
+            }
+        });
+
+        document.getElementById('nextStep2').addEventListener('click', function() {
+            if (validateStep(2)) {
+                currentStep = 3;
+                showStep(currentStep);
+            }
+        });
+
+        document.getElementById('prevStep2').addEventListener('click', function() {
+            currentStep = 1;
+            showStep(currentStep);
+        });
+
+        document.getElementById('prevStep3').addEventListener('click', function() {
+            currentStep = 2;
+            showStep(currentStep);
+        });
+
+        // Final submission handler
+        document.getElementById('multiStepForm').addEventListener('submit', function(event) {
+            if (!validateStep(3)) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                event.preventDefault();
+                alert('Multi-step form submitted successfully!');
+            }
+        });
+
+        // ============================================
+        // SECTION 9: Tooltip Form Validation
+        // ============================================
+        const tooltipForm = document.getElementById('tooltipForm');
+        tooltipForm.addEventListener('submit', function(event) {
+            if (!tooltipForm.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            tooltipForm.classList.add('was-validated');
+        });
+
+        // ============================================
+        // SECTION 10: Real-Time Validation
+        // ============================================
+        const rtEmail = document.getElementById('rtEmail');
+        const rtPassword = document.getElementById('rtPassword');
+        const rtUsername = document.getElementById('rtUsername');
+
+        // Validate email on blur (when user leaves the field)
+        rtEmail.addEventListener('blur', function() {
+            if (this.value && !this.checkValidity()) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else if (this.value) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        // Validate password on every keystroke
+        rtPassword.addEventListener('input', function() {
+            const count = document.getElementById('rtCharCount');
+            count.textContent = this.value.length;
+
+            if (this.value.length > 0 && this.value.length < 8) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else if (this.value.length >= 8) {
+                this.classList.add('is-valid');
+                this.classList.remove('is-invalid');
+            } else {
+                this.classList.remove('is-invalid', 'is-valid');
+            }
+        });
+
+        // Debounced username validation (waits 400ms after typing stops)
+        const validateUsername = debounce(function() {
+            const spinner = document.getElementById('rtSpinner');
+            spinner.classList.add('d-none');
+
+            if (rtUsername.value.length >= 3 && rtUsername.value.length <= 16) {
+                rtUsername.classList.add('is-valid');
+                rtUsername.classList.remove('is-invalid');
+            } else if (rtUsername.value.length > 0) {
+                rtUsername.classList.add('is-invalid');
+                rtUsername.classList.remove('is-valid');
+            }
+        }, 400);
+
+        rtUsername.addEventListener('input', function() {
+            const spinner = document.getElementById('rtSpinner');
+            spinner.classList.remove('d-none');
+            validateUsername();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<!--
+  ===========================================================================
+  FILE: 06_05_03_Real_Time_API_Integration.html
+  TOPIC: Real-Time API Integration with Bootstrap 5
+
+  DESCRIPTION:
+  This file demonstrates real-time API integration patterns using Bootstrap 5
+  components. Real-time APIs enable bidirectional or server-pushed communication
+  between client and server, allowing live data updates without manual refresh.
+
+  KEY CONCEPTS COVERED:
+  1. WebSocket connections — full-duplex, bidirectional communication
+  2. Server-Sent Events (SSE) — server-to-client one-way streaming
+  3. Polling mechanisms — periodic HTTP requests for data updates
+  4. Connection state management — tracking connection lifecycle
+  5. Reconnection logic — automatic retry with exponential backoff
+  6. Live data feed UI — real-time updating list groups and logs
+
+  REAL-TIME PROTOCOL COMPARISON:
+  ┌──────────────┬─────────────┬────────────┬──────────────┐
+  │ Feature      │ WebSocket   │ SSE        │ Polling      │
+  ├──────────────┼─────────────┼────────────┼──────────────┤
+  │ Direction    │ Bidirectional│ Unidirectional│ Request/Response │
+  │ Protocol     │ ws://       │ HTTP       │ HTTP         │
+  │ Persistent   │ Yes         │ Yes        │ No           │
+  │ Auto-reconnect│ Manual     │ Built-in   │ N/A          │
+  │ Binary data  │ Yes         │ No         │ Yes          │
+  │ Complexity   │ Medium      │ Low        │ Low          │
+  └──────────────┴─────────────┴────────────┴──────────────┘
+  ===========================================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!--
+    =========================================================================
+    META VIEWPORT
+    Ensures proper responsive rendering on mobile devices.
+    width=device-width  — sets viewport width to device screen width
+    initial-scale=1.0   — sets initial zoom level to 100%
+    =========================================================================
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real-Time API Integration — Bootstrap 5</title>
+
+  <!--
+    =========================================================================
+    BOOTSTRAP 5.3.3 CDN
+    CSS loaded in <head> to prevent unstyled content flash (FOUC)
+    =========================================================================
+  -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WR6W8hgAlIGF2lPBGrS◖7U밈P4Do giấ" crossorigin="anonymous" />
+
+  <style>
+    /* Custom styles for connection status indicators */
+    .status-dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* Animated pulse for connected state */
+    .status-dot.connected {
+      background-color: #198754;
+      animation: pulse-green 1.5s infinite;
+    }
+
+    .status-dot.disconnected {
+      background-color: #dc3545;
+    }
+
+    .status-dot.connecting {
+      background-color: #ffc107;
+      animation: pulse-yellow 0.8s infinite;
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.5); }
+      50% { box-shadow: 0 0 0 6px rgba(25, 135, 84, 0); }
+    }
+
+    @keyframes pulse-yellow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.5); }
+      50% { box-shadow: 0 0 0 6px rgba(255, 193, 7, 0); }
+    }
+
+    /* Scrollable log container */
+    .log-container {
+      max-height: 250px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border-radius: 0.375rem;
+      padding: 0.75rem;
+    }
+
+    .log-container .log-entry {
+      padding: 2px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .log-container .log-timestamp {
+      color: #569cd6;
+      margin-right: 8px;
+    }
+
+    .log-container .log-type {
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    .log-container .log-type.ws { color: #4ec9b0; }
+    .log-container .log-type.sse { color: #ce9178; }
+    .log-container .log-type.poll { color: #dcdcaa; }
+    .log-container .log-type.reconnect { color: #c586c0; }
+
+    /* Data feed item animation */
+    .feed-item {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Preformatted code blocks */
+    pre.code-block {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      padding: 1rem;
+      font-size: 0.85rem;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+
+  <!--
+    ===========================================================================
+    NAVIGATION BAR
+    Standard Bootstrap navbar providing page context and branding
+    ===========================================================================
+  -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <strong>Real-Time API Integration</strong>
+      </a>
+      <span class="navbar-text text-light">
+        Bootstrap 5 — WebSocket, SSE &amp; Polling
+      </span>
+    </div>
+  </nav>
+
+  <!--
+    ===========================================================================
+    MAIN CONTENT CONTAINER
+    ===========================================================================
+  -->
+  <div class="container my-5">
+
+    <!-- PAGE HEADER ======================================================= -->
+    <div class="row mb-4">
+      <div class="col">
+        <h1 class="display-5">Real-Time API Integration</h1>
+        <p class="lead text-muted">
+          Demonstrating WebSocket, Server-Sent Events, Polling, and reconnection
+          patterns with Bootstrap 5 UI components.
+        </p>
+        <hr />
+      </div>
+    </div>
+
+    <!--
+      =======================================================================
+      SECTION 1: CONNECTION STATUS DASHBOARD
+      Centralized badges showing the current state of all three connection
+      types. Bootstrap badges use contextual colors:
+        bg-success  → connected
+        bg-danger   → disconnected
+        bg-warning  → connecting
+        bg-secondary→ idle / unknown
+      =======================================================================
+    -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Connection Status Dashboard</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted mb-3">
+              Real-time applications must track connection state to provide
+              meaningful feedback. Badges update dynamically as connections
+              are established, lost, or reconnected.
+            </p>
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+              <!-- WebSocket Status Badge -->
+              <div>
+                <span class="badge bg-dark fs-6 d-flex align-items-center">
+                  <span class="status-dot" id="wsStatusDot"></span>
+                  WebSocket:
+                  <span id="wsStatusText" class="ms-1 badge bg-secondary">Idle</span>
+                </span>
+              </div>
+              <!-- SSE Status Badge -->
+              <div>
+                <span class="badge bg-dark fs-6 d-flex align-items-center">
+                  <span class="status-dot" id="sseStatusDot"></span>
+                  SSE:
+                  <span id="sseStatusText" class="ms-1 badge bg-secondary">Idle</span>
+                </span>
+              </div>
+              <!-- Polling Status Badge -->
+              <div>
+                <span class="badge bg-dark fs-6 d-flex align-items-center">
+                  <span class="status-dot" id="pollStatusDot"></span>
+                  Polling:
+                  <span id="pollStatusText" class="ms-1 badge bg-secondary">Idle</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      =======================================================================
+      SECTION 2: WEBSOCKET CONNECTION SIMULATION
+      WebSocket provides full-duplex communication over a single TCP
+      connection. The ws:// or wss:// protocol is used.
+
+      LIFECYCLE:
+        1. Client sends HTTP Upgrade request
+        2. Server responds with 101 Switching Protocols
+        3. Persistent connection is established
+        4. Both sides can send frames at any time
+        5. Either side can close with a close frame
+
+      SIMULATION NOTE:
+        Real WebSocket requires a server endpoint. This demo simulates the
+        connection lifecycle using setTimeout to mimic the handshake and
+        periodic data exchange, without needing an actual WebSocket server.
+      =======================================================================
+    -->
+    <div class="row mb-4">
+      <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">WebSocket Simulation</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted">
+              WebSocket creates a persistent, full-duplex channel. After an
+              initial HTTP handshake, data flows freely in both directions
+              with minimal overhead — ideal for chat apps, live feeds, and
+              collaborative editing.
+            </p>
+
+            <!-- Control Buttons -->
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-success btn-sm" id="btnWsConnect"
+                      onclick="wsConnect()">
+                Connect
+              </button>
+              <button class="btn btn-danger btn-sm" id="btnWsDisconnect"
+                      onclick="wsDisconnect()" disabled>
+                Disconnect
+              </button>
+              <button class="btn btn-outline-primary btn-sm" id="btnWsSend"
+                      onclick="wsSendMessage()" disabled>
+                Send Message
+              </button>
+            </div>
+
+            <!-- Connection Info -->
+            <div class="mb-2">
+              <small class="text-muted">
+                URL: <code>wss://echo.websocket.org</code> (simulated)
+              </small>
+            </div>
+
+            <!-- WebSocket Data Feed -->
+            <div class="border rounded p-2 bg-white" style="max-height: 200px; overflow-y: auto;">
+              <ul class="list-group list-group-flush" id="wsFeedList">
+                <li class="list-group-item text-muted text-center py-3">
+                  No messages yet. Click "Connect" to start.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--
+        =====================================================================
+        SECTION 3: SERVER-SENT EVENTS (SSE) CONCEPT
+        SSE uses a standard HTTP connection but keeps it open. The server
+        pushes text/event-stream data to the client unidirectionally.
+
+        EVENT STREAM FORMAT:
+          event: messageType\n
+          data: {"key": "value"}\n
+          id: 123\n
+          retry: 5000\n\n
+
+        ADVANTAGES OVER WEBSOCKET:
+          - Works over standard HTTP (firewall/proxy friendly)
+          - Built-in browser reconnection (retry field)
+          - Simpler API: just use EventSource constructor
+          - Automatic reconnection on connection drop
+
+        LIMITATIONS:
+          - One-way: server → client only
+          - Text data only (no binary)
+          - Limited to ~6 concurrent connections per browser
+        =====================================================================
+      -->
+      <div class="col-lg-6 mt-4 mt-lg-0">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">Server-Sent Events (SSE) Simulation</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted">
+              SSE maintains an open HTTP connection for server-to-client
+              streaming. The browser's <code>EventSource</code> API handles
+              parsing and automatic reconnection — no libraries needed.
+            </p>
+
+            <!-- Control Buttons -->
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-success btn-sm" id="btnSseConnect"
+                      onclick="sseConnect()">
+                Start Stream
+              </button>
+              <button class="btn btn-danger btn-sm" id="btnSseDisconnect"
+                      onclick="sseDisconnect()" disabled>
+                Stop Stream
+              </button>
+            </div>
+
+            <!-- SSE Connection Details -->
+            <div class="mb-2">
+              <small class="text-muted">
+                Endpoint: <code>/api/events</code> (simulated with setInterval)
+              </small>
+            </div>
+
+            <!-- SSE Data Feed -->
+            <div class="border rounded p-2 bg-white" style="max-height: 200px; overflow-y: auto;">
+              <ul class="list-group list-group-flush" id="sseFeedList">
+                <li class="list-group-item text-muted text-center py-3">
+                  No events yet. Click "Start Stream" to begin.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      =======================================================================
+      SECTION 4: REAL-TIME DATA FEED UI
+      A unified live data feed that merges data from all active connections.
+      Bootstrap list groups with badges show item count and types.
+
+      The feed demonstrates how a dashboard might aggregate multiple
+      real-time sources into a single scrollable view.
+      =======================================================================
+    -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Unified Real-Time Data Feed</h5>
+            <span class="badge bg-light text-dark" id="feedCount">0 items</span>
+          </div>
+          <div class="card-body">
+            <p class="text-muted">
+              In production, multiple real-time sources (WebSocket, SSE,
+              third-party streams) are often merged into a single feed.
+              Each item is tagged with its source for traceability.
+            </p>
+
+            <!-- Feed Controls -->
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-outline-primary btn-sm" onclick="addFeedItem('ws')">
+                + WebSocket Item
+              </button>
+              <button class="btn btn-outline-warning btn-sm" onclick="addFeedItem('sse')">
+                + SSE Item
+              </button>
+              <button class="btn btn-outline-success btn-sm" onclick="addFeedItem('poll')">
+                + Poll Item
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" onclick="clearFeed()">
+                Clear Feed
+              </button>
+            </div>
+
+            <!-- Live Feed List -->
+            <div class="list-group" id="liveFeedList" style="max-height: 300px; overflow-y: auto;">
+              <div class="list-group-item text-muted text-center py-4">
+                Feed is empty. Start a connection or add items manually.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      =======================================================================
+      SECTION 5: POLLING MECHANISM DEMO
+      Polling sends HTTP requests at regular intervals to check for updates.
+
+      TYPES:
+        - Simple Polling: fixed interval, always returns data
+        - Long Polling: server holds request open until new data available
+        - Adaptive Polling: adjusts interval based on activity
+
+      TRADEOFFS:
+        - Pro: works everywhere, simple implementation
+        - Con: higher latency, more bandwidth, server load
+        - Con: not truly "real-time" — updates delayed by poll interval
+      =======================================================================
+    -->
+    <div class="row mb-4">
+      <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Polling Mechanism</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted">
+              Polling sends periodic HTTP requests at a fixed interval.
+              Simple but effective for data that changes infrequently.
+              Choose an interval that balances freshness with server load.
+            </p>
+
+            <!-- Poll Interval Selector -->
+            <div class="mb-3">
+              <label for="pollInterval" class="form-label">Poll Interval (ms)</label>
+              <select class="form-select form-select-sm" id="pollInterval">
+                <option value="1000">1 second (fast)</option>
+                <option value="3000" selected>3 seconds (normal)</option>
+                <option value="5000">5 seconds (relaxed)</option>
+                <option value="10000">10 seconds (slow)</option>
+              </select>
+            </div>
+
+            <!-- Poll Controls -->
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-success btn-sm" id="btnPollStart"
+                      onclick="pollStart()">
+                Start Polling
+              </button>
+              <button class="btn btn-danger btn-sm" id="btnPollStop"
+                      onclick="pollStop()" disabled>
+                Stop Polling
+              </button>
+            </div>
+
+            <!-- Poll Stats -->
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="card bg-light">
+                  <div class="card-body text-center py-2">
+                    <small class="text-muted d-block">Requests Sent</small>
+                    <strong id="pollRequestCount">0</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="card bg-light">
+                  <div class="card-body text-center py-2">
+                    <small class="text-muted d-block">Last Poll</small>
+                    <strong id="pollLastTime">—</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--
+        =====================================================================
+        SECTION 6: RECONNECTION LOGIC DEMONSTRATION
+        When a real-time connection drops, applications must attempt to
+        reconnect gracefully. Common strategies:
+
+        1. Fixed interval: retry every N seconds
+        2. Linear backoff: increase delay by N seconds each attempt
+        3. Exponential backoff: double delay each attempt (2s, 4s, 8s, 16s...)
+        4. Jitter: add randomness to prevent thundering herd
+
+        BEST PRACTICES:
+        - Cap maximum retry delay (e.g., 30 seconds)
+        - Limit total retry attempts or total time
+        - Show user-facing status during reconnection
+        - Reset backoff on successful connection
+        =====================================================================
+      -->
+      <div class="col-lg-6 mt-4 mt-lg-0">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Reconnection Logic</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted">
+              Exponential backoff with jitter prevents server overload during
+              mass reconnection events. The delay doubles each attempt and
+              adds randomness to spread reconnect attempts.
+            </p>
+
+            <!-- Reconnection Controls -->
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-warning btn-sm" id="btnReconnectSim"
+                      onclick="simulateReconnection()">
+                Simulate Disconnect
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="resetReconnection()">
+                Reset
+              </button>
+            </div>
+
+            <!-- Reconnection Status -->
+            <div class="mb-3">
+              <div class="d-flex justify-content-between mb-1">
+                <small>Reconnection Status</small>
+                <small id="reconnectAttemptText">Attempt 0 / 5</small>
+              </div>
+              <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated"
+                     id="reconnectProgress" role="progressbar" style="width: 0%">
+                  Idle
+                </div>
+              </div>
+            </div>
+
+            <!-- Reconnection Details -->
+            <ul class="list-group list-group-flush" id="reconnectLog">
+              <li class="list-group-item text-muted text-center">
+                No reconnection events yet.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      =======================================================================
+      SECTION 7: LIVE UPDATE LOG WITH TIMESTAMPS
+      A developer console-style log showing all real-time events in
+      chronological order. Each entry is timestamped and color-coded
+      by source type (WebSocket, SSE, Polling, Reconnect).
+      =======================================================================
+    -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Live Update Log</h5>
+            <button class="btn btn-sm btn-outline-light" onclick="clearLog()">Clear Log</button>
+          </div>
+          <div class="card-body p-2">
+            <div class="log-container" id="logContainer">
+              <div class="log-entry">
+                <span class="log-timestamp">[--:--:--]</span>
+                <span class="log-type" style="color: #888;">SYS</span>
+                Log initialized. Waiting for real-time events...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      =======================================================================
+      SECTION 8: CODE REFERENCE
+      Shows the JavaScript API patterns for each real-time technique.
+      =======================================================================
+    -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Code Reference — Real-Time API Patterns</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- WebSocket Code -->
+              <div class="col-lg-4 mb-3">
+                <h6 class="text-primary">WebSocket</h6>
+                <pre class="code-block"><code>// Establish connection
+const ws = new WebSocket('wss://example.com/ws');
+
+ws.onopen = () => {
+  console.log('Connected');
+  ws.send('Hello Server');
+};
+
+ws.onmessage = (event) => {
+  console.log('Received:', event.data);
+};
+
+ws.onclose = () => {
+  console.log('Disconnected');
+};
+
+ws.onerror = (err) => {
+  console.error('Error:', err);
+};</code></pre>
+              </div>
+
+              <!-- SSE Code -->
+              <div class="col-lg-4 mb-3">
+                <h6 class="text-warning">Server-Sent Events</h6>
+                <pre class="code-block"><code>// Open event stream
+const source = new EventSource('/api/events');
+
+source.addEventListener('message', (e) => {
+  console.log('Data:', e.data);
+});
+
+source.addEventListener('stock', (e) => {
+  const data = JSON.parse(e.data);
+  console.log('Stock:', data);
+});
+
+// Built-in reconnection
+source.onerror = () => {
+  // Browser auto-reconnects
+  console.log('Reconnecting...');
+};</code></pre>
+              </div>
+
+              <!-- Polling Code -->
+              <div class="col-lg-4 mb-3">
+                <h6 class="text-success">Polling</h6>
+                <pre class="code-block"><code>// Simple polling
+let pollTimer = null;
+
+function startPolling(interval) {
+  pollTimer = setInterval(async () => {
+    try {
+      const res = await fetch('/api/data');
+      const data = await res.json();
+      handleUpdate(data);
+    } catch (err) {
+      console.error('Poll failed:', err);
+    }
+  }, interval);
+}
+
+function stopPolling() {
+  clearInterval(pollTimer);
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      =======================================================================
+      SECTION 9: CONNECTION STRATEGY COMPARISON TABLE
+      Bootstrap table comparing when to use each real-time approach.
+      =======================================================================
+    -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">When to Use Each Approach</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Use Case</th>
+                    <th>Recommended</th>
+                    <th>Why</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Chat / messaging</td>
+                    <td><span class="badge bg-primary">WebSocket</span></td>
+                    <td>Bidirectional, low latency, persistent connection</td>
+                  </tr>
+                  <tr>
+                    <td>Live stock prices</td>
+                    <td><span class="badge bg-warning text-dark">SSE</span></td>
+                    <td>One-way stream, auto-reconnect, HTTP-friendly</td>
+                  </tr>
+                  <tr>
+                    <td>Notifications</td>
+                    <td><span class="badge bg-warning text-dark">SSE</span></td>
+                    <td>Simple, works through proxies, built-in retry</td>
+                  </tr>
+                  <tr>
+                    <td>Status dashboards</td>
+                    <td><span class="badge bg-success">Polling</span></td>
+                    <td>Data doesn't change fast, simple to implement</td>
+                  </tr>
+                  <tr>
+                    <td>Collaborative editing</td>
+                    <td><span class="badge bg-primary">WebSocket</span></td>
+                    <td>Requires real-time bidirectional sync</td>
+                  </tr>
+                  <tr>
+                    <td>Progress updates</td>
+                    <td><span class="badge bg-warning text-dark">SSE</span> / <span class="badge bg-success">Polling</span></td>
+                    <td>Server pushes updates; polling works too if infrequent</td>
+                  </tr>
+                  <tr>
+                    <td>Game / real-time multiplayer</td>
+                    <td><span class="badge bg-primary">WebSocket</span></td>
+                    <td>Lowest latency, binary data support</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.container -->
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-3">
+    <div class="container">
+      <small>Real-Time API Integration Demo &mdash; Bootstrap 5.3.3</small>
+    </div>
+  </footer>
+
+  <!--
+    ===========================================================================
+    BOOTSTRAP 5.3.3 JS BUNDLE
+    Includes Popper.js for tooltips, dropdowns, etc.
+    Loaded at end of <body> for faster page rendering.
+    ===========================================================================
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+          crossorigin="anonymous"></script>
+
+  <!--
+    ===========================================================================
+    APPLICATION JAVASCRIPT
+    All real-time simulation logic below.
+
+    ARCHITECTURE:
+    - Each connection type (WS, SSE, Poll) has its own state object
+    - A shared log function writes to the unified log console
+    - Status indicators update via DOM manipulation
+    - Simulated data uses random values to mimic real API responses
+    ===========================================================================
+  -->
+  <script>
+    /*
+     =====================================================================
+     GLOBAL STATE
+     Tracks connection states, timers, and counters across all three
+     real-time mechanisms. Centralized state makes it easy to coordinate
+     UI updates and prevent conflicting operations.
+     =====================================================================
+    */
+    const state = {
+      websocket: {
+        connected: false,
+        messageCount: 0,
+        /* In a real app, this would hold the WebSocket instance:
+           this.socket = new WebSocket(url); */
+        simulateInterval: null
+      },
+      sse: {
+        connected: false,
+        eventCount: 0,
+        /* In a real app, this would hold the EventSource instance:
+           this.source = new EventSource(url); */
+        simulateInterval: null
+      },
+      polling: {
+        active: false,
+        requestCount: 0,
+        timer: null
+      },
+      reconnect: {
+        attempt: 0,
+        maxAttempts: 5,
+        baseDelay: 1000,       /* Base delay: 1 second */
+        maxDelay: 16000,       /* Max delay cap: 16 seconds */
+        timer: null,
+        status: 'idle'         /* idle | reconnecting | connected | failed */
+      },
+      feed: {
+        items: [],
+        maxItems: 50           /* Keep last 50 items in feed */
+      }
+    };
+
+    /*
+     =====================================================================
+     UTILITY: getTimestamp()
+     Returns a formatted HH:MM:SS timestamp for log entries and feed items.
+     =====================================================================
+    */
+    function getTimestamp() {
+      const now = new Date();
+      return now.toLocaleTimeString('en-US', { hour12: false });
+    }
+
+    /*
+     =====================================================================
+     UTILITY: updateConnectionStatus()
+     Updates the status badge and dot indicator for a given connection type.
+
+     @param {string} type    - 'ws', 'sse', or 'poll'
+     @param {string} status  - 'connected', 'disconnected', 'connecting'
+     =====================================================================
+    */
+    function updateConnectionStatus(type, status) {
+      /* Map short type names to their DOM element IDs */
+      const dotId = `${type}StatusDot`;
+      const textId = `${type}StatusText`;
+
+      const dot = document.getElementById(dotId);
+      const text = document.getElementById(textId);
+
+      /* Remove all status classes, then add the correct one */
+      dot.className = 'status-dot';
+
+      switch (status) {
+        case 'connected':
+          dot.classList.add('connected');
+          text.className = 'ms-1 badge bg-success';
+          text.textContent = 'Connected';
+          break;
+        case 'disconnected':
+          dot.classList.add('disconnected');
+          text.className = 'ms-1 badge bg-danger';
+          text.textContent = 'Disconnected';
+          break;
+        case 'connecting':
+          dot.classList.add('connecting');
+          text.className = 'ms-1 badge bg-warning text-dark';
+          text.textContent = 'Connecting...';
+          break;
+        default:
+          text.className = 'ms-1 badge bg-secondary';
+          text.textContent = 'Idle';
+      }
+    }
+
+    /*
+     =====================================================================
+     LOGGING: addLogEntry()
+     Appends a timestamped entry to the live update log. Color-coded
+     by source type for easy visual scanning.
+
+     @param {string} type  - 'ws', 'sse', 'poll', 'reconnect', 'sys'
+     @param {string} message - the log message
+     =====================================================================
+    */
+    function addLogEntry(type, message) {
+      const container = document.getElementById('logContainer');
+
+      /* Create the log entry element */
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+
+      /* Format: [timestamp] TYPE message */
+      entry.innerHTML = `
+        <span class="log-timestamp">[${getTimestamp()}]</span>
+        <span class="log-type ${type}">${type.toUpperCase()}</span>
+        ${message}
+      `;
+
+      container.appendChild(entry);
+
+      /* Auto-scroll to the newest entry */
+      container.scrollTop = container.scrollHeight;
+    }
+
+    /*
+     =====================================================================
+     LOGGING: clearLog()
+     Clears all entries from the live update log and resets the placeholder.
+     =====================================================================
+    */
+    function clearLog() {
+      const container = document.getElementById('logContainer');
+      container.innerHTML = `
+        <div class="log-entry">
+          <span class="log-timestamp">[${getTimestamp()}]</span>
+          <span class="log-type" style="color: #888;">SYS</span>
+          Log cleared. Waiting for real-time events...
+        </div>
+      `;
+    }
+
+    /*
+     =====================================================================
+     DATA FEED: addFeedItem()
+     Adds a new item to the unified real-time data feed. Each item is
+     tagged with its source type and timestamped.
+
+     @param {string} source - 'ws', 'sse', or 'poll'
+     =====================================================================
+    */
+    function addFeedItem(source) {
+      const list = document.getElementById('liveFeedList');
+
+      /* Remove the empty-state placeholder if present */
+      const placeholder = list.querySelector('.text-muted.text-center');
+      if (placeholder) placeholder.remove();
+
+      /* Generate simulated data based on source type */
+      const sourceLabels = {
+        ws: { label: 'WebSocket', color: 'bg-primary', icon: '⚡' },
+        sse: { label: 'SSE', color: 'bg-warning text-dark', icon: '📡' },
+        poll: { label: 'Poll', color: 'bg-success', icon: '🔄' }
+      };
+
+      const src = sourceLabels[source] || sourceLabels.ws;
+      const value = (Math.random() * 100).toFixed(2);
+      const itemId = Date.now();
+
+      /* Create the list item with Bootstrap classes */
+      const item = document.createElement('div');
+      item.className = 'list-group-item feed-item d-flex justify-content-between align-items-center';
+      item.innerHTML = `
+        <div>
+          <span class="badge ${src.color} me-2">${src.icon} ${src.label}</span>
+          <span>Value: <strong>${value}</strong></span>
+          <small class="text-muted ms-2">#${itemId}</small>
+        </div>
+        <small class="text-muted">${getTimestamp()}</small>
+      `;
+
+      /* Insert at the top (newest first) */
+      list.prepend(item);
+
+      /* Trim feed to max items to prevent memory growth */
+      state.feed.items.push({ source, value, timestamp: itemId });
+      while (state.feed.items.length > state.feed.maxItems) {
+        state.feed.items.shift();
+        if (list.lastElementChild) list.removeChild(list.lastElementChild);
+      }
+
+      /* Update the item count badge */
+      document.getElementById('feedCount').textContent = `${state.feed.items.length} items`;
+
+      /* Also log the event */
+      addLogEntry(source, `Feed item added — value: ${value}`);
+    }
+
+    /*
+     =====================================================================
+     DATA FEED: clearFeed()
+     Removes all items from the unified feed and resets the counter.
+     =====================================================================
+    */
+    function clearFeed() {
+      const list = document.getElementById('liveFeedList');
+      list.innerHTML = `
+        <div class="list-group-item text-muted text-center py-4">
+          Feed is empty. Start a connection or add items manually.
+        </div>
+      `;
+      state.feed.items = [];
+      document.getElementById('feedCount').textContent = '0 items';
+      addLogEntry('sys', 'Data feed cleared');
+    }
+
+    /*
+     =====================================================================
+     WEBSOCKET: wsConnect()
+     Simulates the WebSocket connection lifecycle:
+       1. Set status to "Connecting" (simulates HTTP Upgrade handshake)
+       2. After a short delay, transition to "Connected"
+       3. Start generating simulated incoming messages
+
+     In a real application, this would be:
+       const ws = new WebSocket('wss://server.com/ws');
+       ws.onopen = () => { ... };
+       ws.onmessage = (e) => { ... };
+     =====================================================================
+    */
+    function wsConnect() {
+      if (state.websocket.connected) return;
+
+      /* Phase 1: Connecting (handshake in progress) */
+      updateConnectionStatus('ws', 'connecting');
+      addLogEntry('ws', 'Initiating WebSocket handshake...');
+      document.getElementById('btnWsConnect').disabled = true;
+
+      /* Phase 2: Simulate handshake delay (500-1500ms) */
+      const handshakeDelay = 500 + Math.random() * 1000;
+
+      setTimeout(() => {
+        /* Phase 3: Connection established */
+        state.websocket.connected = true;
+        updateConnectionStatus('ws', 'connected');
+        addLogEntry('ws', 'Connection established (101 Switching Protocols)');
+
+        /* Update button states */
+        document.getElementById('btnWsConnect').disabled = true;
+        document.getElementById('btnWsDisconnect').disabled = false;
+        document.getElementById('btnWsSend').disabled = false;
+
+        /* Clear the feed placeholder */
+        const feedList = document.getElementById('wsFeedList');
+        feedList.innerHTML = '';
+
+        /* Start simulating incoming messages every 2-5 seconds */
+        wsStartSimulation();
+      }, handshakeDelay);
+    }
+
+    /*
+     =====================================================================
+     WEBSOCKET: wsStartSimulation()
+     Periodically generates simulated incoming WebSocket messages.
+     In production, messages arrive asynchronously from the server.
+     =====================================================================
+    */
+    function wsStartSimulation() {
+      state.websocket.simulateInterval = setInterval(() => {
+        if (!state.websocket.connected) return;
+
+        /* Generate a simulated data payload */
+        state.websocket.messageCount++;
+        const payload = {
+          id: state.websocket.messageCount,
+          type: 'data',
+          value: (Math.random() * 100).toFixed(2),
+          timestamp: getTimestamp()
+        };
+
+        /* Add to WebSocket-specific feed */
+        const feedList = document.getElementById('wsFeedList');
+        const item = document.createElement('li');
+        item.className = 'list-group-item feed-item d-flex justify-content-between';
+        item.innerHTML = `
+          <span><span class="badge bg-primary me-1">#${payload.id}</span> Value: ${payload.value}</span>
+          <small class="text-muted">${payload.timestamp}</small>
+        `;
+        feedList.prepend(item);
+
+        /* Keep only last 20 messages */
+        while (feedList.children.length > 20) {
+          feedList.removeChild(feedList.lastChild);
+        }
+
+        /* Log and add to unified feed */
+        addLogEntry('ws', `Message #${payload.id} received — value: ${payload.value}`);
+        addFeedItem('ws');
+      }, 2000 + Math.random() * 3000);
+    }
+
+    /*
+     =====================================================================
+     WEBSOCKET: wsDisconnect()
+     Gracefully closes the WebSocket connection.
+     In production: ws.close(1000, 'Normal closure');
+     =====================================================================
+    */
+    function wsDisconnect() {
+      if (!state.websocket.connected) return;
+
+      /* Stop the message simulation */
+      clearInterval(state.websocket.simulateInterval);
+      state.websocket.simulateInterval = null;
+
+      /* Update state and UI */
+      state.websocket.connected = false;
+      updateConnectionStatus('ws', 'disconnected');
+      addLogEntry('ws', 'Connection closed (1000 Normal Closure)');
+
+      document.getElementById('btnWsConnect').disabled = false;
+      document.getElementById('btnWsDisconnect').disabled = true;
+      document.getElementById('btnWsSend').disabled = true;
+    }
+
+    /*
+     =====================================================================
+     WEBSOCKET: wsSendMessage()
+     Simulates sending a message through the WebSocket.
+     In production: ws.send(JSON.stringify({ type: 'chat', text: 'hello' }));
+     =====================================================================
+    */
+    function wsSendMessage() {
+      if (!state.websocket.connected) return;
+
+      const msg = `Client message at ${getTimestamp()}`;
+      addLogEntry('ws', `Sent: "${msg}"`);
+
+      /* Simulate server echo response after a short delay */
+      setTimeout(() => {
+        addLogEntry('ws', `Echo: "${msg}"`);
+      }, 300 + Math.random() * 500);
+    }
+
+    /*
+     =====================================================================
+     SSE: sseConnect()
+     Simulates Server-Sent Events connection.
+     In production:
+       const source = new EventSource('/api/events');
+       source.onmessage = (e) => { ... };
+       source.addEventListener('stock', (e) => { ... });
+     =====================================================================
+    */
+    function sseConnect() {
+      if (state.sse.connected) return;
+
+      updateConnectionStatus('sse', 'connecting');
+      addLogEntry('sse', 'Opening EventSource connection...');
+
+      /* SSE handshake is faster than WebSocket (just HTTP) */
+      setTimeout(() => {
+        state.sse.connected = true;
+        updateConnectionStatus('sse', 'connected');
+        addLogEntry('sse', 'Connection established (200 text/event-stream)');
+
+        document.getElementById('btnSseConnect').disabled = true;
+        document.getElementById('btnSseDisconnect').disabled = false;
+
+        /* Clear the feed placeholder */
+        document.getElementById('sseFeedList').innerHTML = '';
+
+        /* Start simulating incoming events */
+        sseStartSimulation();
+      }, 300);
+    }
+
+    /*
+     =====================================================================
+     SSE: sseStartSimulation()
+     Generates simulated SSE events at random intervals.
+     Real SSE events follow the format:
+       event: eventType\n
+       data: {"json": "payload"}\n
+       id: 42\n\n
+     =====================================================================
+    */
+    function sseStartSimulation() {
+      state.sse.simulateInterval = setInterval(() => {
+        if (!state.sse.connected) return;
+
+        state.sse.eventCount++;
+
+        /* Simulate different SSE event types */
+        const eventTypes = ['message', 'update', 'alert', 'notification'];
+        const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+        const value = (Math.random() * 500).toFixed(2);
+
+        const payload = {
+          id: state.sse.eventCount,
+          event: eventType,
+          value: value,
+          timestamp: getTimestamp()
+        };
+
+        /* Add to SSE-specific feed */
+        const feedList = document.getElementById('sseFeedList');
+        const item = document.createElement('li');
+        item.className = 'list-group-item feed-item d-flex justify-content-between';
+        item.innerHTML = `
+          <span>
+            <span class="badge bg-warning text-dark me-1">${eventType}</span>
+            Value: ${value}
+          </span>
+          <small class="text-muted">${payload.timestamp}</small>
+        `;
+        feedList.prepend(item);
+
+        while (feedList.children.length > 20) {
+          feedList.removeChild(feedList.lastChild);
+        }
+
+        addLogEntry('sse', `Event #${payload.id} [${eventType}] — value: ${value}`);
+        addFeedItem('sse');
+      }, 1500 + Math.random() * 2500);
+    }
+
+    /*
+     =====================================================================
+     SSE: sseDisconnect()
+     Closes the SSE connection.
+     In production: source.close();
+     Note: Browser's EventSource handles reconnection automatically
+     on connection loss, but explicit close stops all reconnection.
+     =====================================================================
+    */
+    function sseDisconnect() {
+      if (!state.sse.connected) return;
+
+      clearInterval(state.sse.simulateInterval);
+      state.sse.simulateInterval = null;
+
+      state.sse.connected = false;
+      updateConnectionStatus('sse', 'disconnected');
+      addLogEntry('sse', 'EventSource connection closed');
+
+      document.getElementById('btnSseConnect').disabled = false;
+      document.getElementById('btnSseDisconnect').disabled = true;
+    }
+
+    /*
+     =====================================================================
+     POLLING: pollStart()
+     Starts the polling mechanism using setInterval.
+     Each poll simulates an HTTP GET request to fetch updated data.
+
+     In production:
+       setInterval(async () => {
+         const res = await fetch('/api/data');
+         const data = await res.json();
+         processUpdate(data);
+       }, interval);
+     =====================================================================
+    */
+    function pollStart() {
+      if (state.polling.active) return;
+
+      const interval = parseInt(document.getElementById('pollInterval').value, 10);
+
+      state.polling.active = true;
+      state.polling.requestCount = 0;
+      updateConnectionStatus('poll', 'connected');
+      addLogEntry('poll', `Polling started — interval: ${interval}ms`);
+
+      document.getElementById('btnPollStart').disabled = true;
+      document.getElementById('btnPollStop').disabled = false;
+
+      /* Execute the first poll immediately, then schedule */
+      pollExecute();
+
+      state.polling.timer = setInterval(pollExecute, interval);
+    }
+
+    /*
+     =====================================================================
+     POLLING: pollExecute()
+     Simulates a single poll request-response cycle.
+     =====================================================================
+    */
+    function pollExecute() {
+      state.polling.requestCount++;
+      document.getElementById('pollRequestCount').textContent = state.polling.requestCount;
+      document.getElementById('pollLastTime').textContent = getTimestamp();
+
+      /* Simulate network latency (50-300ms) */
+      const latency = Math.floor(50 + Math.random() * 250);
+      const hasData = Math.random() > 0.3; /* 70% chance of new data */
+
+      if (hasData) {
+        const value = (Math.random() * 200).toFixed(2);
+        addLogEntry('poll', `Poll #${state.polling.requestCount} — data received (${latency}ms) — value: ${value}`);
+        addFeedItem('poll');
+      } else {
+        addLogEntry('poll', `Poll #${state.polling.requestCount} — no new data (${latency}ms)`);
+      }
+    }
+
+    /*
+     =====================================================================
+     POLLING: pollStop()
+     Stops the polling interval and resets the connection status.
+     =====================================================================
+    */
+    function pollStop() {
+      if (!state.polling.active) return;
+
+      clearInterval(state.polling.timer);
+      state.polling.timer = null;
+      state.polling.active = false;
+
+      updateConnectionStatus('poll', 'disconnected');
+      addLogEntry('poll', `Polling stopped after ${state.polling.requestCount} requests`);
+
+      document.getElementById('btnPollStart').disabled = false;
+      document.getElementById('btnPollStop').disabled = true;
+    }
+
+    /*
+     =====================================================================
+     RECONNECTION: simulateReconnection()
+     Demonstrates exponential backoff reconnection logic.
+
+     ALGORITHM:
+       1. Connection drops → wait baseDelay * 2^attempt + random jitter
+       2. If attempt fails → increment attempt, double the delay
+       3. Cap delay at maxDelay to prevent excessive waits
+       4. After maxAttempts → mark as failed, notify user
+
+     DELAY PROGRESSION (with base=1000ms):
+       Attempt 0: ~1000ms
+       Attempt 1: ~2000ms
+       Attempt 2: ~4000ms
+       Attempt 3: ~8000ms
+       Attempt 4: ~16000ms (capped)
+     =====================================================================
+    */
+    function simulateReconnection() {
+      /* Stop any existing reconnection in progress */
+      if (state.reconnect.timer) {
+        clearTimeout(state.reconnect.timer);
+      }
+
+      /* Reset state for fresh reconnection attempt */
+      state.reconnect.attempt = 0;
+      state.reconnect.status = 'reconnecting';
+
+      /* Clear the reconnect log */
+      document.getElementById('reconnectLog').innerHTML = '';
+
+      addLogEntry('reconnect', 'Connection lost! Starting reconnection sequence...');
+      attemptReconnect();
+    }
+
+    /*
+     =====================================================================
+     RECONNECTION: attemptReconnect()
+     Performs a single reconnection attempt with exponential backoff.
+     =====================================================================
+    */
+    function attemptReconnect() {
+      if (state.reconnect.attempt >= state.reconnect.maxAttempts) {
+        /* All attempts exhausted */
+        state.reconnect.status = 'failed';
+        updateReconnectProgress('failed');
+        addLogEntry('reconnect', `All ${state.reconnect.maxAttempts} reconnection attempts failed.`);
+        addReconnectLogItem('danger', 'Reconnection failed — max attempts reached');
+        return;
+      }
+
+      const attempt = state.reconnect.attempt;
+
+      /*
+       Calculate delay using exponential backoff:
+       delay = min(baseDelay * 2^attempt, maxDelay) + jitter
+
+       The jitter (0-500ms random) prevents the "thundering herd" problem
+       where many clients reconnect simultaneously after a server restart.
+      */
+      const exponentialDelay = Math.min(
+        state.reconnect.baseDelay * Math.pow(2, attempt),
+        state.reconnect.maxDelay
+      );
+      const jitter = Math.floor(Math.random() * 500);
+      const totalDelay = exponentialDelay + jitter;
+
+      /* Update progress bar */
+      const progressPercent = ((attempt + 1) / state.reconnect.maxAttempts) * 100;
+      const progressBar = document.getElementById('reconnectProgress');
+      progressBar.style.width = progressPercent + '%';
+      progressBar.textContent = `Attempt ${attempt + 1} in ${(totalDelay / 1000).toFixed(1)}s`;
+
+      document.getElementById('reconnectAttemptText').textContent =
+        `Attempt ${attempt + 1} / ${state.reconnect.maxAttempts}`;
+
+      addLogEntry('reconnect',
+        `Attempt ${attempt + 1}/${state.reconnect.maxAttempts} — waiting ${totalDelay}ms ` +
+        `(base: ${exponentialDelay}ms + jitter: ${jitter}ms)`
+      );
+
+      addReconnectLogItem('warning',
+        `Attempt ${attempt + 1}: waiting ${(totalDelay / 1000).toFixed(1)}s ` +
+        `(exponential: ${exponentialDelay}ms + jitter: ${jitter}ms)`
+      );
+
+      /* Schedule the next attempt */
+      state.reconnect.timer = setTimeout(() => {
+        state.reconnect.attempt++;
+
+        /* Simulate a 40% success rate per attempt */
+        const success = Math.random() < 0.4;
+
+        if (success) {
+          state.reconnect.status = 'connected';
+          updateReconnectProgress('connected');
+          addLogEntry('reconnect', `Reconnection successful on attempt ${attempt + 1}!`);
+          addReconnectLogItem('success', `Connected on attempt ${attempt + 1}`);
+          state.reconnect.attempt = 0; /* Reset for future use */
+        } else {
+          addLogEntry('reconnect', `Attempt ${attempt + 1} failed — server unavailable`);
+          addReconnectLogItem('danger', `Attempt ${attempt + 1} failed`);
+          attemptReconnect(); /* Recurse for next attempt */
+        }
+      }, totalDelay);
+    }
+
+    /*
+     =====================================================================
+     RECONNECTION: updateReconnectProgress()
+     Updates the reconnection progress bar appearance based on status.
+     =====================================================================
+    */
+    function updateReconnectProgress(status) {
+      const bar = document.getElementById('reconnectProgress');
+      bar.className = 'progress-bar progress-bar-striped';
+
+      switch (status) {
+        case 'connected':
+          bar.classList.add('bg-success');
+          bar.style.width = '100%';
+          bar.textContent = 'Connected!';
+          break;
+        case 'failed':
+          bar.classList.add('bg-danger');
+          bar.style.width = '100%';
+          bar.textContent = 'Failed';
+          break;
+        case 'reconnecting':
+          bar.classList.add('bg-warning', 'progress-bar-animated');
+          break;
+        default:
+          bar.classList.add('bg-secondary');
+          bar.style.width = '0%';
+          bar.textContent = 'Idle';
+      }
+    }
+
+    /*
+     =====================================================================
+     RECONNECTION: addReconnectLogItem()
+     Adds a colored entry to the reconnection event list.
+     =====================================================================
+    */
+    function addReconnectLogItem(type, message) {
+      const log = document.getElementById('reconnectLog');
+
+      /* Remove placeholder if present */
+      const placeholder = log.querySelector('.text-muted.text-center');
+      if (placeholder) placeholder.remove();
+
+      const item = document.createElement('li');
+      item.className = `list-group-item list-group-item-${type} feed-item d-flex justify-content-between`;
+      item.innerHTML = `
+        <span>${message}</span>
+        <small>${getTimestamp()}</small>
+      `;
+      log.prepend(item);
+
+      /* Keep only last 10 entries */
+      while (log.children.length > 10) {
+        log.removeChild(log.lastChild);
+      }
+    }
+
+    /*
+     =====================================================================
+     RECONNECTION: resetReconnection()
+     Cancels any pending reconnection and resets the UI to initial state.
+     =====================================================================
+    */
+    function resetReconnection() {
+      if (state.reconnect.timer) {
+        clearTimeout(state.reconnect.timer);
+        state.reconnect.timer = null;
+      }
+
+      state.reconnect.attempt = 0;
+      state.reconnect.status = 'idle';
+
+      updateReconnectProgress('idle');
+
+      document.getElementById('reconnectAttemptText').textContent = 'Attempt 0 / 5';
+      document.getElementById('reconnectLog').innerHTML = `
+        <li class="list-group-item text-muted text-center">
+          No reconnection events yet.
+        </li>
+      `;
+
+      addLogEntry('sys', 'Reconnection state reset');
+    }
+
+    /*
+     =====================================================================
+     INITIALIZATION
+     Runs when the page loads. Sets all connection indicators to their
+     initial "idle" state.
+     =====================================================================
+    */
+    document.addEventListener('DOMContentLoaded', () => {
+      updateConnectionStatus('ws', 'idle');
+      updateConnectionStatus('sse', 'idle');
+      updateConnectionStatus('poll', 'idle');
+      addLogEntry('sys', 'Page loaded — all connections idle. Use controls to connect.');
+    });
+  </script>
+
+</body>
+</html>

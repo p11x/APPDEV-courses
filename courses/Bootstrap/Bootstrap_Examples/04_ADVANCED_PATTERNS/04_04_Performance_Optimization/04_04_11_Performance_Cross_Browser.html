@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_11_Performance_Cross_Browser.html
+     Topic: Cross-Browser Performance Optimization
+     
+     Covers browser-specific optimizations, feature detection,
+     progressive enhancement, and polyfill strategies for Bootstrap.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Cross-Browser Performance - Bootstrap 5</title>
+
+    <style>
+        .hero-cross { background: linear-gradient(135deg, #fd7e14 0%, #dc3545 100%); color: white; padding: 4rem 0; }
+        .code-dark { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.82rem; overflow-x: auto; }
+        .browser-icon { font-size: 2rem; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Cross-Browser</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#support">Support</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#detection">Detection</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#polyfills">Polyfills</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#testing">Testing</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-cross text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Cross-Browser Performance</h1>
+            <p class="lead mt-2">Optimize for Chrome, Firefox, Safari, and Edge with progressive enhancement.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: BROWSER SUPPORT MATRIX
+         ============================================================ -->
+    <section id="support" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Bootstrap 5.3 Browser Support</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover text-center align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Feature</th>
+                            <th>Chrome</th>
+                            <th>Firefox</th>
+                            <th>Safari</th>
+                            <th>Edge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-start">CSS Grid</td>
+                            <td class="text-success">&#10003; 57+</td>
+                            <td class="text-success">&#10003; 52+</td>
+                            <td class="text-success">&#10003; 10.1+</td>
+                            <td class="text-success">&#10003; 16+</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">CSS Custom Properties</td>
+                            <td class="text-success">&#10003; 49+</td>
+                            <td class="text-success">&#10003; 31+</td>
+                            <td class="text-success">&#10003; 9.1+</td>
+                            <td class="text-success">&#10003; 15+</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">IntersectionObserver</td>
+                            <td class="text-success">&#10003; 51+</td>
+                            <td class="text-success">&#10003; 55+</td>
+                            <td class="text-success">&#10003; 12.1+</td>
+                            <td class="text-success">&#10003; 15+</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">loading="lazy"</td>
+                            <td class="text-success">&#10003; 76+</td>
+                            <td class="text-success">&#10003; 75+</td>
+                            <td class="text-success">&#10003; 15.4+</td>
+                            <td class="text-success">&#10003; 79+</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">Container Queries</td>
+                            <td class="text-success">&#10003; 105+</td>
+                            <td class="text-success">&#10003; 110+</td>
+                            <td class="text-success">&#10003; 16+</td>
+                            <td class="text-success">&#10003; 105+</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">View Transitions</td>
+                            <td class="text-success">&#10003; 111+</td>
+                            <td class="text-warning">&#9888; Behind flag</td>
+                            <td class="text-warning">&#9888; TP only</td>
+                            <td class="text-success">&#10003; 111+</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: FEATURE DETECTION
+         Modernizr-style detection and CSS @supports.
+         ============================================================ -->
+    <section id="detection" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Feature Detection</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">CSS @supports</h5></div>
+                        <div class="card-body">
+                            <div class="code-dark">
+/* Progressive enhancement with @supports */<br>
+.container {<br>
+&nbsp;&nbsp;display: flex; /* Fallback */<br>
+}<br><br>
+@supports (display: grid) {<br>
+&nbsp;&nbsp;.container {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;display: grid;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;grid-template-columns: repeat(auto-fit,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minmax(300px, 1fr));<br>
+&nbsp;&nbsp;}<br>
+}<br><br>
+@supports (aspect-ratio: 16/9) {<br>
+&nbsp;&nbsp;.video-wrapper {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;aspect-ratio: 16/9;<br>
+&nbsp;&nbsp;}<br>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">JavaScript Feature Detection</h5></div>
+                        <div class="card-body">
+                            <div class="code-dark">
+// Check for IntersectionObserver<br>
+if ('IntersectionObserver' in window) {<br>
+&nbsp;&nbsp;// Use native lazy loading observer<br>
+&nbsp;&nbsp;const obs = new IntersectionObserver(...);<br>
+} else {<br>
+&nbsp;&nbsp;// Fallback: load all images immediately<br>
+&nbsp;&nbsp;loadAllImages();<br>
+}<br><br>
+// Check for fetch API<br>
+if ('fetch' in window) {<br>
+&nbsp;&nbsp;fetch('/api/data').then(...);<br>
+} else {<br>
+&nbsp;&nbsp;// Fallback to XMLHttpRequest<br>
+&nbsp;&nbsp;const xhr = new XMLHttpRequest();<br>
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: CONDITIONAL POLYFILL LOADING
+         Load polyfills only when needed.
+         ============================================================ -->
+    <section id="polyfills" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Conditional Polyfill Loading</h2>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="code-dark">
+// Load polyfills only for browsers that need them<br>
+(function() {<br>
+&nbsp;&nbsp;const polyfills = [];<br><br>
+&nbsp;&nbsp;if (!('IntersectionObserver' in window)) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;polyfills.push('intersection-observer');<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;if (!('fetch' in window)) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;polyfills.push('fetch');<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;if (!Element.prototype.closest) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;polyfills.push('element-closest');<br>
+&nbsp;&nbsp;}<br><br>
+&nbsp;&nbsp;if (polyfills.length) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;// Dynamic import of polyfill bundle<br>
+&nbsp;&nbsp;&nbsp;&nbsp;const script = document.createElement('script');<br>
+&nbsp;&nbsp;&nbsp;&nbsp;script.src = '/polyfills/' + polyfills.join(',') + '.js';<br>
+&nbsp;&nbsp;&nbsp;&nbsp;document.head.appendChild(script);<br>
+&nbsp;&nbsp;}<br>
+})();
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-4">
+                <strong>Tip:</strong> Use <a href="https://polyfill.io" target="_blank" rel="noopener">polyfill.io</a> or
+                <a href="https://cdnjs.com/libraries/babel-polyfill" target="_blank" rel="noopener">core-js</a> for on-demand polyfill serving based on the User-Agent header.
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 4: CROSS-BROWSER TESTING TOOLS
+         ============================================================ -->
+    <section id="testing" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Cross-Browser Testing Tools</h2>
+
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>BrowserStack</h5>
+                            <p class="small">Real device cloud testing for cross-browser compatibility.</p>
+                            <span class="badge bg-primary">Cloud</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Sauce Labs</h5>
+                            <p class="small">Automated testing across 800+ browser/OS combinations.</p>
+                            <span class="badge bg-success">Automated</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Playwright</h5>
+                            <p class="small">Cross-browser automation with Chromium, Firefox, and WebKit.</p>
+                            <code>npm i playwright</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Can I Use</h5>
+                            <p class="small">Browser support tables for HTML, CSS, and JS features.</p>
+                            <span class="badge bg-info">Reference</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>WebPageTest</h5>
+                            <p class="small">Test performance across different browsers and locations.</p>
+                            <span class="badge bg-warning text-dark">Performance</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5>Autoprefixer</h5>
+                            <p class="small">Auto-add vendor prefixes based on caniuse database.</p>
+                            <code>npm i autoprefixer</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Cross-Browser Performance &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================
+         01_02_02_05_Display_Accessibility.html
+         Topic: Bootstrap 5 Display Utilities — Accessibility
+         
+         This file covers accessibility considerations when using display
+         utilities: screen reader behavior, focus management, ARIA 
+         attributes, and inclusive design patterns.
+         
+         Key principles:
+         - d-none removes content from accessibility tree
+         - .visually-hidden keeps content accessible but hidden
+         - ARIA attributes should complement display changes
+         - Focus management is critical when toggling visibility
+         ============================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 - Display Utilities Accessibility</title>
+
+    <!-- Bootstrap 5.3.3 CSS via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <style>
+        /* Custom styles for accessibility demo sections */
+        .a11y-demo {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #f8f9fa;
+        }
+
+        .a11y-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Custom focus ring for demo clarity */
+        .focus-ring-demo:focus {
+            outline: 3px solid #0d6efd;
+            outline-offset: 2px;
+        }
+
+        /* Skip link styling */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #000;
+            color: #fff;
+            padding: 8px 16px;
+            z-index: 10000;
+            transition: top 0.3s;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- ============================================================
+         SKIP LINK: Accessible pattern for keyboard users
+         Tab to this link to skip directly to main content.
+         Uses opacity/position instead of d-none so it can receive focus.
+         ============================================================ -->
+    <a href="#main-content" class="skip-link visually-hidden-focusable">
+        Skip to main content
+    </a>
+
+    <div class="container my-5" id="main-content">
+
+        <!-- ============================================================
+             PAGE HEADER
+             ============================================================ -->
+        <h1 class="mb-3">Display Utilities — Accessibility</h1>
+        <p class="lead text-muted">
+            How display utilities affect accessibility and best practices for 
+            creating inclusive interfaces.
+        </p>
+        <hr class="mb-4">
+
+        <!-- ============================================================
+             SECTION 1: d-none vs .visually-hidden — Key Difference
+             
+             d-none: sets display:none — element is removed from the 
+                     accessibility tree. Screen readers cannot access it.
+             
+             .visually-hidden: uses position:absolute, clip, etc. — element
+                     is still in the accessibility tree. Screen readers
+                     CAN read it, but it's visually hidden.
+             
+             CRITICAL: Never use d-none on content that screen readers
+             need to access (e.g., labels, descriptions, error messages).
+             ============================================================ -->
+        <h3>1. <code>d-none</code> vs <code>.visually-hidden</code></h3>
+        
+        <div class="a11y-demo">
+            <span class="a11y-label">Screen Reader Test</span>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <strong>d-none</strong> — NOT accessible
+                        </div>
+                        <div class="card-body">
+                            <p>Visible text here.</p>
+                            <!-- d-none: screen reader CANNOT read this -->
+                            <span class="d-none">This hidden text is NOT read by screen readers because d-none removes it from the accessibility tree.</span>
+                            <p class="text-muted small">The hidden span with d-none is invisible to assistive technology.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <strong>.visually-hidden</strong> — IS accessible
+                        </div>
+                        <div class="card-body">
+                            <p>Visible text here.</p>
+                            <!-- visually-hidden: screen reader CAN read this -->
+                            <span class="visually-hidden">This hidden text IS read by screen readers because visually-hidden keeps it in the accessibility tree.</span>
+                            <p class="text-muted small">The hidden span with .visually-hidden IS visible to assistive technology.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <strong>Rule:</strong> Use <code>.visually-hidden</code> for content that should be 
+                available to screen readers but hidden visually. Use <code>d-none</code> only when 
+                you want to hide content from EVERYONE (including screen readers).
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 2: ARIA attributes with display toggling
+             When you toggle d-none on content, you must also update
+             ARIA attributes to communicate state to assistive technology.
+             ============================================================ -->
+        <h3 class="mt-5">2. ARIA Attributes with Display Toggling</h3>
+        <p>Always pair display changes with appropriate ARIA attributes.</p>
+        
+        <div class="a11y-demo">
+            <span class="a11y-label">Expandable Section with ARIA</span>
+            
+            <!-- Button with aria-expanded that updates with JS -->
+            <button 
+                class="btn btn-primary mb-3" 
+                id="aria-toggle-btn"
+                aria-expanded="false" 
+                aria-controls="aria-content"
+                onclick="toggleAriaSection()">
+                Show Details
+            </button>
+            
+            <!-- Hidden content with aria-labelledby linking to the button -->
+            <div 
+                id="aria-content" 
+                class="d-none alert alert-success" 
+                role="region" 
+                aria-labelledby="aria-toggle-btn">
+                <h5>Details Section</h5>
+                <p>
+                    This content is now visible. The button's <code>aria-expanded</code> 
+                    attribute has been updated to "true" to inform screen readers that 
+                    this section is open.
+                </p>
+                <p>
+                    Always use <code>aria-expanded</code>, <code>aria-controls</code>, 
+                    and <code>role</code> attributes when toggling visibility.
+                </p>
+            </div>
+            
+            <p class="text-muted mt-3">
+                JavaScript updates <code>aria-expanded</code> on the button every time 
+                <code>d-none</code> is toggled on the content.
+            </p>
+        </div>
+
+        <!-- ============================================================
+             SECTION 3: Accessible error messages
+             Form error messages should be visible AND accessible.
+             Don't use d-none — use visibility or aria-live instead.
+             ============================================================ -->
+        <h3 class="mt-5">3. Accessible Error Messages</h3>
+        <p>Form errors must be accessible to screen readers.</p>
+        
+        <div class="a11y-demo">
+            <span class="a11y-label">Form with Accessible Errors</span>
+            
+            <div class="mb-3">
+                <label for="email-input" class="form-label">Email Address</label>
+                <input 
+                    type="email" 
+                    class="form-control" 
+                    id="email-input" 
+                    aria-describedby="email-error email-help"
+                    oninput="validateEmail()">
+                <div id="email-help" class="form-text">
+                    Enter a valid email address.
+                </div>
+                <!-- Error message: hidden by default but uses aria-live for screen readers -->
+                <div 
+                    id="email-error" 
+                    class="text-danger d-none" 
+                    role="alert" 
+                    aria-live="assertive">
+                    Please enter a valid email address (e.g., user@example.com).
+                </div>
+            </div>
+            
+            <p class="text-muted">
+                The error message uses <code>role="alert"</code> and 
+                <code>aria-live="assertive"</code> so screen readers announce it immediately 
+                when it appears (d-none is removed).
+            </p>
+        </div>
+
+        <!-- ============================================================
+             SECTION 4: Focus management when toggling display
+             When content is shown/hidden, manage focus to avoid 
+             disorienting keyboard users.
+             ============================================================ -->
+        <h3 class="mt-5">4. Focus Management</h3>
+        <p>Move focus appropriately when showing/hiding content.</p>
+        
+        <div class="a11y-demo">
+            <span class="a11y-label">Modal-like Pattern</span>
+            
+            <button class="btn btn-primary mb-3" onclick="showModal()" id="open-modal-btn">
+                Open Panel
+            </button>
+            
+            <!-- Modal-like panel: hidden by default -->
+            <div id="modal-panel" class="d-none border border-primary rounded p-4 bg-white" 
+                 role="dialog" aria-labelledby="modal-title" aria-modal="true">
+                <h5 id="modal-title">Information Panel</h5>
+                <p>When this panel opens, focus is moved here. When it closes, focus returns to the trigger button.</p>
+                <button class="btn btn-secondary" onclick="closeModal()" id="close-modal-btn">
+                    Close Panel
+                </button>
+            </div>
+            
+            <p class="text-muted mt-3">
+                JavaScript moves focus to the panel when opened, and back to the trigger button when closed.
+                This ensures keyboard users aren't lost after display changes.
+            </p>
+        </div>
+
+        <!-- ============================================================
+             SECTION 5: Color contrast and display utilities
+             When hiding/showing colored elements, ensure sufficient
+             contrast ratios are maintained.
+             ============================================================ -->
+        <h3 class="mt-5">5. Color Contrast Awareness</h3>
+        <p>Ensure visible content meets WCAG contrast requirements.</p>
+        
+        <div class="a11y-demo">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <h6 class="text-success">Good Contrast</h6>
+                            <p class="mb-1" style="color: #000; background: #fff; padding: 5px;">
+                                Black on white: 21:1 ratio ✓
+                            </p>
+                            <p class="mb-1" style="color: #fff; background: #0d6efd; padding: 5px;">
+                                White on Bootstrap primary: 4.56:1 ✓
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <h6 class="text-danger">Poor Contrast</h6>
+                            <p class="mb-1" style="color: #aaa; background: #fff; padding: 5px;">
+                                Light gray on white: 2.32:1 ✗
+                            </p>
+                            <p class="mb-1 d-none d-md-block" style="color: #ffc107; background: #fff; padding: 5px;">
+                                Yellow on white (hidden on mobile): 1.07:1 ✗
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="text-muted mt-2">
+                When using display utilities to show/hide content across breakpoints, 
+                verify that visible states maintain 4.5:1 contrast (WCAG AA).
+            </p>
+        </div>
+
+        <!-- ============================================================
+             SECTION 6: Tabindex and d-none
+             Elements with d-none cannot receive focus. If you have 
+             interactive elements inside a d-none container, keyboard
+             users can never reach them. This is correct behavior.
+             ============================================================ -->
+        <h3 class="mt-5">6. Tabindex and Hidden Elements</h3>
+        <p>Elements inside <code>d-none</code> are removed from the tab order.</p>
+        
+        <div class="a11y-demo">
+            <span class="a11y-label">Tab Order Demo</span>
+            
+            <button class="btn btn-outline-primary mb-2 focus-ring-demo" onclick="toggleTabDemo()">
+                Toggle Hidden Form
+            </button>
+            
+            <div class="mb-3">
+                <input type="text" class="form-control mb-2 focus-ring-demo" placeholder="Always visible input">
+            </div>
+            
+            <!-- Hidden form fields: removed from tab order when d-none is applied -->
+            <div id="tab-demo-form" class="d-none mb-3">
+                <input type="text" class="form-control mb-2 focus-ring-demo" placeholder="Hidden input 1 (tab-able only when visible)">
+                <input type="text" class="form-control mb-2 focus-ring-demo" placeholder="Hidden input 2 (tab-able only when visible)">
+            </div>
+            
+            <div>
+                <input type="text" class="form-control focus-ring-demo" placeholder="Always visible input (below hidden form)">
+            </div>
+            
+            <p class="text-muted mt-3">
+                Tab through these inputs. When the hidden form is collapsed, tab skips 
+                directly from the first to the last input. This is correct behavior.
+            </p>
+        </div>
+
+        <!-- ============================================================
+             SECTION 7: Screen reader-only content patterns
+             Common patterns for adding screen-reader-only content
+             using Bootstrap utilities.
+             ============================================================ -->
+        <h3 class="mt-5">7. Screen Reader-Only Content Patterns</h3>
+        
+        <div class="a11y-demo">
+            <!-- Pattern 1: Icon button with sr-only label -->
+            <div class="mb-3">
+                <span class="a11y-label">Icon Button Pattern</span>
+                <button class="btn btn-outline-primary me-2" aria-label="Close dialog">
+                    <span aria-hidden="true">×</span>
+                    <span class="visually-hidden">Close dialog</span>
+                </button>
+                <button class="btn btn-outline-danger me-2" aria-label="Delete item">
+                    <span aria-hidden="true">🗑</span>
+                    <span class="visually-hidden">Delete item</span>
+                </button>
+                <button class="btn btn-outline-success" aria-label="Edit document">
+                    <span aria-hidden="true">✎</span>
+                    <span class="visually-hidden">Edit document</span>
+                </button>
+            </div>
+            
+            <!-- Pattern 2: Status badge with context -->
+            <div class="mb-3">
+                <span class="a11y-label">Status Badge Pattern</span>
+                <span class="badge bg-success">
+                    Active
+                    <span class="visually-hidden">account status</span>
+                </span>
+                <span class="badge bg-warning text-dark ms-2">
+                    Pending
+                    <span class="visually-hidden">account status</span>
+                </span>
+            </div>
+            
+            <!-- Pattern 3: Navigation with current page indicator -->
+            <div class="mb-3">
+                <span class="a11y-label">Navigation with Current Page</span>
+                <nav aria-label="Example">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Products</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">About</a>
+                        </li>
+                    </ul>
+                </nav>
+                <p class="text-muted mt-2">
+                    <code>aria-current="page"</code> tells screen readers which link represents the current page.
+                </p>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             SECTION 8: Accessibility checklist
+             ============================================================ -->
+        <h3 class="mt-5">8. Display Utilities Accessibility Checklist</h3>
+        
+        <div class="a11y-demo">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Check</th>
+                        <th>Guideline</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="checkbox" disabled checked></td>
+                        <td>Use <code>.visually-hidden</code> instead of <code>d-none</code> for SR-needed content</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" disabled checked></td>
+                        <td>Update <code>aria-expanded</code> when toggling visibility</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" disabled checked></td>
+                        <td>Use <code>aria-controls</code> to associate triggers with targets</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" disabled checked></td>
+                        <td>Manage focus: move to shown content, return to trigger when hidden</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" disabled checked></td>
+                        <td>Use <code>aria-live</code> regions for dynamic content changes</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" disabled checked></td>
+                        <td>Add <code>aria-label</code> or <code>aria-labelledby</code> to interactive elements</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" disabled checked></td>
+                        <td>Ensure visible content meets WCAG contrast ratios (4.5:1 AA)</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" disabled checked></td>
+                        <td>Don't rely solely on display changes — pair with ARIA</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <!-- End container -->
+
+    <script>
+        /* ============================================================
+           JavaScript for accessibility demos
+           ============================================================ */
+        
+        // Toggle ARIA section: updates aria-expanded on the button
+        function toggleAriaSection() {
+            const btn = document.getElementById('aria-toggle-btn');
+            const content = document.getElementById('aria-content');
+            const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+            
+            // Toggle display class
+            content.classList.toggle('d-none');
+            
+            // Update ARIA attribute — critical for screen readers
+            btn.setAttribute('aria-expanded', !isExpanded);
+            
+            // Update button text
+            btn.textContent = isExpanded ? 'Show Details' : 'Hide Details';
+        }
+
+        // Email validation with accessible error message
+        function validateEmail() {
+            const input = document.getElementById('email-input');
+            const error = document.getElementById('email-error');
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (input.value && !emailPattern.test(input.value)) {
+                // Show error: remove d-none
+                error.classList.remove('d-none');
+                input.classList.add('is-invalid');
+                input.setAttribute('aria-invalid', 'true');
+            } else {
+                // Hide error: add d-none
+                error.classList.add('d-none');
+                input.classList.remove('is-invalid');
+                input.removeAttribute('aria-invalid');
+            }
+        }
+
+        // Modal-like panel with focus management
+        let previousFocus = null;
+        
+        function showModal() {
+            const panel = document.getElementById('modal-panel');
+            previousFocus = document.activeElement; // Save current focus
+            
+            // Show panel
+            panel.classList.remove('d-none');
+            
+            // Move focus to the close button inside the panel
+            document.getElementById('close-modal-btn').focus();
+        }
+
+        function closeModal() {
+            const panel = document.getElementById('modal-panel');
+            
+            // Hide panel
+            panel.classList.add('d-none');
+            
+            // Return focus to the trigger button
+            if (previousFocus) {
+                previousFocus.focus();
+            }
+        }
+
+        // Toggle hidden form for tab order demo
+        function toggleTabDemo() {
+            document.getElementById('tab-demo-form').classList.toggle('d-none');
+        }
+    </script>
+
+    <!-- Bootstrap 5.3.3 JS Bundle via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

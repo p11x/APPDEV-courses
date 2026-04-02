@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================ -->
+    <!-- CORE META TAGS                               -->
+    <!-- ============================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bootstrap 5 Build Process Overview - Understanding the toolchain that produces Bootstrap">
+    <meta name="author" content="Bootstrap Course">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- ============================================ -->
+    <!-- TITLE                                        -->
+    <!-- ============================================ -->
+    <title>01_01_03 - Build Process</title>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 CSS CDN                          -->
+    <!-- ============================================ -->
+    <!--
+        In a real build process, this CDN link would be replaced by
+        your own compiled and minified CSS file generated from SASS source.
+        We use the CDN for demonstration purposes.
+    -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aV76Ug"
+        crossorigin="anonymous"
+    >
+
+    <!-- Bootstrap Icons CDN -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+    <!-- ============================================ -->
+    <!-- CUSTOM STYLES                                -->
+    <!-- ============================================ -->
+    <style>
+        /*
+            Pipeline stage cards.
+            These styles create visual pipeline connectors between build stages.
+        */
+        .pipeline-stage {
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .pipeline-stage:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        /*
+            Terminal/code block styling.
+            Simulates a terminal window appearance for command examples.
+        */
+        .terminal-block {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        .terminal-block .prompt {
+            color: #4ec9b0;
+        }
+        .terminal-block .command {
+            color: #dcdcaa;
+        }
+        .terminal-block .flag {
+            color: #9cdcfe;
+        }
+        .terminal-block .comment {
+            color: #6a9955;
+        }
+        .terminal-block .output {
+            color: #808080;
+        }
+
+        /*
+            Config file preview.
+            Shows JSON/YAML configuration in a styled block.
+        */
+        .config-preview {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-left: 4px solid #0d6efd;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        /*
+            Arrow connector between pipeline stages.
+            Uses CSS pseudo-element to draw a right arrow.
+        */
+        .arrow-connector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ============================================ -->
+    <!-- NAVIGATION BAR                               -->
+    <!-- ============================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-gear-wide-connected me-2"></i>Build Process
+            </a>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#pipeline">Pipeline</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tools">Tools</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#config">Config</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#npm">NPM Scripts</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================ -->
+    <!-- HERO SECTION                                 -->
+    <!-- ============================================ -->
+    <header class="bg-dark text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Build Process Overview</h1>
+            <p class="lead mb-0">
+                Understanding the toolchain and pipeline that transforms Bootstrap's SASS source
+                into optimized CSS and JavaScript for production deployment.
+            </p>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT                                 -->
+    <!-- ============================================ -->
+    <main class="container py-5">
+
+        <!-- ============================================ -->
+        <!-- BUILD PIPELINE VISUAL OVERVIEW               -->
+        <!-- ============================================ -->
+        <!--
+            The build pipeline is the sequence of transformations
+            applied to source files before they become production assets.
+            Each stage has a specific purpose in the pipeline.
+        -->
+        <section class="mb-5" id="pipeline">
+            <h2 class="mb-4">
+                <i class="bi bi-diagram-3 me-2"></i>Build Pipeline
+            </h2>
+
+            <!--
+                Pipeline visualization using cards and flexbox.
+                Each card represents a stage in the build pipeline.
+                d-flex and flex-wrap create a responsive horizontal flow.
+            -->
+            <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mb-5">
+                <!-- Stage 1: Source Files -->
+                <div class="card pipeline-stage text-center" style="width: 150px;">
+                    <div class="card-body py-3">
+                        <i class="bi bi-file-earmark-code fs-1 text-primary"></i>
+                        <h6 class="card-title mt-2 mb-0">Source</h6>
+                        <small class="text-muted">.scss / .ts</small>
+                    </div>
+                </div>
+
+                <!-- Arrow connector between stages -->
+                <div class="arrow-connector d-none d-md-flex">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+
+                <!-- Stage 2: SASS Compilation -->
+                <div class="card pipeline-stage text-center" style="width: 150px;">
+                    <div class="card-body py-3">
+                        <i class="bi bi-filetype-css fs-1 text-warning"></i>
+                        <h6 class="card-title mt-2 mb-0">Compile</h6>
+                        <small class="text-muted">SASS → CSS</small>
+                    </div>
+                </div>
+
+                <div class="arrow-connector d-none d-md-flex">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+
+                <!-- Stage 3: PostCSS Processing -->
+                <div class="card pipeline-stage text-center" style="width: 150px;">
+                    <div class="card-body py-3">
+                        <i class="bi bi-funnel fs-1 text-info"></i>
+                        <h6 class="card-title mt-2 mb-0">PostCSS</h6>
+                        <small class="text-muted">Autoprefixer</small>
+                    </div>
+                </div>
+
+                <div class="arrow-connector d-none d-md-flex">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+
+                <!-- Stage 4: Minification -->
+                <div class="card pipeline-stage text-center" style="width: 150px;">
+                    <div class="card-body py-3">
+                        <i class="bi bi-arrows-collapse fs-1 text-danger"></i>
+                        <h6 class="card-title mt-2 mb-0">Minify</h6>
+                        <small class="text-muted">Compress</small>
+                    </div>
+                </div>
+
+                <div class="arrow-connector d-none d-md-flex">
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+
+                <!-- Stage 5: Output -->
+                <div class="card pipeline-stage text-center" style="width: 150px;">
+                    <div class="card-body py-3">
+                        <i class="bi bi-check-circle fs-1 text-success"></i>
+                        <h6 class="card-title mt-2 mb-0">Output</h6>
+                        <small class="text-muted">dist/css/</small>
+                    </div>
+                </div>
+            </div>
+
+            <!--
+                Detailed explanation cards for each pipeline stage.
+                Uses a responsive grid: 2 columns on medium+, 1 column on small.
+            -->
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="badge bg-primary me-2">1</span>Source Files
+                            </h5>
+                            <p class="card-text">
+                                Bootstrap's source code lives in the <code>scss/</code> directory.
+                                JavaScript source is in <code>js/src/</code>. These files use
+                                modern syntax (SASS, ES modules) that browsers cannot execute directly.
+                            </p>
+                            <ul class="list-unstyled mb-0">
+                                <li><i class="bi bi-check text-success me-2"></i><code>_variables.scss</code> - Configuration</li>
+                                <li><i class="bi bi-check text-success me-2"></i><code>bootstrap.scss</code> - Entry point</li>
+                                <li><i class="bi bi-check text-success me-2"></i><code>js/src/*.js</code> - JS components</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="badge bg-warning text-dark me-2">2</span>SASS Compilation
+                            </h5>
+                            <p class="card-text">
+                                The Dart SASS compiler processes all <code>.scss</code> files,
+                                resolving <code>@import</code> / <code>@use</code> statements,
+                                evaluating variables, expanding mixins, and flattening nesting.
+                            </p>
+                            <ul class="list-unstyled mb-0">
+                                <li><i class="bi bi-check text-success me-2"></i>Resolves all imports</li>
+                                <li><i class="bi bi-check text-success me-2"></i>Evaluates variables</li>
+                                <li><i class="bi bi-check text-success me-2"></i>Expands mixins</li>
+                                <li><i class="bi bi-check text-success me-2"></i>Flattens nesting</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="badge bg-info me-2">3</span>PostCSS Processing
+                            </h5>
+                            <p class="card-text">
+                                PostCSS is a tool for transforming CSS with JavaScript plugins.
+                                Bootstrap uses Autoprefixer to add vendor prefixes automatically
+                                based on browser support targets.
+                            </p>
+                            <!--
+                                Shows before/after of vendor prefixing.
+                            -->
+                            <div class="bg-light p-2 rounded small font-monospace mb-0">
+                                <div class="text-muted">// Input:</div>
+                                <div>display: flex;</div>
+                                <div class="text-muted mt-1">// Output (with Autoprefixer):</div>
+                                <div>display: -webkit-box;</div>
+                                <div>display: -ms-flexbox;</div>
+                                <div>display: flex;</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="badge bg-danger me-2">4</span>Minification
+                            </h5>
+                            <p class="card-text">
+                                Minification removes whitespace, comments, and shortens
+                                property names where safe. This reduces file size for
+                                faster downloads. Bootstrap's CSS goes from ~250KB to ~50KB minified.
+                            </p>
+                            <ul class="list-unstyled mb-0">
+                                <li><i class="bi bi-check text-success me-2"></i>Removes whitespace</li>
+                                <li><i class="bi bi-check text-success me-2"></i>Removes comments</li>
+                                <li><i class="bi bi-check text-success me-2"></i>Optimizes values</li>
+                                <li><i class="bi bi-check text-success me-2"></i>~80% size reduction</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- BUILD TOOLS SECTION                          -->
+        <!-- ============================================ -->
+        <!--
+            Explains the specific tools used in Bootstrap's build process.
+            Each tool has a specific role in the pipeline.
+        -->
+        <section class="mb-5" id="tools">
+            <h2 class="mb-4">
+                <i class="bi bi-tools me-2"></i>Build Tools
+            </h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-filetype-scss text-pink me-2"></i>Dart SASS
+                            </h5>
+                            <p class="card-text">
+                                The official SASS compiler. Bootstrap uses Dart SASS
+                                (not the deprecated Node-SASS) for compilation.
+                            </p>
+                            <!--
+                                npm install command for Dart SASS.
+                            -->
+                            <div class="terminal-block small">
+                                <div><span class="prompt">$</span> <span class="command">npm</span> install <span class="flag">sass</span></div>
+                                <div class="output">+ sass@1.77.0</div>
+                            </div>
+                            <p class="card-text mt-3 mb-0 small text-muted">
+                                Dart SASS is written in Dart but distributed as a JavaScript
+                                package for Node.js. It's the primary implementation and
+                                receives new SASS features first.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-plugin text-info me-2"></i>PostCSS + Autoprefixer
+                            </h5>
+                            <p class="card-text">
+                                PostCSS processes CSS with plugins. Autoprefixer automatically
+                                adds vendor prefixes based on your browser support targets.
+                            </p>
+                            <div class="terminal-block small">
+                                <div><span class="prompt">$</span> <span class="command">npm</span> install <span class="flag">postcss autoprefixer</span></div>
+                                <div class="output">+ postcss@8.4.38</div>
+                                <div class="output">+ autoprefixer@10.4.19</div>
+                            </div>
+                            <p class="card-text mt-3 mb-0 small text-muted">
+                                Reads <code>.browserslistrc</code> to know which browsers
+                                to support, then adds only necessary prefixes.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-terminal text-success me-2"></i>npm Scripts
+                            </h5>
+                            <p class="card-text">
+                                Bootstrap uses npm scripts in <code>package.json</code>
+                                to orchestrate the build pipeline. No Grunt or Gulp needed.
+                            </p>
+                            <div class="terminal-block small">
+                                <div><span class="prompt">$</span> <span class="command">npm</span> run <span class="flag">css</span></div>
+                                <div class="output">Compiling SASS...</div>
+                                <div class="output">Running PostCSS...</div>
+                                <div class="output">Minifying CSS...</div>
+                                <div class="output">Done: dist/css/bootstrap.min.css</div>
+                            </div>
+                            <p class="card-text mt-3 mb-0 small text-muted">
+                                Simple, cross-platform, no extra dependencies beyond Node.js.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- CONFIGURATION FILES SECTION                  -->
+        <!-- ============================================ -->
+        <!--
+            Configuration files control build tool behavior.
+            Understanding these files is essential for customizing the build.
+        -->
+        <section class="mb-5" id="config">
+            <h2 class="mb-4">
+                <i class="bi bi-gear me-2"></i>Configuration Files
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">package.json</h5>
+                            <p class="card-text text-muted">
+                                The npm configuration file. Defines dependencies,
+                                scripts, and project metadata.
+                            </p>
+                            <!--
+                                Simplified package.json showing build-related config.
+                            -->
+                            <div class="config-preview">
+<pre>{
+  "name": "bootstrap",
+  "version": "5.3.3",
+  "scripts": {
+    "css": "npm-run-all css-compile css-prefix css-minify",
+    "css-compile": "sass --style expanded --source-map ...",
+    "css-prefix": "postcss --replace ...",
+    "css-minify": "cleancss --level 1 ..."
+  },
+  "devDependencies": {
+    "sass": "^1.77.0",
+    "postcss": "^8.4.38",
+    "autoprefixer": "^10.4.19",
+    "clean-css-cli": "^5.6.3"
+  }
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">.browserslistrc</h5>
+                            <p class="card-text text-muted">
+                                Defines which browsers the project targets.
+                                Autoprefixer and other tools read this to determine
+                                what CSS transformations to apply.
+                            </p>
+                            <div class="config-preview">
+<pre># Bootstrap's browser support targets
+# https://browsersl.ist/
+
+>= 0.5%
+last 2 major versions
+not dead
+Chrome >= 60
+Firefox >= 60
+Firefox ESR
+iOS >= 12
+Safari >= 12
+not Explorer <= 11
+not op_mini all</pre>
+                            </div>
+                            <p class="card-text mt-3 mb-0 small text-muted">
+                                These targets mean: support browsers with at least 0.5%
+                                global usage, the last 2 major versions of each browser,
+                                and specific minimum versions for key browsers.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">postcss.config.js</h5>
+                            <p class="card-text text-muted">
+                                PostCSS plugin configuration. Defines which
+                                transformations to apply to compiled CSS.
+                            </p>
+                            <div class="config-preview">
+<pre>module.exports = {
+  plugins: [
+    // Adds vendor prefixes automatically
+    require('autoprefixer')({
+      overrideBrowserslist: [
+        '>= 0.5%',
+        'last 2 major versions'
+      ]
+    }),
+    // Optional: discard comments
+    // require('postcss-discard-comments')()
+  ]
+};</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">.browserslistrc Query Examples</h5>
+                            <p class="card-text text-muted">
+                                Different query formats you can use:
+                            </p>
+                            <table class="table table-sm small">
+                                <thead>
+                                    <tr>
+                                        <th>Query</th>
+                                        <th>Meaning</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>> 1%</code></td>
+                                        <td>Browsers with >1% global usage</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>last 2 versions</code></td>
+                                        <td>Last 2 versions of each browser</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>not dead</code></td>
+                                        <td>Exclude browsers without official support</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>defaults</code></td>
+                                        <td>Common sensible defaults</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>cover 99.5%</code></td>
+                                        <td>Cover 99.5% of all users</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- NPM SCRIPTS SECTION                          -->
+        <!-- ============================================ -->
+        <!--
+            Practical npm commands for working with Bootstrap's build.
+            Shows the actual commands developers run.
+        -->
+        <section id="npm">
+            <h2 class="mb-4">
+                <i class="bi bi-terminal me-2"></i>NPM Build Commands
+            </h2>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Bootstrap Build Commands</h5>
+                            <p class="card-text text-muted">
+                                Commands available in Bootstrap's <code>package.json</code>:
+                            </p>
+                            <div class="terminal-block">
+                                <div><span class="comment"># Clone Bootstrap and install dependencies</span></div>
+                                <div><span class="prompt">$</span> <span class="command">git</span> clone https://github.com/twbs/bootstrap.git</div>
+                                <div><span class="prompt">$</span> <span class="command">cd</span> bootstrap</div>
+                                <div><span class="prompt">$</span> <span class="command">npm</span> install</div>
+                                <div class="mt-2"><span class="comment"># Build all CSS</span></div>
+                                <div><span class="prompt">$</span> <span class="command">npm</span> run <span class="flag">css</span></div>
+                                <div class="mt-2"><span class="comment"># Build all JavaScript</span></div>
+                                <div><span class="prompt">$</span> <span class="command">npm</span> run <span class="flag">js</span></div>
+                                <div class="mt-2"><span class="comment"># Build everything (CSS + JS)</span></div>
+                                <div><span class="prompt">$</span> <span class="command">npm</span> run <span class="flag">build</span></div>
+                                <div class="mt-2"><span class="comment"># Watch for changes during development</span></div>
+                                <div><span class="prompt">$</span> <span class="command">npm</span> run <span class="flag">css-watch</span></div>
+                                <div class="mt-2"><span class="comment"># Run the documentation site locally</span></div>
+                                <div><span class="prompt">$</span> <span class="command">npm</span> run <span class="flag">docs-serve</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!--
+                        Output directory structure.
+                        Shows what the build produces.
+                    -->
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Build Output</h5>
+                            <p class="card-text text-muted small">
+                                After running <code>npm run build</code>:
+                            </p>
+                            <div class="bg-dark text-white p-3 rounded font-monospace small">
+                                <div>dist/</div>
+                                <div>├── css/</div>
+                                <div>│&nbsp;&nbsp;├── bootstrap.css <span class="text-muted">← Full (250KB)</span></div>
+                                <div>│&nbsp;&nbsp;├── bootstrap.css.map</div>
+                                <div>│&nbsp;&nbsp;├── bootstrap.min.css <span class="text-success">← Minified (50KB)</span></div>
+                                <div>│&nbsp;&nbsp;├── bootstrap.min.css.map</div>
+                                <div>│&nbsp;&nbsp;├── bootstrap.rtl.css</div>
+                                <div>│&nbsp;&nbsp;└── bootstrap.rtl.min.css</div>
+                                <div>├── js/</div>
+                                <div>│&nbsp;&nbsp;├── bootstrap.bundle.js</div>
+                                <div>│&nbsp;&nbsp;├── bootstrap.bundle.min.js <span class="text-success">← With Popper</span></div>
+                                <div>│&nbsp;&nbsp;├── bootstrap.esm.js</div>
+                                <div>│&nbsp;&nbsp;├── bootstrap.esm.min.js</div>
+                                <div>│&nbsp;&nbsp;├── bootstrap.js</div>
+                                <div>│&nbsp;&nbsp;└── bootstrap.min.js</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================ -->
+    <!-- FOOTER                                       -->
+    <!-- ============================================ -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Build Process</h5>
+                    <p class="text-muted mb-0">
+                        Understanding Bootstrap's build pipeline: SASS compilation, PostCSS, minification, and npm scripts.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-github"></i></a>
+                    <a href="#" class="text-white me-3 fs-4"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white fs-4"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+            <hr class="border-secondary">
+            <p class="text-center text-muted mb-0">
+                &copy; 2024 Bootstrap Course. Built with Bootstrap 5.3.3
+            </p>
+        </div>
+    </footer>
+
+    <!-- ============================================ -->
+    <!-- BOOTSTRAP 5 JAVASCRIPT BUNDLE CDN            -->
+    <!-- ============================================ -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous">
+    </script>
+
+    <!-- ============================================ -->
+    <!-- CUSTOM JAVASCRIPT                            -->
+    <!-- ============================================ -->
+    <script>
+        // Confirm Bootstrap is loaded
+        console.log('Bootstrap version:', bootstrap.Tooltip.VERSION || '5.3.3');
+
+        // Initialize tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(
+            tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl)
+        );
+    </script>
+</body>
+</html>

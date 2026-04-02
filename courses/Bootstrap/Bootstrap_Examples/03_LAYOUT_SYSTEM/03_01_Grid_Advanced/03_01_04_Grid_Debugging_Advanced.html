@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         03_01_04 - Grid Debugging Advanced
+         ============================================
+         Advanced techniques for debugging CSS Grid layouts
+         including grid overlays, named lines visualization,
+         and DevTools strategies.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_04 - Grid Debugging Advanced</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ============================================
+           VISUAL GRID DEBUG OVERLAY
+           Toggle-able debug mode that shows grid lines,
+           column indices, and item boundaries
+        ================================================ */
+
+        /* Debug mode class applied to body */
+        body.debug-mode .debug-grid {
+            /* Dashed outline shows the grid container boundary */
+            outline: 3px dashed #dc3545;
+            outline-offset: 5px;
+            position: relative;
+        }
+
+        body.debug-mode .debug-grid::before {
+            content: "GRID CONTAINER";
+            position: absolute;
+            top: -22px;
+            left: 0;
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-family: monospace;
+            border-radius: 3px;
+            z-index: 10;
+        }
+
+        body.debug-mode .debug-item {
+            /* Solid border shows item boundaries */
+            outline: 2px solid #0d6efd !important;
+            outline-offset: -2px;
+            position: relative;
+        }
+
+        /* Show grid-column and grid-row values on each item */
+        body.debug-mode .debug-item::after {
+            content: attr(data-grid-pos);
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(13, 110, 253, 0.9);
+            color: white;
+            padding: 1px 6px;
+            font-size: 0.65rem;
+            font-family: monospace;
+            border-radius: 3px;
+        }
+
+        .debug-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .debug-item {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* ============================================
+           NAMED GRID LINES
+           Using named lines for easier debugging and
+           more readable grid definitions
+        ================================================ */
+        .named-lines-grid {
+            display: grid;
+            /* Named lines: [name-start] track [name-end] */
+            grid-template-columns: [sidebar-start] 200px [sidebar-end main-start] 1fr [main-end];
+            grid-template-rows: [header-start] 60px [header-end content-start] 200px [content-end footer-start] 50px [footer-end];
+            gap: 10px;
+            border: 2px solid #198754;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .named-item {
+            background: #d1e7dd;
+            border-radius: 5px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Using named lines for placement */
+        .place-header { grid-column: sidebar-start / main-end; grid-row: header-start / header-end; }
+        .place-sidebar { grid-column: sidebar-start / sidebar-end; grid-row: content-start / footer-end; }
+        .place-main { grid-column: main-start / main-end; grid-row: content-start / content-end; }
+        .place-footer { grid-column: sidebar-start / main-end; grid-row: footer-start / footer-end; }
+
+        /* ============================================
+           GRID OVERLAY WITH BACKGROUND IMAGE
+           A visual grid overlay using repeating-linear-gradient
+           to show column/row tracks
+        ================================================ */
+        .overlay-demo-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 10px;
+            position: relative;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        /* The overlay itself - shows 12 equal columns */
+        .overlay-demo-grid.debug-active::before {
+            content: "";
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            /* Create 12 equal vertical lines to show the column tracks */
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.08) 0px,
+                rgba(255, 0, 0, 0.08) calc((100% - 110px) / 12),
+                transparent calc((100% - 110px) / 12),
+                transparent calc((100% - 110px) / 12 + 10px)
+            );
+            pointer-events: none;
+            border-radius: 8px;
+            z-index: 1;
+        }
+
+        .overlay-item {
+            background: rgba(13, 110, 253, 0.2);
+            border: 2px solid #0d6efd;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ============================================
+           DEBUGGING GRID FLOW ISSUES
+           Demonstrating grid-auto-flow behavior and
+           how to identify unexpected item placement
+        ================================================ */
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-auto-rows: minmax(80px, auto);
+            gap: 10px;
+            border: 2px solid #ffc107;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .flow-item {
+            background: #fff3cd;
+            border: 2px solid #ffecb5;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* This item spans 2 columns, creating potential empty cells */
+        .flow-item.span-col { grid-column: span 2; background: #ffeeba; }
+        /* This item spans 2 rows */
+        .flow-item.span-row { grid-row: span 2; background: #f8d7da; }
+
+        /* ============================================
+           GRID GAP DEBUG VISUALIZATION
+           Showing exactly how gap distributes space
+        ================================================ */
+        .gap-debug-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px 40px; /* row-gap: 20px, column-gap: 40px */
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(220, 53, 69, 0.1) 0px,
+                rgba(220, 53, 69, 0.1) 40px,
+                transparent 40px
+            );
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .gap-debug-item {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        /* ============================================
+           RESPONSIVE DEBUG GRID
+           Shows which breakpoint is active
+        ================================================ */
+        .breakpoint-indicator {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 5px;
+            padding: 10px;
+            background: #212529;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .bp-col {
+            height: 30px;
+            background: rgba(13, 110, 253, 0.3);
+            border-radius: 3px;
+        }
+
+        .bp-label {
+            grid-column: 1 / -1;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        /* ============================================
+           GRID ITEM INSPECTION HELPER
+           Shows track position info for each item
+        ================================================ */
+        .inspect-grid {
+            display: grid;
+            grid-template-columns: [col-1-start] 1fr [col-2-start] 1fr [col-3-start] 1fr [col-4-start] 1fr [end];
+            grid-template-rows: [row-1-start] auto [row-2-start] auto [row-3-start] auto [end];
+            gap: 10px;
+        }
+
+        .inspect-item {
+            background: #e2d9f3;
+            border: 2px solid #c4b5e0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4">03_01_04 - Grid Debugging Advanced</h1>
+
+        <!-- ============================================
+             DEBUG MODE TOGGLE
+             Button that toggles visual debug overlays
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Visual Debug Mode Toggle</h2>
+            <div class="alert alert-info">
+                Click the button to toggle debug visualization. Uses CSS to show grid container
+                boundaries, item positions, and grid track data via <code>data-*</code> attributes.
+            </div>
+
+            <button class="btn btn-danger mb-3" onclick="document.body.classList.toggle('debug-mode')">
+                Toggle Debug Mode
+            </button>
+
+            <div class="debug-grid">
+                <!-- data-grid-pos attribute is displayed by CSS ::after pseudo-element -->
+                <div class="debug-item" data-grid-pos="col: 1 / 2">Item A</div>
+                <div class="debug-item" data-grid-pos="col: 2 / 3">Item B</div>
+                <div class="debug-item" data-grid-pos="col: 3 / 5, span 2">Item C (span 2)</div>
+                <div class="debug-item" data-grid-pos="col: 1 / 3, span 2">Item D (span 2)</div>
+                <div class="debug-item" data-grid-pos="col: 3 / 4">Item E</div>
+                <div class="debug-item" data-grid-pos="col: 4 / 5">Item F</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             NAMED GRID LINES
+             Using named lines for readable grid placement
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Named Grid Lines for Debugging</h2>
+            <div class="alert alert-info">
+                Named lines make grid placement self-documenting. Instead of
+                <code>grid-column: 1 / 3</code>, use
+                <code>grid-column: sidebar-start / main-end</code>.
+            </div>
+
+            <div class="named-lines-grid">
+                <div class="named-item place-header" style="background: #0d6efd; color: white;">
+                    Header (sidebar-start / main-end)
+                </div>
+                <div class="named-item place-sidebar" style="background: #198754; color: white;">
+                    Sidebar
+                </div>
+                <div class="named-item place-main">
+                    Main (main-start / main-end)
+                </div>
+                <div class="named-item place-footer" style="background: #6c757d; color: white;">
+                    Footer
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             COLUMN TRACK OVERLAY
+             Visual overlay showing the 12-column grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Column Track Overlay Visualization</h2>
+            <div class="alert alert-info">
+                A <code>repeating-linear-gradient</code> pseudo-element overlays the grid to
+                visualize column tracks, similar to how design tools show grids.
+            </div>
+
+            <button class="btn btn-primary mb-3" onclick="document.querySelector('.overlay-demo-grid').classList.toggle('debug-active')">
+                Toggle Column Overlay
+            </button>
+
+            <div class="overlay-demo-grid">
+                <div class="overlay-item" style="grid-column: span 4;">col-span-4</div>
+                <div class="overlay-item" style="grid-column: span 4;">col-span-4</div>
+                <div class="overlay-item" style="grid-column: span 4;">col-span-4</div>
+                <div class="overlay-item" style="grid-column: span 6;">col-span-6</div>
+                <div class="overlay-item" style="grid-column: span 6;">col-span-6</div>
+                <div class="overlay-item" style="grid-column: span 3;">col-3</div>
+                <div class="overlay-item" style="grid-column: span 3;">col-3</div>
+                <div class="overlay-item" style="grid-column: span 3;">col-3</div>
+                <div class="overlay-item" style="grid-column: span 3;">col-3</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             GRID FLOW DEBUGGING
+             Understanding how auto-flow places items
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Grid Auto-Flow Debugging</h2>
+            <div class="alert alert-warning">
+                When items span multiple tracks, <code>grid-auto-flow</code> determines how remaining
+                items fill gaps. Dense packing can cause unexpected reordering.
+            </div>
+
+            <h6>Default flow (row):</h6>
+            <div class="flow-grid mb-3">
+                <div class="flow-item">1</div>
+                <div class="flow-item span-col">2 (span 2 cols)</div>
+                <div class="flow-item">3</div>
+                <div class="flow-item">4</div>
+                <div class="flow-item span-row">5 (span 2 rows)</div>
+                <div class="flow-item">6</div>
+                <div class="flow-item">7</div>
+                <div class="flow-item">8</div>
+            </div>
+
+            <h6>Dense flow (fills gaps):</h6>
+            <div class="flow-grid" style="grid-auto-flow: dense;">
+                <div class="flow-item">1</div>
+                <div class="flow-item span-col">2 (span 2 cols)</div>
+                <div class="flow-item">3</div>
+                <div class="flow-item">4</div>
+                <div class="flow-item span-row">5 (span 2 rows)</div>
+                <div class="flow-item">6</div>
+                <div class="flow-item">7</div>
+                <div class="flow-item">8</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             GAP VISUALIZATION
+             Showing gap distribution visually
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Gap Visualization</h2>
+            <div class="alert alert-info">
+                The red-tinted background on the grid container shows the column gap areas.
+                This helps verify gap values are applied correctly.
+            </div>
+
+            <div class="gap-debug-grid">
+                <div class="gap-debug-item">Col A</div>
+                <div class="gap-debug-item">Col B</div>
+                <div class="gap-debug-item">Col C</div>
+                <div class="gap-debug-item">Col D</div>
+                <div class="gap-debug-item">Col E</div>
+                <div class="gap-debug-item">Col F</div>
+            </div>
+            <p class="text-muted small mt-2">
+                Red tint = 40px column gap. Row gap = 20px (visible between rows).
+            </p>
+        </section>
+
+        <!-- ============================================
+             BREAKPOINT INDICATOR
+             Shows current viewport breakpoint
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Live Breakpoint Indicator</h2>
+            <div class="alert alert-info">
+                A CSS-only breakpoint indicator using media queries to show which Bootstrap
+                breakpoint is currently active.
+            </div>
+
+            <div class="breakpoint-indicator">
+                <!-- Default (xs) -->
+                <div class="bp-label d-block d-sm-none">XS (&lt;576px)</div>
+                <div class="bp-label d-none d-sm-block d-md-none">SM (576px - 767px)</div>
+                <div class="bp-label d-none d-md-block d-lg-none">MD (768px - 991px)</div>
+                <div class="bp-label d-none d-lg-block d-xl-none">LG (992px - 1199px)</div>
+                <div class="bp-label d-none d-xl-block d-xxl-none">XL (1200px - 1399px)</div>
+                <div class="bp-label d-none d-xxl-block">XXL (1400px+)</div>
+                <!-- 12 column indicators -->
+                <div class="bp-col"></div><div class="bp-col"></div>
+                <div class="bp-col"></div><div class="bp-col"></div>
+                <div class="bp-col"></div><div class="bp-col"></div>
+                <div class="bp-col"></div><div class="bp-col"></div>
+                <div class="bp-col"></div><div class="bp-col"></div>
+                <div class="bp-col"></div><div class="bp-col"></div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             GRID TRACK INSPECTION
+             Showing exact track positions
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Grid Track Position Inspection</h2>
+            <div class="alert alert-info">
+                Named grid lines with descriptive names make it clear where each item is placed.
+                The track names are shown inside each item.
+            </div>
+
+            <div class="inspect-grid">
+                <div class="inspect-item" style="grid-column: col-1-start / col-3-start;">
+                    col-1-start / col-3-start
+                </div>
+                <div class="inspect-item" style="grid-column: col-3-start / end;">
+                    col-3-start / end
+                </div>
+                <div class="inspect-item" style="grid-column: col-1-start / col-2-start; grid-row: row-2-start / row-3-start;">
+                    col-1 / col-2, row-2
+                </div>
+                <div class="inspect-item" style="grid-column: col-2-start / col-4-start; grid-row: row-2-start / row-3-start;">
+                    col-2 / col-4, row-2
+                </div>
+                <div class="inspect-item" style="grid-column: col-4-start / end; grid-row: row-2-start / row-3-start;">
+                    col-4 / end, row-2
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             DEBUGGING TIPS
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Common Debugging Issues & Solutions</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Issue</th>
+                            <th>Debug Technique</th>
+                            <th>Fix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Unexpected empty cells</td>
+                            <td>Inspect grid-auto-flow value</td>
+                            <td>Use <code>grid-auto-flow: dense</code> or explicit placement</td>
+                        </tr>
+                        <tr>
+                            <td>Items not aligning</td>
+                            <td>Check gap vs margin conflicts</td>
+                            <td>Use <code>gap</code> instead of margins</td>
+                        </tr>
+                        <tr>
+                            <td>Overflow on small screens</td>
+                            <td>Check min-width on items</td>
+                            <td>Use <code>minmax(0, 1fr)</code> instead of <code>1fr</code></td>
+                        </tr>
+                        <tr>
+                            <td>Unexpected wrapping</td>
+                            <td>Verify column sum equals 12</td>
+                            <td>Ensure <code>span</code> values sum to 12</td>
+                        </tr>
+                        <tr>
+                            <td>Items overlapping</td>
+                            <td>Check explicit grid-row/grid-column</td>
+                            <td>Verify no conflicting placements</td>
+                        </tr>
+                        <tr>
+                            <td>Auto-placement reorders items</td>
+                            <td>Test with <code>dense</code> vs default flow</td>
+                            <td>Use explicit placement for critical order</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

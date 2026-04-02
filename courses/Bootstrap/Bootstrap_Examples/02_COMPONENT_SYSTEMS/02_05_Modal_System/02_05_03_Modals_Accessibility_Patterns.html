@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================================ -->
+    <!-- 02_05_03 - MODALS ACCESSIBILITY PATTERNS                      -->
+    <!-- Covers: Focus trap, ARIA attributes, keyboard navigation     -->
+    <!-- ============================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modals Accessibility Patterns - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .example-section { border-bottom: 2px solid #dee2e6; padding-bottom: 2rem; margin-bottom: 2rem; }
+        .a11y-highlight { outline: 3px dashed #0d6efd; outline-offset: 2px; }
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+    <!-- Page Header -->
+    <div class="container-fluid bg-dark text-white py-4 mb-5">
+        <div class="container">
+            <h1 class="display-4">Modals: Accessibility Patterns</h1>
+            <p class="lead">Focus management, ARIA attributes, keyboard navigation, and screen reader support</p>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: ARIA ATTRIBUTES REFERENCE                      -->
+        <!-- Proper ARIA is critical for screen readers to understand  -->
+        <!-- the modal structure and relationships.                    -->
+        <!-- Required:                                                 -->
+        <!--   - aria-labelledby on .modal pointing to title           -->
+        <!--   - aria-hidden="true" on .modal when hidden              -->
+        <!--   - tabindex="-1" on .modal for focus management          -->
+        <!--   - aria-label on close button                            -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">1. ARIA Attributes Reference</h2>
+            <p>Proper ARIA attributes ensure screen readers understand the modal structure.</p>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ariaModal">
+                Open ARIA Example Modal
+            </button>
+
+            <!-- ARIA-compliant modal with all required attributes -->
+            <div class="modal fade" id="ariaModal" tabindex="-1"
+                 aria-labelledby="ariaModalLabel"
+                 aria-describedby="ariaModalDesc"
+                 aria-hidden="true">
+                <div class="modal-dialog" role="dialog" aria-modal="true">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <!-- Modal title with id matching aria-labelledby -->
+                            <h5 class="modal-title" id="ariaModalLabel">Accessible Modal Title</h5>
+                            <!-- Close button with aria-label for screen readers -->
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close this modal dialog"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Modal description with id matching aria-describedby -->
+                            <div id="ariaModalDesc">
+                                <p>This modal demonstrates all required ARIA attributes:</p>
+                                <ul>
+                                    <li><code>aria-labelledby</code> - Points to the modal title</li>
+                                    <li><code>aria-describedby</code> - Points to this description</li>
+                                    <li><code>aria-hidden="true"</code> - Hides modal from screen readers when closed</li>
+                                    <li><code>tabindex="-1"</code> - Makes modal focusable but not in tab order</li>
+                                    <li><code>role="dialog"</code> - Identifies this as a dialog</li>
+                                    <li><code>aria-modal="true"</code> - Indicates modal behavior</li>
+                                </ul>
+                            </div>
+                            <!-- Form fields should have associated labels -->
+                            <div class="mb-3">
+                                <label for="ariaName" class="form-label">Your Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="ariaName" required aria-required="true">
+                                <div class="form-text" id="ariaNameHelp">Enter your full name</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: FOCUS TRAP                                     -->
+        <!-- Bootstrap automatically traps focus within the modal.     -->
+        <!-- Tab cycles through focusable elements; Shift+Tab reverses.-->
+        <!-- First focusable element receives focus on open.           -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">2. Focus Trap Behavior</h2>
+            <p>Bootstrap automatically traps focus within the modal. Try tabbing through this example.</p>
+
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#focusTrapModal">
+                Test Focus Trap
+            </button>
+
+            <div class="modal fade" id="focusTrapModal" tabindex="-1" aria-labelledby="focusTrapLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="focusTrapLabel">Focus Trap Demo</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Press <kbd>Tab</kbd> to cycle forward through focusable elements.</p>
+                            <p>Press <kbd>Shift + Tab</kbd> to cycle backward.</p>
+                            <p>Focus will <strong>wrap around</strong> - you cannot tab outside this modal.</p>
+                            <div class="mb-3">
+                                <label for="focusInput1" class="form-label">First Input</label>
+                                <input type="text" class="form-control" id="focusInput1" placeholder="Tab lands here first">
+                            </div>
+                            <div class="mb-3">
+                                <label for="focusInput2" class="form-label">Second Input</label>
+                                <input type="text" class="form-control" id="focusInput2" placeholder="Then here">
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="focusCheck">
+                                <label class="form-check-label" for="focusCheck">A checkbox element</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-success">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: KEYBOARD NAVIGATION                            -->
+        <!-- ESC key closes the modal (unless data-bs-keyboard=false). -->
+        <!-- Tab navigates through focusable elements.                 -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">3. Keyboard Navigation</h2>
+            <p>Modals support keyboard navigation out of the box.</p>
+
+            <div class="table-responsive mb-3">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Key</th>
+                            <th>Action</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><kbd>Escape</kbd></td>
+                            <td>Close modal</td>
+                            <td>Disabled with <code>data-bs-keyboard="false"</code></td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Tab</kbd></td>
+                            <td>Next focusable element</td>
+                            <td>Wraps at end</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Shift + Tab</kbd></td>
+                            <td>Previous focusable element</td>
+                            <td>Wraps at beginning</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Enter</kbd></td>
+                            <td>Activate focused button</td>
+                            <td>When button is focused</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#keyboardModal">
+                Keyboard Navigation Modal
+            </button>
+
+            <div class="modal fade" id="keyboardModal" tabindex="-1" aria-labelledby="keyboardLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="keyboardLabel">Keyboard Navigation</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Use keyboard to interact with this modal:</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary">Focusable Button 1</button>
+                                <button class="btn btn-outline-primary">Focusable Button 2</button>
+                                <a href="#" class="btn btn-outline-primary">Focusable Link</a>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close (or press ESC)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: SCREEN READER ANNOUNCEMENTS                    -->
+        <!-- Live regions and aria-live can announce modal state       -->
+        <!-- changes to screen reader users.                           -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">4. Screen Reader Announcements</h2>
+            <p>Using live regions to announce modal state changes.</p>
+
+            <!-- Live region for screen reader announcements -->
+            <div aria-live="polite" aria-atomic="true" class="visually-hidden" id="srAnnounce"></div>
+
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#srModal">
+                Screen Reader Optimized Modal
+            </button>
+
+            <div class="modal fade" id="srModal" tabindex="-1" aria-labelledby="srModalLabel" aria-describedby="srModalDesc" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="srModalLabel">Screen Reader Optimized</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close this dialog"></button>
+                        </div>
+                        <div class="modal-body" id="srModalDesc">
+                            <p>This modal is optimized for screen readers with:</p>
+                            <ul>
+                                <li><code>aria-describedby</code> pointing to body content</li>
+                                <li>Descriptive <code>aria-label</code> on close button</li>
+                                <li>Visible, descriptive labels on all form fields</li>
+                                <li>Error messages linked via <code>aria-describedby</code></li>
+                            </ul>
+                            <div class="mb-3">
+                                <label for="srEmail" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="srEmail"
+                                       aria-describedby="srEmailHelp srEmailError"
+                                       aria-invalid="false">
+                                <div class="form-text" id="srEmailHelp">We will never share your email.</div>
+                                <!-- Error message linked via aria-describedby -->
+                                <div class="invalid-feedback" id="srEmailError">Please enter a valid email address.</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-warning">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Script to announce modal open/close to screen readers -->
+            <script>
+                const srModal = document.getElementById('srModal');
+                const srAnnounce = document.getElementById('srAnnounce');
+                srModal.addEventListener('shown.bs.modal', function() {
+                    srAnnounce.textContent = 'Dialog opened: Screen Reader Optimized';
+                });
+                srModal.addEventListener('hidden.bs.modal', function() {
+                    srAnnounce.textContent = 'Dialog closed';
+                });
+            </script>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 5: ROLE AND SEMANTIC HTML                         -->
+        <!-- Using semantic HTML and proper roles inside modals.       -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">5. Semantic HTML Inside Modals</h2>
+            <p>Use semantic HTML elements inside modals for maximum accessibility.</p>
+
+            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#semanticModal">
+                Semantic HTML Modal
+            </button>
+
+            <div class="modal fade" id="semanticModal" tabindex="-1" aria-labelledby="semanticLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="semanticLabel">Article Preview</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Using article as semantic container -->
+                            <article>
+                                <header>
+                                    <h6>Article Title</h6>
+                                    <p class="text-muted small">Published on <time datetime="2024-01-15">January 15, 2024</time></p>
+                                </header>
+                                <p>This article uses semantic HTML elements: <code>&lt;article&gt;</code>, <code>&lt;header&gt;</code>, <code>&lt;time&gt;</code>, <code>&lt;footer&gt;</code>.</p>
+                                <footer>
+                                    <small class="text-muted">By Author Name</small>
+                                </footer>
+                            </article>
+
+                            <!-- Properly structured list -->
+                            <nav aria-label="Related articles">
+                                <h6>Related Articles</h6>
+                                <ol class="list-group list-group-numbered">
+                                    <li class="list-group-item border-0 px-0 py-1">First Related Article</li>
+                                    <li class="list-group-item border-0 px-0 py-1">Second Related Article</li>
+                                    <li class="list-group-item border-0 px-0 py-1">Third Related Article</li>
+                                </ol>
+                            </nav>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Read Full Article</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 6: ACCESSIBILITY CHECKLIST                        -->
+        <!-- Comprehensive checklist for modal accessibility.          -->
+        <!-- ======================================================== -->
+        <section class="example-section">
+            <h2 class="mb-3">6. Modal Accessibility Checklist</h2>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Required for All Modals</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label"><code>aria-labelledby</code> points to modal title</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label"><code>aria-hidden="true"</code> on modal when hidden</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label"><code>tabindex="-1"</code> on modal element</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label"><code>aria-label</code> on close button</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">All form fields have visible labels</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">Focus is trapped within modal</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">ESC key closes modal (unless intentional override)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <label class="form-check-label">Focus returns to trigger element on close</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" disabled>
+                        <label class="form-check-label">Color contrast meets WCAG AA (4.5:1 ratio)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" disabled>
+                        <label class="form-check-label">Modal content tested with screen reader</label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

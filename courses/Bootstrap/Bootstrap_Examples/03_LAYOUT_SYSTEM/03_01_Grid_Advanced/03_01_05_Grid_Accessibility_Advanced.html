@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- ============================================
+         03_01_05 - Grid Accessibility Advanced
+         ============================================
+         Ensuring CSS Grid layouts are accessible: reading
+         order vs visual order, ARIA roles, keyboard
+         navigation, and screen reader compatibility.
+    ================================================ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03_01_05 - Grid Accessibility Advanced</title>
+
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1Vx6wgc68mFRAS7I+s3GRznyrA2f27" crossorigin="anonymous">
+
+    <style>
+        /* ============================================
+           READING ORDER PRESERVATION
+           When CSS Grid reorders items visually (e.g.,
+           putting a sidebar before main in the DOM but
+           visually to the right), screen readers still
+           follow DOM order. This section demonstrates
+           the problem and solutions.
+        ================================================ */
+
+        /* DEMO: Visual reordering problem */
+        .reorder-problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 10px;
+        }
+
+        .reorder-problem-grid .sidebar {
+            grid-column: 2; /* Visual: right side */
+            grid-row: 1;
+        }
+
+        .reorder-problem-grid .main {
+            grid-column: 1; /* Visual: left side */
+            grid-row: 1;
+        }
+
+        /* DEMO: Correct approach - DOM order matches visual order */
+        .reorder-correct-grid {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 10px;
+        }
+
+        /* ============================================
+           SKIP NAVIGATION FOR GRID
+           Skip links allow keyboard users to jump past
+           grid navigation to main content
+        ================================================ */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #0d6efd;
+            color: white;
+            padding: 8px 16px;
+            z-index: 10000;
+            transition: top 0.3s;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* ============================================
+           FOCUS MANAGEMENT IN GRID
+           Proper focus indicators for grid items that
+           are interactive (links, buttons, cards)
+        ================================================ */
+        .focus-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .focus-card {
+            background: #e9ecef;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 20px;
+            /* Remove default outline and use border for focus */
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        /* Keyboard focus: visible high-contrast ring */
+        .focus-card:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25);
+        }
+
+        /* Mouse focus: subtle highlight */
+        .focus-card:focus:not(:focus-visible) {
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        /* Keyboard-only focus: prominent ring */
+        .focus-card:focus-visible {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25);
+        }
+
+        /* ============================================
+           ARIA ROLES FOR SEMANTIC GRIDS
+           Using role="grid", role="row", role="gridcell"
+           for data table-like grid layouts
+        ================================================ */
+        .aria-data-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            background: #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .aria-header {
+            background: #212529;
+            color: white;
+            padding: 12px;
+            font-weight: 600;
+        }
+
+        .aria-cell {
+            background: white;
+            padding: 12px;
+        }
+
+        .aria-cell:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        /* ============================================
+           HIGH CONTRAST MODE SUPPORT
+           Ensures grid borders are visible in
+           Windows High Contrast Mode
+        ================================================ */
+        .hc-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .hc-item {
+            /* Use transparent border that becomes visible in high contrast */
+            border: 2px solid transparent;
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        /* High contrast mode: borders become visible */
+        @media (forced-colors: active) {
+            .hc-item {
+                border-color: ButtonText;
+            }
+        }
+
+        /* ============================================
+           RESPONSIVE FONT SIZING IN GRID
+           Ensuring text within grid items scales
+           properly for users who increase font size
+        ================================================ */
+        .text-safe-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .text-safe-item {
+            /* Use em/rem units so text scales with user preferences */
+            padding: 1em;
+            font-size: 1rem;
+            /* min-height in em respects font size changes */
+            min-height: 6em;
+            background: #d1e7dd;
+            border-radius: 8px;
+        }
+
+        .text-safe-item h5 {
+            font-size: 1.25rem;
+        }
+
+        /* ============================================
+           LANDMARK ROLES IN GRID LAYOUTS
+           Using ARIA landmarks for grid sections
+        ================================================ */
+        .landmark-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-areas:
+                "header header"
+                "nav main"
+                "footer footer";
+            gap: 10px;
+            min-height: 300px;
+        }
+
+        .lm-header { grid-area: header; }
+        .lm-nav { grid-area: nav; }
+        .lm-main { grid-area: main; }
+        .lm-footer { grid-area: footer; }
+
+        /* ============================================
+           MOTION PREFERENCES
+           Respecting prefers-reduced-motion for
+           grid animations
+        ================================================ */
+        .motion-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .motion-item {
+            background: #cfe2ff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .motion-item:hover {
+            transform: scale(1.05);
+        }
+
+        /* Disable animations for users who prefer reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .motion-item {
+                transition: none;
+            }
+            .motion-item:hover {
+                transform: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .focus-grid,
+            .hc-grid,
+            .text-safe-grid,
+            .motion-grid {
+                grid-template-columns: 1fr;
+            }
+            .reorder-problem-grid,
+            .reorder-correct-grid,
+            .landmark-grid {
+                grid-template-columns: 1fr;
+            }
+            .reorder-problem-grid .sidebar,
+            .reorder-problem-grid .main,
+            .reorder-correct-grid .sidebar,
+            .reorder-correct-grid .main {
+                grid-column: 1;
+                grid-row: auto;
+            }
+            .aria-data-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip navigation link for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="container my-5">
+        <h1 class="mb-4">03_01_05 - Grid Accessibility Advanced</h1>
+
+        <!-- ============================================
+             SECTION 1: DOM Order vs Visual Order
+             The #1 accessibility concern with CSS Grid
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. DOM Order vs Visual Order</h2>
+            <div class="alert alert-danger">
+                <strong>Critical:</strong> CSS Grid can reorder items visually with
+                <code>grid-column</code> and <code>grid-row</code>, but screen readers and
+                keyboard navigation always follow DOM order. Visual reordering creates a
+                disconnect for assistive technology users.
+            </div>
+
+            <h6 class="text-danger">Bad: Visual reordering (sidebar DOM-first, displayed right):</h6>
+            <div class="reorder-problem-grid mb-3">
+                <!-- DOM order: sidebar first, main second -->
+                <!-- But visually: sidebar on right, main on left -->
+                <div class="sidebar p-3" style="background: #f8d7da; border-radius: 8px;">
+                    <strong>Sidebar</strong> (DOM 1st, visual RIGHT)
+                </div>
+                <div class="main p-3" style="background: #d1e7dd; border-radius: 8px;">
+                    <strong>Main Content</strong> (DOM 2nd, visual LEFT)
+                    <p class="small mb-0">Screen readers read sidebar first, but it appears on the right. This is confusing.</p>
+                </div>
+            </div>
+
+            <h6 class="text-success">Correct: DOM order matches visual order:</h6>
+            <div class="reorder-correct-grid">
+                <!-- DOM order matches visual: main first, sidebar second -->
+                <div class="p-3" style="background: #d1e7dd; border-radius: 8px;">
+                    <strong>Main Content</strong> (DOM 1st, visual LEFT)
+                    <p class="small mb-0">DOM and visual order match. Screen reader users experience the same flow.</p>
+                </div>
+                <div class="p-3" style="background: #cfe2ff; border-radius: 8px;">
+                    <strong>Sidebar</strong> (DOM 2nd, visual RIGHT)
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 2: Focusable Grid Cards
+             Making grid items keyboard-accessible
+        ================================================ -->
+        <section class="mb-5" id="main-content">
+            <h2 class="h4 mb-3">2. Keyboard-Accessible Grid Cards</h2>
+            <div class="alert alert-info">
+                Grid cards that are clickable must be focusable. Use <code>&lt;a&gt;</code> or
+                <code>&lt;button&gt;</code> elements rather than <code>&lt;div&gt;</code> with click handlers.
+                The <code>:focus-visible</code> pseudo-class shows focus only for keyboard navigation.
+            </div>
+
+            <div class="focus-grid">
+                <!-- Using <a> tags for proper keyboard accessibility -->
+                <a href="#" class="focus-card text-decoration-none text-dark">
+                    <h5>Card 1</h5>
+                    <p class="small mb-0">This is a link element. Press Tab to focus, Enter to activate.</p>
+                </a>
+                <a href="#" class="focus-card text-decoration-none text-dark">
+                    <h5>Card 2</h5>
+                    <p class="small mb-0">Focus ring uses :focus-visible for keyboard-only indication.</p>
+                </a>
+                <a href="#" class="focus-card text-decoration-none text-dark">
+                    <h5>Card 3</h5>
+                    <p class="small mb-0">Mouse clicks don't show focus ring (unless supported).</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 3: ARIA Roles for Data Grids
+             Using grid/row/gridcell roles for tabular data
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. ARIA Roles for Semantic Data Grids</h2>
+            <div class="alert alert-info">
+                When CSS Grid displays tabular data, add <code>role="grid"</code> to the container,
+                <code>role="row"</code> to row wrappers, and <code>role="columnheader"</code> /
+                <code>role="gridcell"</code> to cells. This enables screen reader table navigation.
+            </div>
+
+            <div class="aria-data-grid" role="grid" aria-label="Employee data">
+                <!-- Header row -->
+                <div role="columnheader" class="aria-header">Name</div>
+                <div role="columnheader" class="aria-header">Role</div>
+                <div role="columnheader" class="aria-header">Department</div>
+                <div role="columnheader" class="aria-header">Status</div>
+
+                <!-- Data rows -->
+                <div role="gridcell" class="aria-cell">Alice Johnson</div>
+                <div role="gridcell" class="aria-cell">Engineer</div>
+                <div role="gridcell" class="aria-cell">Development</div>
+                <div role="gridcell" class="aria-cell">Active</div>
+
+                <div role="gridcell" class="aria-cell">Bob Smith</div>
+                <div role="gridcell" class="aria-cell">Designer</div>
+                <div role="gridcell" class="aria-cell">Creative</div>
+                <div role="gridcell" class="aria-cell">Active</div>
+
+                <div role="gridcell" class="aria-cell">Carol Davis</div>
+                <div role="gridcell" class="aria-cell">Manager</div>
+                <div role="gridcell" class="aria-cell">Operations</div>
+                <div role="gridcell" class="aria-cell">On Leave</div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 4: High Contrast Mode Support
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Windows High Contrast Mode Support</h2>
+            <div class="alert alert-info">
+                In Windows High Contrast Mode, CSS colors are overridden. Use
+                <code>@media (forced-colors: active)</code> to ensure borders and
+                backgrounds remain distinguishable.
+            </div>
+
+            <div class="hc-grid">
+                <div class="hc-item">
+                    <h5>Item 1</h5>
+                    <p class="small mb-0">Border visible in high contrast</p>
+                </div>
+                <div class="hc-item">
+                    <h5>Item 2</h5>
+                    <p class="small mb-0">Uses ButtonText color</p>
+                </div>
+                <div class="hc-item">
+                    <h5>Item 3</h5>
+                    <p class="small mb-0">Transparent border becomes visible</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 5: Responsive Text Scaling
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Font-Size Resilient Grid Items</h2>
+            <div class="alert alert-info">
+                Users who increase browser font size should see grid items scale properly.
+                Use <code>em</code>/<code>rem</code> units for padding, gaps, and min-heights
+                instead of <code>px</code>.
+            </div>
+
+            <div class="text-safe-grid">
+                <div class="text-safe-item">
+                    <h5>Scales Well</h5>
+                    <p class="small mb-0">Padding and min-height use em units.</p>
+                </div>
+                <div class="text-safe-item">
+                    <h5>User-Respectful</h5>
+                    <p class="small mb-0">Respects browser font size settings.</p>
+                </div>
+                <div class="text-safe-item">
+                    <h5>Accessible</h5>
+                    <p class="small mb-0">Content doesn't overflow at larger sizes.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 6: Landmark Grid Layout
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. ARIA Landmarks in Grid Layouts</h2>
+            <div class="alert alert-info">
+                Each grid section should have an appropriate ARIA landmark role so screen reader
+                users can navigate by region (<code>banner</code>, <code>navigation</code>,
+                <code>main</code>, <code>contentinfo</code>).
+            </div>
+
+            <div class="landmark-grid">
+                <div class="lm-header p-3 bg-dark text-white rounded" role="banner">
+                    <strong>Header</strong> (role="banner")
+                </div>
+                <div class="lm-nav p-3 bg-success text-white rounded" role="navigation" aria-label="Main navigation">
+                    <strong>Nav</strong> (role="navigation")
+                    <ul class="list-unstyled small mt-2 mb-0">
+                        <li><a href="#" class="text-white">Dashboard</a></li>
+                        <li><a href="#" class="text-white">Reports</a></li>
+                        <li><a href="#" class="text-white">Settings</a></li>
+                    </ul>
+                </div>
+                <div class="lm-main p-3 bg-light rounded" role="main">
+                    <strong>Main</strong> (role="main")
+                    <p class="small mb-0">Primary content area.</p>
+                </div>
+                <div class="lm-footer p-3 bg-secondary text-white rounded" role="contentinfo">
+                    <strong>Footer</strong> (role="contentinfo")
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 7: prefers-reduced-motion
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">7. Respecting <code>prefers-reduced-motion</code></h2>
+            <div class="alert alert-info">
+                Users with vestibular disorders can set <code>prefers-reduced-motion: reduce</code>
+                in their OS. CSS animations on grid items should respect this preference.
+            </div>
+
+            <div class="motion-grid">
+                <div class="motion-item">
+                    <h5>Hover Me</h5>
+                    <p class="small mb-0">Animates unless reduced-motion is set.</p>
+                </div>
+                <div class="motion-item">
+                    <h5>Hover Me</h5>
+                    <p class="small mb-0">Check OS accessibility settings.</p>
+                </div>
+                <div class="motion-item">
+                    <h5>Hover Me</h5>
+                    <p class="small mb-0">Transition disabled when preferred.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================
+             SECTION 8: Accessibility Checklist
+        ================================================ -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">8. Grid Accessibility Checklist</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Check</th>
+                            <th>Why</th>
+                            <th>How</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>DOM order matches visual order</td>
+                            <td>Screen readers follow DOM order</td>
+                            <td>Don't use grid-column/row to reorder content</td>
+                        </tr>
+                        <tr>
+                            <td>Interactive items are focusable</td>
+                            <td>Keyboard users can't click divs</td>
+                            <td>Use <code>&lt;a&gt;</code> or <code>&lt;button&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td>Focus indicators visible</td>
+                            <td>Keyboard users need to see focus</td>
+                            <td>Use <code>:focus-visible</code> styling</td>
+                        </tr>
+                        <tr>
+                            <td>Data grids have ARIA roles</td>
+                            <td>Enables table navigation in screen readers</td>
+                            <td>Add <code>role="grid"</code>, <code>role="row"</code>, <code>role="gridcell"</code></td>
+                        </tr>
+                        <tr>
+                            <td>Skip navigation links</td>
+                            <td>Keyboard users bypass repeated nav</td>
+                            <td>Add skip link to <code>#main-content</code></td>
+                        </tr>
+                        <tr>
+                            <td>High contrast support</td>
+                            <td>Borders/backgrounds visible in HCM</td>
+                            <td>Use <code>@media (forced-colors: active)</code></td>
+                        </tr>
+                        <tr>
+                            <td>Reduced motion support</td>
+                            <td>Prevents vestibular discomfort</td>
+                            <td>Use <code>@media (prefers-reduced-motion)</code></td>
+                        </tr>
+                        <tr>
+                            <td>Relative units (em/rem)</td>
+                            <td>Text scales with user preferences</td>
+                            <td>Use rem for font-size, em for spacing</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+</html>

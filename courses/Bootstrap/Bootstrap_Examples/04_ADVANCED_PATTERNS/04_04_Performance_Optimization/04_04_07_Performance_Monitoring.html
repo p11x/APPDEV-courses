@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     04_04_07_Performance_Monitoring.html
+     Topic: Performance Monitoring with Web Vitals
+     
+     Demonstrates using the Web Vitals API and Performance API to
+     monitor real-world performance metrics in a Bootstrap application.
+     ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1WQ/t9E3DnYGhCKaPJoHamN4HE2ENRa" crossorigin="anonymous">
+
+    <title>Performance Monitoring - Bootstrap 5</title>
+
+    <style>
+        .hero-mon { background: linear-gradient(135deg, #0dcaf0 0%, #0d6efd 100%); color: white; padding: 4rem 0; }
+        .vital-card { text-align: center; padding: 2rem 1rem; border-radius: 0.5rem; }
+        .vital-value { font-size: 3rem; font-weight: 800; line-height: 1; }
+        .vital-name { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; }
+        .good { color: #198754; }
+        .needs-improvement { color: #ffc107; }
+        .poor { color: #dc3545; }
+        .code-sm { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.82rem; overflow-x: auto; }
+        .metric-log { max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Perf Monitoring</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navMain" aria-controls="navMain"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#vitals">Web Vitals</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#api">Performance API</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#live">Live Monitor</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero-mon text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Performance Monitoring</h1>
+            <p class="lead mt-2">Measure real user metrics with Web Vitals and the Performance API.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 1: CORE WEB VITALS EXPLANATION
+         Each card explains a Core Web Vital metric.
+         ============================================================ -->
+    <section id="vitals" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-4">Core Web Vitals</h2>
+
+            <div class="row g-4">
+                <!-- LCP -->
+                <div class="col-md-4">
+                    <div class="card h-100 vital-card">
+                        <div class="card-body">
+                            <div class="vital-value good" id="lcpValue">--</div>
+                            <div class="vital-name">LCP</div>
+                            <p class="mt-3 mb-0 small text-muted">Largest Contentful Paint</p>
+                            <hr>
+                            <p class="small">Measures loading performance. The time until the largest visible element finishes rendering.</p>
+                            <div class="d-flex justify-content-center gap-1">
+                                <span class="badge bg-success">&le; 2.5s</span>
+                                <span class="badge bg-warning text-dark">&le; 4s</span>
+                                <span class="badge bg-danger">&gt; 4s</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FID / INP -->
+                <div class="col-md-4">
+                    <div class="card h-100 vital-card">
+                        <div class="card-body">
+                            <div class="vital-value good" id="inpValue">--</div>
+                            <div class="vital-name">INP</div>
+                            <p class="mt-3 mb-0 small text-muted">Interaction to Next Paint</p>
+                            <hr>
+                            <p class="small">Measures responsiveness. The latency of the worst interaction during the page lifecycle.</p>
+                            <div class="d-flex justify-content-center gap-1">
+                                <span class="badge bg-success">&le; 200ms</span>
+                                <span class="badge bg-warning text-dark">&le; 500ms</span>
+                                <span class="badge bg-danger">&gt; 500ms</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CLS -->
+                <div class="col-md-4">
+                    <div class="card h-100 vital-card">
+                        <div class="card-body">
+                            <div class="vital-value good" id="clsValue">--</div>
+                            <div class="vital-name">CLS</div>
+                            <p class="mt-3 mb-0 small text-muted">Cumulative Layout Shift</p>
+                            <hr>
+                            <p class="small">Measures visual stability. The sum of all unexpected layout shifts during the page session.</p>
+                            <div class="d-flex justify-content-center gap-1">
+                                <span class="badge bg-success">&le; 0.1</span>
+                                <span class="badge bg-warning text-dark">&le; 0.25</span>
+                                <span class="badge bg-danger">&gt; 0.25</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional metrics row -->
+            <div class="row g-4 mt-2">
+                <div class="col-md-6">
+                    <div class="card h-100 vital-card">
+                        <div class="card-body">
+                            <div class="vital-value text-primary" id="fcpValue">--</div>
+                            <div class="vital-name">FCP</div>
+                            <p class="mt-3 mb-0 small text-muted">First Contentful Paint</p>
+                            <p class="small mt-2">Time until the first DOM content is painted. Good: &le; 1.8s</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 vital-card">
+                        <div class="card-body">
+                            <div class="vital-value text-primary" id="ttfbValue">--</div>
+                            <div class="vital-name">TTFB</div>
+                            <p class="mt-3 mb-0 small text-muted">Time to First Byte</p>
+                            <p class="small mt-2">Time until the first byte of the response is received. Good: &le; 800ms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 2: PERFORMANCE API CODE EXAMPLES
+         Shows how to use the Performance API programmatically.
+         ============================================================ -->
+    <section id="api" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">Performance API Examples</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Navigation Timing</h5></div>
+                        <div class="card-body">
+                            <div class="code-sm">
+// Get navigation timing data<br>
+const nav = performance.getEntriesByType(<br>
+&nbsp;&nbsp;'navigation'<br>
+)[0];<br><br>
+console.log({<br>
+&nbsp;&nbsp;dns: nav.domainLookupEnd - nav.domainLookupStart,<br>
+&nbsp;&nbsp;tcp: nav.connectEnd - nav.connectStart,<br>
+&nbsp;&nbsp;ttfb: nav.responseStart - nav.requestStart,<br>
+&nbsp;&nbsp;download: nav.responseEnd - nav.responseStart,<br>
+&nbsp;&nbsp;domParse: nav.domInteractive - nav.responseEnd,<br>
+&nbsp;&nbsp;domReady: nav.domContentLoadedEventEnd,<br>
+&nbsp;&nbsp;fullLoad: nav.loadEventEnd<br>
+});
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Resource Timing</h5></div>
+                        <div class="card-body">
+                            <div class="code-sm">
+// Analyze loaded resources<br>
+const resources = performance<br>
+&nbsp;&nbsp;.getEntriesByType('resource');<br><br>
+resources.forEach(r => {<br>
+&nbsp;&nbsp;console.log({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name: r.name.split('/').pop(),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;type: r.initiatorType,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;size: r.transferSize,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;duration: Math.round(r.duration)<br>
+&nbsp;&nbsp;});<br>
+});
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         SECTION 3: LIVE PERFORMANCE MONITOR
+         Real-time display of performance entries as they occur.
+         ============================================================ -->
+    <section id="live" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">Live Metric Log</h2>
+            <p class="text-muted mb-3">Performance entries are captured in real time below:</p>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">Performance Log</span>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearLog()">Clear</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="metric-log p-3 bg-dark text-light" id="perfLog">
+                        <div class="text-muted">Waiting for performance entries...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Performance Monitoring &mdash; Bootstrap 5 Performance Patterns</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous" defer></script>
+
+    <script>
+        // ============================================================
+        // PERFORMANCE MONITORING SCRIPT
+        // Uses PerformanceObserver to watch for Web Vitals
+        // ============================================================
+
+        const perfLog = document.getElementById('perfLog');
+
+        function logMetric(name, value, rating) {
+            const colorMap = { good: '#198754', 'needs-improvement': '#ffc107', poor: '#dc3545' };
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.style.borderLeft = `3px solid ${colorMap[rating] || '#6c757d'}`;
+            entry.style.paddingLeft = '0.5rem';
+            entry.style.marginBottom = '0.5rem';
+            entry.innerHTML = `<span class="text-muted">${time}</span> <strong>${name}</strong>: ${typeof value === 'number' ? value.toFixed(2) : value}ms <span style="color:${colorMap[rating]}">[${rating}]</span>`;
+            perfLog.prepend(entry);
+        }
+
+        function getRating(name, value) {
+            const thresholds = {
+                LCP: [2500, 4000],
+                FCP: [1800, 3000],
+                CLS: [0.1, 0.25],
+                INP: [200, 500],
+                TTFB: [800, 1800]
+            };
+            const t = thresholds[name];
+            if (!t) return 'good';
+            if (value <= t[0]) return 'good';
+            if (value <= t[1]) return 'needs-improvement';
+            return 'poor';
+        }
+
+        // Update vital display
+        function updateVital(elId, value, unit) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            const display = unit === 's' ? (value / 1000).toFixed(2) : value.toFixed(value < 1 ? 3 : 0);
+            el.textContent = display + (unit || '');
+        }
+
+        // LCP Observer
+        if ('PerformanceObserver' in window) {
+            try {
+                const lcpObs = new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    const last = entries[entries.length - 1];
+                    const rating = getRating('LCP', last.startTime);
+                    logMetric('LCP', last.startTime, rating);
+                    updateVital('lcpValue', last.startTime, 's');
+                    document.getElementById('lcpValue').className = 'vital-value ' + rating.replace('needs-improvement', 'needs-improvement');
+                });
+                lcpObs.observe({ type: 'largest-contentful-paint', buffered: true });
+            } catch(e) {}
+
+            // FCP Observer
+            try {
+                const fcpObs = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        if (entry.name === 'first-contentful-paint') {
+                            const rating = getRating('FCP', entry.startTime);
+                            logMetric('FCP', entry.startTime, rating);
+                            updateVital('fcpValue', entry.startTime, 's');
+                        }
+                    }
+                });
+                fcpObs.observe({ type: 'paint', buffered: true });
+            } catch(e) {}
+
+            // CLS Observer
+            try {
+                let clsValue = 0;
+                const clsObs = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        if (!entry.hadRecentInput) {
+                            clsValue += entry.value;
+                        }
+                    }
+                    const rating = getRating('CLS', clsValue);
+                    logMetric('CLS', clsValue, rating);
+                    const el = document.getElementById('clsValue');
+                    el.textContent = clsValue.toFixed(3);
+                });
+                clsObs.observe({ type: 'layout-shift', buffered: true });
+            } catch(e) {}
+
+            // Resource timing
+            try {
+                const resObs = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        logMetric('Resource', entry.duration, entry.duration < 200 ? 'good' : entry.duration < 500 ? 'needs-improvement' : 'poor');
+                    }
+                });
+                resObs.observe({ type: 'resource', buffered: false });
+            } catch(e) {}
+        }
+
+        // TTFB from Navigation Timing
+        window.addEventListener('load', () => {
+            const nav = performance.getEntriesByType('navigation')[0];
+            if (nav) {
+                const ttfb = nav.responseStart - nav.requestStart;
+                const rating = getRating('TTFB', ttfb);
+                logMetric('TTFB', ttfb, rating);
+                updateVital('ttfbValue', ttfb, 's');
+            }
+        });
+
+        function clearLog() {
+            perfLog.innerHTML = '<div class="text-muted">Log cleared. Waiting for new entries...</div>';
+        }
+    </script>
+</body>
+</html>

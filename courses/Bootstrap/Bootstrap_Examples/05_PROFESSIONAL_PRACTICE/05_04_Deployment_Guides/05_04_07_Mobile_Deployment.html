@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<!-- ====================================================================
+     05_04_07_Mobile_Deployment.html
+     
+     PURPOSE: Mobile-optimized deployment strategies for Bootstrap
+     TOPICS:  Mobile-first CSS, touch optimization, viewport config,
+              responsive images, mobile performance, PWA basics
+     
+     This example demonstrates how to deploy Bootstrap projects
+     optimized for mobile devices with proper touch targets,
+     responsive images, and mobile performance techniques.
+     ==================================================================== -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- ==============================================================
+         VIEWPORT META - Critical for mobile deployment
+         
+         - width=device-width: Match screen width
+         - initial-scale=1: No zoom on load
+         - maximum-scale=5: Allow user zoom (accessibility)
+         - user-scalable=yes: Allow pinch-to-zoom (WCAG requirement)
+         
+         NEVER set user-scalable=no or maximum-scale=1 - this
+         breaks accessibility for users who need to zoom.
+         ============================================================== -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    
+    <!-- ==============================================================
+         MOBILE WEB APP META TAGS
+         
+         These tags enable mobile web app capabilities:
+         - apple-mobile-web-app-capable: iOS home screen app mode
+         - mobile-web-app-capable: Android home screen app mode
+         - theme-color: Browser chrome color on mobile
+         ============================================================== -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0d6efd">
+    
+    <title>Mobile Deployment - Bootstrap Mastery</title>
+    
+    <!-- ==============================================================
+         PRECONNECT TO CDN - Reduces mobile latency
+         
+         Mobile networks have higher latency than desktop.
+         Preconnect establishes early connections to CDNs.
+         ============================================================== -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    
+    <link 
+        rel="stylesheet" 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YcnS/1p8bUGKl6OSYNROTER0WeiZs0aVf636N"
+        crossorigin="anonymous">
+    
+    <style>
+        /* ==============================================================
+           MOBILE-FIRST CSS STRATEGY
+           
+           All base styles target mobile screens first.
+           Media queries progressively enhance for larger screens.
+           
+           This is Bootstrap's default approach - our custom CSS
+           follows the same mobile-first methodology.
+           ============================================================== */
+        
+        /* ==============================================================
+           TOUCH TARGET SIZES (WCAG 2.5.5)
+           
+           Minimum touch target: 44x44 CSS pixels
+           Recommended touch target: 48x48 CSS pixels
+           
+           Bootstrap's default button padding achieves ~38px height.
+           We enhance for better mobile touch experience.
+           ============================================================== */
+        .touch-target {
+            /* Ensures minimum 44x44px touch area */
+            min-height: 44px;
+            min-width: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .touch-target-lg {
+            /* Larger touch targets for primary actions */
+            min-height: 48px;
+            min-width: 48px;
+        }
+        
+        /* ==============================================================
+           SAFE AREA INSETS
+           
+           Modern phones have notches, rounded corners, and home indicators.
+           env(safe-area-inset-*) provides the padding needed to avoid
+           these hardware features.
+           
+           Essential for:
+           - iPhone X and later (notch)
+           - Android phones with rounded corners
+           - Devices with gesture navigation
+           ============================================================== */
+        .safe-area-padding {
+            padding-left: env(safe-area-inset-left, 0px);
+            padding-right: env(safe-area-inset-right, 0px);
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        
+        /* ==============================================================
+           MOBILE NAVIGATION PATTERNS
+           
+           Bottom navigation is the standard mobile pattern.
+           Fixed to bottom of screen for easy thumb reach.
+           ============================================================== */
+        .mobile-bottom-nav {
+            /* Fixed to bottom of viewport */
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            background: white;
+            border-top: 1px solid #dee2e6;
+            
+            /* Safe area for phones with home indicator */
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            
+            /* Ensure touch targets are large enough */
+            display: flex;
+            justify-content: space-around;
+            padding-top: 0.5rem;
+        }
+        
+        .mobile-bottom-nav a {
+            /* Each nav item is a proper touch target */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 44px;
+            min-height: 44px;
+            padding: 0.5rem;
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 0.75rem;
+            gap: 0.25rem;
+        }
+        
+        .mobile-bottom-nav a.active {
+            color: #0d6efd;
+        }
+        
+        .mobile-bottom-nav a svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        /* Add padding to body to account for fixed bottom nav */
+        @media (max-width: 767.98px) {
+            body {
+                padding-bottom: 80px;
+            }
+        }
+        
+        /* ==============================================================
+           MOBILE-OPTIMIZED IMAGES
+           
+           Serve smaller images to mobile devices to save bandwidth.
+           Use srcset and sizes for responsive image loading.
+           ============================================================== */
+        .mobile-image {
+            /* Default: full width on mobile */
+            width: 100%;
+            height: auto;
+        }
+        
+        /* ==============================================================
+           MOBILE TYPOGRAPHY
+           
+           Larger base font size for mobile readability.
+           Prevent text size adjustment on orientation change.
+           ============================================================== */
+        html {
+            /* 16px base prevents iOS zoom on input focus */
+            font-size: 16px;
+            /* Prevent font boosting */
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+        
+        /* ==============================================================
+           PULL-TO-REFRESH INDICATOR
+           
+           Visual feedback for mobile pull-to-refresh gesture.
+           ============================================================== */
+        .pull-indicator {
+            text-align: center;
+            padding: 1rem;
+            color: #6c757d;
+            display: none;
+        }
+        
+        /* ==============================================================
+           SWIPE-ENABLED CAROUSEL
+           
+           Enhanced carousel for touch devices with momentum scrolling.
+           ============================================================== */
+        .swipe-container {
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            scrollbar-width: none;
+        }
+        
+        .swipe-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .swipe-item {
+            flex: 0 0 85%;
+            scroll-snap-align: center;
+        }
+        
+        /* ==============================================================
+           LOADING SKELETON FOR MOBILE
+           
+           Skeleton screens improve perceived performance on slow
+           mobile networks. They show placeholder shapes while
+           content loads.
+           ============================================================== */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 0.375rem;
+        }
+        
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ==============================================================
+         MOBILE-OPTIMIZED NAVBAR
+         
+         Uses offcanvas for mobile menu (better than collapse for mobile).
+         Hamburger button has proper touch target size.
+         ============================================================== -->
+    <nav class="navbar navbar-light bg-white shadow-sm sticky-top safe-area-padding">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">📱 MobileDeploy</a>
+            
+            <!-- ==============================================================
+                 HAMBURGER BUTTON - Touch target compliant
+                 
+                 - btn: Removes default button styles
+                 - p-2: Adds padding for 44px+ touch target
+                 - border-0: Clean look
+                 ============================================================== -->
+            <button 
+                class="btn p-2 border-0" 
+                type="button" 
+                data-bs-toggle="offcanvas" 
+                data-bs-target="#mobileMenu"
+                aria-label="Open navigation menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==============================================================
+         OFFCANVAS MENU - Better mobile UX than collapse
+         
+         Offcanvas slides in from the end (right in LTR).
+         Better for mobile because:
+         - Full-height menu easier to navigate
+         - Clear overlay dismisses menu
+         - More screen real estate for menu items
+         ============================================================== -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileMenu">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title">Menu</h5>
+            <!-- Close button is a proper touch target -->
+            <button type="button" class="btn-close p-2" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <nav class="nav flex-column gap-2">
+                <!-- Each link has proper touch target size -->
+                <a class="nav-link active p-3 rounded bg-light" href="#mobile-checklist">
+                    <strong>Mobile Checklist</strong>
+                    <small class="d-block text-muted">Pre-deployment checks</small>
+                </a>
+                <a class="nav-link p-3 rounded" href="#responsive-images">
+                    <strong>Responsive Images</strong>
+                    <small class="d-block text-muted">Optimize for mobile</small>
+                </a>
+                <a class="nav-link p-3 rounded" href="#touch-optimization">
+                    <strong>Touch Optimization</strong>
+                    <small class="d-block text-muted">Touch targets & gestures</small>
+                </a>
+                <a class="nav-link p-3 rounded" href="#mobile-performance">
+                    <strong>Mobile Performance</strong>
+                    <small class="d-block text-muted">Speed on mobile networks</small>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- ==============================================================
+         HERO SECTION - Mobile optimized
+         ============================================================== -->
+    <header class="bg-primary text-white py-4 safe-area-padding">
+        <div class="container">
+            <h1 class="h2 fw-bold">Mobile Deployment</h1>
+            <p class="mb-0 opacity-75">Optimize Bootstrap for mobile devices</p>
+        </div>
+    </header>
+
+    <main class="container py-4">
+        <!-- ==============================================================
+             SECTION 1: Mobile Deployment Checklist
+             ============================================================== -->
+        <section id="mobile-checklist" class="mb-5">
+            <h2 class="h4 mb-3">Mobile Deployment Checklist</h2>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex align-items-start gap-3">
+                            <span class="badge bg-success rounded-pill mt-1">✓</span>
+                            <div>
+                                <strong>Viewport meta tag configured</strong>
+                                <p class="mb-0 small text-muted">width=device-width, initial-scale=1.0</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start gap-3">
+                            <span class="badge bg-success rounded-pill mt-1">✓</span>
+                            <div>
+                                <strong>Touch targets minimum 44x44px</strong>
+                                <p class="mb-0 small text-muted">WCAG 2.5.5 compliance for all interactive elements</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start gap-3">
+                            <span class="badge bg-success rounded-pill mt-1">✓</span>
+                            <div>
+                                <strong>Responsive images with srcset</strong>
+                                <p class="mb-0 small text-muted">Serve smaller images to mobile devices</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start gap-3">
+                            <span class="badge bg-success rounded-pill mt-1">✓</span>
+                            <div>
+                                <strong>Safe area insets configured</strong>
+                                <p class="mb-0 small text-muted">Support for notches and rounded corners</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start gap-3">
+                            <span class="badge bg-warning rounded-pill mt-1">!</span>
+                            <div>
+                                <strong>Font size 16px for inputs</strong>
+                                <p class="mb-0 small text-muted">Prevents iOS auto-zoom on input focus</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start gap-3">
+                            <span class="badge bg-warning rounded-pill mt-1">!</span>
+                            <div>
+                                <strong>Lazy load images below fold</strong>
+                                <p class="mb-0 small text-muted">loading="lazy" for off-screen images</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 2: Responsive Images
+             ============================================================== -->
+        <section id="responsive-images" class="mb-5">
+            <h2 class="h4 mb-3">Responsive Images</h2>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Using srcset for Mobile Optimization</h5>
+                </div>
+                <div class="card-body">
+                    <!-- ==================================================
+                         RESPONSIVE IMAGE WITH SRCSET
+                         
+                         The browser picks the best image based on:
+                         - Device pixel ratio (1x, 2x, 3x)
+                         - Viewport width
+                         - Network conditions
+                         
+                         sizes attribute tells browser how wide the
+                         image will be at each breakpoint.
+                         ================================================== -->
+                    <div class="code-block" style="background:#f8f9fa; padding:1rem; border-radius:0.5rem; font-family:monospace; font-size:0.875rem; overflow-x:auto;"><!-- Responsive image: serves smaller file to mobile -->
+&lt;img
+  src="image-800.jpg"
+  srcset="image-400.jpg 400w,
+          image-800.jpg 800w,
+          image-1200.jpg 1200w"
+  sizes="(max-width: 576px) 100vw,
+         (max-width: 992px) 50vw,
+         33vw"
+  alt="Description"
+  loading="lazy"
+  class="img-fluid"&gt;</div>
+                    
+                    <div class="alert alert-info mt-3 mb-0">
+                        <strong>Bandwidth savings:</strong> A 400px image is typically 50-80% smaller 
+                        than a 1200px image. On slow mobile networks, this means 2-5x faster loading.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lazy Loading Example -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Lazy Loading with Bootstrap</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-4">
+                            <!-- ==================================================
+                                 LAZY LOADED IMAGE
+                                 
+                                 loading="lazy" tells browser to defer loading
+                                 until image is near the viewport.
+                                 
+                                 Bootstrap's img-fluid makes it responsive.
+                                 ================================================== -->
+                            <div class="card">
+                                <div class="bg-light text-center py-5">
+                                    <span class="text-muted">Image 1<br>(lazy loaded)</span>
+                                </div>
+                                <div class="card-body p-2">
+                                    <small class="text-muted">loading="lazy"</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="card">
+                                <div class="bg-light text-center py-5">
+                                    <span class="text-muted">Image 2<br>(lazy loaded)</span>
+                                </div>
+                                <div class="card-body p-2">
+                                    <small class="text-muted">loading="lazy"</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="card">
+                                <div class="bg-light text-center py-5">
+                                    <span class="text-muted">Image 3<br>(lazy loaded)</span>
+                                </div>
+                                <div class="card-body p-2">
+                                    <small class="text-muted">loading="lazy"</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 3: Touch Optimization
+             ============================================================== -->
+        <section id="touch-optimization" class="mb-5">
+            <h2 class="h4 mb-3">Touch Optimization</h2>
+            
+            <div class="row g-3">
+                <!-- Standard Touch Target -->
+                <div class="col-6">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <p class="small text-muted mb-2">Standard (44px)</p>
+                            <button class="btn btn-primary touch-target">
+                                Tap Me
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Large Touch Target -->
+                <div class="col-6">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <p class="small text-muted mb-2">Large (48px)</p>
+                            <button class="btn btn-success touch-target-lg px-4">
+                                Primary Action
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Touch Target Demo -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6>Navigation with Proper Touch Targets</h6>
+                    <div class="d-flex justify-content-around py-2">
+                        <a href="#" class="btn btn-outline-primary touch-target">
+                            <span>🏠</span>
+                            <span class="d-block small">Home</span>
+                        </a>
+                        <a href="#" class="btn btn-outline-primary touch-target">
+                            <span>🔍</span>
+                            <span class="d-block small">Search</span>
+                        </a>
+                        <a href="#" class="btn btn-outline-primary touch-target">
+                            <span>❤️</span>
+                            <span class="d-block small">Favorites</span>
+                        </a>
+                        <a href="#" class="btn btn-outline-primary touch-target">
+                            <span>👤</span>
+                            <span class="d-block small">Profile</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 4: Mobile Performance
+             ============================================================== -->
+        <section id="mobile-performance" class="mb-5">
+            <h2 class="h4 mb-3">Mobile Performance</h2>
+            
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Technique</th>
+                            <th>Impact</th>
+                            <th>Effort</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Lazy load images</td>
+                            <td><span class="badge bg-success">High</span></td>
+                            <td><span class="badge bg-success">Low</span></td>
+                        </tr>
+                        <tr>
+                            <td>Responsive images (srcset)</td>
+                            <td><span class="badge bg-success">High</span></td>
+                            <td><span class="badge bg-warning">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td>Preconnect to CDN</td>
+                            <td><span class="badge bg-info">Medium</span></td>
+                            <td><span class="badge bg-success">Low</span></td>
+                        </tr>
+                        <tr>
+                            <td>Critical CSS inline</td>
+                            <td><span class="badge bg-success">High</span></td>
+                            <td><span class="badge bg-danger">High</span></td>
+                        </tr>
+                        <tr>
+                            <td>Service Worker caching</td>
+                            <td><span class="badge bg-success">High</span></td>
+                            <td><span class="badge bg-danger">High</span></td>
+                        </tr>
+                        <tr>
+                            <td>Font display swap</td>
+                            <td><span class="badge bg-info">Medium</span></td>
+                            <td><span class="badge bg-success">Low</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==============================================================
+         MOBILE BOTTOM NAVIGATION
+         
+         Standard mobile navigation pattern.
+         Fixed to bottom for easy thumb access.
+         ============================================================== -->
+    <nav class="mobile-bottom-nav d-md-none">
+        <a href="#" class="active">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5Z"/>
+            </svg>
+            <span>Home</span>
+        </a>
+        <a href="#">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+            <span>Search</span>
+        </a>
+        <a href="#">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+            </svg>
+            <span>Nearby</span>
+        </a>
+        <a href="#">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+            </svg>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <script 
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLSfVQmvFPwCq8mFpDrNvbTNpsMxMXJLZl1FTERFBzNEk9"
+        crossorigin="anonymous">
+    </script>
+</body>
+</html>

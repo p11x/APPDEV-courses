@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 04_06_06_Cross_Browser_Debugging.html                         -->
+<!-- Cross-Browser Debugging Techniques                           -->
+<!-- Demonstrates debugging strategies, DevTools tips, visual     -->
+<!-- regression testing, and common bug patterns                  -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>04_06_06 - Cross-Browser Debugging</title>
+    
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        /* ======================================================== */
+        /* DEBUG OVERLAY STYLES                                     */
+        /* Visual debugging helpers for identifying layout issues  */
+        /* ======================================================== */
+        
+        /* Outline all elements for layout debugging */
+        .debug-outlines * {
+            outline: 1px solid rgba(255, 0, 0, 0.3) !important;
+        }
+
+        /* Show element dimensions */
+        .debug-sizes * {
+            position: relative;
+        }
+        .debug-sizes *::after {
+            content: attr(data-debug-size);
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: #0f0;
+            font-size: 10px;
+            padding: 1px 4px;
+            font-family: monospace;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* Highlight overflow issues */
+        .debug-overflow * {
+            overflow: visible !important;
+        }
+        .debug-overflow *::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            outline: 2px dashed orange;
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        /* Common buggy pattern demos */
+        .bug-demo {
+            border: 2px solid #dee2e6;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            position: relative;
+        }
+        .bug-demo .bug-label {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: #dc3545;
+            color: white;
+            padding: 0 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .bug-demo .fix-label {
+            background: #198754;
+        }
+
+        /* Margin collapse demo */
+        .margin-top { margin-top: 30px; background: rgba(13,110,253,0.1); padding: 10px; }
+        .margin-bottom { margin-bottom: 30px; background: rgba(25,135,84,0.1); padding: 10px; }
+
+        /* Float clearing demo */
+        .float-container { border: 1px solid #ccc; }
+        .float-left { float: left; width: 100px; height: 100px; background: #0d6efd; margin: 10px; }
+        .clearfix::after { content: ''; display: table; clear: both; }
+
+        /* Z-index stacking context demo */
+        .z-parent { position: relative; z-index: 1; background: rgba(255,0,0,0.1); padding: 20px; }
+        .z-child { position: relative; z-index: 9999; background: rgba(0,0,255,0.2); padding: 10px; }
+
+        /* Width overflow demo */
+        .overflow-container { width: 300px; border: 1px solid #ccc; padding: 10px; }
+        .overflow-content { width: 400px; background: rgba(255,193,7,0.3); padding: 5px; }
+        .overflow-fixed { max-width: 100%; overflow-x: auto; }
+
+        /* Console logging styles */
+        .console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .console-output .log-info { color: #4fc1ff; }
+        .console-output .log-warn { color: #f0ad4e; }
+        .console-output .log-error { color: #d9534f; }
+        .console-output .log-success { color: #5cb85c; }
+    </style>
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- NAVIGATION                                                   -->
+    <!-- ============================================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Debugging Lab</a>
+            <button class="navbar-toggler" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#techniques">Techniques</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#commonBugs">Common Bugs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#tools">Tools</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#visualDebug">Visual Debug</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- HERO                                                         -->
+    <!-- ============================================================ -->
+    <header class="bg-secondary text-white py-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold">Cross-Browser Debugging</h1>
+            <p class="lead">
+                Techniques for identifying, isolating, and fixing cross-browser
+                rendering issues in Bootstrap and custom CSS.
+            </p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+
+        <!-- ======================================================== -->
+        <!-- SECTION 1: DEBUGGING TECHNIQUES                          -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="techniques">
+            <h2 class="border-bottom pb-2 mb-4">1. Debugging Techniques</h2>
+            
+            <!-- CSS Debugging -->
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">CSS Debugging Approaches</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>1. Isolation Testing</h6>
+                            <p class="small">Remove elements one by one to find the cause:</p>
+                            <pre class="bg-light p-2 rounded small"><code>/* Hide suspect elements */
+.suspect-element { display: none; }
+
+/* Add temporary background colors */
+.debug-1 { background: rgba(255,0,0,0.2) !important; }
+.debug-2 { background: rgba(0,255,0,0.2) !important; }</code></pre>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>2. Computed Styles Check</h6>
+                            <p class="small">Compare computed values across browsers:</p>
+                            <pre class="bg-light p-2 rounded small"><code>// In browser console
+getComputedStyle(element).display;
+getComputedStyle(element).width;
+getComputedStyle(element)['flex-direction'];</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- JavaScript Debugging -->
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">JavaScript Debugging</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Feature Detection Logging</h6>
+                            <pre class="bg-light p-2 rounded small"><code>// Log all feature detections at startup
+console.group('Feature Support');
+console.table({
+  'CSS Grid': CSS.supports('display','grid'),
+  'Flexbox': CSS.supports('display','flex'),
+  'Custom Props': CSS.supports('color','var(--x)'),
+  'fetch': typeof fetch === 'function',
+  'Promise': typeof Promise !== 'undefined'
+});
+console.groupEnd();</code></pre>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Error Boundary Pattern</h6>
+                            <pre class="bg-light p-2 rounded small"><code>// Wrap risky operations in try/catch
+function safeInit(component) {
+  try {
+    component.init();
+    console.log('✓ ' + component.name);
+  } catch(e) {
+    console.error('✗ ' + component.name, e);
+    // Apply fallback behavior
+    component.fallback();
+  }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 2: COMMON CROSS-BROWSER BUGS                     -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="commonBugs">
+            <h2 class="border-bottom pb-2 mb-4">2. Common Cross-Browser Bugs</h2>
+            
+            <!-- Bug 1: Margin Collapse -->
+            <div class="bug-demo">
+                <span class="bug-label">Bug #1</span>
+                <h5>Margin Collapse</h5>
+                <p class="small text-muted">
+                    Vertical margins of adjacent block elements collapse into a single margin.
+                    Behavior is consistent but often unexpected.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="border p-3">
+                            <div class="margin-bottom">Box 1 (margin-bottom: 30px)</div>
+                            <div class="margin-top">Box 2 (margin-top: 30px)</div>
+                            <p class="small text-muted mt-2 mb-0">
+                                Gap between boxes is 30px, not 60px (margins collapsed).
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Solutions:</h6>
+                        <ul class="small">
+                            <li>Use <code>padding</code> instead of margin</li>
+                            <li>Add <code>overflow: auto</code> to parent</li>
+                            <li>Use <code>display: flow-root</code> on parent</li>
+                            <li>Use Flexbox/Grid gap instead of margins</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bug 2: Float Clearing -->
+            <div class="bug-demo">
+                <span class="bug-label">Bug #2</span>
+                <h5>Float Clearing (Legacy)</h5>
+                <p class="small text-muted">
+                    Floated elements are removed from normal flow, causing parent collapse.
+                    Less relevant with Flexbox/Grid but still encountered.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="small">Without clearfix:</h6>
+                        <div class="float-container mb-2">
+                            <div class="float-left" style="float:left;width:100px;height:100px;background:#0d6efd;margin:10px;"></div>
+                            <p class="small mb-0">Parent collapses (no height).</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="small">With clearfix:</h6>
+                        <div class="float-container clearfix mb-2">
+                            <div class="float-left" style="float:left;width:100px;height:100px;background:#198754;margin:10px;"></div>
+                            <p class="small mb-0">Parent wraps floated element.</p>
+                        </div>
+                    </div>
+                </div>
+                <pre class="bg-light p-2 rounded small mt-2 mb-0"><code>.clearfix::after {
+  content: '';
+  display: table;
+  clear: both;
+}</code></pre>
+            </div>
+            
+            <!-- Bug 3: Z-index Stacking -->
+            <div class="bug-demo">
+                <span class="bug-label">Bug #3</span>
+                <h5>Z-Index Stacking Context</h5>
+                <p class="small text-muted">
+                    z-index only works on positioned elements and within the same stacking context.
+                    A child can never appear above an element in a higher stacking context.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="z-parent mb-2">
+                            <p class="small mb-1">Parent (z-index: 1)</p>
+                            <div class="z-child">
+                                Child (z-index: 9999) - still below elements with z-index > 1 on parent's sibling
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="small">Common causes of new stacking context:</h6>
+                        <ul class="small mb-0">
+                            <li><code>position: relative/absolute/fixed</code> + z-index</li>
+                            <li><code>opacity</code> &lt; 1</li>
+                            <li><code>transform</code> not none</li>
+                            <li><code>filter</code> not none</li>
+                            <li><code>will-change</code></li>
+                            <li><code>isolation: isolate</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bug 4: Width Overflow -->
+            <div class="bug-demo">
+                <span class="bug-label">Bug #4</span>
+                <h5>Horizontal Overflow</h5>
+                <p class="small text-muted">
+                    Elements wider than their container cause horizontal scrolling.
+                    Common with images, tables, and long text.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="small">Problem:</h6>
+                        <div class="overflow-container mb-2">
+                            <div class="overflow-content">Content wider than container (400px in 300px box)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="small">Fixed:</h6>
+                        <div class="overflow-container overflow-fixed mb-2">
+                            <div class="overflow-content" style="width:auto;min-width:100%;">Content constrained with max-width</div>
+                        </div>
+                    </div>
+                </div>
+                <pre class="bg-light p-2 rounded small mt-2 mb-0"><code>/* Prevent overflow */
+.container { max-width: 100%; overflow-x: auto; }
+img { max-width: 100%; height: auto; }
+table { width: 100%; }
+pre { overflow-x: auto; }</code></pre>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 3: DEBUGGING TOOLS                               -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="tools">
+            <h2 class="border-bottom pb-2 mb-4">3. Debugging Tools & Strategies</h2>
+            
+            <div class="row">
+                <!-- Browser DevTools -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Browser DevTools</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <thead><tr><th>Tool</th><th>Use</th></tr></thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Elements Panel</strong></td>
+                                        <td>Inspect DOM, modify CSS in real-time</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Computed Tab</strong></td>
+                                        <td>See final computed values for any element</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Box Model</strong></td>
+                                        <td>Visualize margin/padding/border</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Console</strong></td>
+                                        <td>Log feature detections, test expressions</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Network Tab</strong></td>
+                                        <td>Check if CDN resources loaded</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Lighthouse</strong></td>
+                                        <td>Performance and accessibility audit</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Online Tools -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">Online Testing Tools</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Can I Use</strong></td>
+                                        <td>Browser support tables for CSS/JS</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>BrowserStack</strong></td>
+                                        <td>Real device cloud testing</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Sauce Labs</strong></td>
+                                        <td>Automated cross-browser testing</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>LambdaTest</strong></td>
+                                        <td>Live interactive testing</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>WebPageTest</strong></td>
+                                        <td>Performance across browsers</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>CSS Validator</strong></td>
+                                        <td>W3C CSS validation</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Console logging demo -->
+            <div class="card mt-3">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Interactive Debug Console</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100 mb-2" onclick="runDebugCheck('features')">
+                                Check Features
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-success w-100 mb-2" onclick="runDebugCheck('bootstrap')">
+                                Check Bootstrap
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-warning w-100 mb-2" onclick="runDebugCheck('errors')">
+                                Simulate Errors
+                            </button>
+                        </div>
+                    </div>
+                    <div class="console-output" id="debugConsole">
+                        <span class="log-info">// Debug console output appears here</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================== -->
+        <!-- SECTION 4: VISUAL DEBUGGING                              -->
+        <!-- ======================================================== -->
+        <section class="mb-5" id="visualDebug">
+            <h2 class="border-bottom pb-2 mb-4">4. Visual Debugging Tools</h2>
+            
+            <div class="card">
+                <div class="card-body">
+                    <p>Toggle visual debugging overlays to identify layout issues:</p>
+                    <div class="btn-group mb-3" role="group">
+                        <button class="btn btn-outline-danger" onclick="toggleDebug('outlines')">
+                            Show Outlines
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="toggleDebug('overflow')">
+                            Show Overflow
+                        </button>
+                        <button class="btn btn-outline-info" onclick="toggleDebug('reset')">
+                            Reset
+                        </button>
+                    </div>
+                    
+                    <div class="border rounded p-3" id="debugTarget">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="bg-primary text-white p-3 rounded mb-2">Column 1</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="bg-success text-white p-3 rounded mb-2">Column 2</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="bg-warning p-3 rounded mb-2">Column 3</div>
+                            </div>
+                        </div>
+                        <p>This area demonstrates visual debugging overlays.</p>
+                    </div>
+                    
+                    <pre class="bg-light p-3 rounded small mt-3 mb-0"><code>/* Bookmarklet-style debug CSS */
+/* Add to any page via DevTools or a bookmarklet */
+
+/* Outline all elements */
+* { outline: 1px solid rgba(255,0,0,0.3) !important; }
+
+/* Show element boundaries with random colors */
+* { outline: 1px solid hsl(calc(var(--i, 0) * 30), 70%, 50%) !important; }
+
+/* Show empty elements */
+:empty { outline: 3px solid red !important; }
+
+/* Highlight fixed/absolute positioning */
+[style*="position"] { outline: 3px dashed blue !important; }</code></pre>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER                                                       -->
+    <!-- ============================================================ -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">Cross-Browser Debugging &copy; 2024 | Bootstrap 5.3.3</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- DEBUGGING SCRIPTS                                            -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // DEBUG CONSOLE
+        // In-page logging for debugging demonstrations
+        // ============================================================
+        var consoleDiv = document.getElementById('debugConsole');
+        
+        function debugLog(message, type) {
+            var prefix = { info: '[INFO]', warn: '[WARN]', error: '[ERROR]', success: '[OK]' };
+            var timestamp = new Date().toLocaleTimeString();
+            consoleDiv.innerHTML += '<div class="log-' + type + '">' + 
+                timestamp + ' ' + (prefix[type] || '[LOG]') + ' ' + message + '</div>';
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        // ============================================================
+        // RUN DEBUG CHECKS
+        // Demonstrates different debugging approaches
+        // ============================================================
+        function runDebugCheck(type) {
+            consoleDiv.innerHTML = '';
+            
+            switch(type) {
+                case 'features':
+                    debugLog('Running feature detection...', 'info');
+                    var features = [
+                        ['CSS Grid', CSS.supports('display', 'grid')],
+                        ['Flexbox', CSS.supports('display', 'flex')],
+                        ['CSS Variables', CSS.supports('color', 'var(--x)')],
+                        ['fetch()', typeof fetch === 'function'],
+                        ['Promise', typeof Promise !== 'undefined'],
+                        ['IntersectionObserver', 'IntersectionObserver' in window],
+                        ['Service Worker', 'serviceWorker' in navigator]
+                    ];
+                    features.forEach(function(f) {
+                        debugLog(f[0] + ': ' + (f[1] ? 'SUPPORTED' : 'MISSING'), 
+                                 f[1] ? 'success' : 'warn');
+                    });
+                    debugLog('Feature check complete.', 'info');
+                    break;
+                    
+                case 'bootstrap':
+                    debugLog('Checking Bootstrap integration...', 'info');
+                    debugLog('Bootstrap CSS loaded: ' + 
+                        (document.querySelector('link[href*="bootstrap"]') !== null ? 'YES' : 'NO'),
+                        document.querySelector('link[href*="bootstrap"]') !== null ? 'success' : 'error');
+                    debugLog('Bootstrap JS loaded: ' + 
+                        (typeof bootstrap !== 'undefined' ? 'YES' : 'NO'),
+                        typeof bootstrap !== 'undefined' ? 'success' : 'error');
+                    if (typeof bootstrap !== 'undefined') {
+                        debugLog('Bootstrap version: ' + (bootstrap.Tooltip.VERSION || 'unknown'), 'info');
+                        debugLog('Tooltip: ' + (typeof bootstrap.Tooltip !== 'undefined' ? 'available' : 'missing'), 'info');
+                        debugLog('Modal: ' + (typeof bootstrap.Modal !== 'undefined' ? 'available' : 'missing'), 'info');
+                        debugLog('Dropdown: ' + (typeof bootstrap.Dropdown !== 'undefined' ? 'available' : 'missing'), 'info');
+                    }
+                    debugLog('Bootstrap check complete.', 'info');
+                    break;
+                    
+                case 'errors':
+                    debugLog('Simulating common error scenarios...', 'warn');
+                    debugLog('CDN load failure - check Network tab', 'warn');
+                    debugLog('Mixed content - HTTP resource on HTTPS page', 'error');
+                    debugLog('CORS policy violation - cross-origin request blocked', 'error');
+                    debugLog('This demonstrates how errors appear in debugging.', 'info');
+                    break;
+            }
+        }
+
+        // ============================================================
+        // VISUAL DEBUG TOGGLES
+        // Adds/removes debug CSS classes
+        // ============================================================
+        function toggleDebug(mode) {
+            var target = document.getElementById('debugTarget');
+            target.classList.remove('debug-outlines', 'debug-overflow');
+            
+            switch(mode) {
+                case 'outlines':
+                    target.classList.add('debug-outlines');
+                    debugLog('Outline debug mode enabled', 'info');
+                    break;
+                case 'overflow':
+                    target.classList.add('debug-overflow');
+                    debugLog('Overflow debug mode enabled', 'info');
+                    break;
+                case 'reset':
+                    debugLog('Debug overlays reset', 'info');
+                    break;
+            }
+        }
+
+        // ============================================================
+        // GLOBAL ERROR HANDLER
+        // Captures uncaught errors for debugging display
+        // ============================================================
+        window.onerror = function(message, source, lineno, colno, error) {
+            debugLog('Uncaught: ' + message + ' (' + source + ':' + lineno + ')', 'error');
+            return false;
+        };
+    </script>
+</body>
+</html>

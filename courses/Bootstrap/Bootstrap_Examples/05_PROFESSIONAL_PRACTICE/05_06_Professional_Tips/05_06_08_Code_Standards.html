@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<!-- ============================================================ -->
+<!-- 05_06_08_Code_Standards.html                                  -->
+<!-- Enforcing Standards: Linters, Formatters, CI Checks          -->
+<!-- ============================================================ -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Standards - Linters, Formatters &amp; CI Checks</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .cs-config-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+        .cs-config-block .key { color: #9cdcfe; }
+        .cs-config-block .str { color: #ce9178; }
+        .cs-config-block .num { color: #b5cea8; }
+        .cs-config-block .cmt { color: #6a9955; }
+        .cs-badge-tool { font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">Code Standards</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#csNav" aria-controls="csNav"
+                    aria-expanded="false" aria-label="Toggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="csNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#linters">Linters</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#formatters">Formatters</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#ci">CI/CD</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#configs">Configs</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-success text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold">&#128203; Code Standards</h1>
+            <p class="lead">Linters, formatters, pre-commit hooks, and CI pipeline configuration for Bootstrap projects.</p>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- LINTERS                                                      -->
+    <!-- ============================================================ -->
+    <section id="linters" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">1. Linters</h2>
+            <div class="row g-4">
+                <!-- HTML Hint / HTML-validate -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">HTML Linting</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Tools:</strong> html-validate, HTMLHint</p>
+                            <p class="text-muted">Catches missing attributes, invalid nesting, duplicate IDs, and Bootstrap structure errors.</p>
+                            <h6>Install</h6>
+                            <pre class="bg-dark text-success p-2 rounded"><code>npm install --save-dev html-validate</code></pre>
+                            <h6 class="mt-3">.htmlvalidate.json</h6>
+                            <div class="cs-config-block">
+{
+  <span class="key">"extends"</span>: [<span class="str">"htmlvalidate:recommended"</span>],
+  <span class="key">"rules"</span>: {
+    <span class="key">"no-dup-id"</span>: <span class="str">"error"</span>,
+    <span class="key">"element-required-attributes"</span>: <span class="str">"error"</span>,
+    <span class="key">"no-trailing-whitespace"</span>: <span class="str">"warn"</span>
+  }
+}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stylelint -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">CSS Linting</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Tool:</strong> Stylelint</p>
+                            <p class="text-muted">Enforces CSS quality: no invalid rules, specificity limits, nesting depth.</p>
+                            <h6>Install</h6>
+                            <pre class="bg-dark text-success p-2 rounded"><code>npm install --save-dev \
+  stylelint \
+  stylelint-config-standard</code></pre>
+                            <h6 class="mt-3">.stylelintrc.json</h6>
+                            <div class="cs-config-block">
+{
+  <span class="key">"extends"</span>: <span class="str">"stylelint-config-standard"</span>,
+  <span class="key">"rules"</span>: {
+    <span class="key">"max-nesting-depth"</span>: <span class="num">3</span>,
+    <span class="key">"no-duplicate-selectors"</span>: <span class="str">"error"</span>,
+    <span class="key">"declaration-no-important"</span>: <span class="str">"error"</span>,
+    <span class="key">"selector-max-id"</span>: <span class="num">0</span>,
+    <span class="key">"selector-class-pattern"</span>: <span class="str">"^[a-z][a-z0-9-]*$"</span>
+  }
+}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ESLint -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0">JS Linting</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Tool:</strong> ESLint</p>
+                            <p class="text-muted">Enforces JS quality, catches errors, ensures consistent coding style.</p>
+                            <h6>Install</h6>
+                            <pre class="bg-dark text-success p-2 rounded"><code>npm install --save-dev \
+  eslint \
+  eslint-config-recommended</code></pre>
+                            <h6 class="mt-3">.eslintrc.json</h6>
+                            <div class="cs-config-block">
+{
+  <span class="key">"env"</span>: { <span class="key">"browser"</span>: <span class="num">true</span>, <span class="key">"es2021"</span>: <span class="num">true</span> },
+  <span class="key">"extends"</span>: <span class="str">"eslint:recommended"</span>,
+  <span class="key">"rules"</span>: {
+    <span class="key">"no-unused-vars"</span>: <span class="str">"warn"</span>,
+    <span class="key">"no-console"</span>: <span class="str">"warn"</span>,
+    <span class="key">"eqeqeq"</span>: <span class="str">"error"</span>
+  }
+}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- FORMATTERS                                                   -->
+    <!-- ============================================================ -->
+    <section id="formatters" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">2. Formatters</h2>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Prettier - Universal Formatter</h5></div>
+                        <div class="card-body">
+                            <p>Auto-formats HTML, CSS, and JS. Eliminates formatting debates.</p>
+                            <h6>Install</h6>
+                            <pre class="bg-dark text-success p-2 rounded"><code>npm install --save-dev prettier</code></pre>
+                            <h6 class="mt-3">.prettierrc</h6>
+                            <div class="cs-config-block">
+{
+  <span class="key">"printWidth"</span>: <span class="num">100</span>,
+  <span class="key">"tabWidth"</span>: <span class="num">2</span>,
+  <span class="key">"useTabs"</span>: <span class="num">false</span>,
+  <span class="key">"semi"</span>: <span class="num">true</span>,
+  <span class="key">"singleQuote"</span>: <span class="num">true</span>,
+  <span class="key">"htmlWhitespaceSensitivity"</span>: <span class="str">"ignore"</span>
+}</div>
+                            <h6 class="mt-3">.prettierignore</h6>
+                            <div class="cs-config-block">
+<span class="cmt"># Don't format vendor files</span>
+css/bootstrap.min.css
+js/bootstrap.bundle.min.js
+dist/</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">EditorConfig - Editor Consistency</h5></div>
+                        <div class="card-body">
+                            <p>Ensures all team members use the same editor settings regardless of IDE.</p>
+                            <h6>.editorconfig</h6>
+                            <div class="cs-config-block">
+<span class="cmt"># Top-most EditorConfig file</span>
+root = <span class="num">true</span>
+
+<span class="cmt"># All files</span>
+[*]
+indent_style = <span class="str">space</span>
+indent_size = <span class="num">2</span>
+end_of_line = <span class="str">lf</span>
+charset = <span class="str">utf-8</span>
+trim_trailing_whitespace = <span class="num">true</span>
+insert_final_newline = <span class="num">true</span>
+
+<span class="cmt"># HTML files - 2 spaces</span>
+[*.html]
+indent_size = <span class="num">2</span>
+
+<span class="cmt"># CSS files - 2 spaces</span>
+[*.css]
+indent_size = <span class="num">2</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- PRE-COMMIT HOOKS & CI                                        -->
+    <!-- ============================================================ -->
+    <section id="ci" class="py-5">
+        <div class="container">
+            <h2 class="mb-4">3. Pre-Commit Hooks &amp; CI Pipeline</h2>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-dark text-white"><h5 class="mb-0">Husky + lint-staged</h5></div>
+                        <div class="card-body">
+                            <p>Run linters only on staged files before each commit.</p>
+                            <h6>Setup</h6>
+                            <pre class="bg-dark text-success p-2 rounded"><code># Install Husky
+npm install --save-dev husky lint-staged
+npx husky init
+
+# Add pre-commit hook
+echo "npx lint-staged" > .husky/pre-commit</code></pre>
+                            <h6 class="mt-3">package.json</h6>
+                            <div class="cs-config-block">
+{
+  <span class="key">"lint-staged"</span>: {
+    <span class="str">"*.html"</span>: [<span class="str">"html-validate"</span>, <span class="str">"prettier --write"</span>],
+    <span class="str">"*.css"</span>: [<span class="str">"stylelint"</span>, <span class="str">"prettier --write"</span>],
+    <span class="str">"*.js"</span>: [<span class="str">"eslint"</span>, <span class="str">"prettier --write"</span>]
+  }
+}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-dark text-white"><h5 class="mb-0">GitHub Actions CI</h5></div>
+                        <div class="card-body">
+                            <p>Automate linting and testing on every push/PR.</p>
+                            <h6>.github/workflows/ci.yml</h6>
+                            <div class="cs-config-block" style="font-size:0.8rem">
+<span class="key">name</span>: <span class="str">CI</span>
+<span class="key">on</span>: [<span class="str">push</span>, <span class="str">pull_request</span>]
+<span class="key">jobs</span>:
+  <span class="key">lint</span>:
+    <span class="key">runs-on</span>: <span class="str">ubuntu-latest</span>
+    <span class="key">steps</span>:
+      - <span class="key">uses</span>: <span class="str">actions/checkout@v4</span>
+      - <span class="key">uses</span>: <span class="str">actions/setup-node@v4</span>
+        <span class="key">with</span>:
+          <span class="key">node-version</span>: <span class="num">20</span>
+      - <span class="key">run</span>: <span class="str">npm ci</span>
+      - <span class="key">run</span>: <span class="str">npm run lint:html</span>
+      - <span class="key">run</span>: <span class="str">npm run lint:css</span>
+      - <span class="key">run</span>: <span class="str">npm run lint:js</span>
+      - <span class="key">run</span>: <span class="str">npm run format:check</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- npm scripts reference -->
+            <div class="mt-4 p-4 bg-light rounded">
+                <h5>Recommended npm scripts</h5>
+                <div class="cs-config-block">
+<span class="key">"scripts"</span>: {
+  <span class="key">"lint:html"</span>: <span class="str">"html-validate '**/*.html'"</span>,
+  <span class="key">"lint:css"</span>: <span class="str">"stylelint '**/*.css'"</span>,
+  <span class="key">"lint:js"</span>: <span class="str">"eslint '**/*.js'"</span>,
+  <span class="key">"format"</span>: <span class="str">"prettier --write '**/*.{html,css,js,md}'"</span>,
+  <span class="key">"format:check"</span>: <span class="str">"prettier --check '**/*.{html,css,js,md}'"</span>,
+  <span class="key">"lint"</span>: <span class="str">"npm run lint:html && npm run lint:css && npm run lint:js"</span>
+}</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- BOOTSTRAP-SPECIFIC RULES                                     -->
+    <!-- ============================================================ -->
+    <section id="configs" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="mb-4">4. Bootstrap-Specific Lint Rules</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr><th>Rule</th><th>Tool</th><th>Purpose</th><th>Config</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>No ID selectors</td>
+                            <td>Stylelint</td>
+                            <td>Prevents specificity issues</td>
+                            <td><code>"selector-max-id": 0</code></td>
+                        </tr>
+                        <tr>
+                            <td>Max nesting depth</td>
+                            <td>Stylelint</td>
+                            <td>Keeps selectors flat</td>
+                            <td><code>"max-nesting-depth": 3</code></td>
+                        </tr>
+                        <tr>
+                            <td>No !important</td>
+                            <td>Stylelint</td>
+                            <td>Forces proper specificity</td>
+                            <td><code>"declaration-no-important": "error"</code></td>
+                        </tr>
+                        <tr>
+                            <td>No duplicate IDs</td>
+                            <td>html-validate</td>
+                            <td>Bootstrap JS depends on unique IDs</td>
+                            <td><code>"no-dup-id": "error"</code></td>
+                        </tr>
+                        <tr>
+                            <td>Required alt on images</td>
+                            <td>html-validate</td>
+                            <td>Accessibility requirement</td>
+                            <td><code>"element-required-attributes": "error"</code></td>
+                        </tr>
+                        <tr>
+                            <td>Valid Bootstrap classes</td>
+                            <td>Custom</td>
+                            <td>Catches typos in class names</td>
+                            <td>Custom validation script</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 Code Standards. Professional Practice Series.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

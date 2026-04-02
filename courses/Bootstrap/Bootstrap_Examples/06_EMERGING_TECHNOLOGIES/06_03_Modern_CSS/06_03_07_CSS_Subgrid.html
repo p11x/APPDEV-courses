@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<!-- ============================================================= -->
+<!-- 06_03_07_CSS_Subgrid.html                                       -->
+<!-- CSS subgrid for nested layouts                                 -->
+<!-- Bootstrap 5.3.3 + CSS Subgrid                                  -->
+<!-- ============================================================= -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06_03_07 - CSS Subgrid</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* ============================================================= */
+        /* CSS SUBGRID BASICS                                            */
+        /* grid-template-columns: subgrid allows a child grid to adopt  */
+        /* the column tracks of its parent grid. Similarly,             */
+        /* grid-template-rows: subgrid adopts parent row tracks.        */
+        /*                                                               */
+        /* This solves the problem of aligning content across sibling   */
+        /* grid items without hardcoding column widths.                 */
+        /* ============================================================= */
+
+        /* Parent grid: defines the master column layout */
+        .subgrid-parent {
+            display: grid;
+            /* 6-column grid for the overall layout */
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+        }
+
+        /* ============================================================= */
+        /* CARD WITH SUBGRID COLUMNS                                     */
+        /* Each card spans all 6 parent columns. The card's inner grid  */
+        /* uses subgrid so its children align with the parent columns.  */
+        /* ============================================================= */
+
+        .subgrid-card {
+            /* Span all 6 parent columns */
+            grid-column: span 6;
+
+            /* Create a nested grid that adopts parent columns */
+            display: grid;
+            grid-template-columns: subgrid;
+
+            /* Define own rows (not inherited from parent) */
+            grid-template-rows: auto 1fr auto;
+
+            /* Visual styling */
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        /* Card header: spans first 6 columns */
+        .subgrid-card-header {
+            grid-column: 1 / -1;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        /* Card body content column: spans columns 1-4 */
+        .subgrid-card-body {
+            grid-column: 1 / 5;
+            padding: 20px;
+        }
+
+        /* Card sidebar: spans columns 5-6 */
+        .subgrid-card-sidebar {
+            grid-column: 5 / 7;
+            padding: 20px;
+            background: #f8f9fa;
+            border-inline-start: 1px solid #e9ecef;
+        }
+
+        /* Card footer: spans all columns */
+        .subgrid-card-footer {
+            grid-column: 1 / -1;
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ============================================================= */
+        /* LIST WITH SUBGRID ROWS                                        */
+        /* A list where each item's content aligns across all items via */
+        /* shared row tracks through subgrid.                           */
+        /* ============================================================= */
+
+        .list-grid {
+            display: grid;
+            /* 3 columns: icon | content | action */
+            grid-template-columns: 50px 1fr auto;
+            gap: 12px;
+        }
+
+        .list-item {
+            /* Each list item is a subgrid in the row direction */
+            display: grid;
+            grid-template-columns: subgrid;
+            grid-column: 1 / -1;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        /* ============================================================= */
+        /* FORM LAYOUT WITH SUBGRID                                      */
+        /* Align form labels, inputs, and validation messages across    */
+        /* multiple form rows using subgrid.                            */
+        /* ============================================================= */
+
+        .form-grid {
+            display: grid;
+            /* 3 columns: label | input | validation */
+            grid-template-columns: 150px 1fr 200px;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: subgrid;
+            grid-column: 1 / -1;
+        }
+
+        /* ============================================================= */
+        /* DASHBOARD WITH SUBGRID                                        */
+        /* Complex dashboard where widgets align their internal content */
+        /* with a shared grid system.                                   */
+        /* ============================================================= */
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 16px;
+        }
+
+        .dashboard-widget {
+            display: grid;
+            grid-template-columns: subgrid;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        .widget-header {
+            grid-column: 1 / -1;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            font-weight: 600;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .widget-body {
+            grid-column: 1 / -1;
+            padding: 16px;
+        }
+
+        /* ============================================================= */
+        /* VISUAL STYLES                                                 */
+        /* ============================================================= */
+
+        .subgrid-indicator {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+
+        <!-- Page header -->
+        <div class="row mb-5">
+            <div class="col-12 text-center">
+                <h1 class="display-4 fw-bold text-primary">CSS Subgrid</h1>
+                <p class="lead text-muted">Nested layouts aligned to parent grid tracks</p>
+                <hr class="w-50 mx-auto">
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 1: BASIC SUBGRID COLUMNS                               -->
+        <!-- A parent grid with 6 columns. Cards use subgrid to align     -->
+        <!-- their internal elements with the parent's column tracks.     -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">1. Card Layout with Subgrid</h2>
+            <p class="text-muted mb-3">
+                Parent has <code>grid-template-columns: repeat(6, 1fr)</code>.
+                Child uses <code>grid-template-columns: subgrid</code>.
+            </p>
+
+            <!-- Parent grid defining 6 columns -->
+            <div class="subgrid-parent">
+                <!-- Column labels -->
+                <div style="grid-column: span 6; display:flex; gap:8px; margin-bottom:8px;">
+                    <span class="badge bg-secondary flex-fill">Col 1</span>
+                    <span class="badge bg-secondary flex-fill">Col 2</span>
+                    <span class="badge bg-secondary flex-fill">Col 3</span>
+                    <span class="badge bg-secondary flex-fill">Col 4</span>
+                    <span class="badge bg-secondary flex-fill">Col 5</span>
+                    <span class="badge bg-secondary flex-fill">Col 6</span>
+                </div>
+
+                <!-- First card using subgrid -->
+                <div class="subgrid-card">
+                    <div class="subgrid-card-header">
+                        <h4 class="mb-0">Card with Subgrid</h4>
+                        <small class="opacity-75">Header spans all 6 columns</small>
+                    </div>
+                    <div class="subgrid-card-body">
+                        <h5>Content Area</h5>
+                        <p class="text-muted">
+                            This body spans columns 1-4. It aligns perfectly with the parent
+                            grid's column tracks because of <code>grid-template-columns: subgrid</code>.
+                        </p>
+                        <p class="text-muted mb-0">
+                            No hardcoded widths needed - the alignment comes from the parent.
+                        </p>
+                    </div>
+                    <div class="subgrid-card-sidebar">
+                        <h6>Sidebar</h6>
+                        <p class="text-muted small mb-0">
+                            Spans columns 5-6. Aligned with parent grid tracks.
+                        </p>
+                        <span class="subgrid-indicator bg-success text-white mt-2">subgrid</span>
+                    </div>
+                    <div class="subgrid-card-footer">
+                        <span class="text-muted small">Footer spans all 6 columns</span>
+                        <button class="btn btn-sm btn-primary">Action</button>
+                    </div>
+                </div>
+
+                <!-- Second card demonstrating different content alignment -->
+                <div class="subgrid-card" style="margin-top: 16px;">
+                    <div class="subgrid-card-header" style="background: linear-gradient(135deg, #00b894, #00cec9);">
+                        <h4 class="mb-0">Second Card</h4>
+                        <small class="opacity-75">Same column alignment</small>
+                    </div>
+                    <div class="subgrid-card-body">
+                        <h5>Aligned Content</h5>
+                        <p class="text-muted mb-0">
+                            Both cards share the same column boundaries even with different content lengths.
+                        </p>
+                    </div>
+                    <div class="subgrid-card-sidebar">
+                        <h6>Sidebar</h6>
+                        <span class="subgrid-indicator bg-info text-white">aligned</span>
+                    </div>
+                    <div class="subgrid-card-footer">
+                        <span class="text-muted small">Consistent alignment</span>
+                        <button class="btn btn-sm btn-success">Action</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 2: SUBLIST WITH SHARED COLUMNS                         -->
+        <!-- List items using subgrid so icons, text, and actions align    -->
+        <!-- vertically across all rows.                                  -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">2. Aligned List with Subgrid</h2>
+            <p class="text-muted mb-3">
+                Each list item uses subgrid to align icons, content, and actions in shared columns.
+            </p>
+
+            <div class="list-grid">
+                <!-- Column headers -->
+                <div style="grid-column:1; font-weight:600; font-size:0.85rem; color:#636e72;">Icon</div>
+                <div style="grid-column:2; font-weight:600; font-size:0.85rem; color:#636e72;">Description</div>
+                <div style="grid-column:3; font-weight:600; font-size:0.85rem; color:#636e72;">Action</div>
+
+                <!-- List item 1 -->
+                <div class="list-item">
+                    <div class="text-center" style="font-size:1.5rem;">📁</div>
+                    <div>
+                        <strong>Project Alpha</strong>
+                        <span class="text-muted d-block small">Last modified 2 hours ago</span>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm">Open</button>
+                </div>
+
+                <!-- List item 2 -->
+                <div class="list-item">
+                    <div class="text-center" style="font-size:1.5rem;">📊</div>
+                    <div>
+                        <strong>Analytics Report Q4 2025 - Annual Revenue Summary</strong>
+                        <span class="text-muted d-block small">Generated today</span>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm">View</button>
+                </div>
+
+                <!-- List item 3 -->
+                <div class="list-item" style="border-bottom:none;">
+                    <div class="text-center" style="font-size:1.5rem;">⚙️</div>
+                    <div>
+                        <strong>Settings</strong>
+                        <span class="text-muted d-block small">Configuration</span>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm">Edit</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 3: FORM WITH SUBLAYOUT                                 -->
+        <!-- Form labels, inputs, and validation messages align across     -->
+        <!-- all rows using subgrid.                                      -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">3. Form Layout with Subgrid</h2>
+            <p class="text-muted mb-3">
+                Labels, inputs, and validation align across rows using <code>grid-template-columns: subgrid</code>.
+            </p>
+
+            <div class="form-grid" style="background:#f8f9fa; padding:24px; border-radius:12px;">
+                <!-- Form row 1 -->
+                <div class="form-row">
+                    <label class="fw-bold">Name</label>
+                    <input type="text" class="form-control" placeholder="Enter your name">
+                    <span class="text-success small">Valid</span>
+                </div>
+
+                <!-- Form row 2 -->
+                <div class="form-row">
+                    <label class="fw-bold">Email</label>
+                    <input type="email" class="form-control is-invalid" placeholder="email@example.com">
+                    <span class="text-danger small">Invalid email format</span>
+                </div>
+
+                <!-- Form row 3 -->
+                <div class="form-row">
+                    <label class="fw-bold">Phone</label>
+                    <input type="tel" class="form-control" placeholder="+1 234 567 8900">
+                    <span class="text-muted small">Optional</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================= -->
+        <!-- SECTION 4: DASHBOARD WIDGETS                                   -->
+        <!-- Widgets spanning different numbers of columns, all aligned   -->
+        <!-- to the shared 12-column grid.                                -->
+        <!-- ============================================================= -->
+        <section class="mb-5">
+            <h2 class="h3 mb-3">4. Dashboard with Subgrid</h2>
+
+            <div class="dashboard-grid">
+                <!-- Widget spanning 8 columns -->
+                <div class="dashboard-widget" style="grid-column: span 8;">
+                    <div class="widget-header">Main Chart (8 cols)</div>
+                    <div class="widget-body">
+                        <div class="bg-light rounded p-4 text-center text-muted">
+                            Chart placeholder - aligned to parent 12-col grid
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget spanning 4 columns -->
+                <div class="dashboard-widget" style="grid-column: span 4;">
+                    <div class="widget-header">Stats (4 cols)</div>
+                    <div class="widget-body">
+                        <div class="d-flex flex-column gap-2">
+                            <div class="d-flex justify-content-between"><span>Users</span><strong>12,483</strong></div>
+                            <div class="d-flex justify-content-between"><span>Sessions</span><strong>8,291</strong></div>
+                            <div class="d-flex justify-content-between"><span>Revenue</span><strong>$48,300</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget spanning 6 columns -->
+                <div class="dashboard-widget" style="grid-column: span 6;">
+                    <div class="widget-header">Table (6 cols)</div>
+                    <div class="widget-body">
+                        <div class="bg-light rounded p-3 text-center text-muted small">
+                            Table aligned to subgrid
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget spanning 6 columns -->
+                <div class="dashboard-widget" style="grid-column: span 6;">
+                    <div class="widget-header">Activity (6 cols)</div>
+                    <div class="widget-body">
+                        <div class="bg-light rounded p-3 text-center text-muted small">
+                            Activity feed aligned to subgrid
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /.container -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<!-- ====================================================================
+     04_09_08_State_Complete_Guide.html
+     Comprehensive State Management Guide
+     
+     Covers:
+     - Complete reference of all state patterns from lessons 01-07
+     - Quick-reference cheat sheet
+     - Decision matrix for choosing patterns
+     - Best practices and anti-patterns
+     - Integrated demo combining all patterns
+     ==================================================================== -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Management Complete Guide - Bootstrap 5</title>
+    <!-- Bootstrap 5.3.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Reference table styling */
+        .ref-table th { white-space: nowrap; }
+        .ref-table td code { font-size: 0.8rem; }
+        /* Cheat sheet card styling */
+        .cheat-card { border-left: 4px solid; }
+        .cheat-card.data-attr { border-left-color: #0d6efd; }
+        .cheat-card.css-class { border-left-color: #198754; }
+        .cheat-card.js-obj { border-left-color: #dc3545; }
+        .cheat-card.machine { border-left-color: #ffc107; }
+        .cheat-card.persist { border-left-color: #6c757d; }
+        .cheat-card.events { border-left-color: #0dcaf0; }
+        .cheat-card.perf { border-left-color: #6f42c1; }
+        .cheat-card.a11y { border-left-color: #fd7e14; }
+        .cheat-card.mobile { border-left-color: #20c997; }
+        .cheat-card.framework { border-left-color: #d63384; }
+        /* Pattern demo tabs */
+        .demo-panel { display: none; }
+        .demo-panel.active { display: block; }
+        /* Best practice icon */
+        .bp-do { color: #198754; }
+        .bp-dont { color: #dc3545; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container my-5">
+
+        <!-- Page header -->
+        <div class="mb-4">
+            <h1 class="display-5">State Management Complete Guide</h1>
+            <p class="text-muted lead">
+                A comprehensive reference for all state management patterns covered in Lessons 04_09_01 through 04_09_07,
+                with a quick-reference cheat sheet, decision matrix, and integrated demo.
+            </p>
+        </div>
+
+        <!-- ==============================================================
+             SECTION 1: PATTERN REFERENCE TABLE
+             Complete reference of all state management patterns with
+             use cases, complexity, and links to lessons.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">1. Pattern Reference Table</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover ref-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Pattern</th>
+                            <th>Lesson</th>
+                            <th>Use Case</th>
+                            <th>Complexity</th>
+                            <th>Persistent</th>
+                            <th>Key API</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Data Attribute State</strong></td>
+                            <td>04_09_01</td>
+                            <td>Simple component state, CSS selectors</td>
+                            <td><span class="badge bg-success">Low</span></td>
+                            <td>No</td>
+                            <td><code>getAttribute('data-state')</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>CSS Class State</strong></td>
+                            <td>04_09_01</td>
+                            <td>Visual state, transitions, toggles</td>
+                            <td><span class="badge bg-success">Low</span></td>
+                            <td>No</td>
+                            <td><code>classList.toggle()</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>JS State Object</strong></td>
+                            <td>04_09_01</td>
+                            <td>Complex multi-property state</td>
+                            <td><span class="badge bg-warning">Medium</span></td>
+                            <td>Optional</td>
+                            <td><code>state.prop = value</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>State Machine</strong></td>
+                            <td>04_09_01, 04_09_02</td>
+                            <td>Strict state transitions, workflows</td>
+                            <td><span class="badge bg-warning">Medium</span></td>
+                            <td>Optional</td>
+                            <td><code>machine.transition(action)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Observer Pattern</strong></td>
+                            <td>04_09_02</td>
+                            <td>One-to-many state notifications</td>
+                            <td><span class="badge bg-warning">Medium</span></td>
+                            <td>No</td>
+                            <td><code>subject.subscribe(fn)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pub/Sub (Event Bus)</strong></td>
+                            <td>04_09_02</td>
+                            <td>Decoupled cross-component messaging</td>
+                            <td><span class="badge bg-warning">Medium</span></td>
+                            <td>No</td>
+                            <td><code>bus.publish(event, data)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Command Pattern</strong></td>
+                            <td>04_09_02</td>
+                            <td>Undo/redo, action history</td>
+                            <td><span class="badge bg-danger">High</span></td>
+                            <td>No</td>
+                            <td><code>command.execute()</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Memento Pattern</strong></td>
+                            <td>04_09_02</td>
+                            <td>State snapshots, checkpoints</td>
+                            <td><span class="badge bg-warning">Medium</span></td>
+                            <td>Optional</td>
+                            <td><code>memento.save()</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Batched Updates</strong></td>
+                            <td>04_09_03</td>
+                            <td>Performance, reduce re-renders</td>
+                            <td><span class="badge bg-success">Low</span></td>
+                            <td>No</td>
+                            <td><code>queueMicrotask()</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Debounce/Throttle</strong></td>
+                            <td>04_09_03</td>
+                            <td>Input handlers, scroll events</td>
+                            <td><span class="badge bg-success">Low</span></td>
+                            <td>No</td>
+                            <td><code>debounce(fn, delay)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Memoization</strong></td>
+                            <td>04_09_03</td>
+                            <td>Expensive computed state</td>
+                            <td><span class="badge bg-success">Low</span></td>
+                            <td>No</td>
+                            <td><code>memoize(fn)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>ARIA Live Regions</strong></td>
+                            <td>04_09_04</td>
+                            <td>Screen reader announcements</td>
+                            <td><span class="badge bg-success">Low</span></td>
+                            <td>No</td>
+                            <td><code>aria-live="polite"</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Focus Management</strong></td>
+                            <td>04_09_04</td>
+                            <td>Accessible state transitions</td>
+                            <td><span class="badge bg-warning">Medium</span></td>
+                            <td>No</td>
+                            <td><code>element.focus()</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Touch/Gesture State</strong></td>
+                            <td>04_09_05</td>
+                            <td>Mobile interactions, swipe, pinch</td>
+                            <td><span class="badge bg-warning">Medium</span></td>
+                            <td>No</td>
+                            <td><code>touchstart/move/end</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Offline State</strong></td>
+                            <td>04_09_05</td>
+                            <td>PWA, offline-first apps</td>
+                            <td><span class="badge bg-warning">Medium</span></td>
+                            <td>Yes</td>
+                            <td><code>navigator.onLine</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Test State</strong></td>
+                            <td>04_09_06</td>
+                            <td>Verifying state logic correctness</td>
+                            <td><span class="badge bg-warning">Medium</span></td>
+                            <td>No</td>
+                            <td><code>assertEqual()</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>React-like useState</strong></td>
+                            <td>04_09_07</td>
+                            <td>Functional state with re-renders</td>
+                            <td><span class="badge bg-danger">High</span></td>
+                            <td>No</td>
+                            <td><code>useState(initial)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Vue-like Reactive</strong></td>
+                            <td>04_09_07</td>
+                            <td>Automatic dependency tracking</td>
+                            <td><span class="badge bg-danger">High</span></td>
+                            <td>No</td>
+                            <td><code>createReactive(obj)</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Redux-like Store</strong></td>
+                            <td>04_09_07</td>
+                            <td>Unidirectional data flow</td>
+                            <td><span class="badge bg-danger">High</span></td>
+                            <td>Optional</td>
+                            <td><code>store.dispatch(action)</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 2: QUICK-REFERENCE CHEAT SHEET
+             One-line summaries of each pattern with syntax examples.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">2. Quick-Reference Cheat Sheet</h2>
+
+            <div class="row g-3">
+                <!-- Data Attribute -->
+                <div class="col-md-6">
+                    <div class="card cheat-card data-attr">
+                        <div class="card-body py-2">
+                            <h6 class="mb-1">Data Attribute State</h6>
+                            <code>el.setAttribute('data-state', 'active')</code><br>
+                            <code>el.getAttribute('data-state')</code><br>
+                            <small class="text-muted">CSS: <code>[data-state="active"] { ... }</code></small>
+                        </div>
+                    </div>
+                </div>
+                <!-- CSS Class -->
+                <div class="col-md-6">
+                    <div class="card cheat-card css-class">
+                        <div class="card-body py-2">
+                            <h6 class="mb-1">CSS Class State</h6>
+                            <code>el.classList.toggle('active')</code><br>
+                            <code>el.classList.contains('active')</code><br>
+                            <small class="text-muted">Replace: <code>el.classList.replace('old','new')</code></small>
+                        </div>
+                    </div>
+                </div>
+                <!-- JS Object -->
+                <div class="col-md-6">
+                    <div class="card cheat-card js-obj">
+                        <div class="card-body py-2">
+                            <h6 class="mb-1">JS State Object</h6>
+                            <code>const state = { count: 0, name: '' }</code><br>
+                            <code>state.count++; render(state)</code><br>
+                            <small class="text-muted">Single source of truth + render function</small>
+                        </div>
+                    </div>
+                </div>
+                <!-- State Machine -->
+                <div class="col-md-6">
+                    <div class="card cheat-card machine">
+                        <div class="card-body py-2">
+                            <h6 class="mb-1">State Machine</h6>
+                            <code>{ idle: ['active'], active: ['done'] }</code><br>
+                            <code>if (transitions[current].includes(next))</code><br>
+                            <small class="text-muted">Define valid transitions, reject invalid ones</small>
+                        </div>
+                    </div>
+                </div>
+                <!-- Persistent -->
+                <div class="col-md-6">
+                    <div class="card cheat-card persist">
+                        <div class="card-body py-2">
+                            <h6 class="mb-1">Persistent State</h6>
+                            <code>localStorage.setItem('key', JSON.stringify(state))</code><br>
+                            <code>JSON.parse(localStorage.getItem('key'))</code><br>
+                            <small class="text-muted">Also: sessionStorage, IndexedDB, cookies</small>
+                        </div>
+                    </div>
+                </div>
+                <!-- Events -->
+                <div class="col-md-6">
+                    <div class="card cheat-card events">
+                        <div class="card-body py-2">
+                            <h6 class="mb-1">State Events</h6>
+                            <code>new CustomEvent('stateChange', { detail: state })</code><br>
+                            <code>el.dispatchEvent(event)</code><br>
+                            <small class="text-muted">Decoupled communication between components</small>
+                        </div>
+                    </div>
+                </div>
+                <!-- Performance -->
+                <div class="col-md-6">
+                    <div class="card cheat-card perf">
+                        <div class="card-body py-2">
+                            <h6 class="mb-1">Performance</h6>
+                            <code>debounce(fn, 300)</code> | <code>throttle(fn, 100)</code><br>
+                            <code>queueMicrotask(() => render())</code><br>
+                            <small class="text-muted">Batch, debounce, memoize, virtual diff</small>
+                        </div>
+                    </div>
+                </div>
+                <!-- Accessibility -->
+                <div class="col-md-6">
+                    <div class="card cheat-card a11y">
+                        <div class="card-body py-2">
+                            <h6 class="mb-1">Accessibility</h6>
+                            <code>&lt;div aria-live="polite"&gt;</code><br>
+                            <code>el.setAttribute('aria-pressed', state)</code><br>
+                            <small class="text-muted">Live regions, focus management, ARIA states</small>
+                        </div>
+                    </div>
+                </div>
+                <!-- Mobile -->
+                <div class="col-md-6">
+                    <div class="card cheat-card mobile">
+                        <div class="card-body py-2">
+                            <h6 class="mb-1">Mobile State</h6>
+                            <code>navigator.onLine</code> | <code>touchstart/end</code><br>
+                            <code>window.innerWidth</code> for breakpoints<br>
+                            <small class="text-muted">Touch, gesture, offline, viewport state</small>
+                        </div>
+                    </div>
+                </div>
+                <!-- Framework -->
+                <div class="col-md-6">
+                    <div class="card cheat-card framework">
+                        <div class="card-body py-2">
+                            <h6 class="mb-1">Framework Integration</h6>
+                            <code>useState()</code> | <code>new Proxy()</code> | <code>createStore()</code><br>
+                            <small class="text-muted">React, Vue, Angular, Redux patterns in vanilla JS</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 3: DECISION MATRIX
+             Helps choose the right pattern based on requirements.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">3. Decision Matrix</h2>
+            <p class="text-muted">Which pattern to choose based on your requirements.</p>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Requirement</th>
+                            <th>Recommended Pattern</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-start">Simple toggle (on/off)</td>
+                            <td><span class="badge bg-primary">CSS Class</span></td>
+                            <td class="text-start">Zero JS state needed, CSS handles it</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">Component-specific state</td>
+                            <td><span class="badge bg-primary">Data Attribute</span></td>
+                            <td class="text-start">State lives on the element, easy to read</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">Multi-field form</td>
+                            <td><span class="badge bg-danger">JS State Object</span></td>
+                            <td class="text-start">Complex state needs central management</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">Workflow (draft/review/publish)</td>
+                            <td><span class="badge bg-warning text-dark">State Machine</span></td>
+                            <td class="text-start">Strict transitions prevent invalid states</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">Cross-component communication</td>
+                            <td><span class="badge bg-info">Pub/Sub</span></td>
+                            <td class="text-start">Decouples components, scalable</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">Undo/redo functionality</td>
+                            <td><span class="badge bg-secondary">Command</span></td>
+                            <td class="text-start">Encapsulates actions with undo logic</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">State persistence</td>
+                            <td><span class="badge bg-dark">localStorage</span></td>
+                            <td class="text-start">Survives page reloads</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">High-frequency updates</td>
+                            <td><span class="badge bg-purple" style="background:#6f42c1">Batch/Throttle</span></td>
+                            <td class="text-start">Prevents excessive re-renders</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">Screen reader users</td>
+                            <td><span class="badge bg-orange" style="background:#fd7e14">ARIA Live</span></td>
+                            <td class="text-start">Announces state changes to AT</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start">Mobile/touch interactions</td>
+                            <td><span class="badge bg-teal" style="background:#20c997">Touch State</span></td>
+                            <td class="text-start">Handles touch events and gestures</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 4: BEST PRACTICES & ANTI-PATTERNS
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">4. Best Practices & Anti-Patterns</h2>
+
+            <div class="row g-3">
+                <!-- Best Practices -->
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">Best Practices</div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2"><span class="bp-do">&#10003;</span> <strong>Single source of truth</strong> — one place holds each state value</li>
+                                <li class="mb-2"><span class="bp-do">&#10003;</span> <strong>Immutable updates</strong> — create new state objects, don't mutate</li>
+                                <li class="mb-2"><span class="bp-do">&#10003;</span> <strong>Validate transitions</strong> — use state machines for strict flows</li>
+                                <li class="mb-2"><span class="bp-do">&#10003;</span> <strong>Announce to screen readers</strong> — use aria-live for dynamic state</li>
+                                <li class="mb-2"><span class="bp-do">&#10003;</span> <strong>Persist user preferences</strong> — save important state to localStorage</li>
+                                <li class="mb-2"><span class="bp-do">&#10003;</span> <strong>Batch DOM updates</strong> — reduce re-renders for performance</li>
+                                <li class="mb-2"><span class="bp-do">&#10003;</span> <strong>Test state logic</strong> — unit test state transitions in isolation</li>
+                                <li class="mb-0"><span class="bp-do">&#10003;</span> <strong>Handle offline</strong> — queue actions when network is unavailable</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Anti-Patterns -->
+                <div class="col-md-6">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">Anti-Patterns</div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2"><span class="bp-dont">&#10007;</span> <strong>Scattered state</strong> — state spread across many DOM elements</li>
+                                <li class="mb-2"><span class="bp-dont">&#10007;</span> <strong>Direct DOM reads as state</strong> — reading <code>input.value</code> everywhere</li>
+                                <li class="mb-2"><span class="bp-dont">&#10007;</span> <strong>Render on every keystroke</strong> — no debouncing on input handlers</li>
+                                <li class="mb-2"><span class="bp-dont">&#10007;</span> <strong>Color-only state indicators</strong> — inaccessible to colorblind users</li>
+                                <li class="mb-2"><span class="bp-dont">&#10007;</span> <strong>Silent state changes</strong> — no announcements for screen readers</li>
+                                <li class="mb-2"><span class="bp-dont">&#10007;</span> <strong>Ignoring offline</strong> — assuming always-on network connectivity</li>
+                                <li class="mb-2"><span class="bp-dont">&#10007;</span> <strong>God state object</strong> — one massive object holding all app state</li>
+                                <li class="mb-0"><span class="bp-dont">&#10007;</span> <strong>Unvalidated transitions</strong> — allowing any state to transition to any state</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 5: INTEGRATED DEMO
+             A single component that combines all patterns from lessons
+             01-07 into one cohesive demonstration.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">5. Integrated Demo (All Patterns)</h2>
+            <p class="text-muted">
+                A single card component that uses every pattern: data attributes, CSS classes,
+                JS state object, state machine, observer, pub/sub, command (undo), persistence,
+                debouncing, memoization, ARIA, touch support, and offline detection.
+            </p>
+
+            <!-- Pattern selector tabs -->
+            <ul class="nav nav-tabs" id="demoTabs" role="tablist">
+                <li class="nav-item"><button class="nav-link active" onclick="showDemoTab('full')">Full Demo</button></li>
+                <li class="nav-item"><button class="nav-link" onclick="showDemoTab('state')">State Inspector</button></li>
+                <li class="nav-item"><button class="nav-link" onclick="showDemoTab('events')">Event Log</button></li>
+            </ul>
+
+            <!-- Full integrated demo panel -->
+            <div class="demo-panel active border border-top-0 rounded-bottom p-3" id="demo-full">
+                <!-- ARIA live region for screen reader announcements -->
+                <div aria-live="polite" aria-atomic="true" class="visually-hidden" id="integratedLive"></div>
+
+                <!-- Offline banner -->
+                <div class="alert alert-danger py-1 mb-2" id="integratedOffline" style="display:none;">
+                    Offline — actions will be queued
+                </div>
+
+                <!-- The integrated component: uses ALL patterns -->
+                <div class="card border-2 position-relative"
+                     id="integratedCard"
+                     data-state="idle"
+                     data-count="0">
+
+                    <!-- CSS-class-based state indicator (pattern 2) -->
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Integrated Component</span>
+                        <div>
+                            <!-- Data-attribute-driven badge (pattern 1) -->
+                            <span class="badge bg-secondary" id="intStateBadge" aria-pressed="false">idle</span>
+                            <span class="badge bg-info" id="intCountBadge">0</span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- JS state object controls (pattern 3) -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small">Label</label>
+                                <input type="text" class="form-control form-control-sm" id="intLabel"
+                                       placeholder="Enter label" oninput="integratedDebouncedUpdate()">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Priority</label>
+                                <select class="form-select form-select-sm" id="intPriority" onchange="integratedUpdate()">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- State machine controls (pattern 4) -->
+                        <div class="d-flex gap-1 mb-3 flex-wrap">
+                            <button class="btn btn-sm btn-outline-primary" onclick="integratedMachine.transition('activate')">Activate</button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="integratedMachine.transition('pause')">Pause</button>
+                            <button class="btn btn-sm btn-outline-success" onclick="integratedMachine.transition('complete')">Complete</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="integratedMachine.transition('reset')">Reset</button>
+                        </div>
+
+                        <!-- Counter with sync (patterns 1, 6) -->
+                        <div class="d-flex gap-2 align-items-center mb-3">
+                            <button class="btn btn-sm btn-outline-primary" onclick="integratedCounter.change(1)">+1</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="integratedCounter.change(-1)">-1</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="integratedCounter.reset()">Reset</button>
+                            <!-- Progress bar synced with counter -->
+                            <div class="progress flex-grow-1" style="height:20px;">
+                                <div class="progress-bar" id="intProgress" style="width:0%">0</div>
+                            </div>
+                        </div>
+
+                        <!-- Command pattern: undo/redo (pattern 7) -->
+                        <div class="d-flex gap-1 mb-3">
+                            <button class="btn btn-sm btn-outline-dark" onclick="integratedUndo()" id="intUndoBtn" disabled>Undo</button>
+                            <button class="btn btn-sm btn-outline-dark" onclick="integratedRedo()" id="intRedoBtn" disabled>Redo</button>
+                            <span class="badge bg-dark align-self-center" id="intHistoryBadge">History: 0</span>
+                        </div>
+
+                        <!-- Memoized computed display (pattern 11) -->
+                        <div class="alert alert-light border py-2 mb-2" id="intMemoDisplay">
+                            Computed state will appear here
+                        </div>
+
+                        <!-- ARIA accessible indicator (pattern 14) -->
+                        <div class="small text-muted">
+                            Touch/click the card for touch state tracking (pattern 15)
+                        </div>
+                    </div>
+
+                    <!-- Persistence controls (pattern 8) -->
+                    <div class="card-footer d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="integratedSave()">Save State</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="integratedLoad()">Load State</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="integratedClear()">Clear Saved</button>
+                        <span class="badge bg-success align-self-center" id="intPersistBadge">Not saved</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- State inspector panel -->
+            <div class="demo-panel border border-top-0 rounded-bottom p-3" id="demo-state">
+                <h6>All State Objects</h6>
+                <pre class="bg-dark text-light p-2 rounded small" id="allStateInspector" style="max-height:400px;overflow-y:auto;"></pre>
+            </div>
+
+            <!-- Event log panel -->
+            <div class="demo-panel border border-top-0 rounded-bottom p-3" id="demo-events">
+                <h6>Event Log</h6>
+                <div class="bg-dark text-light p-2 rounded small" id="integratedEventLog" style="max-height:400px;overflow-y:auto;font-family:monospace;"></div>
+            </div>
+        </section>
+
+        <!-- ==============================================================
+             SECTION 6: LESSON NAVIGATION
+             Links to all lessons in the state management series.
+             ============================================================== -->
+        <section class="mb-5">
+            <h2 class="h4 mb-3">6. Lesson Navigation</h2>
+            <div class="list-group">
+                <a href="04_09_01_Component_State.html" class="list-group-item list-group-item-action">
+                    <strong>04_09_01</strong> — Component State Management
+                    <small class="text-muted d-block">Data attributes, CSS classes, JS state objects, persistence</small>
+                </a>
+                <a href="04_09_02_State_Patterns.html" class="list-group-item list-group-item-action">
+                    <strong>04_09_02</strong> — State Design Patterns
+                    <small class="text-muted d-block">State machine, observer, pub/sub, command, memento</small>
+                </a>
+                <a href="04_09_03_State_Performance.html" class="list-group-item list-group-item-action">
+                    <strong>04_09_03</strong> — State Performance
+                    <small class="text-muted d-block">Batching, debouncing, throttling, memoization</small>
+                </a>
+                <a href="04_09_04_State_Accessibility.html" class="list-group-item list-group-item-action">
+                    <strong>04_09_04</strong> — State Accessibility
+                    <small class="text-muted d-block">ARIA live regions, focus management, screen readers</small>
+                </a>
+                <a href="04_09_05_State_Mobile.html" class="list-group-item list-group-item-action">
+                    <strong>04_09_05</strong> — State Mobile
+                    <small class="text-muted d-block">Touch, gesture, offline, viewport state</small>
+                </a>
+                <a href="04_09_06_State_Testing.html" class="list-group-item list-group-item-action">
+                    <strong>04_09_06</strong> — State Testing
+                    <small class="text-muted d-block">Unit tests, integration tests, assertions, mocks</small>
+                </a>
+                <a href="04_09_07_State_Integration.html" class="list-group-item list-group-item-action">
+                    <strong>04_09_07</strong> — State Integration
+                    <small class="text-muted d-block">React useState, Vue reactive, Angular change detection, Redux</small>
+                </a>
+                <a href="04_09_08_State_Complete_Guide.html" class="list-group-item list-group-item-action active">
+                    <strong>04_09_08</strong> — Complete Guide (This Page)
+                    <small class="text-muted d-block">Reference table, cheat sheet, decision matrix, integrated demo</small>
+                </a>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Bootstrap 5.3.3 JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ====================================================================
+           INTEGRATED DEMO: ALL PATTERNS IN ONE COMPONENT
+           This section combines every pattern into a single cohesive demo.
+           ==================================================================== */
+
+        // ================================================================
+        // PATTERN 3: JS State Object — single source of truth
+        // ================================================================
+        const integratedState = {
+            label: '',
+            priority: 'low',
+            count: 0,
+            history: []
+        };
+
+        // ================================================================
+        // PATTERN 4: State Machine
+        // ================================================================
+        const integratedMachine = {
+            current: 'idle',
+            transitions: {
+                idle: ['active'],
+                active: ['paused', 'completed'],
+                paused: ['active', 'idle'],
+                completed: ['idle']
+            },
+            transition(action) {
+                const targetMap = { activate: 'active', pause: 'paused', complete: 'completed', reset: 'idle' };
+                const target = targetMap[action];
+                if (!this.transitions[this.current].includes(target)) {
+                    intLog('BLOCKED: ' + this.current + ' -> ' + target);
+                    return false;
+                }
+                const old = this.current;
+                this.current = target;
+                intLog('STATE: ' + old + ' -> ' + target);
+                intAnnounce('State changed to ' + target);
+                intRenderAll();
+                return true;
+            }
+        };
+
+        // ================================================================
+        // PATTERN 5: Observer — observers that react to state changes
+        // ================================================================
+        const integratedObservers = [];
+
+        function intSubscribe(fn) { integratedObservers.push(fn); }
+        function intNotify() { integratedObservers.forEach(fn => fn(integratedState)); }
+
+        // Observer: update card visual
+        intSubscribe((state) => {
+            const card = document.getElementById('integratedCard');
+            card.setAttribute('data-state', integratedMachine.current);
+            card.setAttribute('data-count', state.count);
+
+            const badge = document.getElementById('intStateBadge');
+            badge.textContent = integratedMachine.current;
+            badge.className = 'badge ' + ({
+                idle: 'bg-secondary', active: 'bg-primary',
+                paused: 'bg-warning text-dark', completed: 'bg-success'
+            }[integratedMachine.current] || 'bg-secondary');
+            badge.setAttribute('aria-pressed', integratedMachine.current === 'active');
+
+            document.getElementById('intCountBadge').textContent = state.count;
+            document.getElementById('intProgress').style.width = state.count + '%';
+            document.getElementById('intProgress').textContent = state.count + '%';
+        });
+
+        // ================================================================
+        // PATTERN 6: Pub/Sub — event-driven updates
+        // ================================================================
+        function intPublish(event, data) {
+            intLog('EVENT: ' + event + ' ' + JSON.stringify(data));
+            intNotify();
+        }
+
+        // ================================================================
+        // PATTERN 7: Command — undo/redo
+        // ================================================================
+        let intCommands = [];
+        let intRedoStack = [];
+
+        function intExecuteCommand(cmd) {
+            cmd.execute();
+            intCommands.push(cmd);
+            intRedoStack = [];
+            intUpdateUndoRedo();
+        }
+
+        function integratedUndo() {
+            if (intCommands.length === 0) return;
+            const cmd = intCommands.pop();
+            cmd.undo();
+            intRedoStack.push(cmd);
+            intUpdateUndoRedo();
+            intLog('UNDO: ' + cmd.description);
+        }
+
+        function integratedRedo() {
+            if (intRedoStack.length === 0) return;
+            const cmd = intRedoStack.pop();
+            cmd.execute();
+            intCommands.push(cmd);
+            intUpdateUndoRedo();
+            intLog('REDO: ' + cmd.description);
+        }
+
+        function intUpdateUndoRedo() {
+            document.getElementById('intUndoBtn').disabled = intCommands.length === 0;
+            document.getElementById('intRedoBtn').disabled = intRedoStack.length === 0;
+            document.getElementById('intHistoryBadge').textContent = 'History: ' + intCommands.length;
+        }
+
+        // ================================================================
+        // COUNTER with Command Pattern
+        // ================================================================
+        const integratedCounter = {
+            change(delta) {
+                const oldValue = integratedState.count;
+                const newValue = Math.max(0, Math.min(100, oldValue + delta));
+                intExecuteCommand({
+                    description: 'counter ' + (delta > 0 ? '+' : '') + delta,
+                    execute() { integratedState.count = newValue; intPublish('counter:change', { value: newValue }); },
+                    undo() { integratedState.count = oldValue; intPublish('counter:change', { value: oldValue }); }
+                });
+            },
+            reset() {
+                const oldValue = integratedState.count;
+                intExecuteCommand({
+                    description: 'counter reset',
+                    execute() { integratedState.count = 0; intPublish('counter:reset', {}); },
+                    undo() { integratedState.count = oldValue; intPublish('counter:change', { value: oldValue }); }
+                });
+            }
+        };
+
+        // ================================================================
+        // PATTERN 11: Memoization — computed derived state
+        // ================================================================
+        let intMemoCache = {};
+
+        function intCompute() {
+            const key = integratedState.label + '|' + integratedState.priority + '|' + integratedState.count + '|' + integratedMachine.current;
+            if (intMemoCache[key]) return intMemoCache[key];
+
+            const result = {
+                summary: `${integratedMachine.current.toUpperCase()}: "${integratedState.label || '(no label)'}" [${integratedState.priority}] — ${integratedState.count}%`,
+                isValid: integratedState.label.length > 0 && integratedState.count > 0,
+                category: integratedState.priority === 'high' ? 'Urgent' : integratedState.priority === 'medium' ? 'Normal' : 'Low priority'
+            };
+            intMemoCache[key] = result;
+            return result;
+        }
+
+        // ================================================================
+        // PATTERN 14: ARIA announcements
+        // ================================================================
+        function intAnnounce(msg) {
+            document.getElementById('integratedLive').textContent = msg;
+            setTimeout(() => { document.getElementById('integratedLive').textContent = ''; }, 1000);
+        }
+
+        // ================================================================
+        // PATTERN 10: Debouncing
+        // ================================================================
+        let intDebounceTimer;
+        function integratedDebouncedUpdate() {
+            clearTimeout(intDebounceTimer);
+            intDebounceTimer = setTimeout(() => integratedUpdate(), 300);
+        }
+
+        // ================================================================
+        // FORM UPDATE
+        // ================================================================
+        function integratedUpdate() {
+            integratedState.label = document.getElementById('intLabel').value;
+            integratedState.priority = document.getElementById('intPriority').value;
+            intPublish('form:change', { label: integratedState.label, priority: integratedState.priority });
+        }
+
+        // ================================================================
+        // PATTERN 8: Persistence
+        // ================================================================
+        const INTEGRATED_KEY = 'integrated_state_demo';
+
+        function integratedSave() {
+            localStorage.setItem(INTEGRATED_KEY, JSON.stringify({
+                state: integratedState,
+                machine: integratedMachine.current
+            }));
+            document.getElementById('intPersistBadge').textContent = 'Saved!';
+            document.getElementById('intPersistBadge').className = 'badge bg-success align-self-center';
+            intLog('PERSIST: Saved to localStorage');
+            intAnnounce('State saved');
+        }
+
+        function integratedLoad() {
+            const saved = localStorage.getItem(INTEGRATED_KEY);
+            if (saved) {
+                const data = JSON.parse(saved);
+                Object.assign(integratedState, data.state);
+                integratedMachine.current = data.machine || 'idle';
+                document.getElementById('intLabel').value = integratedState.label;
+                document.getElementById('intPriority').value = integratedState.priority;
+                document.getElementById('intPersistBadge').textContent = 'Loaded';
+                document.getElementById('intPersistBadge').className = 'badge bg-info align-self-center';
+                intLog('PERSIST: Loaded from localStorage');
+                intRenderAll();
+            }
+        }
+
+        function integratedClear() {
+            localStorage.removeItem(INTEGRATED_KEY);
+            document.getElementById('intPersistBadge').textContent = 'Cleared';
+            document.getElementById('intPersistBadge').className = 'badge bg-danger align-self-center';
+            intLog('PERSIST: Cleared localStorage');
+        }
+
+        // ================================================================
+        // PATTERN 15: Offline detection
+        // ================================================================
+        function intUpdateOnline() {
+            document.getElementById('integratedOffline').style.display = navigator.onLine ? 'none' : '';
+        }
+        window.addEventListener('online', intUpdateOnline);
+        window.addEventListener('offline', intUpdateOnline);
+
+        // ================================================================
+        // MASTER RENDER
+        // ================================================================
+        function intRenderAll() {
+            intNotify();
+            // Update memoized display
+            const computed = intCompute();
+            const memoEl = document.getElementById('intMemoDisplay');
+            memoEl.innerHTML = `<strong>${computed.summary}</strong><br>
+                <small>Valid: ${computed.isValid} | Category: ${computed.category}</small>`;
+            memoEl.className = 'alert border py-2 mb-2 ' + (computed.isValid ? 'alert-success' : 'alert-light');
+
+            // Update inspector
+            const inspector = document.getElementById('allStateInspector');
+            if (inspector) {
+                inspector.textContent = JSON.stringify({
+                    state: integratedState,
+                    machine: integratedMachine.current,
+                    commandHistory: intCommands.length,
+                    memoCacheKeys: Object.keys(intMemoCache).length,
+                    online: navigator.onLine
+                }, null, 2);
+            }
+        }
+
+        // ================================================================
+        // EVENT LOG
+        // ================================================================
+        function intLog(msg) {
+            const log = document.getElementById('integratedEventLog');
+            if (!log) return;
+            const line = document.createElement('div');
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // ================================================================
+        // DEMO TABS
+        // ================================================================
+        function showDemoTab(tab) {
+            document.querySelectorAll('.demo-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('demo-' + tab).classList.add('active');
+            document.querySelectorAll('#demoTabs .nav-link').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        /* ====================================================================
+           INITIALIZATION
+           ==================================================================== */
+        document.addEventListener('DOMContentLoaded', function() {
+            intUpdateOnline();
+            intRenderAll();
+            intLog('INIT: Integrated demo ready');
+        });
+    </script>
+</body>
+</html>

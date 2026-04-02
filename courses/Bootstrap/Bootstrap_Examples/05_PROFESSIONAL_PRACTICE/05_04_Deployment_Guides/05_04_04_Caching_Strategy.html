@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>05_04_04 - Caching Strategy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .code-block { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 1.2rem; font-family: monospace; font-size: 0.85rem; overflow-x: auto; }
+        .code-block .kw { color: #cba6f7; } .code-block .str { color: #a6e3a1; } .code-block .cmt { color: #6c7086; }
+        .cache-hit { background: linear-gradient(135deg, #198754, #20c997); }
+        .cache-miss { background: linear-gradient(135deg, #dc3545, #fd7e14); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">Caching Strategy</a>
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="nav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#headers">Headers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#service-worker">Service Worker</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#cdn-cache">CDN Cache</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#strategies">Strategies</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="bg-info text-white py-5">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">Caching Strategy</h1>
+            <p class="lead">HTTP cache headers, service workers, and CDN caching for optimal performance</p>
+        </div>
+    </header>
+
+    <main class="container my-5">
+        <!-- Cache Hit vs Miss -->
+        <section class="mb-5">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card text-white cache-hit">
+                        <div class="card-body text-center py-4">
+                            <div class="fs-1">&#9889;</div>
+                            <h3>Cache HIT</h3>
+                            <p class="mb-0">~0ms load time | Served from browser/CDN cache</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card text-white cache-miss">
+                        <div class="card-body text-center py-4">
+                            <div class="fs-1">&#128268;</div>
+                            <h3>Cache MISS</h3>
+                            <p class="mb-0">~200-500ms load time | Fetched from origin server</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HTTP Cache Headers -->
+        <section id="headers" class="mb-5">
+            <h2 class="border-bottom pb-2">HTTP Cache Headers</h2>
+
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Cache-Control Headers Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="code-block mb-0">
+<span class="cmt"># nginx configuration for static assets</span>
+
+<span class="cmt"># HTML files - always revalidate</span>
+location ~* \.html$ {
+    add_header Cache-Control <span class="str">"no-cache, must-revalidate"</span>;
+    add_header Cache-Control <span class="str">"public, max-age=0"</span>;
+}
+
+<span class="cmt"># CSS/JS with hash in filename (immutable)</span>
+location ~* \.(css|js)$ {
+    <span class="cmt"># If filename contains hash (e.g., app.a1b2c3.js)</span>
+    add_header Cache-Control <span class="str">"public, max-age=31536000, immutable"</span>;
+}
+
+<span class="cmt"># Images - long cache, stale-while-revalidate</span>
+location ~* \.(jpg|jpeg|png|gif|webp|avif|svg|ico)$ {
+    add_header Cache-Control <span class="str">"public, max-age=2592000, stale-while-revalidate=86400"</span>;
+}
+
+<span class="cmt"># Fonts - immutable (never change once deployed)</span>
+location ~* \.(woff|woff2|ttf|otf|eot)$ {
+    add_header Cache-Control <span class="str">"public, max-age=31536000, immutable"</span>;
+    add_header Access-Control-Allow-Origin <span class="str">"*"</span>;
+}
+
+<span class="cmt"># Bootstrap CDN assets already have optimal caching</span>
+<span class="cmt"># jsDelivr sets: Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable</span></pre>
+                </div>
+            </div>
+
+            <!-- Apache .htaccess -->
+            <div class="card mt-4">
+                <div class="card-header">Apache .htaccess Configuration</div>
+                <div class="card-body">
+                    <pre class="code-block mb-0">
+<span class="cmt"># .htaccess cache configuration</span>
+
+<span class="cmt"># Enable mod_headers and mod_expires</span>
+&lt;IfModule mod_expires.c&gt;
+    ExpiresActive On
+
+    <span class="cmt"># HTML - 0 seconds (always revalidate)</span>
+    ExpiresByType text/html <span class="str">"access plus 0 seconds"</span>
+
+    <span class="cmt"># CSS and JS - 1 year (use cache-busting filenames)</span>
+    ExpiresByType text/css <span class="str">"access plus 1 year"</span>
+    ExpiresByType application/javascript <span class="str">"access plus 1 year"</span>
+
+    <span class="cmt"># Images - 30 days</span>
+    ExpiresByType image/jpeg <span class="str">"access plus 30 days"</span>
+    ExpiresByType image/png <span class="str">"access plus 30 days"</span>
+    ExpiresByType image/webp <span class="str">"access plus 30 days"</span>
+    ExpiresByType image/svg+xml <span class="str">"access plus 30 days"</span>
+
+    <span class="cmt"># Fonts - 1 year</span>
+    ExpiresByType font/woff2 <span class="str">"access plus 1 year"</span>
+    ExpiresByType font/woff <span class="str">"access plus 1 year"</span>
+&lt;/IfModule&gt;
+
+<span class="cmt"># Cache-Control headers</span>
+&lt;IfModule mod_headers.c&gt;
+    &lt;FilesMatch <span class="str">"\.(css|js)$"</span>&gt;
+        Header set Cache-Control <span class="str">"public, max-age=31536000, immutable"</span>
+    &lt;/FilesMatch&gt;
+&lt;/IfModule&gt;</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Service Worker -->
+        <section id="service-worker" class="mb-5">
+            <h2 class="border-bottom pb-2">Service Worker Caching</h2>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">Service Worker Registration</div>
+                        <div class="card-body">
+                            <pre class="code-block mb-0">
+<span class="cmt">// main.js - Register service worker</span>
+<span class="kw">if</span> (<span class="str">'serviceWorker'</span> <span class="kw">in</span> navigator) {
+    window.<span class="fn">addEventListener</span>(<span class="str">'load'</span>, <span class="kw">async</span> () => {
+        <span class="kw">try</span> {
+            <span class="kw">const</span> reg = <span class="kw">await</span> navigator
+                .serviceWorker.<span class="fn">register</span>(
+                    <span class="str">'/sw.js'</span>,
+                    { <span class="fn">scope</span>: <span class="str">'/'</span> }
+                );
+            console.<span class="fn">log</span>(
+                <span class="str">'SW registered:'</span>, reg.scope
+            );
+        } <span class="kw">catch</span> (err) {
+            console.<span class="fn">error</span>(
+                <span class="str">'SW registration failed:'</span>, err
+            );
+        }
+    });
+}</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">Service Worker (Cache-First)</div>
+                        <div class="card-body">
+                            <pre class="code-block mb-0">
+<span class="cmt">// sw.js - Cache-first strategy</span>
+<span class="kw">const</span> CACHE_NAME = <span class="str">'v1.0.0'</span>;
+<span class="kw">const</span> ASSETS = [
+    <span class="str">'/'</span>,
+    <span class="str">'/css/style.css'</span>,
+    <span class="str">'/js/app.js'</span>
+];
+
+self.<span class="fn">addEventListener</span>(<span class="str">'install'</span>, e => {
+    e.<span class="fn">waitUntil</span>(
+        caches.<span class="fn">open</span>(CACHE_NAME)
+            .<span class="fn">then</span>(cache => cache.<span class="fn">addAll</span>(ASSETS))
+    );
+});
+
+self.<span class="fn">addEventListener</span>(<span class="str">'fetch'</span>, e => {
+    e.<span class="fn">respondWith</span>(
+        caches.<span class="fn">match</span>(e.request)
+            .<span class="fn">then</span>(r => r || <span class="fn">fetch</span>(e.request))
+    );
+});</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cache Strategies Table -->
+        <section id="strategies" class="mb-5">
+            <h2 class="border-bottom pb-2">Caching Strategies Comparison</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Strategy</th>
+                            <th>Behavior</th>
+                            <th>Best For</th>
+                            <th>Cache-Control</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Immutable</strong></td>
+                            <td>Never revalidate, use hash-busted filenames</td>
+                            <td>Versioned CSS/JS, fonts</td>
+                            <td><code>max-age=31536000, immutable</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stale-While-Revalidate</strong></td>
+                            <td>Serve cached, update in background</td>
+                            <td>Images, API responses</td>
+                            <td><code>max-age=60, stale-while-revalidate=300</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Must-Revalidate</strong></td>
+                            <td>Always check with server when stale</td>
+                            <td>HTML documents</td>
+                            <td><code>no-cache, must-revalidate</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>No-Store</strong></td>
+                            <td>Never cache</td>
+                            <td>Sensitive data, auth tokens</td>
+                            <td><code>no-store</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>ETag</strong></td>
+                            <td>Conditional requests with hash</td>
+                            <td>Dynamic content, APIs</td>
+                            <td>Server generates ETag header</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- CDN Caching -->
+        <section id="cdn-cache" class="mb-5">
+            <h2 class="border-bottom pb-2">CDN Cache Configuration</h2>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Cache Busting Strategy</div>
+                        <div class="card-body">
+                            <pre class="code-block mb-0">
+<span class="cmt">// Vite - automatic hash in filename</span>
+<span class="cmt">// Output: app.a1b2c3d4.js</span>
+<span class="cmt">// Output: style.e5f6g7h8.css</span>
+
+<span class="cmt">// webpack.config.js</span>
+<span class="fn">output</span>: {
+    <span class="fn">filename</span>: <span class="str">'[name].[contenthash:8].js'</span>,
+    <span class="fn">chunkFilename</span>: <span class="str">'[name].[contenthash:8].js'</span>
+}
+
+<span class="cmt">// Content hash ensures filename changes</span>
+<span class="cmt">// when file content changes, automatically</span>
+<span class="cmt">// invalidating CDN/browser caches</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">CDN Purge Strategy</div>
+                        <div class="card-body">
+                            <pre class="code-block mb-0">
+<span class="cmt"># Cloudflare purge via API</span>
+curl -X POST \
+  <span class="str">"https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache"</span> \
+  -H <span class="str">"Authorization: Bearer {token}"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "purge_everything": true
+  }'</span>
+
+<span class="cmt"># Or purge specific files</span>
+-d <span class="str">'{
+  "files": [
+    "https://example.com/css/style.css"
+  ]
+}'</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">05_04_04 - Caching Strategy &copy; 2024 Bootstrap Course</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

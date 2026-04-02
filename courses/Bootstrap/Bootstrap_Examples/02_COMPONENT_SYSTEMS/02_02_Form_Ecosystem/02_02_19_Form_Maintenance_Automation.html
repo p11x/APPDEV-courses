@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Maintenance Automation - Bootstrap 5</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>.demo-section { margin-bottom: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 0.5rem; } .code-block { background: #212529; color: #f8f9fa; padding: 1rem; border-radius: 0.25rem; font-size: 0.85rem; }</style>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-4 fw-bold text-primary">Form Maintenance Automation</h1>
+                <p class="lead text-muted">Automated code generation, migration tools, and maintenance patterns.</p><hr>
+            </div>
+        </div>
+
+        <section class="demo-section" id="form-generator">
+            <h2 class="h4 mb-3">1. Form Code Generator</h2>
+            <p class="text-muted">Generate form HTML from a JSON schema definition.</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">JSON Schema</label>
+                    <textarea class="form-control font-monospace" id="schemaInput" rows="15" style="font-size:0.8rem;">[
+  {"type":"text","name":"firstName","label":"First Name","required":true},
+  {"type":"text","name":"lastName","label":"Last Name","required":true},
+  {"type":"email","name":"email","label":"Email","required":true},
+  {"type":"password","name":"password","label":"Password","required":true,"minlength":8},
+  {"type":"select","name":"role","label":"Role","options":["Admin","User","Guest"]},
+  {"type":"checkbox","name":"terms","label":"Accept Terms","required":true},
+  {"type":"textarea","name":"bio","label":"Biography","rows":3}
+]</textarea>
+                    <button class="btn btn-primary mt-2" id="generateBtn">Generate Form</button>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Generated HTML</label>
+                    <pre class="code-block" id="generatedCode" style="max-height:350px;overflow-y:auto;"></pre>
+                    <button class="btn btn-outline-success btn-sm mt-2" id="copyBtn">Copy to Clipboard</button>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <label class="form-label">Live Preview</label>
+                <div class="border rounded p-3" id="generatedPreview"></div>
+            </div>
+        </section>
+
+        <section class="demo-section" id="lint-form">
+            <h2 class="h4 mb-3">2. Form Linter</h2>
+            <p class="text-muted">Check a form for common issues: missing labels, accessibility problems, etc.</p>
+
+            <button class="btn btn-primary mb-3" id="lintBtn">Lint All Forms on This Page</button>
+            <div id="lintResults" class="border rounded p-3" style="font-family:monospace;font-size:0.85rem;min-height:100px;"></div>
+        </section>
+
+        <section class="demo-section" id="migration">
+            <h2 class="h4 mb-3">3. Migration Helper</h2>
+            <p class="text-muted">Convert forms from Bootstrap 4 to Bootstrap 5 syntax.</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Bootstrap 4 HTML</label>
+                    <textarea class="form-control font-monospace" id="bs4Input" rows="10" style="font-size:0.8rem;"><div class="form-group">
+    <label for="email">Email</label>
+    <input type="email" class="form-control" id="email">
+    <small class="form-text text-muted">Help text</small>
+</div>
+<div class="form-group">
+    <label for="sel">Select</label>
+    <select class="form-control" id="sel">
+        <option>1</option>
+    </select>
+</div>
+<div class="form-group form-check">
+    <input type="checkbox" class="form-check-input" id="cb">
+    <label class="form-check-label" for="cb">Check</label>
+</div>
+<custom-file>
+    <label class="custom-file-label">Choose file</label>
+    <input type="file" class="custom-file-input">
+</custom-file></textarea>
+                    <button class="btn btn-primary mt-2" id="migrateBtn">Convert to Bootstrap 5</button>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Bootstrap 5 HTML</label>
+                    <pre class="code-block" id="bs5Output" style="max-height:250px;overflow-y:auto;"></pre>
+                </div>
+            </div>
+        </section>
+
+        <section class="demo-section" id="audit">
+            <h2 class="h4 mb-3">4. Form Audit Report</h2>
+            <button class="btn btn-primary mb-3" id="auditBtn">Generate Audit Report</button>
+            <div id="auditResults"></div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form generator
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            try {
+                const schema = JSON.parse(document.getElementById('schemaInput').value);
+                let html = '<form novalidate>\n';
+                schema.forEach(function(field) {
+                    switch (field.type) {
+                        case 'text': case 'email': case 'password': case 'number': case 'tel':
+                            html += '  <div class="mb-3">\n';
+                            html += '    <label for="' + field.name + '" class="form-label">' + field.label + '</label>\n';
+                            html += '    <input type="' + field.type + '" class="form-control" id="' + field.name + '" name="' + field.name + '"';
+                            if (field.required) html += ' required';
+                            if (field.minlength) html += ' minlength="' + field.minlength + '"';
+                            html += '>\n';
+                            if (field.required) html += '    <div class="invalid-feedback">' + field.label + ' is required.</div>\n';
+                            html += '  </div>\n';
+                            break;
+                        case 'textarea':
+                            html += '  <div class="mb-3">\n';
+                            html += '    <label for="' + field.name + '" class="form-label">' + field.label + '</label>\n';
+                            html += '    <textarea class="form-control" id="' + field.name + '" name="' + field.name + '"';
+                            if (field.rows) html += ' rows="' + field.rows + '"';
+                            if (field.required) html += ' required';
+                            html += '></textarea>\n  </div>\n';
+                            break;
+                        case 'select':
+                            html += '  <div class="mb-3">\n';
+                            html += '    <label for="' + field.name + '" class="form-label">' + field.label + '</label>\n';
+                            html += '    <select class="form-select" id="' + field.name + '" name="' + field.name + '">\n';
+                            html += '      <option selected disabled value="">Choose...</option>\n';
+                            (field.options || []).forEach(function(opt) {
+                                html += '      <option>' + opt + '</option>\n';
+                            });
+                            html += '    </select>\n  </div>\n';
+                            break;
+                        case 'checkbox':
+                            html += '  <div class="mb-3 form-check">\n';
+                            html += '    <input class="form-check-input" type="checkbox" id="' + field.name + '" name="' + field.name + '"';
+                            if (field.required) html += ' required';
+                            html += '>\n';
+                            html += '    <label class="form-check-label" for="' + field.name + '">' + field.label + '</label>\n  </div>\n';
+                            break;
+                    }
+                });
+                html += '  <button type="submit" class="btn btn-primary">Submit</button>\n</form>';
+
+                document.getElementById('generatedCode').textContent = html;
+                document.getElementById('generatedPreview').innerHTML = html;
+            } catch (e) {
+                document.getElementById('generatedCode').textContent = 'Error: ' + e.message;
+            }
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            navigator.clipboard.writeText(document.getElementById('generatedCode').textContent);
+            this.textContent = 'Copied!';
+            setTimeout(() => this.textContent = 'Copy to Clipboard', 2000);
+        });
+
+        // Form linter
+        document.getElementById('lintBtn').addEventListener('click', function() {
+            const issues = [];
+            let formCount = 0;
+
+            document.querySelectorAll('form').forEach(function(form) {
+                formCount++;
+                // Check inputs without labels
+                form.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"])').forEach(function(input) {
+                    if (input.id) {
+                        const label = form.querySelector('label[for="' + input.id + '"]');
+                        if (!label) issues.push({ type: 'error', msg: 'Input #' + input.id + ' has no associated label' });
+                    } else {
+                        if (!input.getAttribute('aria-label') && !input.getAttribute('aria-labelledby')) {
+                            issues.push({ type: 'error', msg: 'Input without id and no aria-label: type=' + input.type });
+                        }
+                    }
+                });
+
+                // Check checkboxes without labels
+                form.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(function(cb) {
+                    if (cb.id) {
+                        const label = form.querySelector('label[for="' + cb.id + '"]');
+                        if (!label) issues.push({ type: 'warning', msg: 'Checkbox/Radio #' + cb.id + ' has no label' });
+                    }
+                });
+
+                // Check form without submit button
+                if (!form.querySelector('button[type="submit"], input[type="submit"]')) {
+                    issues.push({ type: 'warning', msg: 'Form has no submit button' });
+                }
+
+                // Check selects without labels
+                form.querySelectorAll('select').forEach(function(sel) {
+                    if (sel.id) {
+                        const label = form.querySelector('label[for="' + sel.id + '"]');
+                        if (!label) issues.push({ type: 'error', msg: 'Select #' + sel.id + ' has no label' });
+                    }
+                });
+            });
+
+            let html = '<strong>Linted ' + formCount + ' form(s). Found ' + issues.length + ' issue(s).</strong><br><br>';
+            if (issues.length === 0) {
+                html += '<span class="text-success">✅ No issues found!</span>';
+            } else {
+                issues.forEach(function(issue) {
+                    const icon = issue.type === 'error' ? '❌' : '⚠️';
+                    const color = issue.type === 'error' ? '#dc3545' : '#ffc107';
+                    html += '<span style="color:' + color + '">' + icon + ' [' + issue.type.toUpperCase() + '] ' + issue.msg + '</span><br>';
+                });
+            }
+            document.getElementById('lintResults').innerHTML = html;
+        });
+
+        // BS4 to BS5 migration
+        document.getElementById('migrateBtn').addEventListener('click', function() {
+            let html = document.getElementById('bs4Input').value;
+            // Replace form-group
+            html = html.replace(/<div class="form-group">/g, '<div class="mb-3">');
+            // Replace form-control on select
+            html = html.replace(/<select class="form-control"/g, '<select class="form-select"');
+            // Replace small.form-text
+            html = html.replace(/<small class="form-text text-muted">/g, '<div class="form-text">');
+            html = html.replace(/<\/small>/g, '</div>');
+            // Replace custom-file
+            html = html.replace(/<custom-file>/g, '');
+            html = html.replace(/<\/custom-file>/g, '');
+            html = html.replace(/<label class="custom-file-label">/g, '<label class="form-label">');
+            html = html.replace(/class="custom-file-input"/g, 'class="form-control"');
+            // Remove form-group from form-check
+            html = html.replace(/<div class="mb-3 form-check">/g, '<div class="mb-3 form-check">');
+
+            document.getElementById('bs5Output').textContent = html;
+        });
+
+        // Audit report
+        document.getElementById('auditBtn').addEventListener('click', function() {
+            const report = [];
+            const forms = document.querySelectorAll('form');
+            let totalInputs = 0, labeledInputs = 0, requiredInputs = 0, accessibleInputs = 0;
+
+            forms.forEach(function(form) {
+                form.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(function(input) {
+                    totalInputs++;
+                    if (input.id && document.querySelector('label[for="' + input.id + '"]')) labeledInputs++;
+                    if (input.hasAttribute('required')) requiredInputs++;
+                    if (input.getAttribute('aria-label') || input.getAttribute('aria-labelledby') || (input.id && document.querySelector('label[for="' + input.id + '"]'))) {
+                        accessibleInputs++;
+                    }
+                });
+            });
+
+            const labelPct = totalInputs ? Math.round((labeledInputs / totalInputs) * 100) : 0;
+            const a11yPct = totalInputs ? Math.round((accessibleInputs / totalInputs) * 100) : 0;
+
+            report.push('<h5>Form Audit Summary</h5>');
+            report.push('<table class="table table-bordered"><tbody>');
+            report.push('<tr><th>Total Forms</th><td>' + forms.length + '</td></tr>');
+            report.push('<tr><th>Total Controls</th><td>' + totalInputs + '</td></tr>');
+            report.push('<tr><th>Controls with Labels</th><td>' + labeledInputs + '/' + totalInputs + ' (' + labelPct + '%)</td></tr>');
+            report.push('<tr><th>Required Fields</th><td>' + requiredInputs + '</td></tr>');
+            report.push('<tr><th>Accessibility Score</th><td>' + a11yPct + '% ' + (a11yPct >= 90 ? '✅' : a11yPct >= 70 ? '⚠️' : '❌') + '</td></tr>');
+            report.push('</tbody></table>');
+
+            document.getElementById('auditResults').innerHTML = report.join('');
+        });
+    </script>
+</body>
+</html>

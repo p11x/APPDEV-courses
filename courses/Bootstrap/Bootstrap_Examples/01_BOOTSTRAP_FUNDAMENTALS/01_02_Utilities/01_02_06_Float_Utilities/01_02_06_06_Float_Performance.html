@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap 5 - Float Performance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .demo-border {
+            border: 3px dashed #dc3545;
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .perf-box {
+            padding: 1.5rem;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            border: 2px solid #fff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+
+    <!-- ========================================== -->
+    <!-- PAGE HEADER                                 -->
+    <!-- ========================================== -->
+    <h1 class="display-4 fw-bold text-primary mb-3">Float Performance</h1>
+    <p class="lead text-muted mb-5">
+        Floats are one of the oldest CSS layout mechanisms. Understanding their rendering
+        characteristics helps you make informed decisions about when to use floats versus
+        flexbox or grid for optimal performance.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: FLOAT RENDERING PIPELINE         -->
+    <!-- Floats affect layout and paint stages.     -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-4 mb-3">1. Float Rendering Pipeline</h2>
+    <div class="alert alert-info">
+        <strong>Browser rendering:</strong> Style → Layout → Paint → Composite. Floats trigger
+        <strong>Layout</strong> (reflow) because surrounding content must recalculate its position
+        relative to the floated element.
+    </div>
+    <p>
+        When a float is added or removed, the browser must re-layout all adjacent inline content
+        that wraps around it. This makes float operations more expensive than
+        <code>transform</code> or <code>opacity</code> changes, which only affect Composite.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: CLEARFIX COST                    -->
+    <!-- clearfix adds a pseudo-element that forces -->
+    <!-- additional layout calculations.            -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">2. Clearfix Overhead</h2>
+    <p>
+        The <code>clearfix</code> pseudo-element forces the browser to calculate the clearing
+        position, which requires measuring all floated children. In deeply nested layouts,
+        this can cascade.
+    </p>
+    <div class="demo-border">
+        <div class="clearfix bg-white border rounded p-3">
+            <p class="mb-2 fw-semibold">Shallow nesting (performant):</p>
+            <div class="float-start perf-box bg-primary me-2" style="width:100px;">1</div>
+            <div class="float-start perf-box bg-secondary me-2" style="width:100px;">2</div>
+            <div class="float-start perf-box bg-success" style="width:100px;">3</div>
+        </div>
+    </div>
+    <p class="text-muted">
+        A single clearfix at the outermost level is efficient. Avoid nesting multiple clearfix
+        containers inside each other.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: FLOAT VS FLEX PERFORMANCE        -->
+    <!-- Side-by-side comparison of reflow cost.    -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">3. Float vs. Flex: Layout Cost</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr><th>Aspect</th><th>Float</th><th>Flexbox</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Layout algorithm</td>
+                <td>Inline flow wrapping</td>
+                <td>Axis-based distribution</td>
+            </tr>
+            <tr>
+                <td>Adding/removing items</td>
+                <td>Reflows wrapping content</td>
+                <td>Redistributes all items</td>
+            </tr>
+            <tr>
+                <td>Nesting cost</td>
+                <td>clearfix at each level</td>
+                <td>Layout calc at each level</td>
+            </tr>
+            <tr>
+                <td>Typical use case</td>
+                <td>Text wrapping (low cost)</td>
+                <td>Full layouts (moderate cost)</td>
+            </tr>
+            <tr>
+                <td>Containment</td>
+                <td>Needs clearfix or BFC</td>
+                <td>Self-containing by default</td>
+            </tr>
+            <tr>
+                <td>GPU acceleration</td>
+                <td>No (triggers layout)</td>
+                <td>No (triggers layout)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: USE BFC FOR CONTAINMENT          -->
+    <!-- overflow:hidden creates a Block Formatting -->
+    <!-- Context, containing floats without clearfix. -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">4. BFC Containment (Alternative to Clearfix)</h2>
+    <p>
+        Creating a Block Formatting Context (BFC) on the parent automatically contains floats.
+        This avoids the extra pseudo-element used by clearfix.
+    </p>
+    <div class="demo-border">
+        <div class="bg-white border rounded p-3" style="overflow: hidden;">
+            <p class="mb-2 fw-semibold">Contained with <code>overflow: hidden</code> (BFC):</p>
+            <div class="float-start perf-box bg-primary me-2" style="width:120px;">Left</div>
+            <div class="float-end perf-box bg-secondary" style="width:120px;">Right</div>
+            <p class="mt-2">
+                This container uses <code>overflow: hidden</code> to create a BFC, which automatically
+                contains floats without needing <code>clearfix</code>. Performance is equivalent,
+                but the approach is more modern.
+            </p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 5: MINIMIZE FLOAT LAYOUT SHIFTS     -->
+    <!-- Avoid adding/removing floats dynamically.  -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">5. Minimize Dynamic Float Changes</h2>
+    <p>
+        Toggling float classes with JavaScript causes layout thrashing. Prefer using CSS
+        media queries for responsive float changes, and avoid modifying floats in animation loops.
+    </p>
+    <div class="demo-border">
+        <div class="clearfix" id="float-demo">
+            <div class="float-start perf-box bg-primary me-2 mb-2" style="width:150px;" id="fbox">
+                Static float
+            </div>
+            <p>
+                This float is set via CSS class and does not change dynamically. The browser
+                calculates its position once and reuses the result.
+            </p>
+        </div>
+    </div>
+    <div class="alert alert-warning">
+        <strong>Anti-pattern:</strong> Don't do <code>element.style.float = 'left'</code> inside
+        a <code>requestAnimationFrame</code> loop. This forces a layout recalc every frame.
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 6: LAYOUT THRASHING                 -->
+    <!-- Reading layout properties after writing    -->
+    <!-- forces synchronous reflow.                 -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">6. Avoid Layout Thrashing</h2>
+    <p>
+        Layout thrashing occurs when you alternately read and write layout properties,
+        forcing the browser to recalculate layout repeatedly within a single frame.
+    </p>
+    <div class="bg-white border rounded p-4 mb-4">
+        <p class="text-danger fw-semibold mb-2">Bad — forces reflow each iteration:</p>
+        <pre class="bg-dark text-white p-3 rounded"><code>items.forEach(item => {
+  item.style.float = 'left';          // WRITE
+  const width = item.offsetWidth;     // READ (forces reflow)
+  item.style.width = (width + 10) + 'px'; // WRITE
+});</code></pre>
+        <p class="text-success fw-semibold mt-3 mb-2">Good — batch reads, then writes:</p>
+        <pre class="bg-dark text-white p-3 rounded"><code>const widths = items.map(i => i.offsetWidth);  // READ all
+items.forEach((item, i) => {
+  item.style.float = 'left';                    // WRITE
+  item.style.width = (widths[i] + 10) + 'px';  // WRITE
+});</code></pre>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 7: CSS CONTAINMENT                  -->
+    <!-- contain:layout scopes float recalculation. -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">7. CSS Containment</h2>
+    <p>
+        The <code>contain</code> CSS property tells the browser that an element's internal
+        layout is independent, limiting the scope of reflows.
+    </p>
+    <div class="demo-border">
+        <div class="clearfix bg-white border rounded p-3" style="contain: layout;">
+            <div class="float-start perf-box bg-primary me-2" style="width:100px;">1</div>
+            <div class="float-start perf-box bg-secondary me-2" style="width:100px;">2</div>
+            <div class="float-start perf-box bg-success me-2" style="width:100px;">3</div>
+            <div class="float-start perf-box bg-warning text-dark me-2" style="width:100px;">4</div>
+            <div class="float-start perf-box bg-danger" style="width:100px;">5</div>
+        </div>
+    </div>
+    <p class="text-muted">
+        <code>contain: layout</code> tells the browser changes inside this container won't
+        affect outside layout, enabling more efficient repaints.
+    </p>
+
+    <!-- ========================================== -->
+    <!-- PERFORMANCE SUMMARY TABLE                   -->
+    <!-- ========================================== -->
+    <h2 class="h4 text-secondary mt-5 mb-3">Performance Tips Summary</h2>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Use CSS media queries for responsive floats</td><td>Avoids JS-triggered layout</td></tr>
+            <tr><td>Prefer BFC (<code>overflow: hidden</code>) over clearfix</td><td>Same containment, no pseudo-element</td></tr>
+            <tr><td>Apply <code>contain: layout</code> to float containers</td><td>Scopes reflow calculations</td></tr>
+            <tr><td>Batch DOM reads and writes</td><td>Prevents layout thrashing</td></tr>
+            <tr><td>Avoid nesting clearfix containers</td><td>Reduces cascading reflow</td></tr>
+            <tr><td>Use floats only where appropriate (text wrapping)</td><td>Flex/grid for complex layouts</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
