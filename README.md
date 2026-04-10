@@ -4,8 +4,8 @@
 [![GitHub repo size](https://img.shields.io/github/repo-size/p11x/APPDEV-courses)](https://github.com/p11x/APPDEV-courses)
 [![GitHub stars](https://img.shields.io/github/stars/p11x/APPDEV-courses?style=social)](https://github.com/p11x/APPDEV-courses/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/p11x/APPDEV-courses?style=social)](https://github.com/p11x/APPDEV-courses/network)
-[![Total Files](https://img.shields.io/badge/Total%20Files-11%2C624-blue)](https://github.com/p11x/APPDEV-courses)
-[![Total Courses](https://img.shields.io/badge/Courses-27-brightgreen)](https://github.com/p11x/APPDEV-courses)
+[![Total Files](https://img.shields.io/badge/Total%20Files-15%2C142-blue)](https://github.com/p11x/APPDEV-courses)
+[![Total Courses](https://img.shields.io/badge/Courses-36-brightgreen)](https://github.com/p11x/APPDEV-courses)
 [![Repo Health](https://img.shields.io/badge/Health-Excellent-brightgreen)](https://github.com/p11x/APPDEV-courses/pulse)
 [![Contributors](https://img.shields.io/github/contributors/p11x/APPDEV-courses?style=flat-square&color=3b82f6)](https://github.com/p11x/APPDEV-courses/graphs/contributors)
 [![Forks](https://img.shields.io/github/forks/p11x/APPDEV-courses?style=flat-square&color=1b2631)](https://github.com/p11x/APPDEV-courses/network)
@@ -22,7 +22,7 @@
 
 </div>
 
-A comprehensive collection of **27 courses** covering full-stack development, programming languages, frameworks, DevOps, and AI tools. Contains **11,624 files** and **1,960,481 lines** of educational content.
+A comprehensive collection of **36 courses** covering full-stack development, programming languages, frameworks, DevOps, and AI tools. Contains **15,142 files** and **2,500,000+ lines** of educational content.
 
 ---
 
@@ -34,9 +34,9 @@ A comprehensive collection of **27 courses** covering full-stack development, pr
 |--------|-------|
 | ⭐ Stars | [![GitHub stars](https://img.shields.io/github/stars/p11x/APPDEV-courses?style=social)](https://github.com/p11x/APPDEV-courses/stargazers) |
 | 🍴 Forks | [![GitHub forks](https://img.shields.io/github/forks/p11x/APPDEV-courses?style=social)](https://github.com/p11x/APPDEV-courses/network) |
-| 📁 Total Files | **11,624** |
-| 📚 Total Lines of Code | **1,960,481** |
-| 🎓 Total Courses | **27** |
+| 📁 Total Files | **15,142** |
+| 📚 Total Lines of Code | **2,500,000+** |
+| 🎓 Total Courses | **36** |
 | 🚀 Last Commit | [![GitHub last commit](https://img.shields.io/github/last-commit/p11x/APPDEV-courses)](https://github.com/p11x/APPDEV-courses/commits/master) |
 | 📅 Created | [![GitHub created](https://img.shields.io/github/created-at/p11x/APPDEV-courses)](https://github.com/p11x/APPDEV-courses) |
 
@@ -78,6 +78,9 @@ A comprehensive collection of **27 courses** covering full-stack development, pr
 | [C#](./courses/C#%20practice/) | 195 | 6,695 | C# console application practice exercises and arithmetic library |
 | [JavaScript](./courses/Java%20Script/) | 30 | 4,135 | JavaScript fundamentals and basics |
 | [TypeScript](./courses/Type%20Script/) | 30 | 6,712 | TypeScript basics for Angular development |
+| [C#](./courses/C#/) | 596 | 126,079 | C# programming language materials - fundamentals, OOP, LINQ, async |
+| [Kotlin Android Studio](./courses/Kotlin%20Android%20Studio/) | 104 | 67,826 | Android development with Kotlin |
+| [R Programming](./courses/R%20programming/) | 300 | 42,411 | R programming language materials |
 
 ### 🌐 Web Development
 
@@ -87,6 +90,8 @@ A comprehensive collection of **27 courses** covering full-stack development, pr
 | [HTML](./courses/HTML/) | 71 | 24,659 | 4-level HTML course: beginner fundamentals through advanced techniques and projects |
 | [CSS](./courses/CSS/) | 30 | 6,578 | CSS styling, layout, and design fundamentals |
 | [HTML Practice](./courses/HTML%20practice/) | 12 | 800 | HTML practice exercises |
+| [Tailwind CSS](./courses/Tailwind%20CSS/) | 160 | 38,154 | Tailwind CSS framework |
+| [Web Components](./courses/Web%20Components/) | 442 | 103,824 | Web Components development |
 
 ### ⚡ Frontend Frameworks
 
@@ -114,12 +119,21 @@ A comprehensive collection of **27 courses** covering full-stack development, pr
 |--------|------:|------:|-------------|
 | [Docker & Kubernetes](./courses/Docker%20&%20Kubernetes/) | 175 | 22,041 | Container orchestration: Docker and Kubernetes guides |
 | [Jenkins](./courses/Jenkins/) | 41 | 14,108 | CI/CD automation with Jenkins |
+| [Cloud Computing](./courses/Cloud%20Computing/) | 332 | 84,627 | Cloud computing concepts and tools |
+| [DevOps](./courses/DevOps/) | 4 | 1,500 | DevOps practices and tools |
+| [MicroServices](./courses/MicroServices/) | 277 | 126,155 | Microservices architecture |
 
 ### 🗄️ Databases & Data
 
 | Course | Files | Lines | Description |
 |--------|------:|------:|-------------|
 | [SQL Server](./courses/SQL%20Server/) | 42 | 5,284 | Database management with SQL Server |
+
+### 📊 Data Structures & Algorithms
+
+| Course | Files | Lines | Description |
+|--------|------:|------:|-------------|
+| [DSA](./courses/DSA/) | 277 | 159,180 | Data Structures and Algorithms |
 
 ### 🤖 AI & Emerging Technologies
 
@@ -268,6 +282,7 @@ We welcome contributions! Here's how you can help:
 
 ### Update Timeline
 
+- 📅 **2026-04-10**: Added 9 new courses - C#, Cloud Computing, DSA, DevOps, Kotlin Android Studio, MicroServices, R Programming, Tailwind CSS, Web Components (36 courses, 15,142 files)
 - 📅 **2026-04-02**: Enhanced README with comprehensive course inventory and accurate statistics (27 courses, 11,624 files, 1.96M lines)
 - 📅 **2026-03-21**: Added AI Tools course, enhanced auto-commit docs
 - 📅 **2026-03-20**: Updated Bootstrap materials, fixed security issues
@@ -318,6 +333,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Made with ❤️ for the developer community
 
-*Last updated: April 2, 2026* | *27 courses* | *11,624 files* | *1,960,481 lines*
+*Last updated: April 10, 2026* | *36 courses* | *15,142 files* | *2,500,000+ lines*
 
 </div>
