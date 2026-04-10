@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare DocumentPosition</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .demo { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 8px 16px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Compare DocumentPosition - compareDocumentPosition()</h1>
+
+    <div id="container">
+        <div id="elem1">Element 1 (first)</div>
+        <div id="elem2">Element 2 (second)</div>
+        <div id="elem3">Element 3</div>
+    </div>
+    
+    <div id="demo1" class="demo">
+        <h3>Compare Positions</h3>
+        <button onclick="comparePositions()">Compare elements</button>
+    </div>
+
+    <div class="demo">
+        <h3>Output:</h3>
+        <pre id="output">Click button to see output...</pre>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        const Node = {
+            DOCUMENT_POSITION_DISCONNECTED: 1,
+            DOCUMENT_POSITION_PRECEDING: 2,
+            DOCUMENT_POSITION_FOLLOWING: 4,
+            DOCUMENT_POSITION_CONTAINS: 8,
+            DOCUMENT_POSITION_CONTAINED_BY: 16,
+            DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC: 32
+        };
+        
+        function comparePositions() {
+            const el1 = document.getElementById('elem1');
+            const el2 = document.getElementById('elem2');
+            const el3 = document.getElementById('elem3');
+            
+            const pos = el1.compareDocumentPosition(el2);
+            
+            let result = "el1 vs el2: " + pos + " (";
+            if (pos & Node.DOCUMENT_POSITION_DISCONNECTED) result += "DISCONNECTED | ";
+            if (pos & Node.DOCUMENT_POSITION_PRECEDING) result += "PRECEDING | ";
+            if (pos & Node.DOCUMENT_POSITION_FOLLOWING) result += "FOLLOWING | ";
+            if (pos & Node.DOCUMENT_POSITION_CONTAINS) result += "CONTAINS | ";
+            if (pos & Node.DOCUMENT_POSITION_CONTAINED_BY) result += "CONTAINED_BY | ";
+            result = result.slice(0, -3) + ")";
+            
+            const pos2 = el3.compareDocumentPosition(el1);
+            let result2 = "el3 vs el1: " + pos2 + " (";
+            if (pos2 & Node.DOCUMENT_POSITION_PRECEDING) result2 += "PRECEDING | ";
+            if (pos2 & Node.DOCUMENT_POSITION_FOLLOWING) result2 += "FOLLOWING | ";
+            result2 = result2.slice(0, -3) + ")";
+            
+            output.textContent = result + "\n" + result2 + "\n\n" +
+                "Bitwise flags:\n" +
+                "PRECEDING (2) - elem1 comes before elem2\n" +
+                "FOLLOWING (4) - elem2 comes after elem1\n" +
+                "CONTAINS (8) - contains the other element\n" +
+                "CONTAINED_BY (16) - is contained by other";
+        }
+    </script>
+</body>
+</html>

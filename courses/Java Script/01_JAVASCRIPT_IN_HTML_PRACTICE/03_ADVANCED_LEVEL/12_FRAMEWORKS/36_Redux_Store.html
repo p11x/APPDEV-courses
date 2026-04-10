@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redux Store</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .concept { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #764abc; }
+        h2 { color: #34495e; }
+        .code { background: #282c34; color: #abb2bf; padding: 15px; border-radius: 5px; font-family: monospace; }
+        .output { background: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50; }
+    </style>
+</head>
+<body>
+    <h1>36. Redux Store</h1>
+    
+    <div class="concept">
+        <h2>Creating a Redux Store</h2>
+        <p>Redux store holds the application state and provides methods to update it.</p>
+        <div class="code">
+const createStore = (reducer) => {
+    let state;
+    let listeners = [];
+    
+    return {
+        getState: () => state,
+        dispatch: (action) => {
+            state = reducer(state, action);
+            listeners.forEach(listener => listener());
+        },
+        subscribe: (listener) => {
+            listeners.push(listener);
+            return () => {
+                listeners = listeners.filter(l => l !== listener);
+            };
+        }
+    };
+};
+        </div>
+    </div>
+    
+    <div class="concept">
+        <h2>Live Demo</h2>
+        <button onclick="increment()">Increment</button>
+        <button onclick="decrement()">Decrement</button>
+        <button onclick="reset()">Reset</button>
+    </div>
+    
+    <div class="output">
+        <strong>Current State:</strong>
+        <div id="stateDisplay">count: 0</div>
+    </div>
+    
+    <script>
+        const createStore = (reducer) => {
+            let state;
+            let listeners = [];
+            
+            return {
+                getState: () => state,
+                dispatch: (action) => {
+                    state = reducer(state, action);
+                    listeners.forEach(listener => listener());
+                },
+                subscribe: (listener) => {
+                    listeners.push(listener);
+                    return () => {
+                        listeners = listeners.filter(l => l !== listener);
+                    };
+                }
+            };
+        };
+        
+        const counterReducer = (state = { count: 0 }, action) => {
+            switch (action.type) {
+                case 'INCREMENT':
+                    return { count: state.count + 1 };
+                case 'DECREMENT':
+                    return { count: state.count - 1 };
+                case 'RESET':
+                    return { count: 0 };
+                default:
+                    return state;
+            }
+        };
+        
+        const store = createStore(counterReducer);
+        
+        store.subscribe(() => {
+            document.getElementById('stateDisplay').textContent = 
+                JSON.stringify(store.getState());
+        });
+        
+        function increment() {
+            store.dispatch({ type: 'INCREMENT' });
+        }
+        
+        function decrement() {
+            store.dispatch({ type: 'DECREMENT' });
+        }
+        
+        function reset() {
+            store.dispatch({ type: 'RESET' });
+        }
+    </script>
+</body>
+</html>

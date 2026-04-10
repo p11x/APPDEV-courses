@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>08 - Cache Match</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>08 - Cache Match</h1>
+    <p>The cache.match() method retrieves the first matching request.</p>
+    
+    <button onclick="testCacheMatch()">Test Cache Match</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        const cacheName = 'match-cache-v1';
+        let output = [];
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        async function testCacheMatch() {
+            output = [];
+            log('Testing cache.match()...');
+            
+            try {
+                const cache = await caches.open(cacheName);
+                
+                const urls = [
+                    'https://example.com/api/users',
+                    'https://example.com/api/products'
+                ];
+                
+                for (const url of urls) {
+                    const response = new Response('Data for ' + url, {
+                        headers: { 'Content-Type': 'text/plain' }
+                    });
+                    await cache.put(new Request(url), response);
+                }
+                log('Added 2 requests to cache');
+                
+                const match1 = await cache.match('https://example.com/api/users');
+                if (match1) {
+                    log('Found match for /api/users: ' + await match1.text());
+                }
+                
+                const match2 = await cache.match(new Request('https://example.com/api/products'));
+                if (match2) {
+                    log('Found match for /api/products: ' + await match2.text());
+                }
+                
+                const notFound = await cache.match('https://example.com/notexist');
+                log('Non-existent request found: ' + (notFound ? 'Yes' : 'No'));
+                
+                log('cache.match() test completed!');
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

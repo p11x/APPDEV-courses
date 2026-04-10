@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+// HTML5 document type declaration
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21 - Event Loop Visual</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #e3f2fd;
+        }
+        h1 {
+            color: #1565c0;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .flow-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .box {
+            background: #bbdefb;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            min-width: 80px;
+        }
+        .arrow {
+            font-size: 24px;
+            color: #1976d2;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Event Loop</h1>
+        <p>The Event Loop continuously checks if the call stack is empty and moves tasks from the queue to the stack.</p>
+        
+        <h2>Execution Flow:</h2>
+        
+        <div class="flow-diagram">
+            <div class="box">Call Stack</div>
+            <div class="arrow">→</div>
+            <div class="box">Run Code</div>
+            <div class="arrow">→</div>
+            <div class="box">Check Queue</div>
+            <div class="arrow">→</div>
+            <div class="box">Move to Stack</div>
+            <div class="arrow">→</div>
+            <div class="box">Repeat</div>
+        </div>
+        
+        <h2>Try It:</h2>
+        <button onclick="visualizeEventLoop()">Visualize Event Loop</button>
+        
+        <div id="output" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px; min-height: 100px;">
+            // Click button to see event loop in action
+        </div>
+    </div>
+
+    // Performance Tip: Async callbacks avoid blocking
+    // Security Note: Be careful with async data timing
+    
+    <script>
+        function visualizeEventLoop() {
+            var output = document.getElementById("output");
+            var steps = [];
+            
+            // Step 1: Synchronous code runs first
+            console.log("1. Synchronous code running...");
+            console.log("2. Call stack has: main()");
+            steps.push("<strong>Step 1:</strong> Main code runs on call stack");
+            
+            // Simulate setTimeout
+            console.log("2. setTimeout scheduled...");
+            console.log("3. Timer API takes callback, setTimeout returns immediately");
+            steps.push("<strong>Step 2:</strong> setTimeout scheduled with Web API");
+            
+            // More sync code
+            var counter = 0;
+            for (var i = 0; i < 3; i++) {
+                counter++;
+                console.log("4. More sync code running: " + counter);
+            }
+            steps.push("<strong>Step 3:</strong> More sync code runs to completion");
+            
+            // Log after stack clears
+            setTimeout(function() {
+                console.log("5. Timeout callback now runs!");
+                console.log("6. Callback moved to call stack by event loop");
+                steps.push("<strong>Step 4:</strong> Event loop moves callback to stack");
+                steps.push("<strong>Step 5:</strong> Timeout callback executes");
+                output.innerHTML = steps.join("<br>");
+            }, 100);
+            
+            console.log("3. setTimeout called - returns immediately");
+            console.log("4. Synchronous code continues...");
+            
+            // Set another callback
+            setTimeout(function() {
+                console.log("7. Second timeout callback!");
+                steps.push("<strong>Step 6:</strong> Second callback runs (after first)");
+                output.innerHTML = steps.join("<br>");
+            }, 200);
+            
+            // Promise microtask
+            Promise.resolve().then(function() {
+                console.log("8. Promise then runs - microtask!");
+                steps.push("<strong>Step 7:</strong> Promise microtask (runs before macrotasks)");
+                output.innerHTML = steps.join("<br>");
+            });
+            
+            console.log("5. More sync code");
+            console.log("6. Empty call stack now");
+            steps.push("<strong>Note:</strong> Sync code finishes, stack becomes empty");
+            output.innerHTML = steps.join("<br>");
+            
+            alert("Event loop visualization! Watch console for execution order.");
+        }
+        
+        console.log("Event Loop page loaded");
+        console.log("Event loop processes tasks when call stack is empty");
+    </script>
+</body>
+</html>

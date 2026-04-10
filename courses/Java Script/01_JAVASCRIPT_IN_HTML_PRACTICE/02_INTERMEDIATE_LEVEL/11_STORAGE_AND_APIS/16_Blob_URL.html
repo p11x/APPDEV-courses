@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16 - Blob URL</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>16 - Blob URL</h1>
+    <p>Create URL references to Blob data for dynamic content.</p>
+    
+    <button onclick="createBlobURL()">Create Blob URL</button>
+    <button onclick="createImageURL()">Create Image URL</button>
+    <button onclick="revokeURL()">Revoke URL</button>
+    <div id="output" class="output">Output will appear here...</div>
+    <div id="preview" style="margin-top: 20px;"></div>
+
+    <script>
+        let blobUrl = null;
+        let imageUrl = null;
+        let output = [];
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        function createBlobURL() {
+            output = [];
+            log('Creating Blob URL...');
+            
+            const text = 'Hello, this is content from a Blob!';
+            const blob = new Blob([text], { type: 'text/plain' });
+            
+            blobUrl = URL.createObjectURL(blob);
+            log('Blob URL created: ' + blobUrl);
+            
+            fetch(blobUrl)
+                .then(response => response.text())
+                .then(content => log('Content: ' + content))
+                .catch(err => log('Error: ' + err.message));
+        }
+
+        function createImageURL() {
+            log('Creating image Blob URL...');
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#ff6b6b';
+            ctx.fillRect(0, 0, 100, 100);
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.fillText('IMG', 30, 55);
+            
+            canvas.toBlob(blob => {
+                imageUrl = URL.createObjectURL(blob);
+                log('Image Blob URL created');
+                
+                document.getElementById('preview').innerHTML = 
+                    '<img src="' + imageUrl + '" alt="Generated">';
+                log('Image displayed in preview');
+            });
+        }
+
+        function revokeURL() {
+            if (blobUrl) {
+                URL.revokeObjectURL(blobUrl);
+                log('Blob URL revoked');
+                blobUrl = null;
+            }
+            if (imageUrl) {
+                URL.revokeObjectURL(imageUrl);
+                log('Image URL revoked');
+                imageUrl = null;
+                document.getElementById('preview').innerHTML = '';
+            }
+            if (!blobUrl && !imageUrl) {
+                log('No URLs to revoke');
+            }
+        }
+    </script>
+</body>
+</html>

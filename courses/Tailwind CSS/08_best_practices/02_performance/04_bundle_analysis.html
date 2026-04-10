@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bundle Analysis - Tailwind CSS Best Practices</title>
+</head>
+<body>
+    <h1>Bundle Analysis in Tailwind CSS</h1>
+
+    <h2>Understanding Bundle Analysis</h2>
+    <p>
+        Bundle analysis is the process of examining the generated CSS to understand its composition, size, and optimization opportunities. Regular analysis helps identify bloat, unused styles, and opportunities for improvement in Tailwind CSS projects.
+    </p>
+
+    <h2>Why Bundle Analysis Matters</h2>
+    <p>
+        Without analyzing your bundle, it's easy to accidentally include unused styles or miss optimization opportunities. Regular analysis ensures your CSS remains lean and performant as the project evolves.
+    </p>
+
+    <h3>Standard Example: Analyzing Bundle Size</h3>
+    <!-- Example of analyzing generated CSS -->
+    <pre>
+/* After building with Tailwind, analyze the output: */
+
+/* Typical unoptimized build: ~3MB */
+/* tailwind-default.css */
+
+/* With JIT and proper content: ~10-50KB */
+/* tailwind-optimized.css */
+
+/* Breakdown of common bundle sizes: */
+Components     | ~20-30%    | Layout utilities (flex, grid, padding, margin)
+Typography    | ~15-20%   | Text utilities (font-size, color, weight)
+Colors        | ~10-15%   | Background and text colors
+Borders       | ~5-10%    | Border and radius utilities
+Effects       | ~5-10%    | Shadows and transitions
+Other         | ~20-30%   | Spacing, sizing, etc.
+</pre>
+    <!-- Understanding bundle composition helps identify optimization targets -->
+
+    <h3>Real-World Example 1: Using Bundle Analyzer</h3>
+    <!-- Tools for analyzing Tailwind output -->
+    <pre>
+/* Using @tailwindcss/analyze plugin */
+
+module.exports = {
+  plugins: [
+    require('@tailwindcss/analyze'),
+  ],
+}
+
+/* Running analysis: */
+/* $ tailwindcss -a */
+
+/* Output includes: */
+/* - Unused CSS classes */
+/* - Class usage statistics */
+/* - File size breakdown */
+/* - Suggestions for optimization */
+</pre>
+    <!-- The analyze plugin identifies unused classes -->
+
+    <h3>Real-World Example 2: Manual Bundle Analysis</h3>
+    <!-- Manual techniques for bundle analysis -->
+    <pre>
+/* 1. Generate production build */
+/* $ npm run build */
+
+/* 2. Check file size */
+/* $ ls -lh dist/styles.css */
+/* -rw-r--r-- 1 user staff 45K Apr 10 08:00 styles.css */
+
+/* 3. Check gzipped size */
+/* $ gzip -c dist/styles.css | wc -c */
+/* 12345 bytes */
+
+/* 4. Analyze with source maps */
+/* Chrome DevTools > More tools > Coverage */
+/* Shows unused CSS in real-time */
+
+/* 5. Compare builds */
+/* Before optimization: 45KB */
+/* After optimization: 32KB */
+/* Savings: 28% */
+</pre>
+    <!-- Multiple tools help with bundle analysis -->
+
+    <h2>Output Statement</h2>
+    <p>
+        A typical optimized Tailwind CSS bundle (after proper content configuration andPurgeCSS) should be 10-50KB gzipped. If your bundle exceeds this range, investigate unused classes, excessive content scanning, or unnecessary custom utilities.
+    </p>
+
+    <h2>ASCII Diagram: Bundle Analysis Process</h2>
+    <pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                 BUNDLE ANALYSIS WORKFLOW                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   STEP 1: Generate Production Build                               │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │  $ npm run build  →  dist/styles.css                    │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                        │                                        │
+│   STEP 2: Analyze File Size                                    │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │  Raw Size: ~45KB                                        │   │
+│   │  Gzipped: ~12KB                                        │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                        │                                        │
+│   STEP 3: Identify Issues                                    │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │  - Unused classes detected                            │   │
+│   │  - Duplicate utilities                            │   │
+│   │  - Excessive variants                           │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                        │                                        │
+│   STEP 4: Optimize                                            │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │  - Refine content configuration                   │   │
+│   │  - Remove unused plugins                       │   │
+│   │  - Add to safelist if needed                  │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                        │                                        │
+│   STEP 5: Re-analyze                                          │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │  Raw Size: ~32KB (+28% reduction)                 │   │
+│   │  Gzipped: ~8KB                                  │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Tools for Bundle Analysis</h2>
+    <ul>
+        <li><strong>Chrome DevTools Coverage:</strong> Shows unused CSS in real-time during development</li>
+        <li><strong>@tailwindcss/analyze:</strong> Official plugin for analyzing Tailwind output</li>
+        <li><strong>source-map-explorer:</strong> Visualize bundle composition</li>
+        <li><strong>bundlephobia:</strong> Analyze npm package impact</li>
+        <li><strong>CSS Stats:</strong> Generate statistics about CSS output</li>
+    </ul>
+
+    <h2>Common Issues and Solutions</h2>
+    <p>
+        <strong>Issue: Large bundle size (>50KB gzipped)</strong>
+        <br>Solution: Review content configuration to ensure only relevant files are scanned
+    </p>
+    <p>
+        <strong>Issue: Many unused classes</strong>
+        <br>Solution: Check for dynamically generated class names that need safelist
+    </p>
+    <p>
+        <strong>Issue: Slow build time</strong>
+        <br>Solution: Optimize content globs, exclude node_modules
+    </p>
+
+    <h2>Edge Cases and Considerations</h2>
+    <p>
+        <strong>Third-party libraries:</strong> Components from libraries may include their own styles. Analyze these separately to understand the full CSS picture.
+    </p>
+    <p>
+        <strong>Server-side rendering:</strong> In SSR applications, analyze both client and server bundles—they may differ.
+    </p>
+    <p>
+        <strong>Feature flags:</strong> If using feature flags that enable/disable components, ensure classes are either in safelist or properly scanned.
+    </p>
+
+    <h2>Performance Considerations</h2>
+    <p>
+        Bundle size directly affects First Contentful Paint and Largest Contentful Paint. Aim for under 50KB gzipped for optimal mobile performance. Consider code-splitting CSS for applications with many routes.
+    </p>
+
+    <h2>Accessibility Considerations</h2>
+    <p>
+        Bundle analysis should ensure accessibility utilities aren't removed. Check that screen reader content (sr-only), focus states, and other accessibility features remain in the production build.
+    </p>
+
+    <h2>Cross-Browser Notes</h2>
+    <p>
+        Different browsers may require different CSS. Use Autoprefixer to generate necessary vendor prefixes. Test production builds in all target browsers, especially for older browser support.
+    </p>
+</body>
+</html>

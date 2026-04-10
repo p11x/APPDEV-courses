@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sapper + Tailwind CSS Integration Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Sapper + Tailwind CSS Integration</h1>
+        
+        <!-- Overview Section -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Overview</h2>
+            <p class="text-gray-600 mb-4">
+                Sapper is a framework for building web applications of all sizes, with a beautiful development experience and 
+                flexible filesystem-based routing. Built on Svelte, it provides server-side rendering, code-splitting, and optimized production builds.
+                Tailwind integrates with Sapper through PostCSS configuration and the standard rollup build process.
+                Note: Sapper is now deprecated in favor of SvelteKit, but these integrations still work for existing projects.
+            </p>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                <p class="text-sm text-blue-700"><strong>Key Point:</strong> Sapper builds on Svelte's compile-time approach.
+                Tailwind classes integrate through rollup-postcss. For new projects, prefer SvelteKit.</p>
+            </div>
+        </section>
+
+        <!-- ASCII Diagram: Architecture -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Architecture Flow</h2>
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto text-sm">
+┌─────────────────────────────────────────────────────────────┐
+│                 SAPPER + TAILWIND BUILD PROCESS           │
+└─────────────────────────────────────────────────────────────┘
+
+  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+  │  Svelte    │────▶│  Rollup    │────▶│   Output   │
+  │ Components │     │  + PostCSS │     │  SSR/CSR  │
+  └─────────────┘     └─────────────┘     └─────────────┘
+        │                   │                    
+        │              ┌─────┴─────┐            
+        ▼              ▼           ▼            
+  ┌──────────┐   ┌────────┐  ┌────────┐
+  │ Sapper  │   │ purge  │  │ minify │
+  │ Routes  │   │ unused │  │  CSS   │
+  └──────────┘   └────────┘  └────────┘
+            </pre>
+        </section>
+
+        <!-- Standard Example -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Standard Example: Sapper Setup</h2>
+            <p class="text-gray-600 mb-3">Setting up Tailwind CSS with Sapper:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">// Install dependencies</p>
+                <p class="text-yellow-300">npx degit sveltejs/sapper-template#rollup my-app</p>
+                <p class="text-yellow-300">cd my-app && npm install</p>
+                <p class="text-yellow-300">npm install -D tailwindcss postcss autoprefixer</p>
+                <p class="text-gray-300">&nbsp;</p>
+                <p class="text-green-400">// tailwind.config.js</p>
+                <p class="text-blue-400">module.exports = {</p>
+                <p class="text-gray-300 pl-4">content: ['./src/**/*.svelte', './src/**/*.html'],</p>
+                <p class="text-gray-300 pl-4">theme: { extend: {} },</p>
+                <p class="text-gray-300 pl-4">plugins: []</p>
+                <p class="text-blue-400">};</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="text-green-400">// postcss.config.js</p>
+                <p class="text-blue-400">module.exports = {</p>
+                <p class="textgray-300 pl-4">plugins: {</p>
+                <p class="textgray-300 pl-8">tailwindcss: {},</p>
+                <p class="textgray-300 pl-8">autoprefixer: {}</p>
+                <p class="textgray-300 pl-4">}</p>
+                <p class="textblue-400">};</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="text-green-400">// src/routes/_layout.svelte</p>
+                <p class="text-blue-400">&lt;script&gt;</p>
+                <p class="textgray-300">import '../../global.css';</p>
+                <p class="textblue-400">&lt;/script&gt;</p>
+                <p class="textblue-400">&lt;slot&gt;&lt;/slot&gt;</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="text-green-400">// rollup.config.js - add postcss to plugins</p>
+                <p class="text-yellow-300">import postcss from 'rollup-plugin-postcss'</p>
+                <p class="text-yellow-300">&nbsp;</p>
+                <p class="text-yellow-300">css: ({</p>
+                <p class="textyellow-300 pl-4">input: 'src/global.css',</p>
+                <p class="textyellow-300 pl-4">plugins: [postcss({ ... })]</p>
+                <p class="text-yellow-300">})</p>
+            </div>
+        </section>
+
+        <!-- Real-World Example 1 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Real-World Example 1: Layout Component</h2>
+            <p class="text-gray-600 mb-3">A layout with navigation using Sapper routing:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">&lt;!-- src/routes/_layout.svelte --&gt;</p>
+                <p class="text-blue-400">&lt;script&gt;</p>
+                <p class="text-gray-300">import { page } from '$app/stores';</p>
+                <p class="text-blue-400">&lt;/script&gt;</p>
+                <p class="text-gray-300">&nbsp;</p>
+                <p class="text-blue-400">&lt;div class="min-h-screen bg-gray-50"&gt;</p>
+                <p class="textgray-300 spacing">&lt;nav class="bg-white shadow sticky top-0 z-50"&gt;</p>
+                <p class="textgray-300 spacing">  &lt;div class="max-w-7xl mx-auto px-4"&gt;</p>
+                <p class="textgray-300 spacing">    &lt;div class="flex justify-between h-16"&gt;</p>
+                <p class="textgray-300 spacing">      &lt;a href="/" class="flex items-center text-2xl font-bold text-gray-800"&gt;</p>
+                <p class="textgray-300 spacing">        MyApp</p>
+                <p class="textgray-300 spacing">      &lt;/a&gt;</p>
+                <p class="textgray-300 spacing">      &lt;div class="flex items-center space-x-4"&gt;</p>
+                <p class="textgray-300 spacing">        &lt;a href="/" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md"</p>
+                <p class="textgray-300 spacing">          class={$page.path === '/' ? 'text-blue-600' : ''}</p>
+                <p class="textgray-300 spacing">        &gt;Home&lt;/a&gt;</p>
+                <p class="textgray-300 spacing">        &lt;a href="/about" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md"</p>
+                <p class="textgray-300 spacing">          class={$page.path === '/about' ? 'text-blue-600' : ''}</p>
+                <p class="textgray-300 spacing">        &gt;About&lt;/a&gt;</p>
+                <p class="textgray-300 spacing">      &lt;/div&gt;</p>
+                <p class="textgray-300 spacing">    &lt;/div&gt;</p>
+                <p class="textgray-300 spacing">  &lt;/div&gt;</p>
+                <p class="textblue-400">&lt;/nav&gt;</p>
+                <p class="textblue-400">&lt;main class="max-w-7xl mx-auto px-4 py-8"&gt;</p>
+                <p class="textgray-300 spacing">&lt;slot&gt;&lt;/slot&gt;</p>
+                <p class="textblue-400">&lt;/main&gt;</p>
+                <p class="textblue-400">&lt;/div&gt;</p>
+            </div>
+        </section>
+
+        <!-- Real-World Example 2 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Real-World Example 2: Blog Page with Preloading</h2>
+            <p class="text-gray-600 mb-3">A blog listing page using Sapper's data loading:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">&lt;!-- src/routes/blog/_data.js --&gt;</p>
+                <p class="text-blue-400">export async</p>
+                <p class="text-yellow-400">function</p>
+                <p class="text-blue-400">load({ params }) {</p>
+                <p class="textgray-300 pl-4">const posts = [</p>
+                <p class="textgray-300 pl-8">{ slug: 'first-post', title: 'First Post', date: '2024-01-01', excerpt: 'Hello world' },</p>
+                <p class="textgray-300 pl-8">{ slug: 'second-post', title: 'Second Post', date: '2024-01-15', excerpt: 'More content' }</p>
+                <p class="textgray-300 pl-4">];</p>
+                <p class="textgray-300 pl-4">return { posts };</p>
+                <p class="text-blue-400">}</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="text-green-400">&lt;!-- src/routes/blog/index.svelte --&gt;</p>
+                <p class="text-blue-400">&lt;script&gt;</p>
+                <p class="textgray-300">export let data;</p>
+                <p class="textblue-400">&lt;/script&gt;</p>
+                <p class="textblue-400">&lt;svelte:head&gt;</p>
+                <p class="textgray-300 spacing">&lt;title&gt;Blog | MyApp&lt;/title&gt;</p>
+                <p class="textblue-400">&lt;/svelte:head&gt;</p>
+                <p class="textblue-400">&lt;h1 class="text-4xl font-bold text-gray-800 mb-8"&gt;Blog&lt;/h1&gt;</p>
+                <p class="textblue-400">&lt;div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"&gt;</p>
+                <p class="textgray-300 spacing">{#each data.posts as post}</p>
+                <p class="textgray-300 spacing">  &lt;article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"&gt;</p>
+                <p class="textgray-300 spacing">    &lt;a href="/blog/{post.slug}" class="block p-6" data-sveltekit-preload-data&gt;</p>
+                <p class="textgray-300 spacing">      &lt;h2 class="text-xl font-semibold text-gray-800 mb-2"&gt;{post.title}&lt;/h2&gt;</p>
+                <p class="textgray-300 spacing">      &lt;p class="text-gray-500 text-sm mb-2"&gt;{post.date}&lt;/p&gt;</p>
+                <p class="textgray-300 spacing">      &lt;p class="text-gray-600"&gt;{post.excerpt}&lt;/p&gt;</p>
+                <p class="textgray-300 spacing">    &lt;/a&gt;</p>
+                <p class="textgray-300 spacing">  &lt;/article&gt;</p>
+                <p class="textgray-300 spacing">{/each}</p>
+                <p class="textblue-400">&lt;/div&gt;</p>
+            </div>
+        </section>
+
+        <!-- Output Statement -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Output: Generated Code</h2>
+            <p class="text-gray-600 mb-3">Sapper produces optimized SSR and client bundles:</p>
+            
+            <div class="bg-gray-800 text-green-400 p-4 rounded">
+                <p class="mb-2">/* Server Bundle (SSR) */</p>
+                <p>import { json } from '@sapper/common';</p>
+                <p>// Server-side rendering of components</p>
+                <p class="mb-2">/* Client Bundle */</p>
+                <p>// Hydration code with event handlers</p>
+                <p class="mb-2">/* Output CSS (~5-8KB) */</p>
+                <p>.bg-white { background-color: #ffffff; }</p>
+                <p>.shadow { box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1); }</p>
+                <p>.sticky { position: sticky; }</p>
+                <p>.max-w-7xl { max-width: 80rem; }</p>
+            </div>
+        </section>
+
+        <!-- Edge Cases -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Edge Cases & Considerations</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Migration:</strong> Consider migrating to SvelteKit for active development.</li>
+                <li><strong>Preloading:</strong> Use data-sveltekit-preload-data for fast navigation.</li>
+                <li><strong>Server Hooks:</strong> Use hooks.js for server-side logic.</li>
+                <li><strong>Error Pages:</strong> Create error.svelte for custom error handling.</li>
+            </ul>
+        </section>
+
+        <!-- Performance Considerations -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Performance Considerations</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Code Splitting:</strong> Automatic per-route code splitting.</li>
+                <li><strong>SSR:</strong> Server-side rendering for SEO and performance.</li>
+                <li><strong>Preloading:</strong> Prefetch resources on hover.</li>
+                <li><strong>Service Worker:</strong> Cache assets for offline use.</li>
+            </ul>
+        </section>
+
+        <!-- Accessibility Notes -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Accessibility Notes</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Focus:</strong> Manage focus after navigation.</li>
+                <li><strong>Skip Links:</strong> Add skip-to-content links.</li>
+                <li><strong>Reduced Motion:</strong> Respect motion preferences.</li>
+                <li><strong>ARIA Live:</strong> Use aria-live for dynamic content.</li>
+            </ul>
+        </section>
+
+        <!-- Cross-Browser Notes -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Cross-Browser Notes</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>SSR Fallback:</strong> Works without JavaScript (basic HTML).</li>
+                <li><strong>Modern Browsers:</strong> Requires ES2015+ support.</li>
+                <li><strong>Testing:</strong> Test SSR output separately.</li>
+                <li><strong>Note:</strong> SvelteKit is recommended for new projects.</li>
+            </ul>
+        </section>
+
+        <!-- Additional Resources -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Additional Resources</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><a href="https://sapper.svelte.dev" class="text-blue-600 hover:underline">Sapper Documentation</a></li>
+                <li><a href="https://svelte.dev" class="text-blue-600 hover:underline">Svelte Documentation</a></li>
+                <li><a href="https://kit.svelte.dev" class="text-blue-600 hover:underline">SvelteKit (recommended)</a></li>
+            </ul>
+        </section>
+    </div>
+</body>
+</html>

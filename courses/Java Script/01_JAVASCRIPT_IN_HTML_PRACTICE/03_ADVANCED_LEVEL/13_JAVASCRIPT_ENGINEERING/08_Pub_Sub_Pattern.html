@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pub/Sub Pattern</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d5f4e6; border-left: 4px solid #27ae60; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <h1>Pub/Sub Pattern</h1>
+    
+    <div class="section">
+        <h2>Publish-Subscribe Pattern</h2>
+        <p>The Pub/Sub pattern decouples publishers from subscribers through an event/message broker. Publishers emit events without knowing subscribers.</p>
+        
+        <pre>
+// PubSub Event Bus
+class PubSub {
+    constructor() {
+        this.events = {};
+    }
+    subscribe(event, callback) {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+        this.events[event].push(callback);
+    }
+    publish(event, data) {
+        if (this.events[event]) {
+            this.events[event].forEach(cb => cb(data));
+        }
+    }
+    unsubscribe(event, callback) {
+        if (this.events[event]) {
+            this.events[event] = this.events[event].filter(cb => cb !== callback);
+        }
+    }
+}
+
+// Usage
+const bus = new PubSub();
+bus.subscribe('news', data => console.log('Subscriber 1:', data));
+bus.subscribe('news', data => console.log('Subscriber 2:', data));
+bus.publish('news', 'Breaking News!');
+        </pre>
+        
+        <button onclick="runPubSubDemo()">Run Pub/Sub Demo</button>
+        <div id="pubsub-output" class="output"></div>
+    </div>
+    
+    <script>
+        class PubSub {
+            constructor() {
+                this.events = {};
+            }
+            subscribe(event, callback) {
+                if (!this.events[event]) {
+                    this.events[event] = [];
+                }
+                this.events[event].push(callback);
+            }
+            publish(event, data) {
+                if (this.events[event]) {
+                    this.events[event].forEach(cb => cb(data));
+                }
+            }
+            unsubscribe(event, callback) {
+                if (this.events[event]) {
+                    this.events[event] = this.events[event].filter(cb => cb !== callback);
+                }
+            }
+        }
+
+        function runPubSubDemo() {
+            const bus = new PubSub();
+            let logs = [];
+            
+            const sub1 = (data) => logs.push(`Subscriber 1 received: ${data}`);
+            const sub2 = (data) => logs.push(`Subscriber 2 received: ${data}`);
+            
+            bus.subscribe('news', sub1);
+            bus.subscribe('news', sub2);
+            bus.subscribe('sports', (data) => logs.push(`Sports received: ${data}`));
+            
+            bus.publish('news', 'Breaking: JavaScript rules!');
+            bus.publish('sports', 'Match ended!');
+            bus.unsubscribe('news', sub2);
+            bus.publish('news', 'Another news item');
+            
+            const output = document.getElementById('pubsub-output');
+            output.innerHTML = `
+                <strong>Pub/Sub Pattern Results:</strong><br>
+                Total events: <code>2</code> (news, sports)<br>
+                Initial subscribers to 'news': <code>2</code><br>
+                Messages delivered: <code>${logs.length}</code><br>
+                After unsubscribe, messages: <code>${logs.filter(l => l.includes('Another')).length}</code><br>
+                <em>Publishers and subscribers are completely decoupled!</em>
+            `;
+        }
+    </script>
+</body>
+</html>

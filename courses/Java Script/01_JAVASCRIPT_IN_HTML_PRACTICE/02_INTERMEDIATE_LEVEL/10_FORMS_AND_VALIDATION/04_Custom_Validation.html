@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Form Validation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 20px; margin: 15px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 15px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; padding: 10px 20px; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        
+        /* Custom validation styles */
+        .validation-error { border: 2px solid red !important; }
+        .validation-success { border: 2px solid green !important; }
+        .error-msg { color: red; font-size: 12px; display: none; margin-top: 2px; }
+        .error-msg.visible { display: block; }
+        
+        /* Password strength indicator */
+        .strength-bar { height: 5px; width: 200px; background: #ddd; margin: 5px 0; }
+        .strength-fill { height: 100%; width: 0; transition: width 0.3s, background 0.3s; }
+    </style>
+</head>
+<body>
+    <h1>Custom Form Validation</h1>
+    <p>Demonstrates custom validation logic beyond built-in HTML5 attributes</p>
+
+    <!-- Custom Validation Output -->
+    <div class="demo-section">
+        <h2>Validation Messages</h2>
+        <div id="validationOutput" class="output">Validation feedback will appear here...</div>
+    </div>
+
+    <!-- Custom Validation with JavaScript -->
+    <div class="demo-section">
+        <h2>1. JavaScript Custom Validation</h2>
+        <form id="customForm1">
+            <label for="customName">Name (letters only):</label>
+            <input type="text" id="customName" name="customName" placeholder="Enter name">
+            <div id="nameError" class="error-msg">Only letters and spaces allowed</div>
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <!-- Password Strength Validation -->
+    <div class="demo-section">
+        <h2>2. Password Strength Validation</h2>
+        <form id="passwordForm">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Enter password">
+            <div class="strength-bar"><div id="strengthFill" class="strength-fill"></div></div>
+            <div id="strengthText">Strength: empty</div>
+            <div id="passwordError" class="error-msg">Password must have: 8+ chars, uppercase, lowercase, number</div>
+            
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password">
+            <div id="confirmError" class="error-msg">Passwords do not match</div>
+            
+            <button type="submit">Register</button>
+        </form>
+    </div>
+
+    <!-- Date Range Validation -->
+    <div class="demo-section">
+        <h2>3. Date Range Validation</h2>
+        <form id="dateForm">
+            <label for="birthDate">Date of Birth (must be in past):</label>
+            <input type="date" id="birthDate" name="birthDate">
+            <div id="birthError" class="error-msg">Date must be in the past</div>
+            
+            <label for="appointmentDate">Appointment Date (must be in future, within 30 days):</label>
+            <input type="date" id="appointmentDate" name="appointmentDate">
+            <div id="appointmentError" class="error-msg">Date must be within the next 30 days</div>
+            
+            <button type="submit">Book</button>
+        </form>
+    </div>
+
+    <!-- Real-time Validation with Debounce -->
+    <div class="demo-section">
+        <h2>4. Username Availability (Simulated Async)</h2>
+        <form id="usernameForm">
+            <label for="checkUsername">Username:</label>
+            <input type="text" id="checkUsername" name="checkUsername" placeholder="Enter username">
+            <div id="usernameStatus"></div>
+            <div id="usernameError" class="error-msg">Username must be 3-20 chars, alphanumeric</div>
+            
+            <button type="submit">Sign Up</button>
+        </form>
+    </div>
+
+    <!-- Custom Validity Message -->
+    <div class="demo-section">
+        <h2>5. Custom Validity Message API</h2>
+        <form id="validityForm">
+            <label for="productCode">Product Code (format: ABC-1234):</label>
+            <input type="text" id="productCode" name="productCode" placeholder="ABC-1234">
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <!-- Cross-field Validation -->
+    <div class="demo-section">
+        <h2>6. Cross-field Validation</h2>
+        <form id="subscriptionForm">
+            <label for="plan">Subscription Plan:</label>
+            <select id="plan" name="plan">
+                <option value="free">Free</option>
+                <option value="pro">Pro ($10/month)</option>
+                <option value="enterprise">Enterprise ($50/month)</option>
+            </select>
+            
+            <label for="paymentMethod">Payment Method (required for paid plans):</label>
+            <select id="paymentMethod" name="paymentMethod">
+                <option value="">-- Select --</option>
+                <option value="credit">Credit Card</option>
+                <option value="paypal">PayPal</option>
+            </select>
+            <div id="paymentError" class="error-msg">Payment method required for paid plans</div>
+            
+            <button type="submit">Subscribe</button>
+        </form>
+    </div>
+
+    <script>
+        const validationOutput = document.getElementById('validationOutput');
+
+        // Helper function to show validation message
+        function showValidation(elementId, message, isValid) {
+            const element = document.getElementById(elementId);
+            const errorMsg = document.getElementById(elementId + 'Error') || 
+                           document.getElementById(elementId.replace('Input', '') + 'Error');
+            
+            if (isValid) {
+                element.classList.remove('validation-error');
+                element.classList.add('validation-success');
+                if (errorMsg) errorMsg.classList.remove('visible');
+            } else {
+                element.classList.remove('validation-success');
+                element.classList.add('validation-error');
+                if (errorMsg) errorMsg.classList.add('visible');
+            }
+            
+            validationOutput.textContent = `${elementId}: ${isValid ? 'Valid ✓' : 'Invalid ✗'} - ${message}`;
+        }
+
+        // ===== 1. JavaScript Custom Validation =====
+        const customNameInput = document.getElementById('customName');
+        
+        customNameInput.addEventListener('blur', function() {
+            const value = this.value.trim();
+            // Only letters and spaces
+            const valid = /^[a-zA-Z\s]+$/.test(value);
+            
+            if (value && !valid) {
+                showValidation('customName', 'Only letters and spaces allowed', false);
+            } else if (!value) {
+                showValidation('customName', 'Required', false);
+            } else {
+                showValidation('customName', 'Valid', true);
+            }
+        });
+
+        // ===== 2. Password Strength Validation =====
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirmPassword');
+        const strengthFill = document.getElementById('strengthFill');
+        const strengthText = document.getElementById('strengthText');
+
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            let errors = [];
+            
+            if (password.length >= 8) strength += 25;
+            else errors.push('8+ chars');
+            
+            if (/[A-Z]/.test(password)) strength += 25;
+            else errors.push('uppercase');
+            
+            if (/[a-z]/.test(password)) strength += 25;
+            else errors.push('lowercase');
+            
+            if (/[0-9]/.test(password)) strength += 25;
+            else errors.push('number');
+            
+            return { strength, errors };
+        }
+
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            const result = checkPasswordStrength(password);
+            
+            // Update strength bar
+            strengthFill.style.width = result.strength + '%';
+            
+            let color = 'red';
+            let text = 'Weak';
+            if (result.strength >= 50) { color = 'orange'; text = 'Medium'; }
+            if (result.strength >= 75) { color = 'green'; text = 'Strong'; }
+            if (password.length === 0) { color = '#ddd'; text = 'empty'; }
+            
+            strengthFill.style.background = color;
+            strengthText.textContent = `Strength: ${text}`;
+            
+            // Show/hide error
+            const errorDiv = document.getElementById('passwordError');
+            if (result.strength < 100 && password.length > 0) {
+                errorDiv.classList.add('visible');
+            } else {
+                errorDiv.classList.remove('visible');
+            }
+        });
+
+        // Confirm password validation
+        confirmInput.addEventListener('input', function() {
+            const match = this.value === passwordInput.value;
+            const errorDiv = document.getElementById('confirmError');
+            
+            if (this.value && !match) {
+                errorDiv.classList.add('visible');
+                this.classList.add('validation-error');
+            } else {
+                errorDiv.classList.remove('visible');
+                this.classList.remove('validation-error');
+            }
+        });
+
+        // ===== 3. Date Range Validation =====
+        const birthDateInput = document.getElementById('birthDate');
+        const appointmentInput = document.getElementById('appointmentDate');
+
+        birthDateInput.addEventListener('change', function() {
+            const selected = new Date(this.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selected >= today) {
+                document.getElementById('birthError').classList.add('visible');
+                this.classList.add('validation-error');
+            } else {
+                document.getElementById('birthError').classList.remove('visible');
+                this.classList.remove('validation-error');
+                showValidation('birthDate', 'Valid date', true);
+            }
+        });
+
+        appointmentInput.addEventListener('change', function() {
+            const selected = new Date(this.value);
+            const today = new Date();
+            const maxDate = new Date();
+            maxDate.setDate(today.getDate() + 30);
+            
+            if (selected <= today) {
+                document.getElementById('appointmentError').textContent = 'Date must be in the future';
+                document.getElementById('appointmentError').classList.add('visible');
+                this.classList.add('validation-error');
+            } else if (selected > maxDate) {
+                document.getElementById('appointmentError').textContent = 'Date must be within 30 days';
+                document.getElementById('appointmentError').classList.add('visible');
+                this.classList.add('validation-error');
+            } else {
+                document.getElementById('appointmentError').classList.remove('visible');
+                this.classList.remove('validation-error');
+                showValidation('appointmentDate', 'Valid appointment', true);
+            }
+        });
+
+        // ===== 4. Username Availability (Simulated Async) =====
+        const usernameInput = document.getElementById('checkUsername');
+        const usernameStatus = document.getElementById('usernameStatus');
+        let debounceTimer;
+
+        usernameInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            usernameStatus.innerHTML = '<span style="color: gray;">Checking...</span>';
+            
+            // Basic format validation
+            const value = this.value;
+            const validFormat = /^[a-zA-Z0-9_]{3,20}$/.test(value);
+            
+            if (!validFormat && value.length > 0) {
+                document.getElementById('usernameError').classList.add('visible');
+                usernameStatus.innerHTML = '';
+                return;
+            }
+            
+            document.getElementById('usernameError').classList.remove('visible');
+            
+            // Simulate async check after 500ms
+            debounceTimer = setTimeout(() => {
+                if (value.length < 3) {
+                    usernameStatus.innerHTML = '<span style="color: gray;">Enter at least 3 characters</span>';
+                    return;
+                }
+                
+                // Simulated "taken" usernames
+                const takenUsernames = ['admin', 'user', 'test', 'root'];
+                const isTaken = takenUsernames.includes(value.toLowerCase());
+                
+                if (isTaken) {
+                    usernameStatus.innerHTML = '<span style="color: red;">✗ Username taken</span>';
+                    usernameInput.classList.add('validation-error');
+                } else {
+                    usernameStatus.innerHTML = '<span style="color: green;">✓ Username available</span>';
+                    usernameInput.classList.remove('validation-error');
+                }
+            }, 500);
+        });
+
+        // ===== 5. Custom Validity Message API =====
+        const productCodeInput = document.getElementById('productCode');
+        
+        productCodeInput.addEventListener('input', function() {
+            const value = this.value.toUpperCase();
+            const pattern = /^[A-Z]{3}-\d{4}$/;
+            
+            if (value && !pattern.test(value)) {
+                this.setCustomValidity('Format must be: ABC-1234');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+        
+        document.getElementById('validityForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (productCodeInput.checkValidity()) {
+                alert('Product code is valid!');
+            } else {
+                alert(productCodeInput.validationMessage);
+            }
+        });
+
+        // ===== 6. Cross-field Validation =====
+        const planSelect = document.getElementById('plan');
+        const paymentSelect = document.getElementById('paymentMethod');
+        
+        function validatePayment() {
+            const isPaidPlan = planSelect.value !== 'free';
+            const hasPayment = paymentSelect.value !== '';
+            
+            if (isPaidPlan && !hasPayment) {
+                document.getElementById('paymentError').classList.add('visible');
+                paymentSelect.classList.add('validation-error');
+                return false;
+            } else {
+                document.getElementById('paymentError').classList.remove('visible');
+                paymentSelect.classList.remove('validation-error');
+                return true;
+            }
+        }
+        
+        planSelect.addEventListener('change', validatePayment);
+        paymentSelect.addEventListener('change', validatePayment);
+        
+        document.getElementById('subscriptionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (validatePayment()) {
+                alert('Subscription submitted!');
+            }
+        });
+
+        // ===== Form Submit Handlers =====
+        document.getElementById('customForm1').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const valid = /^[a-zA-Z\s]+$/.test(customNameInput.value.trim());
+            if (valid) alert('Form valid!');
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const pwdValid = checkPasswordStrength(passwordInput.value).strength === 100;
+            const match = confirmInput.value === passwordInput.value;
+            if (pwdValid && match) alert('Password valid!');
+        });
+
+        document.getElementById('dateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Date form submitted!');
+        });
+
+        document.getElementById('usernameForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Username form submitted!');
+        });
+    </script>
+</body>
+</html>

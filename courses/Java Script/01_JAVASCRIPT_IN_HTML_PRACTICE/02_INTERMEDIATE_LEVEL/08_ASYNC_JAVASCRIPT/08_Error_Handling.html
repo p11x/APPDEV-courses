@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Handling</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Error Handling</h1>
+    <p>Error handling in async code uses try/catch blocks.</p>
+    
+    <h2>Example 1: Try/Catch in Async Function</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Try/Catch with Rejected Promise</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Multiple Errors</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        // Example 1: Try/catch in async function
+        async function safeDivide(a, b) {
+            try {
+                if (b === 0) {
+                    throw new Error("Cannot divide by zero");
+                }
+                return a / b;
+            } catch (error) {
+                return "Error: " + error.message;
+            }
+        }
+        
+        safeDivide(10, 2).then(function(result) {
+            document.getElementById('output1').innerHTML += "10 / 2 = " + result + "<br>";
+        });
+        
+        safeDivide(10, 0).then(function(result) {
+            document.getElementById('output1').innerHTML += "10 / 0 = " + result + "<br>";
+        });
+        
+        // Example 2: Try/catch with async operations
+        async function fetchData(success) {
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    if (success) {
+                        resolve({ data: "Success!" });
+                    } else {
+                        reject(new Error("Fetch failed"));
+                    }
+                }, 500);
+            });
+        }
+        
+        async function handleFetch() {
+            try {
+                var result = await fetchData(true);
+                document.getElementById('output2').innerHTML += result.data + "<br>";
+            } catch (error) {
+                document.getElementById('output2').innerHTML += error.message + "<br>";
+            }
+        }
+        
+        handleFetch();
+        
+        // Example 3: Multiple try/catch blocks
+        async function multipleOperations() {
+            try {
+                await new Promise(function(_, reject) {
+                    setTimeout(function() {
+                        reject(new Error("First error"));
+                    }, 100);
+                });
+            } catch (error) {
+                document.getElementById('output3').innerHTML += "Caught: " + error.message + "<br>";
+            }
+            
+            try {
+                await new Promise(function(resolve) {
+                    setTimeout(function() {
+                        resolve("Second success");
+                    }, 100);
+                });
+            } catch (error) {
+                document.getElementById('output3').innerHTML += "Caught: " + error.message + "<br>";
+            }
+            
+            document.getElementById('output3').innerHTML += "All operations complete<br>";
+        }
+        
+        multipleOperations();
+        
+        // Final output display
+        setTimeout(function() {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>10 / 2 = 5<br>10 / 0 = Error: Cannot divide by zero<br>";
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>Success!<br>";
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Caught: First error<br>All operations complete<br>";
+        }, 700);
+    </script>
+</body>
+</html>

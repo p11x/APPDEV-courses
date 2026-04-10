@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redux Subscribe</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .concept { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #764abc; }
+        h2 { color: #34495e; }
+        .code { background: #282c34; color: #abb2bf; padding: 15px; border-radius: 5px; font-family: monospace; }
+        .output { background: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>38. Redux Subscribe</h1>
+    
+    <div class="concept">
+        <h2>Subscribe to Store Changes</h2>
+        <p>The subscribe method registers listeners that are called when state changes.</p>
+        <div class="code">
+const unsubscribe = store.subscribe(() => {
+    console.log('State changed:', store.getState());
+});
+
+// To stop listening:
+unsubscribe();
+        </div>
+    </div>
+    
+    <div class="concept">
+        <h2>Live Demo with Multiple Subscribers</h2>
+        <button onclick="increment()">Increment</button>
+    </div>
+    
+    <div class="output">
+        <strong>State:</strong>
+        <div id="stateDisplay">0</div>
+    </div>
+    
+    <div class="output">
+        <strong>Change Log:</strong>
+        <ul id="logList"></ul>
+    </div>
+    
+    <script>
+        const createStore = (reducer) => {
+            let state;
+            let listeners = [];
+            return {
+                getState: () => state,
+                dispatch: (action) => {
+                    state = reducer(state, action);
+                    listeners.forEach(l => l());
+                },
+                subscribe: (listener) => {
+                    listeners.push(listener);
+                    return () => { listeners = listeners.filter(l => l !== listener); };
+                }
+            };
+        };
+        
+        const counterReducer = (state = 0, action) => {
+            return action.type === 'INCREMENT' ? state + 1 : state;
+        };
+        
+        const store = createStore(counterReducer);
+        
+        const unsubscribe1 = store.subscribe(() => {
+            document.getElementById('stateDisplay').textContent = store.getState();
+        });
+        
+        const unsubscribe2 = store.subscribe(() => {
+            const li = document.createElement('li');
+            li.textContent = 'State changed to: ' + store.getState();
+            document.getElementById('logList').prepend(li);
+        });
+        
+        function increment() {
+            store.dispatch({ type: 'INCREMENT' });
+        }
+    </script>
+</body>
+</html>

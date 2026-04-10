@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy Get Trap</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d5f4e6; border-left: 4px solid #27ae60; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>35. Proxy Get Trap</h1>
+    
+    <div class="section">
+        <h2>The get Trap</h2>
+        <p>Intercepts property access (obj.prop).</p>
+        <pre>
+const handler = {
+    get(target, property, receiver) {
+        console.log('Accessing:', property);
+        return target[property];
+    }
+};
+        </pre>
+    </div>
+    
+    <div class="section">
+        <h2>Example 1: Default Values</h2>
+        <button onclick="defaultValues()">Test Default Values</button>
+        <div class="output" id="output1"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Example 2: Property Tracking</h2>
+        <button onclick="trackAccess()">Track Access</button>
+        <div class="output" id="output2"></div>
+    </div>
+    
+    <script>
+        function defaultValues() {
+            const defaults = { theme: 'light', limit: 10 };
+            const handler = {
+                get(target, prop) {
+                    return target[prop] !== undefined ? target[prop] : 'default';
+                }
+            };
+            
+            const config = new Proxy(defaults, handler);
+            
+            const results = [];
+            results.push('theme: ' + config.theme);
+            results.push('unknown: ' + config.unknown);
+            results.push('limit: ' + config.limit);
+            
+            document.getElementById('output1').innerHTML = results.join('<br>');
+        }
+        
+        function trackAccess() {
+            const data = { a: 1, b: 2, c: 3 };
+            const accesses = [];
+            const handler = {
+                get(target, prop, receiver) {
+                    accesses.push('Access: ' + prop);
+                    return Reflect.get(target, prop, receiver);
+                }
+            };
+            
+            const proxy = new Proxy(data, handler);
+            
+            const results = [];
+            results.push(proxy.a);
+            results.push(proxy.b);
+            results.push(proxy.c);
+            
+            document.getElementById('output2').innerHTML = accesses.join('<br>');
+        }
+    </script>
+</body>
+</html>

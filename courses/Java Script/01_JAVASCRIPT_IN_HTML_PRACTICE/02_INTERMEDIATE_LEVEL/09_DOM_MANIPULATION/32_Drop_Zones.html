@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drop Zones</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .demo { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 8px 16px; cursor: pointer; margin: 5px; }
+        .drop-zone { width: 150px; height: 80px; border: 2px dashed #666; display: flex; align-items: center; justify-content: center; margin: 10px; float: left; }
+        .drop-zone.dragover { background: lightgreen; border-color: green; }
+        .draggable { width: 80px; height: 40px; background: lightblue; display: flex; align-items: center; justify-content: center; cursor: move; }
+    </style>
+</head>
+<body>
+    <h1>Multiple Drop Zones</h1>
+
+    <div id="demo1" class="demo">
+        <h3>Multiple Drop Targets</h3>
+        <div class="drop-zone" data-zone="1">Zone 1</div>
+        <div class="drop-zone" data-zone="2">Zone 2</div>
+        <div class="drop-zone" data-zone="3">Zone 3</div>
+        <div style="clear:both;"></div>
+        <div class="draggable" draggable="true" id="drag1">Drag Me</div>
+    </div>
+
+    <div class="demo">
+        <h3>Output:</h3>
+        <pre id="output">Drag the box to different zones...</pre>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        const draggable = document.getElementById('drag1');
+        const zones = document.querySelectorAll('.drop-zone');
+        
+        draggable.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', e.target.id);
+        });
+        
+        zones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+            
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+            
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                const zoneNum = zone.getAttribute('data-zone');
+                output.textContent = 'Dropped on Zone ' + zoneNum;
+            });
+        });
+    </script>
+</body>
+</html>

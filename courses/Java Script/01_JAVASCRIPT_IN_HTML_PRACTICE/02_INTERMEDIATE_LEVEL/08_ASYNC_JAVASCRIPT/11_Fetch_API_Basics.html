@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch API Basics</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Fetch API Basics</h1>
+    <p>The Fetch API provides a JavaScript interface for making HTTP requests.</p>
+    
+    <h2>Example 1: Basic Fetch</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Fetch with JSON Response</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Fetch with Error Handling</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        // Example 1: Basic fetch to a URL
+        // Using a mock Promise to simulate fetch behavior
+        function mockFetch(url) {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    resolve({
+                        ok: true,
+                        status: 200,
+                        text: function() {
+                            return Promise.resolve("Response from " + url);
+                        }
+                    });
+                }, 500);
+            });
+        }
+        
+        mockFetch("https://api.example.com/data").then(function(response) {
+            return response.text();
+        }).then(function(data) {
+            document.getElementById('output1').innerHTML += data + "<br>";
+        });
+        
+        // Example 2: Simulating JSON response
+        function mockFetchJSON(url) {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    resolve({
+                        ok: true,
+                        json: function() {
+                            return Promise.resolve({ 
+                                id: 1, 
+                                name: "John", 
+                                email: "john@example.com" 
+                            });
+                        }
+                    });
+                }, 500);
+            });
+        }
+        
+        mockFetchJSON("https://api.example.com/user/1").then(function(response) {
+            return response.json();
+        }).then(function(data) {
+            document.getElementById('output2').innerHTML += "ID: " + data.id + "<br>";
+            document.getElementById('output2').innerHTML += "Name: " + data.name + "<br>";
+            document.getElementById('output2').innerHTML += "Email: " + data.email + "<br>";
+        });
+        
+        // Example 3: Fetch with error handling
+        function mockFetchWithError(success) {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    if (success) {
+                        resolve({
+                            ok: true,
+                            status: 200,
+                            json: function() {
+                                return Promise.resolve({ status: "success" });
+                            }
+                        });
+                    } else {
+                        resolve({
+                            ok: false,
+                            status: 404,
+                            statusText: "Not Found"
+                        });
+                    }
+                }, 500);
+            });
+        }
+        
+        mockFetchWithError(true).then(function(response) {
+            if (!response.ok) {
+                throw new Error("HTTP error: " + response.status);
+            }
+            return response.json();
+        }).then(function(data) {
+            document.getElementById('output3').innerHTML += "Status: " + data.status + "<br>";
+        }).catch(function(error) {
+            document.getElementById('output3').innerHTML += "Error: " + error.message + "<br>";
+        });
+        
+        mockFetchWithError(false).then(function(response) {
+            if (!response.ok) {
+                throw new Error("HTTP error: " + response.status);
+            }
+            return response.json();
+        }).then(function(data) {
+            document.getElementById('output3').innerHTML += "Status: " + data.status + "<br>";
+        }).catch(function(error) {
+            document.getElementById('output3').innerHTML += "Error: " + error.message + "<br>";
+        });
+        
+        // Final output display
+        setTimeout(function() {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Response from https://api.example.com/data<br>";
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>ID: 1<br>Name: John<br>Email: john@example.com<br>";
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Status: success<br>Error: HTTP error: 404<br>";
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eleventy + Tailwind CSS Integration Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Eleventy (11ty) + Tailwind CSS Integration</h1>
+        
+        <!-- Overview Section -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Overview</h2>
+            <p class="text-gray-600 mb-4">
+                Eleventy (11ty) is a simpler static site generator that transforms content with templating languages. 
+                Tailwind CSS integrates with Eleventy through PostCSS and npm scripts. Eleventy has no built-in asset pipeline,
+                so you integrate directly with npm scripts or use a plugin like @11ty/eleventy-plugin-syntaxhighlight alongside Tailwind.
+            </p>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                <p class="text-sm text-blue-700"><strong>Key Point:</strong> Eleventy's simplicity makes it easy to integrate with Tailwind.
+                Just run Tailwind as an npm script during the build process - no special plugins needed.</p>
+            </div>
+        </section>
+
+        <!-- ASCII Diagram: Architecture -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Architecture Flow</h2>
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto text-sm">
+┌─────────────────────────────────────────────────────────────┐
+│               ELEVENTY + TAILWIND BUILD PROCESS            │
+└─────────────────────────────────────────────────────────────┘
+
+  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+  │  Template   │────▶│  PostCSS    │────▶│   Output    │
+  │  Files     │     │  + Tailwind │     │  Static HTML│
+  └─────────────┘     └─────────────┘     └─────────────┘
+        │                   │                    
+        │              ┌─────┴─────┐            
+        ▼              ▼           ▼            
+  ┌──────────┐   ┌────────┐  ┌────────┐
+  │ Nunjucks │   │ purge  │  │ minify │
+  │  Markdown│   │ unused │  │  CSS   │
+  └──────────┘   └────────┘  └────────┘
+            </pre>
+        </section>
+
+        <!-- Standard Example -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Standard Example: Eleventy Setup</h2>
+            <p class="text-gray-600 mb-3">Setting up Tailwind CSS with Eleventy build process:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">// Install dependencies</p>
+                <p class="text-yellow-300">npm init -y</p>
+                <p class="text-yellow-300">npm install -D @11ty/eleventy tailwindcss postcss autoprefixer</p>
+                <p class="text-gray-300">&nbsp;</p>
+                <p class="text-green-400">// package.json</p>
+                <p class="text-yellow-300">"scripts": {</p>
+                <p class="text-yellow-300">  "start": "eleventy --serve & npx tailwindcss -i ./src/css/input.css -o ./_site/css/style.css --watch",</p>
+                <p class="text-yellow-300">  "build": "eleventy && npx tailwindcss -i ./src/css/input.css -o ./_site/css/style.css --minify"</p>
+                <p class="text-yellow-300">}</p>
+                <p class="text-gray-300">&nbsp;</p>
+                <p class="text-green-400">// tailwind.config.js</p>
+                <p class="text-blue-400">module.exports = {</p>
+                <p class="text-gray-300 pl-4">content: ["./src/**/*.njk", "./src/**/*.md", "./_includes/**/*.njk"],</p>
+                <p class="text-gray-300 pl-4">theme: { extend: {} },</p>
+                <p class="text-gray-300 pl-4">plugins: []</p>
+                <p class="textBlue-400">};</p>
+                <p class="text-gray-300">&nbsp;</p>
+                <p class="text-green-400">// src/css/input.css</p>
+                <p class="text-blue-400">@tailwind</p>
+                <p class="text-gray-300">base;</p>
+                <p class="text-blue-400">@tailwind</p>
+                <p class="text-gray-300">components;</p>
+                <p class="text-blue-400">@tailwind</p>
+                <p class="text-gray-300">utilities;</p>
+            </div>
+        </section>
+
+        <!-- Real-World Example 1 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Real-World Example 1: Eleventy Layout with Navigation</h2>
+            <p class="text-gray-600 mb-3">A base layout template using Nunjucks and Tailwind:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">&lt;!-- _includes/base.njk --&gt;</p>
+                <p class="text-blue-400">&lt;!DOCTYPE html&gt;</p>
+                <p class="text-gray-300">&lt;html lang="en"&gt;</p>
+                <p class="text-gray-300">&lt;head&gt;</p>
+                <p class="text-gray-300 spacing">  &lt;meta charset="UTF-8"&gt;</p>
+                <p class="text-gray-300 spacing">  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+                <p class="text-gray-300 spacing">  &lt;title&gt;{{ title }} | {{ metadata.title }}&lt;/title&gt;</p>
+                <p class="text-gray-300 spacing">  &lt;link rel="stylesheet" href="/css/style.css"&gt;</p>
+                <p class="text-gray-300">&lt;/head&gt;</p>
+                <p class="text-gray-300">&lt;body class="bg-gray-50 min-h-screen flex flex-col"&gt;</p>
+                <p class="text-gray-300 spacing">  &lt;nav class="bg-white shadow sticky top-0 z-50"&gt;</p>
+                <p class="text-gray-300 spacing">    &lt;div class="max-w-7xl mx-auto px-4"&gt;</p>
+                <p class="text-gray-300 spacing">      &lt;div class="flex justify-between h-16"&gt;</p>
+                <p class="text-gray-300 spacing">        &lt;a href="/" class="text-2xl font-bold text-gray-800 my-auto"&gt;</p>
+                <p class="text-gray-300 spacing">          {{ metadata.title }}</p>
+                <p class="text-gray-300 spacing">        &lt;/a&gt;</p>
+                <p class="text-gray-300 spacing">        &lt;div class="hidden md:flex space-x-4 my-auto"&gt;</p>
+                <p class="text-gray-300 spacing">{% for item in navigation %}</p>
+                <p class="textgray-300 spacing">          &lt;a href="{{ item.url }}" class="text-gray-700 hover:text-blue-600 px-3 py-2"&gt;</p>
+                <p class="textgray-300 spacing">            {{ item.name }}</p>
+                <p class="textgray-300 spacing">          &lt;/a&gt;</p>
+                <p class="textgray-300 spacing">{% endfor %}</p>
+                <p class="textgray-300 spacing">        &lt;/div&gt;</p>
+                <p class="textgray-300 spacing">      &lt;/div&gt;</p>
+                <p class="textgray-300 spacing">    &lt;/div&gt;</p>
+                <p class="textgray-300 spacing">  &lt;/nav&gt;</p>
+                <p class="textgray-300 spacing">  &lt;main class="flex-grow max-w-7xl mx-auto px-4 py-8 w-full"&gt;</p>
+                <p class="textgray-300 spacing">    {{ content | safeHTML }}</p>
+                <p class="textgray-300 spacing">  &lt;/main&gt;</p>
+                <p class="textgray-300 spacing">  &lt;footer class="bg-gray-800 text-white py-6"&gt;</p>
+                <p class="textgray-300 spacing">    &lt;div class="max-w-7xl mx-auto px-4 text-center"&gt;</p>
+                <p class="textgray-300 spacing">      &lt;p&gt;© {{ helpers.year }} {{ metadata.author }}&lt;/p&gt;</p>
+                <p class="textgray-300 spacing">    &lt;/div&gt;</p>
+                <p class="textgray-300 spacing">  &lt;/footer&gt;</p>
+                <p class="textblue-400">&lt;/body&gt;</p>
+                <p class="textblue-400">&lt;/html&gt;</p>
+            </div>
+        </section>
+
+        <!-- Real-World Example 2 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Real-World Example 2: Blog Index Page</h2>
+            <p class="text-gray-600 mb-3">A blog listing page in Eleventy with Tailwind grid:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">&lt;!-- src/blog.njk --&gt;</p>
+                <p class="text-blue-400">---</p>
+                <p class="textgray-300">layout: base.njk</p>
+                <p class="textgray-300">title: Blog</p>
+                <p class="textblue-400">---</p>
+                <p class="textgray-300">&lt;h1 class="text-4xl font-bold text-gray-800 mb-8"&gt;Latest Posts&lt;/h1&gt;</p>
+                <p class="textgray-300">&lt;div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3"&gt;</p>
+                <p class="textgray-300">{% set posts = collections.post | reverse %}</p>
+                <p class="textgray-300">{% for post in posts %}</p>
+                <p class="textgray-300 spacing">  &lt;article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"&gt;</p>
+                <p class="textgray-300 spacing">    &lt;div class="p-6"&gt;</p>
+                <p class="textgray-300 spacing">      &lt;h2 class="text-xl font-semibold text-gray-800 mb-2"&gt;</p>
+                <p class="textgray-300 spacing">        &lt;a href="{{ post.url }}" class="hover:text-blue-600"&gt;</p>
+                <p class="textgray-300 spacing">          {{ post.data.title }}</p>
+                <p class="textgray-300 spacing">        &lt;/a&gt;</p>
+                <p class="textgray-300 spacing">      &lt;/h2&gt;</p>
+                <p class="textgray-300 spacing">      &lt;p class="text-gray-500 text-sm mb-4"&gt;</p>
+                <p class="textgray-300 spacing">        {{ post.date | date: "%B %d, %Y" }}</p>
+                <p class="textgray-300 spacing">      &lt;/p&gt;</p>
+                <p class="textgray-300 spacing">      &lt;p class="text-gray-600"&gt;</p>
+                <p class="textgray-300 spacing">        {{ post.data.description }}</p>
+                <p class="textgray-300 spacing">      &lt;/p&gt;</p>
+                <p class="textgray-300 spacing">    &lt;/div&gt;</p>
+                <p class="textgray-300 spacing">  &lt;/article&gt;</p>
+                <p class="textgray-300">{% endfor %}</p>
+                <p class="textgray-300">&lt;/div&gt;</p>
+            </div>
+        </section>
+
+        <!-- Output Statement -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Output: Generated CSS Classes</h2>
+            <p class="text-gray-600 mb-3">Eleventy with Tailwind generates optimized CSS:</p>
+            
+            <div class="bg-gray-800 text-green-400 p-4 rounded">
+                <p class="mb-2">/* Output CSS (optimized, ~3-8KB typical site) */</p>
+                <p>.bg-white { background-color: #ffffff; }</p>
+                <p>.bg-gray-50 { background-color: #f9fafb; }</p>
+                <p>.shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }</p>
+                <p>.sticky { position: sticky; }</p>
+                <p>.top-0 { top: 0; }</p>
+                <p>.z-50 { z-index: 50; }</p>
+                <p>.max-w-7xl { max-width: 80rem; }</p>
+                <p>.mx-auto { margin-left: auto; margin-right: auto; }</p>
+                <p>.flex { display: flex; }</p>
+                <p>.grid { display: grid; }</p>
+            </div>
+        </section>
+
+        <!-- Edge Cases -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Edge Cases & Considerations</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Watch Mode:</strong> Run Tailwind and Eleventy concurrently using npm-run-all.</li>
+                <li><strong>Passthrough Copies:</strong> Use Eleventy's passthrough copy for static assets.</li>
+                <li><strong>Collections:</strong> Create collections for organizing content types.</li>
+                <li><strong>Pagination:</strong> Use Eleventy pagination with Tailwind styles.</li>
+            </ul>
+        </section>
+
+        <!-- Performance Considerations -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Performance Considerations</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Fast Builds:</strong> Eleventy is extremely fast for static generation.</li>
+                <li><strong>No Client JS:</strong> Outputs pure static HTML by default.</li>
+                <li><strong>Code Folding:</strong> Use Eleventy watch targets for efficient rebuilds.</li>
+                <li><strong>Caching:</strong> Leverage file system caching.</li>
+            </ul>
+        </section>
+
+        <!-- Accessibility Notes -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Accessibility Notes</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Semantic HTML:</strong> Use semantic elements with Tailwind.</li>
+                <li><strong>Skip Links:</strong> Include skip-to-content links.</li>
+                <li><strong>Focus Styles:</strong> Add visible focus indicators.</li>
+                <li><strong>Color Contrast:</strong> Ensure WCAG AA compliance.</li>
+            </ul>
+        </section>
+
+        <!-- Cross-Browser Notes -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Cross-Browser Compatibility</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Static HTML:</strong> Works across all browsers.</li>
+                <li><strong>No JavaScript Required:</strong> Progressive enhancement supported.</li>
+                <li><strong>Offline Capable:</strong> Works without network.</li>
+                <li><strong>Testing:</strong> Test HTML output across browsers.</li>
+            </ul>
+        </section>
+
+        <!-- Additional Resources -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Additional Resources</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><a href="https://www.11ty.dev/docs/" class="text-blue-600 hover:underline">Eleventy Documentation</a></li>
+                <li><a href="https://tailwindcss.com/docs/guides/nunjucks" class="text-blue-600 hover:underline">Tailwind Nunjucks Guide</a></li>
+                <li><a href="https://www.11ty.dev/docs/plugins/" class="text-blue-600 hover:underline">Eleventy Plugins</a></li>
+            </ul>
+        </section>
+    </div>
+</body>
+</html>

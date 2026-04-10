@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch API POST Requests</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .output { background: #f4f4f4; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        input, textarea { padding: 8px; margin: 5px; width: 200px; }
+        textarea { width: 300px; height: 80px; }
+        pre { background: #2d2d2d; color: #0f0; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .info { background: #e7f3fe; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: inline-block; width: 100px; }
+    </style>
+</head>
+<body>
+    <h1>Fetch API - POST Requests</h1>
+    
+    <div class="info">
+        <strong>Note:</strong> The Fetch API provides a modern way to make HTTP requests.
+        POST requests send data to a server. For demo purposes, we'll use JSONPlaceholder (a fake online REST API).
+    </div>
+
+    <h3>Simple POST Request</h3>
+    <button onclick="simplePostRequest()">Send POST Request</button>
+
+    <h3>POST with JSON Body</h3>
+    <div class="form-group">
+        <label>Title:</label> <input type="text" id="titleInput" value="Test Title">
+    </div>
+    <div class="form-group">
+        <label>Body:</label> <textarea id="bodyInput">This is a test post</textarea>
+    </div>
+    <div class="form-group">
+        <label>User ID:</label> <input type="number" id="userIdInput" value="1">
+    </div>
+    <button onclick="postWithJsonBody()">Send JSON POST</button>
+
+    <h3>POST with Headers</h3>
+    <button onclick="postWithHeaders()">POST with Custom Headers</button>
+
+    <h3>Handle Response</h3>
+    <button onclick="handleFullResponse()">Handle Full Response</button>
+
+    <h3>Error Handling</h3>
+    <button onclick="handleErrors()">Handle Errors</button>
+
+    <div class="output">
+        <h3>Output:</h3>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        const API_URL = 'https://jsonplaceholder.typicode.com/posts';
+
+        // Simple POST request with minimal options
+        async function simplePostRequest() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',  // HTTP method
+                    headers: {
+                        'Content-Type': 'application/json'  // Tell server we're sending JSON
+                    },
+                    body: JSON.stringify({
+                        title: 'Simple Post',
+                        body: 'This is a simple POST request',
+                        userId: 1
+                    })
+                });
+
+                const data = await response.json();
+                displayOutput(`Simple POST Response:\n${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                displayOutput(`Error: ${error.message}`);
+            }
+        }
+
+        // POST with JSON body from form inputs
+        async function postWithJsonBody() {
+            const title = document.getElementById('titleInput').value;
+            const body = document.getElementById('bodyInput').value;
+            const userId = parseInt(document.getElementById('userIdInput').value);
+
+            const postData = {
+                title: title,
+                body: body,
+                userId: userId
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(postData)
+                });
+
+                const data = await response.json();
+                displayOutput(`JSON POST Response:\n${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                displayOutput(`Error: ${error.message}`);
+            }
+        }
+
+        // POST with custom headers
+        async function postWithHeaders() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer my-auth-token',  // Custom auth header
+                        'X-Custom-Header': 'custom-value',  // Any custom header
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: 'Post with Headers',
+                        body: 'This request includes custom headers',
+                        userId: 1
+                    })
+                });
+
+                const data = await response.json();
+                displayOutput(`POST with Headers Response:\n${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                displayOutput(`Error: ${error.message}`);
+            }
+        }
+
+        // Handle full response (status, headers, etc.)
+        async function handleFullResponse() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: 'Full Response Test',
+                        body: 'Checking all response properties',
+                        userId: 1
+                    })
+                });
+
+                // Access various response properties
+                const responseInfo = `
+Full Response Details:
+----------------------
+Status: ${response.status} (${response.ok ? 'OK' : 'Not OK'})
+Status Text: ${response.statusText}
+URL: ${response.url}
+Type: ${response.type}
+
+Response Headers:
+${Array.from(response.headers.entries()).map(h => `${h[0]}: ${h[1]}`).join('\n')}
+
+Response Body:`;
+
+                const data = await response.json();
+                displayOutput(responseInfo + `\n${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                displayOutput(`Error: ${error.message}`);
+            }
+        }
+
+        // Error handling with fetch
+        async function handleErrors() {
+            displayOutput('Testing error handling...\n');
+
+            try {
+                // This will succeed
+                const successResponse = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ title: 'test', userId: 1 })
+                });
+                displayOutput(`Success! Status: ${successResponse.status}`);
+            } catch (error) {
+                displayOutput(`Network error: ${error.message}`);
+            }
+
+            try {
+                // Simulate error by using invalid URL (will still work with JSONPlaceholder)
+                // But we can check response.ok
+                const response = await fetch('https://jsonplaceholder.typicode.com/invalid-endpoint', {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    displayOutput(`Server returned error: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                displayOutput(`Network error: ${error.message}`);
+            }
+
+            // Show proper error handling pattern
+            displayOutput(`
+Error Handling Best Practices:
+------------------------------
+1. Always use try-catch for network errors
+2. Check response.ok for HTTP errors
+3. Handle different error codes appropriately
+4. response.status 200-299 = success
+5. response.status 400 = Bad Request
+6. response.status 401 = Unauthorized
+7. response.status 404 = Not Found
+8. response.status 500 = Server Error
+`);
+        }
+
+        // Helper function to display output
+        function displayOutput(message) {
+            document.getElementById('output').textContent = message;
+        }
+    </script>
+</body>
+</html>

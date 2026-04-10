@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinalizationRegistry</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d5f4e6; border-left: 4px solid #27ae60; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <h1>FinalizationRegistry</h1>
+    
+    <div class="section">
+        <h2>FinalizationRegistry API</h2>
+        <p><code>FinalizationRegistry</code> lets you register callbacks to be invoked when an object is garbage collected.</p>
+        
+        <pre>
+const registry = new FinalizationRegistry((heldValue) => {
+    console.log(`Cleaned up: ${heldValue}`);
+});
+
+let obj = { data: 'some data' };
+registry.register(obj, 'my cleanup message');
+
+// When obj becomes unreachable and is garbage collected,
+// the callback will be called (not guaranteed when)
+        </pre>
+        
+        <button onclick="runFinalizationDemo()">Run FinalizationRegistry Demo</button>
+        <div id="finalization-output" class="output"></div>
+    </script>
+    
+    <script>
+        function runFinalizationDemo() {
+            const cleanupLog = [];
+            const registry = new FinalizationRegistry((name) => {
+                cleanupLog.push(`Cleaned up: ${name}`);
+            });
+            
+            function createResource(id) {
+                const resource = { id, data: `Resource ${id}` };
+                registry.register(resource, `resource-${id}`);
+                return resource;
+            }
+            
+            let results = [];
+            results.push(`Created 3 resources (registered for cleanup)`);
+            
+            createResource(1);
+            createResource(2);
+            const res3 = createResource(3);
+            
+            results.push(`Registry has target registered`);
+            
+            results.push(`Note: Cleanup callbacks run when GC reclaims objects`);
+            results.push(`This is non-deterministic and may not occur immediately`);
+            results.push(`cleanupLog: [${cleanupLog.length} items so far]`);
+            
+            const output = document.getElementById('finalization-output');
+            output.innerHTML = `
+                <strong>FinalizationRegistry Results:</strong><br>
+                ${results.join('<br>')}<br>
+                <em>FinalizationRegistry helps manage cleanup when objects are garbage collected!</em>
+            `;
+        }
+    </script>
+</body>
+</html>

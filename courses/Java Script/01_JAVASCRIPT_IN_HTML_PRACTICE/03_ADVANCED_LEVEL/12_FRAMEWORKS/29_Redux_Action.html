@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>29 - Redux Action</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #764abc; background: #282c34; padding: 15px; border-radius: 5px; }
+        .concept { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .demo { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; font-family: 'Consolas', monospace; }
+        .output { background: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>29 - Redux Action</h1>
+    
+    <div class="concept">
+        <h2>What is a Redux Action?</h2>
+        <p>An action is a plain JavaScript object that describes what happened. It must have a type property and can optionally have a payload with additional data.</p>
+    </div>
+
+    <div class="concept">
+        <h2>Action Structure</h2>
+        <div class="demo">
+<pre><span class="comment">// Simple action</span>
+{ type: 'INCREMENT' }
+
+<span class="comment">// Action with payload</span>
+{
+    type: 'ADD_TODO',
+    payload: { id: 1, text: 'Learn Redux' }
+}
+
+<span class="comment">// Action creators (functions)</span>
+<span class="highlight">const</span> increment = () => ({ type: 'INCREMENT' });
+<span class="highlight">const</span> addTodo = (text) => ({
+    type: 'ADD_TODO',
+    payload: { id: Date.now(), text }
+});</pre>
+        </div>
+    </div>
+
+    <div class="concept">
+        <h2>Live Demo: Action Dispatch</h2>
+        <button onclick="addItem()">Add Item</button>
+        <button onclick="removeItem()">Remove Item</button>
+        <div id="action-demo"></div>
+    </div>
+
+    <div class="output">
+        <strong>Output:</strong>
+        <div id="output-container"></div>
+    </div>
+
+    <script>
+        let state = { items: [] };
+        const actionLog = [];
+
+        const actionCreators = {
+            addItem: (text) => ({ type: 'ADD_ITEM', payload: { id: Date.now(), text } }),
+            removeItem: (id) => ({ type: 'REMOVE_ITEM', payload: { id } })
+        };
+
+        function reducer(state, action) {
+            switch (action.type) {
+                case 'ADD_ITEM':
+                    return { items: [...state.items, action.payload] };
+                case 'REMOVE_ITEM':
+                    return { items: state.items.filter(i => i.id !== action.payload.id) };
+                default:
+                    return state;
+            }
+        }
+
+        function dispatch(action) {
+            actionLog.push(action);
+            state = reducer(state, action);
+            render();
+        }
+
+        function render() {
+            document.getElementById('action-demo').innerHTML = `
+                <div style="padding:20px;background:#fff;border-radius:8px;">
+                    <h3>Items:</h3>
+                    <ul>${state.items.map(i => `<li>${i.text}</li>`).join('') || '<li>No items</li>'}</ul>
+                </div>
+            `;
+            
+            document.getElementById('output-container').innerHTML = `
+                <p><strong>Actions Dispatched:</strong></p>
+                <ul>${actionLog.map(a => `<li>${a.type}: ${JSON.stringify(a.payload || {})}</li>`).join('')}</ul>
+            `;
+        }
+
+        function addItem() {
+            dispatch(actionCreators.addItem('New Item ' + (state.items.length + 1)));
+        }
+
+        function removeItem() {
+            if (state.items.length > 0) {
+                dispatch(actionCreators.removeItem(state.items[0].id));
+            }
+        }
+        
+        render();
+    </script>
+</body>
+</html>

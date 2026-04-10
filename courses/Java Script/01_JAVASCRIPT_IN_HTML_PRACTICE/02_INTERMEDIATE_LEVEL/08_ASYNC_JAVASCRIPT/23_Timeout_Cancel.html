@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeout Cancel</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Timeout Cancel</h1>
+    <p>Using AbortController or signal to cancel timeouts and pending operations.</p>
+    
+    <h2>Example 1: Clear Timeout</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Abort Long Task</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Combined Abort</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        var executed1 = false;
+        var timeoutId = setTimeout(function() {
+            executed1 = true;
+            document.getElementById('output1').innerHTML += "Timer executed!<br>";
+        }, 1000);
+        
+        clearTimeout(timeoutId);
+        
+        document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Timeout cleared: " + (executed1 ? "No" : "Yes") + "<br>";
+
+        function cancellableTask(signal) {
+            return new Promise(function(resolve, reject) {
+                var done = false;
+                
+                function complete(result) {
+                    if (!done) {
+                        done = true;
+                        resolve(result);
+                    }
+                }
+                
+                var id = setTimeout(function() {
+                    complete("Task completed normally");
+                }, 3000);
+                
+                if (signal) {
+                    signal.addEventListener("abort", function() {
+                        clearTimeout(id);
+                        complete("Task cancelled");
+                    });
+                }
+            });
+        }
+        
+        var controller = new AbortController();
+        
+        setTimeout(function() {
+            controller.abort();
+        }, 100);
+        
+        cancellableTask(controller.signal).then(function(result) {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>" + result + "<br>";
+        });
+
+        var log = "<strong>Output 3:</strong><br>";
+        
+        function task1(signal) {
+            return new Promise(function(resolve) {
+                var id = setTimeout(function() {
+                    resolve("Task 1 done");
+                }, 5000);
+                
+                if (signal) {
+                    signal.addEventListener("abort", function() {
+                        clearTimeout(id);
+                        resolve("Task 1 cancelled");
+                    });
+                }
+            });
+        }
+        
+        function task2(signal) {
+            return new Promise(function(resolve) {
+                var id = setTimeout(function() {
+                    resolve("Task 2 done");
+                }, 5000);
+                
+                if (signal) {
+                    signal.addEventListener("abort", function() {
+                        clearTimeout(id);
+                        resolve("Task 2 cancelled");
+                    });
+                }
+            });
+        }
+        
+        var signal = new AbortController().signal;
+        
+        task1(signal).then(function(r) { log += r + "<br>"; });
+        task2(signal).then(function(r) { log += r + "<br>"; });
+        
+        setTimeout(function() {
+            signal.abort();
+        }, 100);
+        
+        setTimeout(function() {
+            document.getElementById('output3').innerHTML = log;
+        }, 200);
+    </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Abort</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Signal Abort</h1>
+    <p>Using AbortSignal to cancel operations based on the abort event.</p>
+    
+    <h2>Example 1: Detect Abort Event</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Abort Multiple Operations</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Abort with Reason</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        var controller = new AbortController();
+        
+        controller.signal.addEventListener("abort", function() {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Abort event received!<br>";
+        });
+        
+        controller.abort();
+
+        var controllers = [];
+        
+        function createTask(index, signal) {
+            return new Promise(function(resolve) {
+                var timeoutId = setTimeout(function() {
+                    resolve("Task " + index + " completed");
+                }, 3000);
+                
+                signal.addEventListener("abort", function() {
+                    clearTimeout(timeoutId);
+                    resolve("Task " + index + " aborted");
+                });
+            });
+        }
+        
+        var signal2 = new AbortController().signal;
+        
+        createTask(1, signal2).then(function(result) {
+            document.getElementById('output2').innerHTML += result + "<br>";
+        });
+        createTask(2, signal2).then(function(result) {
+            document.getElementById('output2').innerHTML += result + "<br>";
+        });
+        
+        setTimeout(function() {
+            signal2.abort();
+        }, 100);
+        
+        setTimeout(function() {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>Task 1 aborted<br>Task 2 aborted<br>";
+        }, 500);
+
+        var controller3 = new AbortController();
+        
+        controller3.signal.addEventListener("abort", function() {
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Aborted: true<br>Reason: User cancelled<br>";
+        });
+        
+        controller3.abort("User cancelled");
+        
+        var output = "Aborted: " + controller3.signal.aborted + "<br>";
+        output += "Reason available in signal.reason: " + (controller3.signal.reason !== undefined) + "<br>";
+        
+        document.getElementById('output3').innerHTML += output;
+    </script>
+</body>
+</html>

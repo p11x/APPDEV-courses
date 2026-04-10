@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17 - useReducer Hook</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #61dafb; background: #282c34; padding: 15px; border-radius: 5px; }
+        .concept { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .demo { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; font-family: 'Consolas', monospace; }
+        .output { background: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>17 - useReducer Hook</h1>
+    
+    <div class="concept">
+        <h2>What is useReducer?</h2>
+        <p>useReducer is an alternative to useState for complex state logic. It takes a reducer function and initial state, returning current state and a dispatch function.</p>
+    </div>
+
+    <div class="concept">
+        <h2>useReducer Syntax</h2>
+        <div class="demo">
+<pre><span class="highlight">const</span> [state, dispatch] = useReducer(reducer, initialState);
+
+<span class="comment">// Reducer function</span>
+<span class="highlight">function</span> reducer(state, action) {
+    <span class="highlight">switch</span> (action.type) {
+        <span class="highlight">case</span> 'increment':
+            <span class="highlight">return</span> { count: state.count + 1 };
+        <span class="highlight">case</span> 'decrement':
+            <span class="highlight">return</span> { count: state.count - 1 };
+        <span class="highlight">default</span>:
+            <span class="highlight">return</span> state;
+    }
+}
+
+<span class="comment">// Usage</span>
+dispatch({ type: 'increment' });</pre>
+        </div>
+    </div>
+
+    <div class="concept">
+        <h2>Live Demo: useReducer Pattern</h2>
+        <button onclick="dispatch({type:'increment'})">+</button>
+        <button onclick="dispatch({type:'decrement'})">-</button>
+        <button onclick="dispatch({type:'reset'})">Reset</button>
+        <div id="reducer-demo"></div>
+    </div>
+
+    <div class="output">
+        <strong>Output:</strong>
+        <div id="output-container"></div>
+    </div>
+
+    <script>
+        let state = { count: 0 };
+        const history = [];
+
+        function reducer(currentState, action) {
+            switch (action.type) {
+                case 'increment':
+                    return { count: currentState.count + 1 };
+                case 'decrement':
+                    return { count: currentState.count - 1 };
+                case 'reset':
+                    return { count: 0 };
+                default:
+                    return currentState;
+            }
+        }
+
+        function dispatch(action) {
+            history.push(action.type);
+            state = reducer(state, action);
+            render();
+        }
+
+        function render() {
+            document.getElementById('reducer-demo').innerHTML = `
+                <div style="padding:20px;background:#fff;border-radius:8px;">
+                    <h3>Counter with Reducer</h3>
+                    <p>Count: <strong>${state.count}</strong></p>
+                </div>
+            `;
+            
+            document.getElementById('output-container').innerHTML = `
+                <p><strong>Action History:</strong> ${history.join(' → ')}</p>
+                <p>Each dispatch goes through the reducer function!</p>
+            `;
+        }
+        
+        render();
+    </script>
+</body>
+</html>

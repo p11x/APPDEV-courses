@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>19 - Array Buffer</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>19 - Array Buffer</h1>
+    <p>ArrayBuffer represents a fixed-length binary data buffer.</p>
+    
+    <button onclick="testArrayBuffer()">Test ArrayBuffer</button>
+    <button onclick="convertToString()">Convert to String</button>
+    <button onclick="sliceBuffer()">Slice Buffer</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        let output = [];
+        let buffer = null;
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        function testArrayBuffer() {
+            output = [];
+            log('Testing ArrayBuffer...');
+            
+            buffer = new ArrayBuffer(16);
+            log('Created ArrayBuffer with ' + buffer.byteLength + ' bytes');
+            log('IsView: ' + ArrayBuffer.isView(new Int8Array()));
+            
+            const view = new Uint8Array(buffer);
+            view[0] = 72;
+            view[1] = 101;
+            view[2] = 108;
+            view[3] = 108;
+            view[4] = 111;
+            
+            log('Set bytes [72,101,108,108,111] (Hello)');
+            log('View length: ' + view.length);
+            
+            for (let i = 0; i < 5; i++) {
+                log('Byte ' + i + ': ' + view[i] + ' (' + String.fromCharCode(view[i]) + ')');
+            }
+        }
+
+        function convertToString() {
+            if (!buffer) {
+                log('Create buffer first');
+                return;
+            }
+            
+            log('Converting to string...');
+            
+            const view = new Uint8Array(buffer);
+            let str = '';
+            for (let i = 0; i < view.length; i++) {
+                if (view[i] !== 0) {
+                    str += String.fromCharCode(view[i]);
+                }
+            }
+            log('String: ' + str);
+            
+            const bytes = Array.from(view);
+            log('As array: [' + bytes.join(',') + ']');
+        }
+
+        function sliceBuffer() {
+            if (!buffer) {
+                log('Create buffer first');
+                return;
+            }
+            
+            log('Slicing buffer...');
+            
+            const sliced = buffer.slice(0, 5);
+            log('Sliced buffer length: ' + sliced.byteLength);
+            
+            const view = new Uint8Array(sliced);
+            log('Sliced bytes: [' + Array.from(view).join(',') + ']');
+        }
+    </script>
+</body>
+</html>

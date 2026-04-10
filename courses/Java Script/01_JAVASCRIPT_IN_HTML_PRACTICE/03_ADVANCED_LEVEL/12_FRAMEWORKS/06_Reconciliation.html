@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06 - Reconciliation</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #61dafb; background: #282c34; padding: 15px; border-radius: 5px; }
+        .concept { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .demo { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; font-family: 'Consolas', monospace; margin: 10px 0; }
+        .output { background: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50; margin: 10px 0; }
+        pre { margin: 0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>06 - Reconciliation</h1>
+    
+    <div class="concept">
+        <h2>What is Reconciliation?</h2>
+        <p>Reconciliation is the algorithm React uses to diff one tree with another to determine which parts need to be changed. It's the process of comparing the Virtual DOM and determining the minimum number of operations to update the real DOM.</p>
+    </div>
+
+    <div class="concept">
+        <h2>Diffing Algorithm</h2>
+        <div class="demo">
+<pre><span class="comment">// React's reconciliation rules:</span>
+1. <span class="highlight">Different types</span> → Different components → Recreate
+2. <span class="highlight">Same type</span> → Update props, keep component same
+3. <span class="highlight">Keys</span> → Help identify stable elements
+
+<span class="comment">// Example: List reordering</span>
+<span class="highlight">const</span> oldChildren = [
+    { key: 'a', value: 'Apple' },
+    { key: 'b', value: 'Banana' }
+];
+
+<span class="highlight">const</span> newChildren = [
+    { key: 'b', value: 'Banana' },
+    { key: 'a', value: 'Apple' }
+];
+<span class="comment">// Without keys: both items replaced</span>
+<span class="comment">// With keys: just reordered (efficient!)</span></pre>
+        </div>
+    </div>
+
+    <div class="concept">
+        <h2>Live Demo: Reconciliation Process</h2>
+        <button onclick="updateItems()">Update List</button>
+        <div id="reconciliation-demo"></div>
+    </div>
+
+    <div class="output">
+        <strong>Output:</strong>
+        <div id="output-container"></div>
+    </div>
+
+    <script>
+        let items = [
+            { id: 1, name: 'React', key: 'r1' },
+            { id: 2, name: 'Vue', key: 'v1' },
+            { id: 3, name: 'Angular', key: 'a1' }
+        ];
+
+        let updateCount = 0;
+
+        function renderItems() {
+            const container = document.getElementById('reconciliation-demo');
+            container.innerHTML = `
+                <ul>
+                    ${items.map(item => `<li key="${item.key}" data-id="${item.id}">${item.name}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        function updateItems() {
+            updateCount++;
+            if (updateCount % 2 === 0) {
+                items = [
+                    { id: 1, name: 'React', key: 'r1' },
+                    { id: 2, name: 'Vue', key: 'v1' },
+                    { id: 3, name: 'Angular', key: 'a1' }
+                ];
+            } else {
+                items = [
+                    { id: 3, name: 'Angular', key: 'a1' },
+                    { id: 1, name: 'React', key: 'r1' },
+                    { id: 2, name: 'Vue', key: 'v1' }
+                ];
+            }
+            renderItems();
+            
+            const output = document.getElementById('output-container');
+            output.innerHTML = `
+                <p><strong>Update #${updateCount}:</strong></p>
+                <p>Items reordered but keys preserved - React would recognize these as same elements!</p>
+                <p>Order: ${items.map(i => i.name).join(' → ')}</p>
+            `;
+        }
+
+        renderItems();
+        
+        const output = document.getElementById('output-container');
+        output.innerHTML = '<p>Click button to see reconciliation in action!</p>';
+    </script>
+</body>
+</html>

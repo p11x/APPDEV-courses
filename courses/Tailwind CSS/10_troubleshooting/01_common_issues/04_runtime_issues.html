@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runtime Issues - Tailwind CSS Troubleshooting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-red-600">Runtime Issues</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Understanding the Issue</h2>
+            <p class="mb-4">Runtime issues occur when Tailwind CSS works in development but fails in production or browser environments. These can be related to CSS loading, JavaScript conflicts, or CDN issues.</p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                <p class="font-bold">Common Causes:</p>
+                <ul class="list-disc ml-6 mt-2">
+                    <li>CDN loading order issues</li>
+                    <li>Production build missing classes</li>
+                    <li>JavaScript framework conflicts</li>
+                    <li>Browser caching old CSS</li>
+                    <li>Async/deferred script loading issues</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Standard Example: The Problem</h2>
+            
+            <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-4">
+                <h3 class="font-bold text-red-700 mb-2">Problem: CDN Loading Race Condition</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// HTML - Loading Tailwind too late
+&lt;html&gt;
+&lt;head&gt;
+    &lt;script src="app.js"&gt;&lt;/script&gt;  // App loads first!
+    &lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="bg-blue-500"&gt;Content&lt;/div&gt;
+    // Classes flash unstyled then apply - FART
+&lt;/body&gt;
+&lt;/html&gt;
+
+// Problem: JavaScript modifies DOM before Tailwind is ready
+// Result: Content Flashes After Render (FART)
+// The blue background appears briefly without styles</code></pre>
+            </div>
+
+            <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                <h3 class="font-bold text-green-700 mb-2">Solution: Proper Loading Order</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// SOLUTION 1: Load Tailwind first (in head, blocking)
+&lt;html&gt;
+&lt;head&gt;
+    &lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;
+    &lt;script src="app.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+// SOLUTION 2: Use async with DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize your app AFTER DOM is ready
+    initApp();
+});
+
+// SOLUTION 3: For production - generate CSS at build time
+// Instead of CDN, use proper build pipeline
+npm install -D tailwindcss postcss autoprefixer
+
+// Run build: npx tailwindcss -i input.css -o output.css
+// Then reference output.css in HTML</code></pre>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 1: React/Framework Issue</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// React + Tailwind Runtime Issue
+// Problem: Using JIT with dynamic styles
+
+// App.jsx - Problematic code
+function Button({ variant }) {
+    // This works in dev but may fail in prod
+    const colorClass = `bg-${variant}-500`;
+    
+    return (
+        &lt;button className={colorClass}&gt;
+            Click
+        &lt;/button&gt;
+    );
+    // Error: Class not generated in production build
+}
+
+// SOLUTION 1: Use classnames library
+import clsx from 'classnames';
+
+function Button({ variant, size }) {
+    return (
+        &lt;button className={clsx(
+            'px-4 py-2 rounded',
+            {
+                'bg-blue-500': variant === 'primary',
+                'bg-red-500': variant === 'danger',
+                'bg-gray-500': variant === 'secondary'
+            }
+        )}&gt;
+            Click
+        &lt;/button&gt;
+    );
+}
+
+// SOLUTION 2: Use Template Literals with conditionals
+function Button({ variant }) {
+    return (
+        &lt;button className={`px-4 py-2 rounded ${variant === 'primary' ? 'bg-blue-500' : 'bg-red-500'}`}&gt;
+            Click
+        &lt;/button&gt;
+    );
+}</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Production build: Missing classes cause broken UI</p>
+                <p>Fix: Using clsx or conditional template literals works</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 2: Browser Caching</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// PROBLEM: Browser serves stale CSS
+// User sees old styles after deployment
+
+// index.html - No cache busting
+&lt;link rel="stylesheet" href="styles.css"&gt;
+
+// Browser caches styles.css for days
+// After deploy: New CSS not loaded!
+
+// SOLUTION 1: Query string versioning
+&lt;link rel="stylesheet" href="styles.css?v=1.0.5"&gt;
+
+// SOLUTION 2: Build tool auto-versioning
+// Vite, Webpack can add content hash
+// Output: styles.a1b2c3d4.css
+&lt;link rel="stylesheet" href="styles.a1b2c3d4.css"&gt;
+
+// SOLUTION 3: Configure server headers
+// .htaccess (Apache)
+&lt;FilesMatch "\.(css)$"&gt;
+    Header set Cache-Control "no-cache, must-revalidate"
+&lt;/FilesMatch&gt;
+
+// nginx.conf
+location ~* \.(css)$ {
+    add_header Cache-Control "no-cache, must-revalidate";
+}
+
+// SOLUTION 4: Use Tailwind CDN with version
+&lt;script src="https://cdn.tailwindcss.com?plugins=forms,typography"&gt;&lt;/script&gt;
+&lt;script&gt;
+    tailwind.config = {
+        // Your config
+    }
+&lt;/script&gt;</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Without cache busting: Users see outdated styles</p>
+                <p>With versioning: Fresh CSS loaded on each deploy</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Debugging Flow</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌─────────────────────────────────────────────────────────────────┐
+│                   RUNTIME ISSUE DEBUGGING                          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  1. Check if issue is CDN vs Build                               │
+│     ├── Is CDN working in dev mode?                              │
+│     ├── Does production use built CSS?                           │
+│     └── Compare dev vs prod output                               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. Check browser console for errors                             │
+│     ├── Open DevTools (F12)                                      │
+│     ├── Check Console tab                                        │
+│     └── Look for JavaScript errors                               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  3. Check Network tab for CSS loading                            │
+│     ├── Verify CSS file was requested                            │
+│     ├── Check response status (200 vs 404)                       │
+│     └── Check for CORS errors                                    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. Test in incognito/private mode                              │
+│     ├── Disables caching                                         │
+│     ├── No extensions interfere                                 │
+│     └── Clean slate for testing                                  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  5. Check server/hosting configuration                          │
+│     ├── Static file serving enabled?                            │
+│     ├── MIME types correct?                                     │
+│     └── Gzip/brotli compression?                                │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │  Issue Resolved! │
+                    └──────────────────┘</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Edge Cases & Considerations</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-yellow-50 p-4 rounded">
+                    <h3 class="font-bold text-yellow-800">Edge Cases</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• CDN fails when offline</li>
+                        <li>• Third-party scripts may conflict</li>
+                        <li>• iframe isolation issues</li>
+                        <li>• Service worker caching issues</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <h3 class="font-bold text-blue-800">Performance</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• CDN adds latency on first load</li>
+                        <li>• Build pipeline is more performant</li>
+                        <li>• Consider self-hosted CDN</li>
+                    </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                    <h3 class="font-bold text-green-800">Accessibility</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• FART (flash) can trigger motion sensitivity</li>
+                        <li>• Ensure no flash of unstyled content</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50 p-4 rounded">
+                    <h3 class="font-bold text-purple-800">Cross-Browser</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• CDN works in all modern browsers</li>
+                        <li>• IE11 requires polyfills</li>
+                        <li>• Test in target browsers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Quick Fix Commands</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Browser Console Checks */
+// Check if Tailwind loaded
+console.log(tailwind.config)
+console.log(tailwind)
+
+// Check applied styles
+getComputedStyle(document.querySelector('.my-element'))
+
+// Hard refresh (disable cache)
+// Chrome: Ctrl+Shift+R
+// Mac: Cmd+Shift+R
+
+/* Debug network issues */
+// Open Network tab, check CSS file response
+// Status should be 200, not 404
+
+/* Test offline */
+npx serve . --no-cache
+
+/* Check CDN availability */
+curl -I https://cdn.tailwindcss.com</code></pre>
+        </div>
+    </div>
+</body>
+</html>

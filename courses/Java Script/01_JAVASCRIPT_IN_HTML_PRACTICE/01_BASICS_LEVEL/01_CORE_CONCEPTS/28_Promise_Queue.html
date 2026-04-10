@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+// HTML5 document type declaration
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>28 - Promise Queue</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffccbc;
+        }
+        h1 {
+            color: #d84315;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .queue-type {
+            background: #ffab91;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ff5722;
+        }
+        button {
+            background: #e64a19;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #d84315;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Promise Queue (Microtask Queue)</h1>
+        <p>Promise handlers (.then, .catch, .finally) are queued in a separate microtask queue with higher priority.</p>
+        
+        <h2>How Promise Queue Works:</h2>
+        
+        <div class="queue-type">
+            <strong>Separate Queue</strong> - Priority over macrotask queue
+        </div>
+        
+        <div class="queue-type">
+            <strong>All at Once</strong> - ALL microtasks run before macrotasks
+        </div>
+        
+        <div class="queue-type">
+            <strong>FIFO</strong> - In order they were added
+        </div>
+        
+        <h2>Try It:</h2>
+        <button onclick="demoPromiseQueue()">Promise Queue Demo</button>
+        
+        <div id="output" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
+            // Click button to see execution order
+        </div>
+    </div>
+
+    // Performance Tip: Use promises for async operations
+    // Security Note: Unhandled rejections should be caught
+    
+    <script>
+        function demoPromiseQueue() {
+            console.log("%c=== Promise Queue (Microtask) Demo ===", "color: #e64a19; font-weight: bold; font-size: 16px;");
+            
+            // Add promises to queue
+            Promise.resolve(1).then(function(v) {
+                console.log("Promise 1 resolved: " + v);
+                return v + 1;
+            }).then(function(v) {
+                console.log("Promise 2: " + v);
+            });
+            
+            Promise.resolve(10).then(function(v) {
+                console.log("Promise 3 resolved: " + v);
+            });
+            
+            // setTimeout for comparison
+            setTimeout(function() {
+                console.log("Macrotask (setTimeout) executed");
+            }, 0);
+            
+            console.log("Sync code before promises");
+            
+            // More promises
+            var p = new Promise(function(resolve) {
+                resolve("Direct resolve");
+            });
+            
+            p.then(function(v) {
+                console.log("Promise 4: " + v);
+            });
+            
+            console.log("Sync code after promises");
+            
+            // Show execution order after
+            setTimeout(function() {
+                console.log("");
+                console.log("%cPromise Queue Priority:", "font-weight: bold;");
+                console.log("1. Sync code runs first");
+                console.log("2. Promise tasks (microtasks) ALL run");
+                console.log("3. Then ONE macrotask runs");
+                console.log("4. Continue checking microtasks");
+                
+                document.getElementById("output").innerHTML = 
+                    "<strong>Execution Order:</strong><br>" +
+                    "1. Sync code runs first<br>" +
+                    "2. ALL microtasks (promise queue)<br>" +
+                    "3. ONE macrotask<br>" +
+                    "4. More microtasks if added<br>" +
+                    "5. Another macrotask";
+                
+                alert("Promise queue demo complete!");
+            }, 100);
+        }
+        
+        console.log("Promise Queue page loaded");
+    </script>
+</body>
+</html>

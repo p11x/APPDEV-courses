@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12 - Hooks Rules</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #61dafb; background: #282c34; padding: 15px; border-radius: 5px; }
+        .concept { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .demo { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; font-family: 'Consolas', monospace; }
+        .output { background: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>12 - Hooks Rules</h1>
+    
+    <div class="concept">
+        <h2>Rules of Hooks</h2>
+        <ul>
+            <li><strong>Only call hooks at the top level</strong> - Don't call inside loops, conditions, or nested functions</li>
+            <li><strong>Only call hooks from React functions</strong> - Not from regular JS functions</li>
+            <li><strong>Hooks must be called in the same order</strong> - Every render must have same hook calls</li>
+        </ul>
+    </div>
+
+    <div class="concept">
+        <h2>Correct vs Incorrect Usage</h2>
+        <div class="demo">
+<pre><span class="comment">// ❌ WRONG - Conditional hook</span>
+<span class="highlight">if</span> (condition) {
+    <span class="highlight">const</span> [state, setState] = useState();
+}
+
+<span class="comment">// ✅ CORRECT - Always call hooks</span>
+<span class="highlight">const</span> [state, setState] = useState();
+<span class="highlight">if</span> (condition) {
+    <span class="highlight">return</span> <span class="highlight">null</span>;
+}
+
+<span class="comment">// ❌ WRONG - Hook in regular function</span>
+<span class="highlight">function</span> handleClick() {
+    useState(value);
+}
+
+<span class="comment">// ✅ CORRECT - Hook in component</span>
+<span class="highlight">function</span> MyComponent() {
+    <span class="highlight">const</span> [state, setState] = useState();
+}</pre>
+        </div>
+    </div>
+
+    <div class="concept">
+        <h2>Live Demo: Hook Order</h2>
+        <button onclick="reorderHooks()">Change Hook Order</button>
+        <div id="hooks-demo"></div>
+    </div>
+
+    <div class="output">
+        <strong>Output:</strong>
+        <div id="output-container"></div>
+    </div>
+
+    <script>
+        let renderCount = 0;
+
+        function renderHooks() {
+            renderCount++;
+            const demo = document.getElementById('hooks-demo');
+            
+            const hooks = [
+                { name: 'useState', order: 1 },
+                { name: 'useEffect', order: 2 },
+                { name: 'useContext', order: 3 }
+            ];
+            
+            demo.innerHTML = `
+                <div style="padding:20px;background:#fff;border-radius:8px;">
+                    <h3>Render #${renderCount}</h3>
+                    <h4>Hook Call Order:</h4>
+                    <ol>${hooks.map(h => `<li>${h.name} called at position ${h.order}</li>`).join('')}</ol>
+                    <p style="color:green;">✓ Hooks called in same order every render!</p>
+                </div>
+            `;
+            
+            document.getElementById('output-container').innerHTML = `
+                <p><strong>Rule:</strong> Hooks must maintain consistent order across renders!</p>
+            `;
+        }
+
+        function reorderHooks() {
+            renderHooks();
+        }
+        
+        renderHooks();
+    </script>
+</body>
+</html>

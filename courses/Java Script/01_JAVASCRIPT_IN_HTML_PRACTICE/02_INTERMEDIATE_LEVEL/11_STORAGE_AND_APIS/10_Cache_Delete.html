@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10 - Cache Delete</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>10 - Cache Delete</h1>
+    <p>The cache.delete() method removes entries from a cache.</p>
+    
+    <button onclick="setupCache()">Setup Cache</button>
+    <button onclick="deleteItem()">Delete Specific Item</button>
+    <button onclick="deleteCache()">Delete Entire Cache</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        const cacheName = 'delete-cache-v1';
+        let output = [];
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        async function setupCache() {
+            output = [];
+            log('Setting up cache with items...');
+            
+            try {
+                const cache = await caches.open(cacheName);
+                
+                const items = ['/api/users', '/api/products', '/api/orders'];
+                for (const url of items) {
+                    const response = new Response('Data for ' + url);
+                    await cache.put(new Request(url), response);
+                }
+                log('Added 3 items to cache');
+                
+                const keys = await cache.keys();
+                log('Cache size: ' + keys.length);
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+
+        async function deleteItem() {
+            try {
+                const cache = await caches.open(cacheName);
+                const deleted = await cache.delete('/api/users');
+                log('Deleted /api/users: ' + deleted);
+                
+                const keys = await cache.keys();
+                log('Remaining items: ' + keys.length);
+                for (const req of keys) {
+                    log('  - ' + req.url);
+                }
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+
+        async function deleteCache() {
+            try {
+                const deleted = await caches.delete(cacheName);
+                log('Deleted cache "' + cacheName + '": ' + deleted);
+                
+                const exists = await caches.has(cacheName);
+                log('Cache exists: ' + exists);
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

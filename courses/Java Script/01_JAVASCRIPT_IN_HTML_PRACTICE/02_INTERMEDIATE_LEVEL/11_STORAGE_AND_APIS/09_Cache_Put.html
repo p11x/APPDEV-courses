@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>09 - Cache Put</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>09 - Cache Put</h1>
+    <p>The cache.put() method stores key/value pairs in the cache.</p>
+    
+    <button onclick="testCachePut()">Test Cache Put</button>
+    <button onclick="viewCache()">View Cache</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        const cacheName = 'put-cache-v1';
+        let output = [];
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        async function testCachePut() {
+            output = [];
+            log('Testing cache.put()...');
+            
+            try {
+                const cache = await caches.open(cacheName);
+                
+                const request1 = new Request('/api/data');
+                const response1 = new Response(JSON.stringify({ id: 1, name: 'John' }), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                await cache.put(request1, response1);
+                log('Stored JSON response');
+                
+                const request2 = new Request('/api/image');
+                const response2 = new Response('image-data', {
+                    headers: { 'Content-Type': 'image/png' }
+                });
+                await cache.put(request2, response2);
+                log('Stored image response');
+                
+                const keys = await cache.keys();
+                log('Total items in cache: ' + keys.length);
+                
+                for (const req of keys) {
+                    log('Cached: ' + req.url);
+                }
+                
+                log('cache.put() test completed!');
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+
+        async function viewCache() {
+            try {
+                const cache = await caches.open(cacheName);
+                const keys = await cache.keys();
+                log('Items in cache: ' + keys.length);
+                for (const req of keys) {
+                    log('  - ' + req.url);
+                }
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

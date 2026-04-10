@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promise Finally</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Promise Finally</h1>
+    <p>Promise.prototype.finally() adds a callback that runs regardless of whether the promise resolves or rejects.</p>
+    
+    <h2>Example 1: Finally on Resolved Promise</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Finally on Rejected Promise</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Cleanup Pattern</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        var loadingState = "idle";
+        
+        function setLoading(state) {
+            loadingState = state;
+        }
+
+        Promise.resolve("Success")
+            .then(function(result) {
+                document.getElementById('output1').innerHTML += "Result: " + result + "<br>";
+            })
+            ["finally"](function() {
+                document.getElementById('output1').innerHTML += "Finally executed!<br>";
+            });
+
+        Promise.reject(new Error("Failed"))
+            ["catch"](function(err) {
+                document.getElementById('output2').innerHTML += "Error: " + err.message + "<br>";
+            })
+            ["finally"](function() {
+                document.getElementById('output2').innerHTML += "Finally executed!<br>";
+            });
+
+        var promise3 = new Promise(function(resolve) {
+            setLoading("loading");
+            setTimeout(function() {
+                resolve({ data: "Loaded!" });
+            }, 100);
+        });
+
+        promise3
+            .then(function(result) {
+                document.getElementById('output3').innerHTML += "Data: " + result.data + "<br>";
+            })
+            ["catch"](function(err) {
+                document.getElementById('output3').innerHTML += "Error: " + err.message + "<br>";
+            })
+            ["finally"](function() {
+                setLoading("idle");
+                document.getElementById('output3').innerHTML += "Loading state: " + loadingState + "<br>";
+            });
+
+        setTimeout(function() {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Result: Success<br>Finally executed!<br>";
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>Error: Failed<br>Finally executed!<br>";
+        }, 200);
+    </script>
+</body>
+</html>

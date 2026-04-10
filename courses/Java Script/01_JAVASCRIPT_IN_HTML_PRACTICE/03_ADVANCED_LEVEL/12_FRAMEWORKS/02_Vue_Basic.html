@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue Basic - Reactive Data</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        .card { border: 2px solid #42b883; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .counter { font-size: 24px; color: #42b883; font-weight: bold; }
+        button { padding: 10px 20px; margin: 5px; background: #42b883; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        h2 { color: #42b883; }
+        code { background: #eee; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Vue Basic - Reactive Data</h1>
+    <p>This example demonstrates Vue.js reactive data and the Composition API.</p>
+
+    <!-- Code Explanation Section -->
+    <div class="output">
+        <h2>Code Explanation</h2>
+        <pre><code>Vue 3 Composition API: setup(), reactive(), computed(), watch()</code></pre>
+        <ul>
+            <li><strong>reactive():</strong> Creates a reactive proxy of a plain object</li>
+            <li><strong>ref():</strong> Creates a reactive reference to a value</li>
+            <li><strong>computed():</strong> Creates a computed property</li>
+            <li><strong>watch():</strong> Watches for changes in reactive data</li>
+        </ul>
+    </div>
+
+    <!-- Vue Container -->
+    <div id="app">
+        <div class="card">
+            <h3>{{ title }}</h3>
+            <p>{{ message }}</p>
+            <p>Author: {{ author }}</p>
+        </div>
+
+        <div class="card">
+            <h3>Counter with Reactive Data</h3>
+            <p class="counter">{{ state.count }}</p>
+            <p>Double: {{ state.double }}</p>
+            <button @click="increment">Increment</button>
+            <button @click="decrement">Decrement</button>
+            <button @click="reset">Reset</button>
+        </div>
+
+        <div class="card">
+            <h3>Computed Property</h3>
+            <p>Full Name: {{ fullName }}</p>
+        </div>
+
+        <div class="card">
+            <h3>Watch Effect</h3>
+            <p>Message history: {{ messageHistory }}</p>
+            <input v-model="newMessage" placeholder="Type a message" @keyup.enter="addMessage">
+        </div>
+
+        <div class="card">
+            <h3>Items List (Reactive Array)</h3>
+            <ul>
+                <li v-for="(item, index) in items" :key="index">
+                    {{ item.name }} - ${{ item.price }}
+                </li>
+            </ul>
+            <p>Total: ${{ total }}</p>
+            <button @click="addItem">Add Item</button>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, reactive, ref, computed, watch } = Vue;
+
+        const app = createApp({
+            setup() {
+                // Simple reactive data using ref()
+                const title = ref('Vue 3 Reactive Data Demo');
+                const message = ref('Hello from Vue 3!');
+                const author = ref('Vue.js Team');
+
+                // Reactive object using reactive()
+                const state = reactive({
+                    count: 0,
+                    get double() {
+                        return this.count * 2;
+                    }
+                });
+
+                // Increment function
+                const increment = () => {
+                    state.count++;
+                };
+
+                // Decrement function
+                const decrement = () => {
+                    state.count--;
+                };
+
+                // Reset function
+                const reset = () => {
+                    state.count = 0;
+                };
+
+                // Computed property
+                const firstName = ref('John');
+                const lastName = ref('Doe');
+                const fullName = computed(() => {
+                    return firstName.value + ' ' + lastName.value;
+                });
+
+                // Watch functionality
+                const newMessage = ref('');
+                const messageHistory = ref([]);
+
+                const addMessage = () => {
+                    if (newMessage.value.trim()) {
+                        messageHistory.value.push(newMessage.value);
+                        newMessage.value = '';
+                    }
+                };
+
+                // Watch for messageHistory changes
+                watch(messageHistory, (newVal) => {
+                    console.log('Message history changed:', newVal);
+                });
+
+                // Reactive array
+                const items = ref([
+                    { name: 'Apple', price: 1.5 },
+                    { name: 'Banana', price: 0.75 }
+                ]);
+
+                const total = computed(() => {
+                    return items.value.reduce((sum, item) => sum + item.price, 0).toFixed(2);
+                });
+
+                const addItem = () => {
+                    items.value.push({ name: 'New Item', price: Math.random() * 10 });
+                };
+
+                return {
+                    title,
+                    message,
+                    author,
+                    state,
+                    increment,
+                    decrement,
+                    reset,
+                    fullName,
+                    newMessage,
+                    messageHistory,
+                    addMessage,
+                    items,
+                    total,
+                    addItem
+                };
+            }
+        });
+
+        app.mount('#app');
+    </script>
+
+    <!-- Output Demonstration -->
+    <div class="output">
+        <h2>Output Demonstration</h2>
+        <p>The following reactive features are demonstrated:</p>
+        <ul>
+            <li><strong>ref():</strong> Simple reactive strings for title, message, author</li>
+            <li><strong>reactive():</strong> Object with reactive count and computed getter</li>
+            <li><strong>computed():</strong> Full name computed from first and last name</li>
+            <li><strong>watch():</strong> Triggers console log when message history changes</li>
+            <li><strong>Reactive Array:</strong> Items list with computed total</li>
+        </ul>
+        <p><strong>Console Output:</strong> Check browser console to see watch effect logs.</p>
+    </div>
+</body>
+</html>

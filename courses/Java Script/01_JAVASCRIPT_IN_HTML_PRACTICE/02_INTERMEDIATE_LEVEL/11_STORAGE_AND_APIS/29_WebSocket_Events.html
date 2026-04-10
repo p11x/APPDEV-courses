@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>29 - WebSocket Events</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>29 - WebSocket Events</h1>
+    <p>WebSocket event handlers for connection lifecycle.</p>
+    
+    <button onclick="testWebSocketEvents()">Test WebSocket Events</button>
+    <button onclick="testEventTypes()">Show Event Types</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        let output = [];
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        function testWebSocketEvents() {
+            output = [];
+            log('Setting up WebSocket event handlers...');
+            
+            const ws = new WebSocket('wss://echo.websocket.org');
+            
+            ws.addEventListener('open', function(event) {
+                log('Event: open - Connection ready');
+                ws.send('Hello, WebSocket!');
+            });
+            
+            ws.addEventListener('message', function(event) {
+                log('Event: message - Data: ' + event.data.substring(0, 50));
+            });
+            
+            ws.addEventListener('error', function(event) {
+                log('Event: error - Error occurred');
+            });
+            
+            ws.addEventListener('close', function(event) {
+                log('Event: close - Code: ' + event.code + ', Reason: ' + event.reason);
+            });
+            
+            log('Event listeners attached');
+            log('Connecting to echo server...');
+            
+            setTimeout(() => {
+                ws.close();
+            }, 2000);
+        }
+
+        function testEventTypes() {
+            log('WebSocket event types explained:');
+            
+            log('\n1. OpenEvent (open):');
+            log('   - No properties, just signals ready');
+            
+            log('\n2. MessageEvent (message):');
+            log('   - data: The message content');
+            log('   - origin: Origin of the message');
+            log('   - lastEventId: Last event ID');
+            
+            log('\n3. CloseEvent (close):');
+            log('   - code: Close status code');
+            log('   - reason: Close reason string');
+            log('   - wasClean: Whether clean close');
+            
+            log('\n4. Event (error):');
+            log('   - Error event, no specific properties');
+            
+            log('\nCommon status codes:');
+            log('  1000 - Normal closure');
+            log('  1001 - Going away');
+            log('  1002 - Protocol error');
+            log('  1006 - Abnormal closure');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thenable Pattern</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Thenable Pattern</h1>
+    <p>A thenable is any object with a then() method. Promises can adapt thenables.</p>
+    
+    <h2>Example 1: Simple Thenable</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Thenable with Delay</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Thenable for Promise Wrapper</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        var thenable1 = {
+            then: function(onFulfilled) {
+                onFulfilled("Resolved from thenable!");
+            }
+        };
+        
+        Promise.resolve(thenable1).then(function(result) {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>" + result + "<br>";
+        });
+
+        var thenable2 = {
+            then: function(onFulfilled) {
+                setTimeout(function() {
+                    onFulfilled(" Delayed resolution");
+                }, 100);
+            }
+        };
+        
+        Promise.resolve(thenable2).then(function(result) {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>" + result + "<br>";
+        });
+
+        function createThenable(value) {
+            return {
+                then: function(onFulfilled, onRejected) {
+                    if (value) {
+                        onFulfilled(value);
+                    } else {
+                        onRejected(new Error("No value provided"));
+                    }
+                }
+            };
+        }
+        
+        Promise.resolve(createThenable("Custom thenable!")).then(function(result) {
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>" + result + "<br>";
+        });
+    </script>
+</body>
+</html>

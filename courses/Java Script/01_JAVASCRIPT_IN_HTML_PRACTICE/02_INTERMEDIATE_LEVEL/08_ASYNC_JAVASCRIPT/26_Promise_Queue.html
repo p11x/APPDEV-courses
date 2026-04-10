@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promise Queue</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Promise Queue</h1>
+    <p>A promise queue ensures promises are resolved sequentially in order of addition.</p>
+    
+    <h2>Example 1: Sequential Queue</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Queue with Concurrency</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Queue Stats</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        function promiseQueue() {
+            var queue = [];
+            var running = false;
+            
+            return {
+                add: function(promiseFn) {
+                    return new Promise(function(resolve, reject) {
+                        queue.push({ promiseFn: promiseFn, resolve: resolve, reject: reject });
+                        processNext();
+                    });
+                }
+            };
+            
+            function processNext() {
+                if (running || queue.length === 0) {
+                    return;
+                }
+                running = true;
+                var item = queue.shift();
+                item.promiseFn().then(item.resolve)["catch"](item.reject).then(function() {
+                    running = false;
+                    processNext();
+                });
+            }
+        }
+        
+        var q = promiseQueue();
+        var order = [];
+        
+        function task(value, delay) {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    order.push(value);
+                    resolve(value);
+                }, delay);
+            });
+        }
+        
+        q.add(function() { return task("A", 200); }).then(function(r) { order.push(r + "-done"); });
+        q.add(function() { return task("B", 100); }).then(function(r) { order.push(r + "-done"); });
+        q.add(function() { return task("C", 150); }).then(function(r) { order.push(r + "-done"); });
+        
+        setTimeout(function() {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Order: " + order.join(", ") + "<br>";
+        }, 500);
+
+        function limitedQueue(limit) {
+            var queue = [];
+            var running = 0;
+            
+            return {
+                add: function(promiseFn) {
+                    return new Promise(function(resolve, reject) {
+                        queue.push({ promiseFn: promiseFn, resolve: resolve, reject: reject });
+                        processNext();
+                    });
+                }
+            };
+            
+            function processNext() {
+                if (running >= limit || queue.length === 0) {
+                    return;
+                }
+                running++;
+                var item = queue.shift();
+                item.promiseFn().then(item.resolve)["catch"](item.reject).then(function() {
+                    running--;
+                    processNext();
+                });
+            }
+        }
+        
+        var q2 = limitedQueue(2);
+        var order2 = [];
+        
+        q2.add(function() {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    order2.push("1");
+                    resolve("Task 1");
+                }, 100);
+            });
+        });
+        
+        q2.add(function() {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    order2.push("2");
+                    resolve("Task 2");
+                }, 50);
+            });
+        });
+        
+        q2.add(function() {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    order2.push("3");
+                    resolve("Task 3");
+                }, 100);
+            });
+        });
+        
+        setTimeout(function() {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>Order: " + order2.join(", ") + "<br>";
+        }, 300);
+
+        var q3 = promiseQueue();
+        var completed = 0;
+        var failed = 0;
+        
+        q3.add(function() {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    resolve("Success 1");
+                }, 50);
+            });
+        })
+        .then(function() { completed++; })
+        ["catch"](function() { failed++; });
+        
+        q3.add(function() {
+            return new Promise(function(resolve, reject) {
+                setTimeout(function() {
+                    reject(new Error("Error"));
+                }, 50);
+            });
+        })
+        .then(function() { completed++; })
+        ["catch"](function() { failed++; });
+        
+        setTimeout(function() {
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Completed: " + completed + "<br>Failed: " + failed + "<br>";
+        }, 200);
+    </script>
+</body>
+</html>

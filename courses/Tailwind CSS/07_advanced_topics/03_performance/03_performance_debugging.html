@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Debugging - Tailwind CSS</title>
+</head>
+<body>
+    <h1>Performance Debugging</h1>
+
+    <h2>Understanding Tailwind Performance</h2>
+    <p>
+        Debugging Tailwind CSS performance involves identifying issues that affect build times, runtime performance, and CSS file size. Understanding the various performance metrics helps optimize your Tailwind setup for faster development and better production performance.
+    </p>
+
+    <h2>Key Performance Metrics</h2>
+    <ul>
+        <li>Build time - Time to generate CSS</li>
+        <li>CSS file size - Final CSS bundle size</li>
+        <li>Rebuild time - Time for incremental builds</li>
+        <li>Runtime performance - Browser rendering speed</li>
+    </ul>
+
+    <h3>Standard Example: Identifying Slow Builds</h3>
+    <!-- Example of what to look for during debugging -->
+    <div class="p-4">
+        Check your build output for performance warnings
+    </div>
+    <!-- 
+        Debug steps:
+        1. Run build with timing: npm run build -- --verbose
+        2. Look for slow content scanning
+        3. Check for large content patterns
+        4. Identify expensive operations
+    -->
+
+    <h3>Real-World Example 1: Large Content Pattern</h3>
+    <!-- Poor content config that scans too many files -->
+    <div class="container mx-auto">
+        <!-- Too broad content pattern causes slow builds -->
+    </div>
+    <!-- 
+        BAD: content: ['./**/*.{html,js}']  // Too broad
+        
+        GOOD: content: [
+            './src/**/*.{html,js,jsx,ts,tsx}',
+            './components/**/*.{js,jsx}',
+        ]
+    -->
+
+    <h3>Real-World Example 2: Unused Theme Extensions</h3>
+    <!-- Theme config with unused values causes bloat -->
+    <div class="text-custom-color">
+        Debug theme usage
+    </div>
+    <!-- 
+        Check tailwind.config.js:
+        - Remove unused color palettes
+        - Remove unused spacing values
+        - Use JIT to auto-purge unused values
+    -->
+
+    <h2>Output Statement</h2>
+    <p>
+        Performance debugging involves monitoring build times, optimizing content patterns, using JIT effectively, and ensuring production builds are properly optimized. Regular performance audits help maintain fast build times and small CSS bundles.
+    </p>
+
+    <h2>ASCII Diagram: Debugging Workflow</h2>
+    <pre>
+┌─────────────────────────────────────────────────────────────┐
+│              PERFORMANCE DEBUGGING FLOW                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌──────────────────────┐                                 │
+│   │  1. Measure Baseline │                                 │
+│   │  - Build time        │                                 │
+│   │  - CSS size          │                                 │
+│   │  - Rebuild time      │                                 │
+│   └──────────┬───────────┘                                 │
+│              │                                             │
+│              ▼                                             │
+│   ┌──────────────────────┐                                 │
+│   │  2. Identify Issues  │                                 │
+│   │  - Check config      │                                 │
+│   │  - Review content    │                                 │
+│   │  - Analyze plugins  │                                 │
+│   └──────────┬───────────┘                                 │
+│              │                                             │
+│              ▼                                             │
+│   ┌──────────────────────┐                                 │
+│   │  3. Optimize          │                                 │
+│   │  - Fix content       │                                 │
+│   │  - Remove unused     │                                 │
+│   │  - Add JIT           │                                 │
+│   └──────────┬───────────┘                                 │
+│              │                                             │
+│              ▼                                             │
+│   ┌──────────────────────┐                                 │
+│   │  4. Verify           │                                 │
+│   │  - Re-measure        │                                 │
+│   │  - Compare results  │                                 │
+│   └──────────────────────┘                                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Debugging Build Performance</h2>
+    <pre>
+module.exports = {
+    // Optimize content patterns
+    content: [
+        './src/**/*.{html,js}',  // Be specific
+        './components/**/*.{js,jsx}',
+    ],
+    
+    // Use JIT (default in v3)
+    mode: 'jit',
+    
+    // Optimize for production
+    purge: {
+        enabled: process.env.NODE_ENV === 'production',
+        content: ['./src/**/*.{html,js}'],
+    },
+}
+    </pre>
+
+    <h2>Common Performance Issues</h2>
+    <pre>
+┌────────────────────────────────────────────────────────────┐
+│ ISSUE                      │ SOLUTION                      │
+├────────────────────────────┼───────────────────────────────┤
+│ Slow initial build         │ Optimize content patterns     │
+│ Large CSS output           │ Enable JIT/purge              │
+│ Slow rebuilds              │ Use watch mode, not rebuild   │
+│ Many unused utilities      │ Check content configuration   │
+│ Expensive plugins          │ Remove unused plugins         │
+│ Large node_modules scan   │ Be specific in content glob   │
+└────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Browser Performance Debugging</h2>
+    <ul>
+        <li>Use Chrome DevTools Performance tab</li>
+        <li>Check for layout thrashing</li>
+        <li>Verify CSS selectors aren't overly complex</li>
+        <li>Monitor paint and render times</li>
+    </ul>
+
+    <h2>CSS Size Analysis</h2>
+    <pre>
+<!-- Use Chrome DevTools: -->
+1. Open DevTools > Coverage tab
+2. Reload page
+3. Check % of CSS actually used
+4. Look for unused Tailwind classes
+
+<!-- Or use PurgeCSS directly: -->
+npx @fullhuman/postcss-purgecss --content src/**/*.{html,js} --css dist/*.css
+    </pre>
+
+    <h2>Edge Cases and Considerations</h2>
+    <ul>
+        <li>Dynamic class generation may bypass purge</li>
+        <li>Large template literals need safelist</li>
+        <li>Third-party content may need explicit inclusion</li>
+    </ul>
+
+    <h2>Monitoring in Production</h2>
+    <ul>
+        <li>Use Chrome Lighthouse for performance scores</li>
+        <li>Monitor Core Web Vitals</li>
+        <li>Track CSS file size over time</li>
+    </ul>
+
+    <h2>Accessibility Notes</h2>
+    <p>
+        Performance issues don't directly affect accessibility. However, slow loading can impact users with assistive technologies. Ensure fast loading times and test with real network conditions.
+    </p>
+
+    <h2>Cross-Browser Notes</h2>
+    <p>
+        Performance debugging is primarily about development workflow and production output. The generated CSS works consistently across browsers regardless of how it was built.
+    </p>
+</body>
+</html>

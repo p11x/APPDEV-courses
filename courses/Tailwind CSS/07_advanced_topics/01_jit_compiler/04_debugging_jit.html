@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debugging JIT - Tailwind CSS</title>
+</head>
+<body>
+    <h1>Debugging JIT Compiler Issues</h1>
+
+    <h2>Common JIT Debugging Scenarios</h2>
+    <p>
+        While the JIT compiler is generally reliable, you may encounter situations where classes aren't being generated as expected. Understanding how to debug these issues is essential for efficient development. This guide covers common problems and their solutions.
+    </p>
+
+    <h2>Understanding JIT Debugging Tools</h2>
+    
+    <h3>Standard Example: Using DevTools</h3>
+    <!-- Inspect elements to see which classes are applied -->
+    <div class="p-4 bg-blue-500 text-white rounded-lg">
+        Debug this element
+    </div>
+    <!-- 
+        Debugging steps:
+        1. Open DevTools (F12)
+        2. Inspect element
+        3. Check computed styles
+        4. Check Styles panel for applied classes
+        5. Look for missing classes in Styles panel
+    -->
+
+    <h3>Real-World Example 1: Missing Classes Debug</h3>
+    <!-- A button with hover state that might not be generating -->
+    <button class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-300">
+        Hover Me
+    </button>
+    <!-- 
+        If hover doesn't work:
+        1. Check if JIT is enabled (mode: 'jit' in config)
+        2. Verify content config includes your file
+        3. Check for typos in class names
+        4. Look for CSS specificity issues
+        5. Check browser console for errors
+    -->
+
+    <h3>Real-World Example 2: Responsive Variant Not Working</h3>
+    <!-- Responsive classes that might not be generating -->
+    <div class="flex flex-col md:flex-row lg:flex-row items-center justify-between p-4 bg-gray-50">
+        <div class="text-sm md:text-base lg:text-lg text-gray-700">
+            Responsive text
+        </div>
+        <button class="mt-2 md:mt-0 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded">
+            Action
+        </button>
+    </div>
+    <!-- 
+        If responsive variants don't work:
+        1. Ensure viewport is wide enough to trigger breakpoint
+        2. Verify theme config has the breakpoints defined
+        3. Check if CDN version is being used (limited features)
+        4. Ensure proper build process is configured
+    -->
+
+    <h2>Output Statement</h2>
+    <p>
+        Most JIT debugging issues can be resolved by: 1) Verifying JIT is enabled, 2) Checking content configuration includes all relevant files, 3) Using browser DevTools to inspect applied styles, and 4) Reviewing build output for errors or warnings.
+    </p>
+
+    <h2>ASCII Diagram: Debugging Process</h2>
+    <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                   JIT DEBUGGING FLOW                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐  │
+│   │           CLASS NOT GENERATED?                      │  │
+│   └──────────────────────┬──────────────────────────────┘  │
+│                          │                                   │
+│                          ▼                                   │
+│   ┌─────────────────────────────────────────────────────┐  │
+│   │  1. Check JIT enabled in tailwind.config.js        │  │
+│   │     mode: 'jit'  (or default in v3.0+)              │  │
+│   └──────────────────────┬──────────────────────────────┘  │
+│                          │                                   │
+│                          ▼                                   │
+│   ┌─────────────────────────────────────────────────────┐  │
+│   │  2. Verify content config includes your file        │  │
+│   │     content: ['./src/**/*.{html,js,vue}']           │  │
+│   └──────────────────────┬──────────────────────────────┘  │
+│                          │                                   │
+│                          ▼                                   │
+│   ┌─────────────────────────────────────────────────────┐  │
+│   │  3. Check DevTools - Inspect element                │  │
+│   │     - Is class in Styles panel?                     │  │
+│   │     - Any errors in Console?                       │  │
+│   └──────────────────────┬──────────────────────────────┘  │
+│                          │                                   │
+│                          ▼                                   │
+│   ┌─────────────────────────────────────────────────────┐  │
+│   │  4. Check build output for warnings                 │  │
+│   │     - Rebuild project                               │  │
+│   │     - Look for purge/content warnings               │  │
+│   └─────────────────────────────────────────────────────┘  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Common Issues and Solutions</h2>
+    <pre>
+┌────────────────────────────────────────────────────────────┐
+│ ISSUE                      │ SOLUTION                      │
+├────────────────────────────┼───────────────────────────────┤
+│ Class not generating       │ Check content config          │
+│ Hover not working          │ Enable hover variant in config│
+│ Responsive not working     │ Verify breakpoints in config  │
+│ Dynamic class not found    │ Add to safelist               │
+│ Wrong theme values         │ Check theme.extend config     │
+│ Build too slow             │ Optimize content globs        │
+└────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Using the JIT Debug Flag</h2>
+    <pre>
+module.exports = {
+  // Add debug flag for verbose output
+  JIT_DEBUG: true,
+  // Or use the CLI
+  // npx tailwindcss -o --verbose
+}
+    </pre>
+
+    <h2>Edge Cases and Considerations</h2>
+    <ul>
+        <li>Dynamic class names from template literals may not be detected</li>
+        <li>Ensure content files use proper file extensions</li>
+        <li>Check for conflicting CSS from other sources</li>
+        <li>Verify no duplicate Tailwind configurations</li>
+    </ul>
+
+    <h2>Performance Considerations</h2>
+    <ul>
+        <li>Verbose JIT output can slow down builds significantly</li>
+        <li>Use debug mode only when actively debugging</li>
+        <li>Keep content patterns specific to avoid scanning unnecessary files</li>
+    </ul>
+
+    <h2>Accessibility Notes</h2>
+    <p>
+        JIT debugging does not directly affect accessibility, but if you're debugging focus states, hover states, or other interactive styles, ensure the final implementation maintains proper accessibility (focus indicators, color contrast, etc.).
+    </p>
+
+    <h2>Cross-Browser Notes</h2>
+    <p>
+        JIT-generated CSS is consistent across browsers. If a style works in one browser but not another, the issue is likely CSS compatibility, not JIT. Check caniuse.com for specific CSS property browser support.
+    </p>
+</body>
+</html>

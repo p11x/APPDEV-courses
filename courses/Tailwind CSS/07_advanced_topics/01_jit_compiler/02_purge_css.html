@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purge CSS - Tailwind CSS JIT</title>
+</head>
+<body>
+    <h1>Purge CSS and JIT Compiler</h1>
+
+    <h2>Understanding Purge CSS</h2>
+    <p>
+        Purge CSS is a tool that removes unused CSS from your project. In the context of Tailwind CSS, purge CSS was essential in older versions (pre-JIT) to remove all the unused utility classes from the generated CSS file, dramatically reducing file size. With JIT, purge happens automatically during compilation.
+    </p>
+
+    <h2>How Purge Works with JIT</h2>
+    <p>
+        The JIT compiler inherently performs purge functionality. It scans your content files (HTML, templates, JavaScript, etc.) and only generates CSS for classes that are actually found in your content. This automatic purge is more efficient than traditional post-processing purge because it happens at generation time rather than as a separate processing step.
+    </p>
+
+    <h3>Standard Example: Content Configuration</h3>
+    <!-- Content patterns tell JIT what files to scan -->
+    <div class="p-4 m-2 bg-gray-100 rounded">
+        Example content to be scanned
+    </div>
+    <!-- 
+        tailwind.config.js content configuration:
+        content: [
+            "./src/**/*.{html,js,jsx,ts,tsx,vue}",
+        ],
+        This scans all matching files for used classes
+    -->
+
+    <h3>Real-World Example 1: Vue Component</h3>
+    <!-- JIT scans Vue templates for class usage -->
+    <div class="flex items-center justify-between p-4 bg-white border rounded-lg shadow-sm">
+        <span class="text-gray-700 font-medium">Task Item</span>
+        <button class="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 bg-blue-50 rounded">
+            Edit
+        </button>
+    </div>
+    <!-- JIT finds: flex, items-center, justify-between, p-4, bg-white, 
+         border, rounded-lg, shadow-sm, text-gray-700, font-medium,
+         px-3, py-1, text-sm, text-blue-600, hover:text-blue-800, bg-blue-50, rounded -->
+
+    <h3>Real-World Example 2: React Component with Dynamic Classes</h3>
+    <!-- Use template literals for dynamic classes that JIT can detect -->
+    <button class={`px-4 py-2 ${isActive ? 'bg-blue-600' : 'bg-gray-200'} text-white rounded`}>
+        Dynamic Button
+    </button>
+    <!-- For dynamic classes, use the safelist option in config -->
+
+    <h2>Output Statement</h2>
+    <p>
+        Proper purge configuration ensures that your production CSS contains only the utilities actually used in your application, resulting in file sizes typically 80-95% smaller than the unpurged version.
+    </p>
+
+    <h2>ASCII Diagram: Purge Process</h2>
+    <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                   PURGE CSS PROCESS                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────────────┐      ┌─────────────────────────┐    │
+│   │  All Generated  │      │    Content Files        │    │
+│   │  CSS (~3MB)     │      │    (HTML, JS, Vue,      │    │
+│   │                 │      │     React, etc.)        │    │
+│   └────────┬────────┘      └───────────┬─────────────┘    │
+│            │                           │                   │
+│            ▼                           ▼                   │
+│   ┌─────────────────────────────────────────────┐         │
+│   │           Purge Scanner                    │         │
+│   │  - Reads all content files                  │         │
+│   │  - Extracts all class names                 │         │
+│   │  - Builds set of used classes               │         │
+│   └────────────────────┬────────────────────────┘         │
+│                        │                                    │
+│                        ▼                                    │
+│   ┌─────────────────────────────────────────────┐         │
+│   │         CSS Filter                           │         │
+│   │  - Removes unused CSS rules                  │         │
+│   │  - Keeps only used classes                   │         │
+│   └────────────────────┬────────────────────────┘         │
+│                        │                                    │
+│                        ▼                                    │
+│   ┌─────────────────┐                                      │
+│   │  Final CSS     │                                      │
+│   │  (~10-50KB)    │                                      │
+│   └─────────────────┘                                      │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Content Configuration Options</h2>
+    <pre>
+module.exports = {
+  content: [
+    // Specific files
+    "./src/index.html",
+    
+    // All files with specific extensions
+    "./src/**/*.{html,js,jsx,ts,tsx,vue,svelte}",
+    
+    // Using globs
+    "./src/components/**/*",
+    
+    // Safelist for dynamic classes
+  ],
+  safelist: [
+    'bg-red-500',
+    'px-4', 
+  ],
+}
+    </pre>
+
+    <h2>Edge Cases and Considerations</h2>
+    <ul>
+        <li>Dynamic class names from template literals may not be detected</li>
+        <li>Classes used conditionally via JavaScript need safelist</li>
+        <li>Content must include all file types that contain classes</li>
+        <li>Third-party libraries may need custom content paths</li>
+    </ul>
+
+    <h2>Performance Considerations</h2>
+    <ul>
+        <li>Content scanning adds some build time but is worthwhile for output size</li>
+        <li>Use specific content patterns rather than scanning entire node_modules</li>
+        <li>Proper content configuration is critical for correct purge results</li>
+    </ul>
+
+    <h2>Accessibility Notes</h2>
+    <p>
+        Proper purge doesn't affect accessibility - it only removes unused CSS rules. All classes found in your HTML and JavaScript files are preserved. Ensure your content files include all templates that render in the browser.
+    </p>
+
+    <h2>Cross-Browser Notes</h2>
+    <p>
+        Purge CSS works identically across all platforms and browsers. The output is standard CSS that works in all modern browsers.
+    </p>
+</body>
+</html>

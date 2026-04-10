@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observer Patterns</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .demo { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 8px 16px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Observer Patterns in DOM</h1>
+
+    <div id="demo1" class="demo">
+        <h3>Custom Event Observer</h3>
+        <button onclick="emitEvent()">Emit Custom Event</button>
+    </div>
+
+    <div id="demo2" class="demo">
+        <h3>Mutation Observer</h3>
+        <div id="mutationTarget" style="padding:10px;background:lightblue;">Watch for changes</div>
+        <button onclick="modifyTarget()">Modify Target</button>
+    </div>
+
+    <div class="demo">
+        <h3>Output:</h3>
+        <pre id="output">Click buttons to see output...</pre>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        document.addEventListener('myCustomEvent', (e) => {
+            output.textContent = 'Custom event received!\n' +
+                'detail: ' + e.detail.message + '\n' +
+                'timestamp: ' + e.detail.time;
+        });
+        
+        function emitEvent() {
+            const event = new CustomEvent('myCustomEvent', {
+                detail: { 
+                    message: 'Hello from custom event!',
+                    time: new Date().toLocaleTimeString()
+                }
+            });
+            document.dispatchEvent(event);
+        }
+        
+        const target = document.getElementById('mutationTarget');
+        const mutationObserver = new MutationObserver((mutations) => {
+            for (let mutation of mutations) {
+                output.textContent = 'Mutation detected!\n' +
+                    'type: ' + mutation.type + '\n' +
+                    'target: ' + mutation.target.tagName + '\n' +
+                    'newValue: ' + (mutation.target.textContent.substring(0, 30));
+            }
+        });
+        
+        mutationObserver.observe(target, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+        
+        function modifyTarget() {
+            target.textContent = 'Content changed at ' + new Date().toLocaleTimeString();
+        }
+    </script>
+</body>
+</html>

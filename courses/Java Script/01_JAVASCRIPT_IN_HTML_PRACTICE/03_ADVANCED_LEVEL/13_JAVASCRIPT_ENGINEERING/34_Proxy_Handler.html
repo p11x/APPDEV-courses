@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy Handler</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d5f4e6; border-left: 4px solid #27ae60; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>34. Proxy Handler</h1>
+    
+    <div class="section">
+        <h2>Handler API</h2>
+        <p>The handler object defines custom behavior for proxy operations.</p>
+        <pre>
+const handler = {
+    get(target, property) { },
+    set(target, property, value) { },
+    has(target, property) { },
+    deleteProperty(target, property) { },
+    apply(target, thisArg, args) { },
+    construct(target, args) { }
+};
+
+const proxy = new Proxy(target, handler);
+        </pre>
+    </div>
+    
+    <div class="section">
+        <h2>Example: Validation Handler</h2>
+        <button onclick="runValidation()">Run Validation</button>
+        <div id="validation-output" class="output"></div>
+    </script>
+    
+    <script>
+        function runValidation() {
+            const output = document.getElementById('validation-output');
+            const logs = [];
+            
+            const validationHandler = {
+                set(target, prop, value) {
+                    if (prop === 'age' && (value < 0 || value > 150)) {
+                        logs.push('Invalid age: ' + value);
+                        return false;
+                    }
+                    target[prop] = value;
+                    logs.push('Set ' + prop + ' = ' + value);
+                    return true;
+                },
+                get(target, prop) {
+                    logs.push('Get ' + prop);
+                    return target[prop];
+                }
+            };
+            
+            const person = { name: 'John', age: 30 };
+            const proxy = new Proxy(person, validationHandler);
+            
+            logs.push('Setting age to 25');
+            proxy.age = 25;
+            logs.push('Setting age to 200');
+            proxy.age = 200;
+            logs.push('Getting name: ' + proxy.name);
+            
+            output.innerHTML = logs.join('<br>');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IndexedDB Transactions</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .output { background: #f4f4f4; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; }
+        pre { background: #2d2d2d; color: #0f0; padding: 10px; border-radius: 3px; }
+        .info { background: #e7f3fe; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1>IndexedDB Transactions</h1>
+    
+    <div class="info">
+        <strong>Note:</strong> Transactions in IndexedDB ensure data integrity. 
+        They can be read-only or read-write, and support multiple operations that either all succeed or all fail together.
+    </div>
+
+    <h3>Initialize</h3>
+    <button onclick="initDatabase()">Initialize Database</button>
+
+    <h3>Add Multiple Records (Transaction)</h3>
+    <button onclick="addMultipleRecords()">Add Multiple Records</button>
+
+    <h3>Update Records (Transaction)</h3>
+    <button onclick="updateRecords()">Update All Ages</button>
+
+    <h3>Delete Records (Transaction)</h3>
+    <button onclick="deleteRecords()">Delete by Age Condition</button>
+
+    <h3>Read Operations</h3>
+    <button onclick="getAllRecords()">Get All Records</button>
+    <button onclick="getUsingIndex()">Get Using Index</button>
+
+    <h3>Transaction Modes</h3>
+    <button onclick="showTransactionModes()">Show Transaction Info</button>
+
+    <div class="output">
+        <h3>Output:</h3>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        let db = null;
+        const DB_NAME = 'TransactionDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'employees';
+
+        // Initialize database
+        function initDatabase() {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                displayOutput(`Database "${DB_NAME}" opened successfully!`);
+            };
+
+            request.onerror = function(event) {
+                displayOutput(`Error: ${event.target.error}`);
+            };
+
+            request.onupgradeneeded = function(event) {
+                const database = event.target.result;
+                
+                if (!database.objectStoreNames.contains(STORE_NAME)) {
+                    // Create object store with keyPath
+                    const objectStore = database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    
+                    // Create indexes for querying
+                    objectStore.createIndex('name', 'name', { unique: false });
+                    objectStore.createIndex('department', 'department', { unique: false });
+                    
+                    displayOutput('Database and indexes created!');
+                }
+            };
+        }
+
+        // Add multiple records in a single transaction
+        function addMultipleRecords() {
+            if (!db) {
+                displayOutput('Initialize database first!');
+                return;
+            }
+
+            // Create read-write transaction
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(STORE_NAME);
+
+            const employees = [
+                { name: 'John Doe', department: 'Engineering', salary: 50000 },
+                { name: 'Jane Smith', department: 'Marketing', salary: 45000 },
+                { name: 'Bob Johnson', department: 'Engineering', salary: 55000 },
+                { name: 'Alice Brown', department: 'HR', salary: 40000 }
+            ];
+
+            let addedCount = 0;
+
+            employees.forEach(function(employee) {
+                const request = objectStore.add(employee);
+                
+                request.onsuccess = function() {
+                    addedCount++;
+                    if (addedCount === employees.length) {
+                        displayOutput(`Added ${addedCount} records in single transaction!`);
+                    }
+                };
+            });
+
+            // Transaction completion event
+            transaction.oncomplete = function() {
+                console.log('Transaction completed');
+            };
+
+            transaction.onerror = function() {
+                displayOutput('Transaction failed: ' + transaction.error);
+            };
+        }
+
+        // Update multiple records in a transaction
+        function updateRecords() {
+            if (!db) {
+                displayOutput('Initialize database first!');
+                return;
+            }
+
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(STORE_NAME);
+
+            // First get all records, then update them
+            const getRequest = objectStore.openCursor();
+            let updatedCount = 0;
+
+            getRequest.onsuccess = function(event) {
+                const cursor = event.target.result;
+                
+                if (cursor) {
+                    // Update: increase salary by 10%
+                    const updatedRecord = cursor.value;
+                    updatedRecord.salary = updatedRecord.salary * 1.1;
+                    
+                    // Put updates the record with same key
+                    const updateRequest = cursor.update(updatedRecord);
+                    updateRequest.onsuccess = function() {
+                        updatedCount++;
+                    };
+                    
+                    cursor.continue();
+                } else {
+                    displayOutput(`Updated ${updatedCount} records! (10% salary increase)`);
+                }
+            };
+        }
+
+        // Delete records based on condition
+        function deleteRecords() {
+            if (!db) {
+                displayOutput('Initialize database first!');
+                return;
+            }
+
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(STORE_NAME);
+
+            // Delete all employees with salary < 45000
+            const index = objectStore.index('department');  // Use existing index
+            const request = objectStore.openCursor();
+
+            let deletedCount = 0;
+
+            request.onsuccess = function(event) {
+                const cursor = event.target.result;
+                
+                if (cursor) {
+                    if (cursor.value.salary < 45000) {
+                        cursor.delete().onsuccess = function() {
+                            deletedCount++;
+                        };
+                    }
+                    cursor.continue();
+                } else {
+                    displayOutput(`Deleted ${deletedCount} records with salary < 45000`);
+                }
+            };
+        }
+
+        // Get all records
+        function getAllRecords() {
+            if (!db) {
+                displayOutput('Initialize database first!');
+                return;
+            }
+
+            const transaction = db.transaction([STORE_NAME], 'readonly');  // Read-only transaction
+            const objectStore = transaction.objectStore(STORE_NAME);
+
+            const request = objectStore.openCursor();
+            let output = 'All Records:\n';
+
+            request.onsuccess = function(event) {
+                const cursor = event.target.result;
+                
+                if (cursor) {
+                    output += `ID: ${cursor.key}, ${cursor.value.name}, ${cursor.value.department}, $${cursor.value.salary.toFixed(2)}\n`;
+                    cursor.continue();
+                } else {
+                    displayOutput(output);
+                }
+            };
+        }
+
+        // Get records using index
+        function getUsingIndex() {
+            if (!db) {
+                displayOutput('Initialize database first!');
+                return;
+            }
+
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(STORE_NAME);
+
+            // Use the department index
+            const index = objectStore.index('department');
+            const request = index.getAll('Engineering');  // Get all engineering employees
+
+            request.onsuccess = function(event) {
+                const results = event.target.result;
+                let output = 'Engineering Department:\n';
+                
+                results.forEach(function(record) {
+                    output += `${record.name}: $${record.salary.toFixed(2)}\n`;
+                });
+                
+                displayOutput(output);
+            };
+        }
+
+        // Show transaction mode information
+        function showTransactionModes() {
+            const info = `
+IndexedDB Transaction Modes:
+----------------------------
+1. readonly (default):
+   - Used for reading data
+   - Multiple concurrent read-only transactions allowed
+   
+2. readwrite:
+   - Used for reading and writing data
+   - Only one readwrite transaction at a time per object store
+   
+3. versionchange:
+   - Used during database upgrades (onupgradeneeded)
+   - Allows creating/deleting object stores and indexes
+
+Transaction Properties:
+- duration: Transactions auto-commit when all requests complete
+- scope: Array of object stores the transaction can access
+- error: Error that caused transaction to abort
+`;
+            displayOutput(info);
+        }
+
+        // Helper function to display output
+        function displayOutput(message) {
+            document.getElementById('output').textContent = message;
+        }
+    </script>
+</body>
+</html>

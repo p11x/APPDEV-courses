@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Optimization - Tailwind CSS Responsive Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Performance Optimization</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Understanding Responsive Performance</h2>
+            <p class="text-gray-600 mb-4">
+                Performance is critical for responsive web design, especially for mobile users on potentially 
+                slow networks. Optimizing your Tailwind CSS implementation ensures fast load times, smooth 
+                interactions, and excellent user experience across all devices.
+            </p>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                <h3 class="font-semibold text-blue-800">Key Performance Metrics</h3>
+                <ul class="list-disc ml-6 mt-2 text-blue-700 text-sm">
+                    <li><strong>FCP (First Contentful Paint):</strong> Time to first visual content</li>
+                    <li><strong>LCP (Largest Contentful Paint):</strong> Time to largest content</li>
+                    <li><strong>FID (First Input Delay):</strong> Time until interactive</li>
+                    <li><strong>CLS (Cumulative Layout Shift):</strong> Visual stability</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Standard Example: Optimized Image Loading</h2>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm mb-4">
+&lt;!-- RESPONSIVE IMAGES FOR PERFORMANCE --&gt;
+
+&lt;!-- 
+    1. Use srcset for resolution switching
+    - Browser chooses best image for device
+    - Saves bandwidth on mobile
+--&gt;
+&lt;img src="hero-800.jpg"
+     srcset="hero-400.jpg 400w,
+             hero-800.jpg 800w,
+             hero-1200.jpg 1200w,
+             hero-1600.jpg 1600w"
+     sizes="(max-width: 640px) 100vw,
+            (max-width: 1024px) 80vw,
+            1200px"
+     alt="Hero image"
+     loading="eager"&gt;
+
+&lt;!-- 
+    2. Lazy loading for below-fold images
+    - defers loading until near viewport
+    - improves initial page load
+--&gt;
+&lt;img src="below-fold.jpg"
+     alt="Lazy loaded image"
+     loading="lazy"
+     decoding="async"&gt;
+
+&lt;!-- 
+    3. Art direction with picture element
+    - Different crops for different viewports
+    - Smaller images on mobile
+--&gt;
+&lt;picture&gt;
+    &lt;source media="(min-width: 1024px)" 
+            srcset="hero-desktop.webp" 
+            type="image/webp"&gt;
+    &lt;source media="(min-width: 768px)" 
+            srcset="hero-tablet.webp" 
+            type="image/webp"&gt;
+    &lt;img src="hero-mobile.jpg" 
+          alt="Responsive hero"
+          loading="eager"
+          class="w-full h-auto"&gt;
+&lt;/picture&gt;
+
+&lt;!-- 
+    4. Blur-up placeholder technique
+    - Shows tiny placeholder immediately
+    - Fades in full image when loaded
+--&gt;
+&lt;div class="relative bg-gray-200"&gt;
+    &lt;img src="placeholder-tiny.jpg" 
+          class="absolute inset-0 w-full h-full object-cover blur-lg scale-110"
+          alt="" 
+          aria-hidden="true"&gt;
+    &lt;img src="full-image.jpg" 
+          class="relative w-full h-auto"
+          loading="lazy"
+          onload="this.classList.add('loaded')"&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+img { opacity: 0; transition: opacity 0.3s; }
+img.loaded { opacity: 1; }
+&lt;/style&gt;</pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Real-World Example: Optimized Component Loading</h2>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm mb-4">
+&lt;!-- PAGE STRUCTURE FOR OPTIMAL PERFORMANCE --&gt;
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;!-- 1. Preconnect to external origins --&gt;
+    &lt;link rel="preconnect" href="https://cdn.tailwindcss.com"&gt;
+    &lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+    &lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+    
+    &lt;!-- 2. Preload critical assets --&gt;
+    &lt;link rel="preload" href="/fonts/critical-font.woff2" as="font" type="font/woff2" crossorigin&gt;
+    
+    &lt;!-- 3. Meta tags for performance --&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+    &lt;meta name="description" content="Performance optimized page description"&gt;
+    
+    &lt;!-- 4. Critical CSS inline (reduce render blocking) --&gt;
+    &lt;style&gt;
+        /* Only essential styles above the fold */
+        body { margin: 0; font-family: system-ui, sans-serif; }
+        .hero { min-height: 100vh; display: flex; align-items: center; }
+    &lt;/style&gt;
+    
+    &lt;!-- 5. Load Tailwind asynchronously --&gt;
+    &lt;script&gt;
+        // Prevent flash of unstyled content
+        document.documentElement.classList.add('tailwind');
+    &lt;/script&gt;
+    &lt;script src="https://cdn.tailwindcss.com" defer&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;!-- CRITICAL: Above-the-fold content (rendered immediately) --&gt;
+    &lt;header class="bg-white shadow-sm" style="contain: content"&gt;
+        &lt;nav class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"&gt;
+            &lt;span class="text-xl font-bold"&gt;Logo&lt;/span&gt;
+            &lt;div class="hidden md:flex gap-4"&gt;
+                &lt;a href="#" class="px-3 py-2"&gt;Products&lt;/a&gt;
+                &lt;a href="#" class="px-3 py-2"&gt;About&lt;/a&gt;
+            &lt;/div&gt;
+        &lt;/nav&gt;
+    &lt;/header&gt;
+    
+    &lt;main&gt;
+        &lt;!-- Hero section - above the fold --&gt;
+        &lt;section class="bg-gradient-to-br from-indigo-600 to-purple-700 text-white py-16 md:py-24" 
+                  style="contain: content"&gt;
+            &lt;div class="max-w-4xl mx-auto px-4 text-center"&gt;
+                &lt;h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-4"&gt;
+                    Build Faster
+                &lt;/h1&gt;
+                &lt;p class="text-lg md:text-xl opacity-90 mb-8"&gt;
+                    Performance optimized for all devices
+                &lt;/p&gt;
+                &lt;!-- Use CSS transform for animations (GPU accelerated) --&gt;
+                &lt;a href="#" class="inline-block bg-white text-indigo-600 px-8 py-3 rounded-lg 
+                                   font-semibold hover:scale-105 transition-transform 
+                                   duration-200"&gt;
+                    Get Started
+                &lt;/a&gt;
+            &lt;/div&gt;
+        &lt;/section&gt;
+        
+        &lt;!-- 
+            BELOW THE FOLD: Can be lazy loaded
+        --&gt;
+        
+        &lt;section class="py-16" id="features"&gt;
+            &lt;div class="max-w-6xl mx-auto px-4"&gt;
+                &lt;h2 class="text-3xl font-bold text-center mb-12"&gt;Features&lt;/h2&gt;
+                
+                &lt;!-- Grid with will-change for GPU acceleration --&gt;
+                &lt;div class="grid md:grid-cols-3 gap-8" style="will-change: transform"&gt;
+                    &lt;div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow"&gt;
+                        &lt;div class="w-12 h-12 bg-indigo-100 rounded-lg mb-4 flex items-center justify-center"&gt;
+                            &lt;span class="text-2xl"&gt;⚡&lt;/span&gt;
+                        &lt;/div&gt;
+                        &lt;h3 class="text-xl font-semibold mb-2"&gt;Fast Loading&lt;/h3&gt;
+                        &lt;p class="text-gray-600"&gt;Optimized for speed and performance.&lt;/p&gt;
+                    &lt;/div&gt;
+                    
+                    &lt;div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow"&gt;
+                        &lt;div class="w-12 h-12 bg-indigo-100 rounded-lg mb-4 flex items-center justify-center"&gt;
+                            &lt;span class="text-2xl"&gt;🔒&lt;/span&gt;
+                        &lt;/div&gt;
+                        &lt;h3 class="text-xl font-semibold mb-2"&gt;Secure&lt;/h3&gt;
+                        &lt;p class="text-gray-600"&gt;Enterprise-grade security built in.&lt;/p&gt;
+                    &lt;/div&gt;
+                    
+                    &lt;div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow"&gt;
+                        &lt;div class="w-12 h-12 bg-indigo-100 rounded-lg mb-4 flex items-center justify-center"&gt;
+                            &lt;span class="text-2xl"&gt;📱&lt;/span&gt;
+                        &lt;/div&gt;
+                        &lt;h3 class="text-xl font-semibold mb-2"&gt;Responsive&lt;/h3&gt;
+                        &lt;p class="text-gray-600"&gt;Looks great on any device.&lt;/p&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/section&gt;
+        
+        &lt;!-- 
+            HEAVY CONTENT: Intersection Observer lazy loading
+        --&gt;
+        &lt;section class="py-16 bg-gray-50" id="charts"&gt;
+            &lt;div class="max-w-4xl mx-auto px-4"&gt;
+                &lt;h2 class="text-3xl font-bold text-center mb-8"&gt;Analytics&lt;/h2&gt;
+                
+                &lt;div class="bg-white rounded-xl shadow-sm p-6 min-h-[300px] flex items-center justify-center"&gt;
+                    &lt;!-- Placeholder until visible --&gt;
+                    &lt;div class="text-center"&gt;
+                        &lt;p class="text-gray-400 mb-2"&gt;Loading charts...&lt;/p&gt;
+                        &lt;div class="animate-pulse"&gt;
+                            &lt;div class="w-32 h-32 bg-gray-200 rounded mx-auto"&gt;&lt;/div&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/section&gt;
+    &lt;/main&gt;
+    
+    &lt;!-- 
+        FOOTER: Less critical, loads normally
+    --&gt;
+    &lt;footer class="bg-gray-900 text-white py-8"&gt;
+        &lt;div class="max-w-6xl mx-auto px-4 text-center"&gt;
+            &lt;p class="text-gray-400"&gt;© 2024 Company. All rights reserved.&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/footer&gt;
+    
+    &lt;!-- 
+        NON-CRITICAL SCRIPTS: defer or async
+    --&gt;
+    &lt;script src="/js/analytics.js" defer&gt;&lt;/script&gt;
+    &lt;script src="/js/lazy-components.js" defer&gt;&lt;/script&gt;
+    
+    &lt;!-- 
+        LAZY LOAD SCRIPT: Intersection Observer for below-fold content
+    --&gt;
+    &lt;script&gt;
+        // Lazy load charts section
+        const chartsSection = document.getElementById('charts');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry =&gt; {
+                if (entry.isIntersecting) {
+                    // Load charts when visible
+                    loadCharts();
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '100px' });
+        
+        observer.observe(chartsSection);
+        
+        function loadCharts() {
+            // Dynamically load chart library and initialize
+            console.log('Charts loaded on demand');
+        }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Real-World Example: Responsive CSS Optimization</h2>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm mb-4">
+&lt;!-- TAILWIND PERFORMANCE OPTIMIZATIONS --&gt;
+
+&lt;!-- 
+    1. Use content-visibility for large pages
+    - Skips rendering off-screen content
+    - Huge performance boost for long pages
+--&gt;
+&lt;section class="space-y-8" style="content-visibility: auto; contain-intrinsic-size: 1000px"&gt;
+    &lt;article&gt;...&lt;/article&gt;
+    &lt;article&gt;...&lt;/article&gt;
+    &lt;article&gt;...&lt;/article&gt;
+&lt;/section&gt;
+
+&lt;!-- 
+    2. CSS containment for independent components
+    - Browser can optimize rendering
+--&gt;
+&lt;div class="bg-white rounded-lg shadow p-6" style="contain: content"&gt;
+    &lt;h3 class="font-semibold mb-2"&gt;Contained Component&lt;/h3&gt;
+    &lt;p class="text-gray-600"&gt;Changes here don't affect rest of page&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- 
+    3. GPU-accelerated animations
+    - Use transform and opacity for animations
+    - Avoid animating layout properties
+--&gt;
+
+&lt;!-- GOOD: GPU accelerated --&gt;
+&lt;button class="hover:scale-105 transition-transform duration-200"&gt;
+    Animated Button
+&lt;/button&gt;
+
+&lt;!-- BAD: Triggers layout recalculation --&gt;
+&lt;button class="hover:width transition-all duration-200"&gt;
+    Slow Animation
+&lt;/button&gt;
+
+&lt;!-- GOOD: Will-change hint for complex animations --&gt;
+&lt;div class="will-change-transform"&gt;
+    &lt;!-- Animating element --&gt;
+&lt;/div&gt;
+
+&lt;!-- 
+    4. Font loading optimization
+    - Use font-display: swap for faster text display
+--&gt;
+&lt;style&gt;
+@font-face {
+    font-family: 'CustomFont';
+    src: url('/fonts/custom.woff2') format('woff2');
+    font-display: swap;  /* Shows fallback until loaded */
+}
+&lt;/style&gt;
+
+&lt;!-- Or use Tailwind's font-sans utility with system fonts first --&gt;
+&lt;body class="font-sans"&gt;
+    &lt;!-- Uses system fonts immediately, swaps to custom font when loaded --&gt;
+&lt;/body&gt;
+
+&lt;!-- 
+    5. Tailwind CSS Purge (production)
+    Only keeps used classes
+--&gt;
+&lt;!-- tailwind.config.js --&gt;
+module.exports = {
+    content: [
+        './src/**/*.{html,js}',
+        './public/**/*.html',
+    ],
+    // Ensures all responsive variants are generated
+    variants: {
+        responsive: [],
+    },
+    // Minify in production
+    corePlugins: {
+        // Disable unused plugins
+    },
+    // ... rest of config
+}</pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Performance Checklist</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-green-700 mb-3">Images</h3>
+                    <ul class="list-disc ml-6 text-gray-600 text-sm space-y-2">
+                        <li>Use WebP/AVIF formats</li>
+                        <li>Implement responsive images with srcset</li>
+                        <li>Lazy load below-fold images</li>
+                        <li>Specify dimensions to prevent CLS</li>
+                        <li>Use image CDNs for optimization</li>
+                        <li>Implement blur-up placeholders</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-green-700 mb-3">CSS & JavaScript</h3>
+                    <ul class="list-disc ml-6 text-gray-600 text-sm space-y-2">
+                        <li>Purge unused Tailwind classes</li>
+                        <li>Minify CSS and JavaScript</li>
+                        <li>Defer non-critical scripts</li>
+                        <li>Inline critical CSS</li>
+                        <li>Use code splitting</li>
+                        <li>Enable gzip/brotli compression</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-green-700 mb-3">Fonts</h3>
+                    <ul class="list-disc ml-6 text-gray-600 text-sm space-y-2">
+                        <li>Preload critical fonts</li>
+                        <li>Use font-display: swap</li>
+                        <li>Subset fonts for needed characters</li>
+                        <li>Preconnect to font origins</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-green-700 mb-3">Caching & CDN</h3>
+                    <ul class="list-disc ml-6 text-gray-600 text-sm space-y-2">
+                        <li>Set long cache headers</li>
+                        <li>Use CDN for static assets</li>
+                        <li>Enable HTTP/2 or HTTP/3</li>
+                        <li>Implement service workers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Performance Testing Tools</h2>
+            
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-800 mb-2">Lighthouse</h3>
+                    <p class="text-blue-700 text-sm">
+                        Chrome DevTools audit for comprehensive performance analysis
+                    </p>
+                </div>
+                
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-green-800 mb-2">WebPageTest</h3>
+                    <p class="text-green-700 text-sm">
+                        Detailed real-device testing from multiple locations
+                    </p>
+                </div>
+                
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-purple-800 mb-2">Chrome DevTools</h3>
+                    <p class="text-purple-700 text-sm">
+                        Network, Performance, and Coverage panels for debugging
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-yellow-50 rounded-lg p-6">
+            <h3 class="font-semibold text-yellow-800 mb-2">Mobile-Specific Optimizations</h3>
+            <ul class="list-disc ml-6 text-yellow-700 text-sm space-y-2">
+                <li><strong>Touch targets:</strong> Minimum 44x44px for all interactive elements</li>
+                <li><strong>Viewport:</strong> Always include proper meta viewport tag</li>
+                <li><strong>Tap highlight:</strong> Remove tap-highlight-color on mobile for cleaner UI</li>
+                <li><strong>Text sizing:</strong> Don't prevent text scaling (no user-scalable=no)</li>
+                <li><strong>Connection:</strong> Use navigator.connection.saveData to detect data-saving mode</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

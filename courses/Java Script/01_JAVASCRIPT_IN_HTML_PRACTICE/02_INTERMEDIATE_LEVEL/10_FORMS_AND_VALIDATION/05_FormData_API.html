@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormData API</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 20px; margin: 15px 0; border-radius: 5px; }
+        .output { background: #1e1e1e; color: #0f0; padding: 15px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; max-height: 250px; overflow-y: auto; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; padding: 10px 20px; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        .form-data-display { background: #fff3cd; padding: 10px; margin: 10px 0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>FormData API Demo</h1>
+    <p>Demonstrates using the FormData interface to work with form data</p>
+
+    <!-- FormData Output Display -->
+    <div class="demo-section">
+        <h2>FormData Output</h2>
+        <div id="formDataOutput" class="output">Click a button to see FormData output...</div>
+    </div>
+
+    <!-- Sample Form for Demo -->
+    <div class="demo-section">
+        <h2>Sample Form</h2>
+        <form id="sampleForm">
+            <label for="fullName">Full Name:</label>
+            <input type="text" id="fullName" name="fullName" value="John Doe">
+
+            <label for="userEmail">Email:</label>
+            <input type="email" id="userEmail" name="userEmail" value="john@example.com">
+
+            <label for="userAge">Age:</label>
+            <input type="number" id="userAge" name="userAge" value="25">
+
+            <label for="country">Country:</label>
+            <select id="country" name="country">
+                <option value="us" selected>United States</option>
+                <option value="uk">United Kingdom</option>
+                <option value="ca">Canada</option>
+            </select>
+
+            <label>
+                <input type="checkbox" id="subscribe" name="subscribe" checked> Subscribe to newsletter
+            </label>
+
+            <label>Interests:</label>
+            <label><input type="checkbox" name="interests" value="coding"> Coding</label>
+            <label><input type="checkbox" name="interests" value="music" checked> Music</label>
+            <label><input type="checkbox" name="interests" value="sports"> Sports</label>
+        </form>
+    </div>
+
+    <!-- FormData Methods Demo -->
+    <div class="demo-section">
+        <h2>1. Basic FormData Creation</h2>
+        <button type="button" onclick="createFormDataFromForm()">Create FormData from Form</button>
+        <button type="button" onclick="createEmptyFormData()">Create Empty FormData</button>
+        <button type="button" onclick="appendDataToFormData()">Append Data to FormData</button>
+    </div>
+
+    <!-- FormData Methods -->
+    <div class="demo-section">
+        <h2>2. FormData Methods</h2>
+        <button type="button" onclick="demoGet()">get()</button>
+        <button type="button" onclick="demoGetAll()">getAll()</button>
+        <button type="button" onclick="demoHas()">has()</button>
+        <button type="button" onclick="demoSet()">set()</button>
+        <button type="button" onclick="demoDelete()">delete()</button>
+        <button type="button" onclick="demoEntries()">entries()</button>
+        <button type="button" onclick="demoKeys()">keys()</button>
+        <button type="button" onclick="demoValues()">values()</button>
+    </div>
+
+    <!-- File Upload Demo -->
+    <div class="demo-section">
+        <h2>3. File Upload with FormData</h2>
+        <form id="fileForm">
+            <label for="fileInput">Select File:</label>
+            <input type="file" id="fileInput" name="fileInput">
+            
+            <label for="fileDescription">Description:</label>
+            <input type="text" id="fileDescription" name="fileDescription" placeholder="File description">
+            
+            <button type="button" onclick="handleFileUpload()">Upload File</button>
+        </form>
+        <div id="fileInfo" class="form-data-display"></div>
+    </div>
+
+    <!-- Convert to Object -->
+    <div class="demo-section">
+        <h2>4. Convert FormData to Object/JSON</h2>
+        <button type="button" onclick="convertToObject()">Convert to Object</button>
+        <button type="button" onclick="convertToJSON()">Convert to JSON</button>
+    </div>
+
+    <!-- Submit Form with Fetch -->
+    <div class="demo-section">
+        <h2>5. Submit FormData via Fetch API</h2>
+        <button type="button" onclick="submitWithFetch()">Simulate Fetch Submission</button>
+    </div>
+
+    <script>
+        const output = document.getElementById('formDataOutput');
+
+        // Helper to display form data
+        function displayFormData(formData, title) {
+            let result = `=== ${title} ===\n`;
+            result += `Entries count: ${formData.size}\n\n`;
+            
+            for (const [key, value] of formData.entries()) {
+                result += `${key}: ${value}\n`;
+            }
+            
+            output.textContent = result;
+        }
+
+        // ===== 1. Basic FormData Creation =====
+        
+        function createFormDataFromForm() {
+            const form = document.getElementById('sampleForm');
+            const formData = new FormData(form);
+            
+            displayFormData(formData, 'FormData from Form');
+        }
+
+        function createEmptyFormData() {
+            const formData = new FormData();
+            formData.append('username', 'jane_doe');
+            formData.append('email', 'jane@example.com');
+            
+            displayFormData(formData, 'Empty FormData with append()');
+        }
+
+        function appendDataToFormData() {
+            const formData = new FormData();
+            formData.append('name', 'Alice');
+            formData.append('age', '30');
+            formData.append('skills', 'JavaScript');
+            formData.append('skills', 'HTML'); // Multiple values for same key
+            
+            let result = '=== Append Data ===\n';
+            result += `formData.get('name'): ${formData.get('name')}\n`;
+            result += `formData.get('age'): ${formData.get('age')}\n`;
+            result += `formData.getAll('skills'): ${formData.getAll('skills').join(', ')}`;
+            
+            output.textContent = result;
+        }
+
+        // ===== 2. FormData Methods =====
+        
+        function demoGet() {
+            const form = document.getElementById('sampleForm');
+            const formData = new FormData(form);
+            
+            const result = `METHOD: get(key)\n` +
+                `formData.get('fullName'): ${formData.get('fullName')}\n` +
+                `formData.get('userEmail'): ${formData.get('userEmail')}\n` +
+                `formData.get('nonexistent'): ${formData.get('nonexistent')}`;
+            
+            output.textContent = result;
+        }
+
+        function demoGetAll() {
+            const formData = new FormData();
+            formData.append('colors', 'red');
+            formData.append('colors', 'blue');
+            formData.append('colors', 'green');
+            formData.append('name', 'test');
+            
+            const result = `METHOD: getAll(key)\n` +
+                `formData.getAll('colors'): ${formData.getAll('colors').join(', ')}\n` +
+                `formData.getAll('name'): ${formData.getAll('name').join(', ')}\n` +
+                `formData.getAll('nonexistent'): ${formData.getAll('nonexistent')}`;
+            
+            output.textContent = result;
+        }
+
+        function demoHas() {
+            const formData = new FormData();
+            formData.append('name', 'John');
+            formData.append('email', 'john@example.com');
+            
+            const result = `METHOD: has(key)\n` +
+                `formData.has('name'): ${formData.has('name')}\n` +
+                `formData.has('email'): ${formData.has('email')}\n` +
+                `formData.has('phone'): ${formData.has('phone')}`;
+            
+            output.textContent = result;
+        }
+
+        function demoSet() {
+            const formData = new FormData();
+            formData.append('username', 'old_user');
+            formData.append('username', 'new_user'); // This replaces
+            
+            const result = `METHOD: set(key, value) - replaces existing\n` +
+                `After append 'old_user' then append 'new_user':\n` +
+                `formData.get('username'): ${formData.get('username')}`;
+            
+            // Now demonstrate set()
+            const formData2 = new FormData();
+            formData2.append('username', 'old_user');
+            formData2.set('username', 'new_user');
+            
+            result += `\n\nAfter set() to replace:\n` +
+                `formData2.get('username'): ${formData2.get('username')}`;
+            
+            output.textContent = result;
+        }
+
+        function demoDelete() {
+            const formData = new FormData();
+            formData.append('name', 'John');
+            formData.append('email', 'john@example.com');
+            formData.append('phone', '123-456-7890');
+            
+            formData.delete('phone');
+            
+            const result = `METHOD: delete(key)\n` +
+                `After deleting 'phone':\n` +
+                `formData.has('phone'): ${formData.has('phone')}\n` +
+                `formData.has('name'): ${formData.has('name')}\n` +
+                `formData.get('name'): ${formData.get('name')}`;
+            
+            output.textContent = result;
+        }
+
+        function demoEntries() {
+            const form = document.getElementById('sampleForm');
+            const formData = new FormData(form);
+            
+            let result = `METHOD: entries() - Iterator\n\n`;
+            
+            for (const [key, value] of formData.entries()) {
+                result += `[${key}]: ${value}\n`;
+            }
+            
+            output.textContent = result;
+        }
+
+        function demoKeys() {
+            const form = document.getElementById('sampleForm');
+            const formData = new FormData(form);
+            
+            let result = `METHOD: keys() - Iterator\n\n`;
+            
+            for (const key of formData.keys()) {
+                result += `Key: ${key}\n`;
+            }
+            
+            output.textContent = result;
+        }
+
+        function demoValues() {
+            const form = document.getElementById('sampleForm');
+            const formData = new FormData(form);
+            
+            let result = `METHOD: values() - Iterator\n\n`;
+            
+            for (const value of formData.values()) {
+                result += `Value: ${value}\n`;
+            }
+            
+            output.textContent = result;
+        }
+
+        // ===== 3. File Upload =====
+        
+        function handleFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('fileInfo').textContent = 'Please select a file first!';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('description', document.getElementById('fileDescription').value);
+            
+            const fileInfo = `File Details:\n` +
+                `Name: ${file.name}\n` +
+                `Size: ${file.size} bytes\n` +
+                `Type: ${file.type}\n` +
+                `Last Modified: ${new Date(file.lastModified).toLocaleString()}\n\n` +
+                `FormData contains file: ${formData.has('file')}\n` +
+                `File in FormData: ${formData.get('file').name}`;
+            
+            document.getElementById('fileInfo').textContent = fileInfo;
+            displayFormData(formData, 'FormData with File');
+        }
+
+        // ===== 4. Convert to Object/JSON =====
+        
+        function convertToObject() {
+            const form = document.getElementById('sampleForm');
+            const formData = new FormData(form);
+            
+            const obj = Object.fromEntries(formData.entries());
+            
+            // Handle multiple checkboxes with same name
+            const checkboxes = form.querySelectorAll('input[name="interests"]:checked');
+            obj.interests = Array.from(checkboxes).map(cb => cb.value);
+            
+            let result = '=== Object.fromEntries(formData) ===\n\n';
+            result += JSON.stringify(obj, null, 2);
+            
+            output.textContent = result;
+        }
+
+        function convertToJSON() {
+            const form = document.getElementById('sampleForm');
+            const formData = new FormData(form);
+            
+            const obj = Object.fromEntries(formData.entries());
+            
+            // Handle multiple checkboxes
+            const checkboxes = form.querySelectorAll('input[name="interests"]:checked');
+            obj.interests = Array.from(checkboxes).map(cb => cb.value);
+            
+            const result = '=== JSON.stringify(formData) ===\n\n' + 
+                JSON.stringify(obj, null, 2);
+            
+            output.textContent = result;
+        }
+
+        // ===== 5. Submit with Fetch =====
+        
+        async function submitWithFetch() {
+            const form = document.getElementById('sampleForm');
+            const formData = new FormData(form);
+            
+            // Handle multiple checkboxes
+            const checkboxes = form.querySelectorAll('input[name="interests"]:checked');
+            formData.delete('interests');
+            checkboxes.forEach(cb => formData.append('interests', cb.value));
+            
+            let result = '=== Simulated Fetch Request ===\n\n';
+            result += 'POST /api/submit\n';
+            result += 'Content-Type: multipart/form-data; boundary=----FormData\n\n';
+            result += 'FormData contents:\n';
+            
+            for (const [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    result += `  ${key}: [File] ${value.name} (${value.size} bytes)\n`;
+                } else {
+                    result += `  ${key}: ${value}\n`;
+                }
+            }
+            
+            result += '\n// In real application, you would do:\n';
+            result += '// fetch("/api/submit", {\n';
+            result += '//   method: "POST",\n';
+            result += '//   body: formData\n';
+            result += '// })';
+            
+            output.textContent = result;
+            
+            // Simulate network delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+            alert('FormData prepared for submission!\nCheck the output panel for details.');
+        }
+    </script>
+</body>
+</html>

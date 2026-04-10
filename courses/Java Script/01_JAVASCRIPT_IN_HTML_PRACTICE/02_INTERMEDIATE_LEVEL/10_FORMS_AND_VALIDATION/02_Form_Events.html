@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Events</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .output { background: #1e1e1e; color: #0f0; padding: 15px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+        input, select, textarea, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; padding: 10px 20px; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        .event-log { border-left: 3px solid #0f0; }
+    </style>
+</head>
+<body>
+    <h1>Form Events Demo</h1>
+    <p>Demonstrates submit, change, and input events in forms</p>
+
+    <!-- Event Log Display -->
+    <div class="demo-section">
+        <h2>Event Log</h2>
+        <div id="eventLog" class="output event-log">Events will be logged here...</div>
+        <button onclick="clearLog()" style="margin-top: 10px; background: #dc3545;">Clear Log</button>
+    </div>
+
+    <!-- Submit Event Demo -->
+    <div class="demo-section">
+        <h2>1. Submit Event</h2>
+        <form id="loginForm">
+            <label for="loginEmail">Email:</label>
+            <input type="email" id="loginEmail" name="email" placeholder="Enter email">
+            
+            <label for="loginPassword">Password:</label>
+            <input type="password" id="loginPassword" name="password" placeholder="Enter password">
+            
+            <button type="submit">Login</button>
+        </form>
+        <p><em>Prevents default submission and logs the event</em></p>
+    </div>
+
+    <!-- Input Event Demo -->
+    <div class="demo-section">
+        <h2>2. Input Event (fires on every change)</h2>
+        <form id="searchForm">
+            <label for="searchInput">Search:</label>
+            <input type="text" id="searchInput" name="search" placeholder="Type to search...">
+            <div id="charCount">Characters: 0</div>
+        </form>
+        <p><em>Shows real-time character count as you type</em></p>
+    </div>
+
+    <!-- Change Event Demo -->
+    <div class="demo-section">
+        <h2>3. Change Event (fires on blur/selection)</h2>
+        <form id="settingsForm">
+            <label for="countrySelect">Select Country:</label>
+            <select id="countrySelect" name="country">
+                <option value="">-- Select --</option>
+                <option value="us">United States</option>
+                <option value="uk">United Kingdom</option>
+                <option value="ca">Canada</option>
+                <option value="au">Australia</option>
+            </select>
+            <div id="countryDisplay">Selected: none</div>
+
+            <label>
+                <input type="checkbox" id="notificationsToggle" name="notifications">
+                Enable Notifications
+            </label>
+            <div id="notificationDisplay">Status: disabled</div>
+        </form>
+        <p><em>Updates display when selection changes or checkbox is toggled</em></p>
+    </div>
+
+    <!-- Blur/Focus Events -->
+    <div class="demo-section">
+        <h2>4. Focus & Blur Events</h2>
+        <form id="contactForm">
+            <label for="nameInput">Name (focus to highlight):</label>
+            <input type="text" id="nameInput" name="name" placeholder="Enter your name">
+            
+            <label for="messageInput">Message (blur to validate):</label>
+            <textarea id="messageInput" name="message" placeholder="Enter message" rows="3"></textarea>
+        </form>
+    </div>
+
+    <script>
+        const eventLog = document.getElementById('eventLog');
+        let logCount = 0;
+
+        // Helper function to log events
+        function logEvent(eventName, details) {
+            logCount++;
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${logCount}] ${timestamp} - ${eventName}: ${details}\n`;
+            eventLog.textContent += logEntry;
+            eventLog.scrollTop = eventLog.scrollHeight;
+        }
+
+        function clearLog() {
+            eventLog.textContent = 'Log cleared...\n';
+            logCount = 0;
+        }
+
+        // ===== SUBMIT EVENT =====
+        const loginForm = document.getElementById('loginForm');
+        
+        loginForm.addEventListener('submit', function(event) {
+            // Prevent actual form submission
+            event.preventDefault();
+            
+            // Get form data
+            const email = loginForm.email.value;
+            const password = loginForm.password.value;
+            
+            logEvent('SUBMIT', `Email: ${email}, Password: ${password.replace(/./g, '*')}`);
+            
+            // Show success feedback
+            alert(`Form submitted!\nEmail: ${email}\n(Check event log for details)`);
+        });
+
+        // ===== INPUT EVENT =====
+        const searchInput = document.getElementById('searchInput');
+        const charCount = document.getElementById('charCount');
+
+        searchInput.addEventListener('input', function(event) {
+            const value = event.target.value;
+            const length = value.length;
+            
+            charCount.textContent = `Characters: ${length}`;
+            logEvent('INPUT', `value="${value}", length=${length}`);
+        });
+
+        // ===== CHANGE EVENT - Select =====
+        const countrySelect = document.getElementById('countrySelect');
+        const countryDisplay = document.getElementById('countryDisplay');
+
+        countrySelect.addEventListener('change', function(event) {
+            const selectedValue = event.target.value;
+            const selectedText = event.target.options[event.target.selectedIndex].text;
+            
+            countryDisplay.textContent = `Selected: ${selectedText} (${selectedValue})`;
+            logEvent('CHANGE (select)', `value="${selectedValue}", text="${selectedText}"`);
+        });
+
+        // ===== CHANGE EVENT - Checkbox =====
+        const notificationsToggle = document.getElementById('notificationsToggle');
+        const notificationDisplay = document.getElementById('notificationDisplay');
+
+        notificationsToggle.addEventListener('change', function(event) {
+            const isChecked = event.target.checked;
+            
+            notificationDisplay.textContent = `Status: ${isChecked ? 'enabled' : 'disabled'}`;
+            logEvent('CHANGE (checkbox)', `checked=${isChecked}`);
+        });
+
+        // ===== FOCUS & BLUR EVENTS =====
+        const nameInput = document.getElementById('nameInput');
+        const messageInput = document.getElementById('messageInput');
+
+        nameInput.addEventListener('focus', function(event) {
+            event.target.style.backgroundColor = '#fffacd';
+            logEvent('FOCUS', `id="${event.target.id}"`);
+        });
+
+        nameInput.addEventListener('blur', function(event) {
+            event.target.style.backgroundColor = '';
+            logEvent('BLUR', `id="${event.target.id}"`);
+        });
+
+        messageInput.addEventListener('blur', function(event) {
+            const value = event.target.value;
+            if (value.length < 10) {
+                logEvent('BLUR + VALIDATION', `Message too short: ${value.length} chars`);
+                event.target.style.borderColor = 'red';
+            } else {
+                event.target.style.borderColor = 'green';
+                logEvent('BLUR + VALIDATION', `Message OK: ${value.length} chars`);
+            }
+        });
+
+        // ===== DEMONSTRATION: Event Properties =====
+        // Log different event properties to show what's available
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const demoDetails = 
+                `target: ${event.target.tagName}#${event.target.id}\n` +
+                `type: ${event.type}\n` +
+                `bubbles: ${event.bubbles}\n` +
+                `cancelable: ${event.cancelable}`;
+            
+            logEvent('EVENT PROPERTIES', demoDetails);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>27 - Routing Guard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #61dafb; background: #282c34; padding: 15px; border-radius: 5px; }
+        .concept { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .demo { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; font-family: 'Consolas', monospace; }
+        .output { background: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>27 - Routing Guard</h1>
+    
+    <div class="concept">
+        <h2>What are Route Guards?</h2>
+        <p>Route guards protect routes from unauthorized access. They check conditions (like authentication, roles) before allowing navigation to a route.</p>
+    </div>
+
+    <div class="concept">
+        <h2>Guard Implementation</h2>
+        <div class="demo">
+<pre><span class="comment">// Protected route wrapper</span>
+<span class="highlight">function</span> ProtectedRoute({ children }) {
+    <span class="highlight">const</span> { isAuthenticated } = useAuth();
+    
+    <span class="highlight">if</span> (!isAuthenticated) {
+        <span class="highlight">return</span> &lt;Navigate to="/login" /&gt;;
+    }
+    
+    <span class="highlight">return</span> children;
+}
+
+<span class="comment">// Usage</span>
+&lt;Route path="/admin" element={
+    &lt;ProtectedRoute&gt;&lt;AdminPanel /&gt;&lt;/ProtectedRoute&gt;
+} /&gt;</pre>
+        </div>
+    </div>
+
+    <div class="concept">
+        <h2>Live Demo: Route Protection</h2>
+        <button onclick="toggleAuth()">Toggle Auth</button>
+        <button onclick="navigate('/admin')">Go to Admin</button>
+        <div id="guard-demo"></div>
+    </div>
+
+    <div class="output">
+        <strong>Output:</strong>
+        <div id="output-container"></div>
+    </div>
+
+    <script>
+        let isAuthenticated = false;
+        let currentPath = '/';
+
+        function navigate(path) {
+            currentPath = path;
+            render();
+        }
+
+        function toggleAuth() {
+            isAuthenticated = !isAuthenticated;
+            render();
+        }
+
+        function ProtectedRoute({ children, condition }) {
+            return condition ? children : '<div style="color:red;">🔒 Access Denied - Please Login</div>';
+        }
+
+        function render() {
+            const isAdminRoute = currentPath === '/admin';
+            const accessGranted = isAuthenticated;
+            
+            let content = '';
+            if (isAdminRoute) {
+                content = ProtectedRoute({
+                    condition: accessGranted,
+                    children: '<div><h3>Admin Panel</h3><p>Welcome, Admin!</p></div>'
+                });
+            } else {
+                content = '<p>Public Page</p>';
+            }
+            
+            document.getElementById('guard-demo').innerHTML = `
+                <div style="padding:20px;background:#fff;border-radius:8px;">
+                    ${content}
+                    <p>Auth Status: <strong>${isAuthenticated ? 'Logged In' : 'Logged Out'}</strong></p>
+                </div>
+            `;
+            
+            document.getElementById('output-container').innerHTML = `
+                <p>Current path: <code>${currentPath}</code></p>
+                <p>Guard condition: <strong>${accessGranted ? 'PASSED' : 'BLOCKED'}</strong></p>
+            `;
+        }
+        
+        render();
+    </script>
+</body>
+</html>

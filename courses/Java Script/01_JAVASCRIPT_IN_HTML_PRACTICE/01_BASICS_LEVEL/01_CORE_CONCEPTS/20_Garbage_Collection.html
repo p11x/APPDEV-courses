@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+// HTML5 document type declaration
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20 - Garbage Collection</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #c8e6c9;
+        }
+        h1 {
+            color: #2e7d32;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .gc-method {
+            background: #a5d6a7;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #43a047;
+        }
+        button {
+            background: #388e3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Garbage Collection</h1>
+        <p>JavaScript uses automatic garbage collection to reclaim memory from objects that are no longer in use.</p>
+        
+        <h2>GC Algorithms:</h2>
+        
+        <div class="gc-method">
+            <strong>Mark and Sweep</strong> - Mark reachable objects, sweep unmarked
+        </div>
+        
+        <div class="gc-method">
+            <strong>Mark and Compact</strong> - Mark, sweep, and compact memory
+        </div>
+        
+        <div class="gc-method">
+            <strong>Generational GC</strong> - Different rules for new/old objects
+        </div>
+        
+        <div class="gc-method">
+            <strong>Incremental GC</strong> - Small steps to avoid pauses
+        </div>
+        
+        <h2>Try It:</h2>
+        <button onclick="demonstrateGC()">Garbage Collection Demo</button>
+        <button onclick="forceGC()">Request GC</button>
+        
+        <div id="output" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
+            // Click button to see demonstration
+        </div>
+    </div>
+
+    // Performance Tip: Help GC by clearing references
+    // Security Note: Don't keep unnecessary references
+    
+    <script>
+        function demonstrateGC() {
+            console.log("%c=== Garbage Collection Demo ===", "color: #388e3c; font-weight: bold; font-size: 16px;");
+            
+            // Create objects
+            var obj1 = { name: "Object 1", data: new Array(1000).fill("x") };
+            var obj2 = { name: "Object 2", data: new Array(1000).fill("y") };
+            var obj3 = { name: "Object 3", data: new Array(1000).fill("z") };
+            
+            console.log("Created 3 objects with data");
+            
+            // Reference relationships
+            obj1.next = obj2;
+            obj2.next = obj3;
+            
+            console.log("Created reference chain: obj1 → obj2 → obj3");
+            
+            // Now "lose" obj1 reference
+            obj1 = null;
+            console.log("Set obj1 to null - entire chain now eligible for GC");
+            
+            // Create more objects
+            var tempObjects = [];
+            for (var i = 0; i < 10; i++) {
+                tempObjects.push({ index: i, data: new Array(100).fill(i) });
+            }
+            
+            console.log("Created temporary objects:", tempObjects.length);
+            
+            // Clear temporary objects
+            tempObjects = null;
+            console.log("Cleared tempObjects reference - can now be garbage collected");
+            
+            // Check memory if available
+            if (window.performance && window.performance.memory) {
+                var mem = window.performance.memory;
+                console.log("");
+                console.log("Memory JS Heap:");
+                console.log("  Used:", Math.round(mem.usedJSHeapSize / 1048576), "MB");
+                console.log("  Limit:", Math.round(mem.jsHeapSizeLimit / 1048576), "MB");
+            }
+            
+            console.log("");
+            console.log("GC determines what's reachable from root");
+            console.log("Objects not reachable are garbage collected");
+            
+            document.getElementById("output").innerHTML = 
+                "<strong>GC Eligibility:</strong><br>" +
+                "- No references from root<br>" +
+                "- Not part of any chain<br>" +
+                "- Not in closure scope<br>" +
+                "- null/undefined references<br>" +
+                "- WeakMap/WeakSet allow GC";
+            
+            alert("Garbage collection demo! Objects with no references will be cleaned up.");
+        }
+        
+        function forceGC() {
+            console.log("Requesting garbage collection...");
+            if (window.gc) {
+                window.gc();
+                console.log("GC executed!");
+            } else {
+                console.log("GC not exposed - requires --expose-gc flag");
+                alert("GC only available with --expose-gc flag. Try: Free memory manually by refreshing.");
+            }
+        }
+        
+        console.log("Garbage Collection page loaded");
+        console.log("Objects without references are collected automatically");
+    </script>
+</body>
+</html>

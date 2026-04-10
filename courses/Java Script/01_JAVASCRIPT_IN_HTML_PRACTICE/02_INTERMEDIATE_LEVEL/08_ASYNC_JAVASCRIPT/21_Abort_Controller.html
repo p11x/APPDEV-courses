@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abort Controller</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Abort Controller</h1>
+    <p>AbortController allows you to abort a fetch or other async operation.</p>
+    
+    <h2>Example 1: Create AbortController</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Abort After Timeout</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Check Aborted Property</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        var controller = new AbortController();
+        
+        document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Controller created<br>Signal: " + typeof controller.signal + "<br>";
+
+        var aborted = false;
+        
+        function longRunningTask(signal) {
+            return new Promise(function(resolve, reject) {
+                var timeoutId = setTimeout(function() {
+                    resolve("Task completed");
+                }, 5000);
+                
+                if (signal) {
+                    signal.addEventListener("abort", function() {
+                        clearTimeout(timeoutId);
+                        aborted = true;
+                        reject(new Error("Aborted"));
+                    });
+                }
+            });
+        }
+        
+        var controller2 = new AbortController();
+        
+        setTimeout(function() {
+            controller2.abort();
+        }, 100);
+        
+        longRunningTask(controller2.signal)
+            .then(function(result) {
+                document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>" + result + "<br>";
+            })
+            ["catch"](function(err) {
+                document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>Aborted: " + aborted + "<br>Error: " + err.message + "<br>";
+            });
+
+        var controller3 = new AbortController();
+        
+        document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Before abort:<br>";
+        document.getElementById('output3').innerHTML += "aborted: " + controller3.signal.aborted + "<br>";
+        
+        controller3.abort();
+        
+        document.getElementById('output3').innerHTML += "After abort:<br>";
+        document.getElementById('output3').innerHTML += "aborted: " + controller3.signal.aborted + "<br>";
+    </script>
+</body>
+</html>

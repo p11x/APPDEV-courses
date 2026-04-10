@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Fields</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+        .dynamic-field { border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 3px; }
+        .remove-btn { background: #dc3545; margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Dynamic Fields</h1>
+    <p>Demonstrates adding/removing fields dynamically</p>
+
+    <div class="demo-section">
+        <h2>Dynamic Form</h2>
+        <form id="dynamicForm">
+            <div id="fieldsContainer">
+                <div class="dynamic-field" data-index="0">
+                    <label>Skill 1:</label>
+                    <input type="text" name="skill_0" placeholder="Enter skill">
+                </div>
+            </div>
+            
+            <button type="button" onclick="addField()">Add Skill</button>
+            <button type="button" onclick="getFieldsData()">Get Fields Data</button>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Dynamic Operations</h2>
+        <button type="button" onclick="addMultipleFields()">Add 3 Fields</button>
+        <button type="button" onclick="removeLastField()">Remove Last</button>
+        <button type="button" onclick="removeAllFields()">Remove All</button>
+        <div id="output" class="output">Click buttons to manage dynamic fields...</div>
+    </div>
+
+    <script>
+        let fieldCount = 1;
+        const container = document.getElementById('fieldsContainer');
+        
+        // Add a new field
+        function addField() {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'dynamic-field';
+            fieldDiv.dataset.index = fieldCount;
+            
+            const label = document.createElement('label');
+            label.textContent = `Skill ${fieldCount + 1}:`;
+            label.htmlFor = `skill_${fieldCount}`;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = `skill_${fieldCount}`;
+            input.placeholder = 'Enter skill';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-btn';
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = () => removeField(fieldDiv);
+            
+            fieldDiv.appendChild(label);
+            fieldDiv.appendChild(input);
+            fieldDiv.appendChild(removeBtn);
+            
+            container.appendChild(fieldDiv);
+            fieldCount++;
+        }
+        
+        // Remove a specific field
+        function removeField(fieldDiv) {
+            container.removeChild(fieldDiv);
+            reindexFields();
+        }
+        
+        // Reindex fields
+        function reindexFields() {
+            const fields = container.querySelectorAll('.dynamic-field');
+            fields.forEach((field, index) => {
+                field.dataset.index = index;
+                const input = field.querySelector('input');
+                input.name = `skill_${index}`;
+                
+                const label = field.querySelector('label');
+                label.htmlFor = `skill_${index}`;
+                label.textContent = `Skill ${index + 1}:`;
+            });
+            
+            fieldCount = fields.length;
+        }
+        
+        // Add multiple fields
+        function addMultipleFields() {
+            for (let i = 0; i < 3; i++) {
+                addField();
+            }
+            document.getElementById('output').textContent = 'Added 3 new fields.';
+        }
+        
+        // Remove last field
+        function removeLastField() {
+            const fields = container.querySelectorAll('.dynamic-field');
+            if (fields.length > 0) {
+                container.removeChild(fields[fields.length - 1]);
+                reindexFields();
+            }
+        }
+        
+        // Remove all fields
+        function removeAllFields() {
+            container.innerHTML = '';
+            fieldCount = 0;
+            document.getElementById('output').textContent = 'All fields removed.';
+        }
+        
+        // Get fields data
+        function getFieldsData() {
+            const fields = container.querySelectorAll('.dynamic-field');
+            let result = 'DYNAMIC FIELDS:\n============\n\n';
+            
+            fields.forEach((field, index) => {
+                const input = field.querySelector('input');
+                result += `Skill ${index + 1}: "${input.value}"\n`;
+            });
+            
+            result += `\nTotal fields: ${fields.length}`;
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Form submit
+        document.getElementById('dynamicForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            getFieldsData();
+        });
+    </script>
+</body>
+</html>

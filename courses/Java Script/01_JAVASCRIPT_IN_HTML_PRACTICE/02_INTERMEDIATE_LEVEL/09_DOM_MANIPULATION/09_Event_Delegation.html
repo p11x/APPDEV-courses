@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Delegation</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .demo { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        #list { list-style: none; padding: 0; }
+        #list li { padding: 10px; margin: 5px 0; background: lightblue; cursor: pointer; }
+        #list li:hover { background: lightgreen; }
+    </style>
+</head>
+<body>
+    <h1>Event Delegation - delegated events</h1>
+
+    <!-- Without Delegation -->
+    <div id="demo1" class="demo">
+        <h3>Without Delegation (inefficient)</h3>
+        <ul id="list1">
+            <li>Item 1</li>
+            <li>Item 2</li>
+            <li>Item 3</li>
+        </ul>
+    </div>
+
+    <!-- With Delegation -->
+    <div id="demo2" class="demo">
+        <h3>With Delegation (efficient)</h3>
+        <ul id="list2">
+            <li>Item 1</li>
+            <li>Item 2</li>
+            <li>Item 3</li>
+            <li>Item 4</li>
+            <li>Item 5</li>
+        </ul>
+    </div>
+
+    <!-- Dynamic Content -->
+    <div id="demo3" class="demo">
+        <h3>Dynamic Content with Delegation</h3>
+        <button onclick="addItem()">Add New Item</button>
+        <ul id="list3" style="list-style: none; padding: 0;"></ul>
+    </div>
+
+    <!-- Output -->
+    <div class="demo">
+        <h3>Output:</h3>
+        <pre id="output">Click any list item...</pre>
+    </div>
+
+    <script>
+        // Event Delegation - attach single listener to parent
+        // Child events bubble up to parent
+        
+        const output = document.getElementById('output');
+        
+        // Example 1: Without delegation - attach to each child
+        const list1Items = document.querySelectorAll('#list1 li');
+        list1Items.forEach(function(item) {
+            item.addEventListener('click', function() {
+                output.textContent = 'Clicked: ' + this.textContent + ' (individual handlers)';
+            });
+        });
+        
+        // Example 2: With delegation - single handler on parent
+        const list2 = document.getElementById('list2');
+        list2.addEventListener('click', function(event) {
+            // event.target - actual clicked element
+            // event.currentTarget - element with listener (list2)
+            if (event.target.tagName === 'LI') {
+                output.textContent = 'Clicked: ' + event.target.textContent + ' (delegated)';
+            }
+        });
+        
+        // Example 3: Dynamic content - delegation handles new items automatically
+        const list3 = document.getElementById('list3');
+        
+        // Add initial items
+        addItemToList3('Dynamic Item 1');
+        
+        // Delegate handler - works for all current and future items
+        list3.addEventListener('click', function(event) {
+            if (event.target.tagName === 'LI') {
+                event.target.style.background = 'lightcoral';
+                output.textContent = 'Clicked: ' + event.target.textContent;
+            }
+        });
+        
+        function addItem() {
+            const num = list3.children.length + 1;
+            addItemToList3('Dynamic Item ' + num);
+        }
+        
+        function addItemToList3(text) {
+            const li = document.createElement('li');
+            li.textContent = text;
+            li.style.padding = '10px';
+            li.style.margin = '5px 0';
+            li.style.background = 'lightyellow';
+            li.style.cursor = 'pointer';
+            list3.appendChild(li);
+        }
+    </script>
+</body>
+</html>

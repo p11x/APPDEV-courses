@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PurgeCSS Issues - Tailwind CSS Troubleshooting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-red-600">PurgeCSS Issues</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Understanding the Issue</h2>
+            <p class="mb-4">PurgeCSS is integrated into Tailwind to remove unused styles, but misconfiguration can cause it to remove styles that are actually needed. This results in broken styling in production.</p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                <p class="font-bold">Common Causes:</p>
+                <ul class="list-disc ml-6 mt-2">
+                    <li>Content patterns not matching source files</li>
+                    <li>Classes used in string concatenation</li>
+                    <li>Dynamic class names not safelisted</li>
+                    <li>Incorrect purge configuration</li>
+                    <li>JavaScript-generated content not scanned</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Standard Example: The Problem</h2>
+            
+            <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-4">
+                <h3 class="font-bold text-red-700 mb-2">Problem: Too Aggressive Purging</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// tailwind.config.js - Problematic config
+module.exports = {
+    content: ['./src/*.html'],  // Too narrow!
+    // Misses: ./src/components/*.html
+    // Misses: ./src/pages/*.html
+    
+    theme: {},
+    plugins: []
+}
+
+// Result: Only classes found in ./src/*.html are kept
+// All classes in components/pages are REMOVED!
+
+// In your component:
+&lt;div class="text-red-500 bg-blue-100 p-4"&gt;
+    Warning Message
+&lt;/div&gt;
+
+// If component is in ./src/components/header.html
+// Classes text-red-500, bg-blue-100, p-4 are PURGED!</code></pre>
+            </div>
+
+            <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                <h3 class="font-bold text-green-700 mb-2">Solution: Comprehensive Content Patterns</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// tailwind.config.js - Better config
+module.exports = {
+    content: [
+        './src/**/*.html',         // All HTML files
+        './src/**/*.{js,ts,jsx,tsx}',  // All JS/TS files
+        './components/**/*.{html,vue,svelte}',
+        './pages/**/*.html'
+    ],
+    safelist: [
+        // Always keep these classes
+        'bg-blue-500',
+        'text-red-500',
+        'p-4',
+        'flex',
+        // Dynamic classes used at runtime
+        /^bg-/,
+        /^text-/
+    ],
+    theme: {},
+    plugins: []
+}
+
+// safelist preserves classes even if not detected
+// Regex patterns: /^bg-/ keeps ALL bg-* classes</code></pre>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="Text-2xl font-semibold mb-4">Real-World Example 1: JavaScript Frameworks</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// React component - class generated dynamically
+function Alert({ type, children }) {
+    // PROBLEM: This class is not detected by PurgeCSS
+    const bgClass = `bg-${type}-100`;
+    const textClass = `text-${type}-800`;
+    
+    return (
+        &lt;div className={`p-4 rounded ${bgClass} ${textClass}`}&gt;
+            {children}
+        &lt;/div&gt;
+    );
+}
+
+// Usage: &lt;Alert type="red"&gt;Warning!&lt;/Alert&gt;
+// Generates: bg-red-100 text-red-800 p-4 rounded
+// But PurgeCSS sees only: ${bgClass} ${textClass}
+// These are not detected!
+
+// SOLUTION 1: Use explicit class with conditionals
+function Alert({ type, children }) {
+    const colors = {
+        red: 'bg-red-100 text-red-800',
+        green: 'bg-green-100 text-green-800',
+        blue: 'bg-blue-100 text-blue-800'
+    };
+    
+    return (
+        &lt;div className={`p-4 rounded ${colors[type]}`}&gt;
+            {children}
+        &lt;/div&gt;
+    );
+}
+
+// SOLUTION 2: Add to safelist in config
+module.exports = {
+    content: ['./src/**/*.{js,jsx,ts,tsx}'],
+    safelist: [
+        'bg-red-100', 'bg-red-200', 'bg-red-300',
+        'bg-green-100', 'bg-green-200', 'bg-green-300',
+        'text-red-800', 'text-red-700',
+        'text-green-800', 'text-green-700'
+    ]
+}</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Without safelist: Dynamic classes purged in production</p>
+                <p>With safelist: All required classes preserved</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 2: Content Detection Issues</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// Problem: Classes in comments or strings
+
+// This class is in a JavaScript comment - not detected
+// Available classes: bg-red-500, text-white
+
+// But used like this:
+const buttonClass = 'bg-red-500 text-white';
+// This string literal IS detected
+
+// Problem: Classes in external strings
+const styles = {
+    primary: 'bg-blue-500',
+    secondary: 'bg-gray-500'
+};
+
+// These are hard to detect!
+
+// SOLUTION: Use content option with extractors
+module.exports = {
+    content: {
+        files: [
+            './src/**/*.{html,js,jsx,ts,tsx}'
+        ],
+        extract: {
+            // Custom extractor for specific patterns
+            js: (content) => content.match(/[\w-/:]+(?<!:)/g) || []
+        }
+    }
+};
+
+// Alternative: Use more specific patterns
+module.exports = {
+    content: [
+        './src/**/*.html',
+        './src/**/*.jsx',
+        './src/**/*.tsx',
+        './public/**/*.html'  // Include generated HTML
+    ]
+};
+
+// Debug what PurgeCSS is seeing
+npm run build 2>&1 | grep -i "purging"
+npm run build 2>&1 | grep -i "removed"</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Classes in complex JS: May be missed by PurgeCSS</p>
+                <p>With proper config: All detected classes preserved</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Debugging Flow</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌─────────────────────────────────────────────────────────────────┐
+│                    PURGECSS DEBUGGING                               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  1. Verify content paths catch all files                         │
+│     ├── Check all HTML files included                            │
+│     ├── Check all JS/TS files included                           │
+│     └── Verify component files scanned                           │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. Test production build locally                                │
+│     npm run build                                                │
+│     npx serve dist  (serve built files)                          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  3. Identify missing classes                                     │
+│     ├── Open in browser                                          │
+│     ├── Find broken styles                                       │
+│     ├── Identify class names missing                             │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. Add to safelist                                              │
+│     safelist: [                                                  │
+│         'class-name-1',                                          │
+│         '/^regex-/'                                              │
+│     ]                                                            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  5. Rebuild and test                                             │
+│     npm run build                                                │
+│     npm run preview                                              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │  Issue Resolved! │
+                    └──────────────────┘</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Edge Cases & Considerations</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-yellow-50 p-4 rounded">
+                    <h3 class="font-bold text-yellow-800">Edge Cases</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• Classes in imported JSON data</li>
+                        <li>• Classes in i18n translation files</li>
+                        <li>• Dynamic components from npm packages</li>
+                        <li>• Classes in conditionally rendered blocks</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <h3 class="font-bold text-blue-800">Performance</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• Large safelist increases CSS size</li>
+                        <li>• Use regex patterns sparingly</li>
+                        <li>• Consider code splitting</li>
+                    </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                    <h3 class="font-bold text-green-800">Accessibility</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• Focus styles may get purged</li>
+                        <li>• Test keyboard navigation</li>
+                        <li>• Verify color contrast maintained</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50 p-4 rounded">
+                    <h3 class="font-bold text-purple-800">Cross-Browser</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• PurgeCSS works with all modern browsers</li>
+                        <li>• Test in target browser versions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Quick Fix Commands</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* View what PurgeCSS is detecting */
+npx tailwindcss -i input.css -o output.css --verbose 2>&1
+
+/* Compare dev vs prod CSS size */
+wc -c input.css  (before purge)
+wc -c output.css (after purge)
+
+/* Check for missing classes in output */
+grep -o "bg-red-500" output.css
+grep -o "text-blue-600" output.css
+
+/* Enable full purge for debugging */
+module.exports = {
+    mode: 'jit',  // Always use JIT
+    content: ['./src/**/*.{html,js,jsx,ts,tsx}'],
+    safelist: []  // Empty safelist for testing
+}
+
+/* Test with PurgeCSS disabled */
+module.exports = {
+    purge: false,  // Disable for debugging
+}</code></pre>
+        </div>
+    </div>
+</body>
+</html>

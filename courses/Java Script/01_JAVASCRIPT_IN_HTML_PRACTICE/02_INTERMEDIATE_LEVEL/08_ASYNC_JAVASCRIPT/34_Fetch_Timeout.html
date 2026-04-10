@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch with Timeout</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>34. Fetch with Timeout</h1>
+    <p>Implementing timeout for fetch requests.</p>
+    
+    <h2>Example 1: Promise Race Timeout</h2>
+    <button onclick="fetchWithTimeout1()">Fetch (3s timeout)</button>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Custom Timeout Function</h2>
+    <button onclick="fetchWithTimeout2()">Fetch (1s timeout)</button>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Different Timeouts</h2>
+    <button onclick="fetchDifferent()">Try Different</button>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        function fetchWithTimeout(url, timeout = 3000) {
+            return Promise.race([
+                fetch(url),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Request timeout')), timeout)
+                )
+            ]);
+        }
+        
+        function fetchWithTimeout1() {
+            document.getElementById('output1').innerHTML = 'Loading...';
+            fetchWithTimeout('https://jsonplaceholder.typicode.com/posts/1', 3000)
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('output1').innerHTML = 'Success: ' + d.title.substring(0, 40);
+                })
+                .catch(e => {
+                    document.getElementById('output1').innerHTML = 'Error: ' + e.message;
+                });
+        }
+        
+        function fetchWithTimeout2() {
+            document.getElementById('output2').innerHTML = 'Loading with 1s timeout...';
+            fetchWithTimeout('https://jsonplaceholder.typicode.com/posts/1', 1000)
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('output2').innerHTML = 'Success: ' + d.title;
+                })
+                .catch(e => {
+                    document.getElementById('output2').innerHTML = 'Error: ' + e.message;
+                });
+        }
+        
+        function fetchDifferent() {
+            document.getElementById('output3').innerHTML = 'Testing multiple timeouts...<br>';
+            
+            const timeouts = [5000, 2000, 1000];
+            const urls = [
+                'https://jsonplaceholder.typicode.com/posts/1',
+                'https://jsonplaceholder.typicode.com/posts/2',
+                'https://jsonplaceholder.typicode.com/posts/3'
+            ];
+            
+            Promise.all(urls.map((url, i) => 
+                fetchWithTimeout(url, timeouts[i])
+                    .then(r => r.json())
+                    .then(d => ({ success: true, data: d.title.substring(0, 20) }))
+                    .catch(e => ({ success: false, error: e.message }))
+            )).then(results => {
+                results.forEach((r, i) => {
+                    document.getElementById('output3').innerHTML += 
+                        `Request ${i+1} (${timeouts[i]}ms): ` + 
+                        (r.success ? r.data : r.error) + '<br>';
+                });
+            });
+        }
+    </script>
+</body>
+</html>

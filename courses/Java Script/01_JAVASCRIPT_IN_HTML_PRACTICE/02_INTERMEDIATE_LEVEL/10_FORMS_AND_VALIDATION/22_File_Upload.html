@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>File Upload Handling</h1>
+    <p>Demonstrates file input with metadata and content reading</p>
+
+    <div class="demo-section">
+        <h2>File Upload Form</h2>
+        <form id="fileForm">
+            <label for="singleFile">Single File:</label>
+            <input type="file" id="singleFile" name="singleFile">
+            
+            <label for="multipleFiles">Multiple Files:</label>
+            <input type="file" id="multipleFiles" name="multipleFiles" multiple>
+            
+            <label for="imageFile">Image Files Only:</label>
+            <input type="file" id="imageFile" name="imageFile" accept="image/*">
+            
+            <label for="pdfFile">PDF Files Only:</label>
+            <input type="file" id="pdfFile" name="pdfFile" accept=".pdf">
+            
+            <button type="button" onclick="getFileInfo()">Get File Info</button>
+            <button type="button" onclick="readFileContent()">Read File Content</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>File Operations</h2>
+        <button type="button" onclick="showFileProperties()">Show File Properties</button>
+        <div id="output" class="output">Select a file to see its metadata...</div>
+    </div>
+
+    <script>
+        const singleFileInput = document.getElementById('singleFile');
+        const multipleFilesInput = document.getElementById('multipleFiles');
+        const imageFileInput = document.getElementById('imageFile');
+        const pdfFileInput = document.getElementById('pdfFile');
+        
+        // Get file info
+        function getFileInfo() {
+            const file = singleFileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('output').textContent = 'No file selected.';
+                return;
+            }
+            
+            let result = 'FILE INFO:\n============\n\n';
+            result += `name: ${file.name}\n`;
+            result += `size: ${file.size} bytes\n`;
+            result += `type: ${file.type}\n`;
+            result += `lastModified: ${new Date(file.lastModified).toLocaleString()}`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Read file content
+        function readFileContent() {
+            const file = singleFileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('output').textContent = 'No file selected.';
+                return;
+            }
+            
+            if (file.type.startsWith('text/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('output').textContent = 
+                        'FILE CONTENT:\n============\n\n' + e.target.result.slice(0, 500) + 
+                        (e.target.result.length > 500 ? '\n...(truncated)' : '');
+                };
+                reader.onerror = function() {
+                    document.getElementById('output').textContent = 'Error reading file.';
+                };
+                reader.readAsText(file);
+            } else {
+                document.getElementById('output').textContent = 
+                    'File is not text. Use FileReader for different types.\n\n' +
+                    `File type: ${file.type}\n` +
+                    `File size: ${file.size} bytes`;
+            }
+        }
+        
+        // Show file properties
+        function showFileProperties() {
+            let result = 'FILE INPUT PROPERTIES:\n========================\n\n';
+            result += `singleFile accept: ${singleFileInput.getAttribute('accept') || '(none)'}\n`;
+            result += `singleFile multiple: ${singleFileInput.multiple}\n`;
+            result += `singleFile files.length: ${singleFileInput.files.length}\n\n`;
+            
+            result += `multipleFiles accept: ${multipleFilesInput.getAttribute('accept') || '(none)'}\n`;
+            result += `multipleFiles multiple: ${multipleFilesInput.multiple}\n`;
+            result += `multipleFiles files.length: ${multipleFilesInput.files.length}\n\n`;
+            
+            result += `imageFile accept: ${imageFileInput.getAttribute('accept')}\n`;
+            result += `imageFile files.length: ${imageFileInput.files.length}\n\n`;
+            
+            result += `FileList properties:\n`;
+            result += `  item(index): get file at index\n`;
+            result += `  length: number of files`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Listen for file selection
+        singleFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                console.log('Selected file:', file.name, file.size, file.type);
+            }
+        });
+        
+        // Multiple files selection
+        multipleFilesInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            console.log('Selected', files.length, 'files');
+            for (let i = 0; i < files.length; i++) {
+                console.log('File', i, ':', files[i].name);
+            }
+        });
+    </script>
+</body>
+</html>

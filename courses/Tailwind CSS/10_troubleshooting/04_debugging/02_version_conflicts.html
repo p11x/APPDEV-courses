@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Version Conflicts - Tailwind CSS Troubleshooting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-red-600">Version Conflicts</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Understanding the Issue</h2>
+            <p class="mb-4">Version conflicts occur when different versions of Tailwind CSS or its dependencies are installed, causing unexpected behavior. This is especially common in monorepos, when using multiple packages, or with outdated dependencies.</p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                <p class="font-bold">Common Causes:</p>
+                <ul class="list-disc ml-6 mt-2">
+                    <li>Multiple Tailwind versions in node_modules</li>
+                    <li>Plugin versions incompatible with Tailwind version</li>
+                    <li>Outdated PostCSS or Autoprefixer</li>
+                    <li>Package manager hoisting issues</li>
+                    <li>Transitive dependency conflicts</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Standard Example: The Problem</h2>
+            
+            <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-4">
+                <h3 class="font-bold text-red-700 mb-2">Problem: Multiple Versions</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>npm ls tailwindcss
+/*
+├── tailwindcss@3.4.0
+├── package-a@1.0.0
+│   └── tailwindcss@3.3.0  (nested)
+└── package-b@2.0.0
+    └── tailwindcss@3.2.0  (nested)
+*/
+
+/* Error: "Detected multiple instances of Tailwind CSS" */</code></pre>
+            </div>
+
+            <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                <h3 class="font-bold text-green-700 mb-2">Solution: Single Version</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Use single version everywhere */
+npm install tailwindcss@3.4.0 --save-exact
+
+/* Check for duplicates */
+npm ls tailwindcss
+
+/* Clear and reinstall */
+rm -rf node_modules package-lock.json
+npm install</code></pre>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 1: Plugin Compatibility</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Plugin not compatible with Tailwind version */
+npm info @tailwindcss/forms peerDependencies
+
+/* Requires: tailwindcss: ^3.0.0 || ^4.0.0 */
+
+/* SOLUTION: Use matching version */
+npm install -D tailwindcss@3.4.0
+npm install -D @tailwindcss/forms@latest</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Mismatched versions: Incompatibility error</p>
+                <p>Matching versions: Works correctly</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 2: PostCSS Version</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* PostCSS version conflict */
+npm install -D postcss@latest autoprefixer@latest
+
+/* Check installed versions */
+npm ls postcss autoprefixer
+
+/* Tailwind v3 requires PostCSS 8 */
+{
+    "devDependencies": {
+        "tailwindcss": "^3.4.0",
+        "postcss": "^8.4.35",
+        "autoprefixer": "^10.4.17"
+    }
+}</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Old PostCSS: Not compatible with Tailwind v3</p>
+                <p>Updated: Works with Tailwind v3</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Debugging Flow</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌─────────────────────────────────┐
+│   VERSION CONFLICT DEBUGGING    │
+└─────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────┐
+│ 1. npm ls tailwindcss          │
+└─────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────┐
+│ 2. npm ls postcss autoprefixer │
+└─────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────┐
+│ 3. Update to latest            │
+└─────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────┐
+│ 4. Clear and reinstall         │
+│    rm -rf node_modules         │
+│    npm install                 │
+└─────────────────────────────────┘
+              │
+              ▼
+        ┌─────────────┐
+        │ Resolved!   │
+        └─────────────┘</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Edge Cases & Considerations</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-yellow-50 p-4 rounded">
+                    <h3 class="font-bold text-yellow-800">Edge Cases</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>Monorepo with multiple packages</li>
+                        <li>Yarn/PNPM different hoisting</li>
+                        <li>Legacy packages with old deps</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <h3 class="font-bold text-blue-800">Performance</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>Single version = smaller node_modules</li>
+                        <li>Faster installs</li>
+                    </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                    <h3 class="font-bold text-green-800">Best Practices</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>Use exact versions</li>
+                        <li>Commit lock files</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50 p-4 rounded">
+                    <h3 class="font-bold text-purple-800">Tools</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>npm-check-updates</li>
+                        <li>Dependabot</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Quick Fix Commands</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Check all versions */
+npm ls tailwindcss
+npm ls postcss autoprefixer
+
+/* Update all dependencies */
+npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
+
+/* Force single version */
+npm install tailwindcss@3.4.0 --save-exact
+
+/* Clean reinstall */
+rm -rf node_modules package-lock.json
+npm install</code></pre>
+        </div>
+    </div>
+</body>
+</html>

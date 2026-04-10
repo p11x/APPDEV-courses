@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Mask</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>Input Masks</h1>
+    <p>Demonstrates input masking for formatted input (phone, date, credit card)</p>
+
+    <div class="demo-section">
+        <h2>Form with Input Masks</h2>
+        <form id="maskForm">
+            <label for="phone">Phone (XXX-XXX-XXXX):</label>
+            <input type="text" id="phone" name="phone" placeholder="123-456-7890" maxlength="12">
+            
+            <label for="date">Date (MM/DD/YYYY):</label>
+            <input type="text" id="date" name="date" placeholder="MM/DD/YYYY" maxlength="10">
+            
+            <label for="creditCard">Credit Card (XXXX XXXX XXXX XXXX):</label>
+            <input type="text" id="creditCard" name="creditCard" placeholder="1234 5678 9012 3456" maxlength="19">
+            
+            <label for="ssn">SSN (XXX-XX-XXXX):</label>
+            <input type="text" id="ssn" name="ssn" placeholder="XXX-XX-XXXX" maxlength="11">
+            
+            <button type="button" onclick="testInputMasks()">Test Input Masks</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Results</h2>
+        <button type="button" onclick="showMaskResults()">Show Mask Results</button>
+        <div id="output" class="output">Start typing to see input masks in action...</div>
+    </div>
+
+    <script>
+        // Phone mask function
+        function maskPhone(value) {
+            const numbers = value.replace(/\D/g, '');
+            const phone = numbers.slice(0, 10);
+            let formatted = '';
+            if (phone.length > 0) formatted = phone.slice(0, 3);
+            if (phone.length > 3) formatted += '-' + phone.slice(3, 6);
+            if (phone.length > 6) formatted += '-' + phone.slice(6, 10);
+            return formatted;
+        }
+        
+        // Date mask function
+        function maskDate(value) {
+            const numbers = value.replace(/\D/g, '');
+            const date = numbers.slice(0, 8);
+            let formatted = '';
+            if (date.length > 0) formatted = date.slice(0, 2);
+            if (date.length > 2) formatted += '/' + date.slice(2, 4);
+            if (date.length > 4) formatted += '/' + date.slice(4, 8);
+            return formatted;
+        }
+        
+        // Credit card mask function
+        function maskCreditCard(value) {
+            const numbers = value.replace(/\D/g, '');
+            const card = numbers.slice(0, 16);
+            let formatted = '';
+            for (let i = 0; i < card.length; i++) {
+                if (i > 0 && i % 4 === 0) formatted += ' ';
+                formatted += card[i];
+            }
+            return formatted;
+        }
+        
+        // SSN mask function
+        function maskSSN(value) {
+            const numbers = value.replace(/\D/g, '');
+            const ssn = numbers.slice(0, 9);
+            let formatted = '';
+            if (ssn.length > 0) formatted = ssn.slice(0, 3);
+            if (ssn.length > 3) formatted += '-' + ssn.slice(3, 5);
+            if (ssn.length > 5) formatted += '-' + ssn.slice(5, 9);
+            return formatted;
+        }
+        
+        // Apply masks on input
+        const phoneInput = document.getElementById('phone');
+        const dateInput = document.getElementById('date');
+        const creditCardInput = document.getElementById('creditCard');
+        const ssnInput = document.getElementById('ssn');
+        
+        phoneInput.addEventListener('input', function(e) {
+            e.target.value = maskPhone(e.target.value);
+        });
+        
+        dateInput.addEventListener('input', function(e) {
+            e.target.value = maskDate(e.target.value);
+        });
+        
+        creditCardInput.addEventListener('input', function(e) {
+            e.target.value = maskCreditCard(e.target.value);
+        });
+        
+        ssnInput.addEventListener('input', function(e) {
+            e.target.value = maskSSN(e.target.value);
+        });
+        
+        // Test input masks
+        function testInputMasks() {
+            phoneInput.value = '1234567890';
+            dateInput.value = '12252025';
+            creditCardInput.value = '1234567890123456';
+            ssnInput.value = '123456789';
+            
+            // Trigger input events
+            phoneInput.dispatchEvent(new Event('input'));
+            dateInput.dispatchEvent(new Event('input'));
+            creditCardInput.dispatchEvent(new Event('input'));
+            ssnInput.dispatchEvent(new Event('input'));
+            
+            showMaskResults();
+        }
+        
+        // Show mask results
+        function showMaskResults() {
+            let result = 'INPUT MASK RESULTS:\n========================\n';
+            result += `phone: "${phoneInput.value}"\n`;
+            result += `date: "${dateInput.value}"\n`;
+            result += `creditCard: "${creditCardInput.value}"\n`;
+            result += `ssn: "${ssnInput.value}"`;
+            
+            document.getElementById('output').textContent = result;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Field Validation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+        .error { color: red; font-size: 12px; display: none; }
+        input.invalid { border-color: red; }
+    </style>
+</head>
+<body>
+    <h1>Individual Field Validation</h1>
+    <p>Demonstrates custom field-by-field validation rules</p>
+
+    <div class="demo-section">
+        <h2>Registration Form</h2>
+        <form id="fieldValidationForm">
+            <label for="username">Username (3-20 chars, alphanumeric):</label>
+            <input type="text" id="username" name="username" placeholder="Enter username">
+            <span class="error" id="usernameError"></span>
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="email@example.com">
+            <span class="error" id="emailError"></span>
+            
+            <label for="password">Password (min 8 chars):</label>
+            <input type="password" id="password" name="password" placeholder="Enter password">
+            <span class="error" id="passwordError"></span>
+            
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password">
+            <span class="error" id="confirmPasswordError"></span>
+            
+            <button type="button" onclick="validateAllFields()">Validate All Fields</button>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Validation Logic</h2>
+        <button type="button" onclick="showValidationRules()">Show Validation Rules</button>
+        <div id="output" class="output">Start typing to see field validation...</div>
+    </div>
+
+    <script>
+        // Validation rules
+        const validators = {
+            username: {
+                validate: (value) => {
+                    if (!value) return 'Username is required';
+                    if (value.length < 3) return 'Username must be at least 3 characters';
+                    if (value.length > 20) return 'Username must be at most 20 characters';
+                    if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Username must be alphanumeric';
+                    return '';
+                }
+            },
+            email: {
+                validate: (value) => {
+                    if (!value) return 'Email is required';
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Please enter a valid email';
+                    return '';
+                }
+            },
+            password: {
+                validate: (value) => {
+                    if (!value) return 'Password is required';
+                    if (value.length < 8) return 'Password must be at least 8 characters';
+                    if (!/[A-Z]/.test(value)) return 'Password must contain an uppercase letter';
+                    if (!/[0-9]/.test(value)) return 'Password must contain a number';
+                    return '';
+                }
+            },
+            confirmPassword: {
+                validate: (value) => {
+                    const password = document.getElementById('password').value;
+                    if (!value) return 'Please confirm your password';
+                    if (value !== password) return 'Passwords do not match';
+                    return '';
+                }
+            }
+        };
+        
+        // Validate single field
+        function validateField(fieldName) {
+            const input = document.getElementById(fieldName);
+            const errorSpan = document.getElementById(fieldName + 'Error');
+            const validator = validators[fieldName];
+            
+            if (!validator) return true;
+            
+            const error = validator.validate(input.value);
+            errorSpan.textContent = error;
+            errorSpan.style.display = error ? 'block' : 'none';
+            input.classList.toggle('invalid', !!error);
+            
+            return !error;
+        }
+        
+        // Validate all fields
+        function validateAllFields() {
+            let allValid = true;
+            for (let fieldName in validators) {
+                if (!validateField(fieldName)) {
+                    allValid = false;
+                }
+            }
+            
+            const output = document.getElementById('output');
+            if (allValid) {
+                output.textContent = 'All fields are valid!';
+            } else {
+                output.textContent = 'Some fields have errors.';
+            }
+        }
+        
+        // Show validation rules
+        function showValidationRules() {
+            let result = 'FIELD VALIDATION RULES:\n========================\n\n';
+            result += 'Username:\n';
+            result += '  - Required\n';
+            result += '  - 3-20 characters\n';
+            result += '  - Alphanumeric only\n\n';
+            result += 'Email:\n';
+            result += '  - Required\n';
+            result += '  - Valid email format\n\n';
+            result += 'Password:\n';
+            result += '  - Required\n';
+            result += '  - Min 8 characters\n';
+            result += '  - Uppercase letter\n';
+            result += '  - Number\n\n';
+            result += 'Confirm Password:\n';
+            result += '  - Must match password';
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Add real-time validation
+        for (let fieldName in validators) {
+            const input = document.getElementById(fieldName);
+            input.addEventListener('blur', () => validateField(fieldName));
+            input.addEventListener('input', () => {
+                if (input.classList.contains('invalid')) {
+                    validateField(fieldName);
+                }
+            });
+        }
+        
+        // Form submit
+        document.getElementById('fieldValidationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            validateAllFields();
+        });
+    </script>
+</body>
+</html>

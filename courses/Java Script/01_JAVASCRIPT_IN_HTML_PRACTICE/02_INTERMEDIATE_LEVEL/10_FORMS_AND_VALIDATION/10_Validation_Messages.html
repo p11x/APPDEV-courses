@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validation Messages</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+        input:invalid { border-color: red; }
+    </style>
+</head>
+<body>
+    <h1>Customizing Validation Messages</h1>
+    <p>Demonstrates customizing validation error messages</p>
+
+    <div class="demo-section">
+        <h2>Custom Validation Messages</h2>
+        <form id="messageForm">
+            <label for="username">Username (min 3 chars):</label>
+            <input type="text" id="username" name="username" minlength="3" required placeholder="Enter username">
+            <span id="usernameError" class="error-message"></span>
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required placeholder="email@example.com">
+            <span id="emailError" class="error-message"></span>
+            
+            <label for="age">Age (18-100):</label>
+            <input type="number" id="age" name="age" min="18" max="100" required placeholder="Enter age">
+            <span id="ageError" class="error-message"></span>
+            
+            <button type="button" onclick="validateWithCustomMessages()">Validate with Custom Messages</button>
+            <button type="submit">Submit Form</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Results</h2>
+        <button type="button" onclick="showValidationMessages()">Show Validation Messages</button>
+        <div id="output" class="output">Click a button to see results...</div>
+    </div>
+
+    <script>
+        // Custom validation message logic
+        function validateWithCustomMessages() {
+            const form = document.getElementById('messageForm');
+            const inputs = form.querySelectorAll('input');
+            let result = 'CUSTOM VALIDATION MESSAGES:\n============================\n\n';
+            
+            inputs.forEach(input => {
+                const isValid = input.checkValidity();
+                let message = '';
+                
+                if (!isValid) {
+                    if (input.validity.valueMissing) {
+                        message = `${input.name} is required. Please fill it out.`;
+                    } else if (input.validity.tooShort) {
+                        message = `${input.name} must be at least ${input.getAttribute('minlength')} characters.`;
+                    } else if (input.validity.rangeUnderflow) {
+                        message = `${input.name} must be at least ${input.getAttribute('min')}.`;
+                    } else if (input.validity.rangeOverflow) {
+                        message = `${input.name} must be at most ${input.getAttribute('max')}.`;
+                    } else if (input.validity.typeMismatch) {
+                        message = `Please enter a valid ${input.type} address.`;
+                    } else {
+                        message = input.validationMessage;
+                    }
+                    
+                    // Display custom message
+                    const errorSpan = document.getElementById(input.id + 'Error');
+                    if (errorSpan) errorSpan.textContent = message;
+                } else {
+                    const errorSpan = document.getElementById(input.id + 'Error');
+                    if (errorSpan) errorSpan.textContent = '';
+                }
+                
+                result += `${input.id}: ${isValid ? 'VALID' : 'INVALID'}\n`;
+                if (message) result += `  Message: ${message}\n`;
+            });
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Show validation messages
+        function showValidationMessages() {
+            const form = document.getElementById('messageForm');
+            const inputs = form.querySelectorAll('input');
+            let result = 'DEFAULT VALIDATION MESSAGES:\n===========================\n\n';
+            
+            inputs.forEach(input => {
+                result += `${input.id}:\n`;
+                result += `  validationMessage: "${input.validationMessage}"\n`;
+                result += `  willValidate: ${input.willValidate}\n`;
+                result += `  valid: ${input.validity.valid}\n\n`;
+            });
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Form submit handler
+        document.getElementById('messageForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            validateWithCustomMessages();
+        });
+        
+        // Real-time validation feedback
+        document.querySelectorAll('#messageForm input').forEach(input => {
+            input.addEventListener('input', function(e) {
+                const errorSpan = document.getElementById(e.target.id + 'Error');
+                if (e.target.checkValidity()) {
+                    if (errorSpan) errorSpan.textContent = '';
+                }
+            });
+            
+            input.addEventListener('blur', function(e) {
+                if (!e.target.checkValidity()) {
+                    validateWithCustomMessages();
+                }
+            });
+        });
+    </script>
+    
+    <style>
+        .error-message {
+            color: red;
+            font-size: 12px;
+            display: block;
+            margin-bottom: 10px;
+        }
+    </style>
+</body>
+</html>

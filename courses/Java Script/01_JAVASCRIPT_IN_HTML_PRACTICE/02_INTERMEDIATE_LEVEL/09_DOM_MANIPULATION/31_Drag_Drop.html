@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag Drop</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .demo { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 8px 16px; cursor: pointer; margin: 5px; }
+        #dragItem { width: 100px; height: 50px; background: lightblue; display: flex; align-items: center; justify-content: center; cursor: move; }
+        #dropZone { width: 200px; height: 100px; border: 2px dashed #333; display: flex; align-items: center; justify-content: center; }
+        #dropZone.dragover { background: lightgreen; border-color: green; }
+    </style>
+</head>
+<body>
+    <h1>Drag and Drop</h1>
+
+    <div id="demo1" class="demo">
+        <h3>Basic Drag and Drop</h3>
+        <div id="dragItem" draggable="true">Drag Me</div>
+        <div id="dropZone">Drop Here</div>
+    </div>
+
+    <div id="demo2" class="demo">
+        <h3>Drag Events</h3>
+        <button onclick="resetDemo()">Reset</button>
+    </div>
+
+    <div class="demo">
+        <h3>Output:</h3>
+        <pre id="output">Drag the blue box to the drop zone...</pre>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        const dragItem = document.getElementById('dragItem');
+        const dropZone = document.getElementById('dropZone');
+        
+        dragItem.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', 'Dragged content');
+            output.textContent = 'dragstart: Started dragging\n' +
+                'dataTransfer.setData() called';
+        });
+        
+        dragItem.addEventListener('dragend', () => {
+            output.textContent += '\ndragend: Drag finished';
+        });
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const data = e.dataTransfer.getData('text/plain');
+            dropZone.textContent = 'Dropped!';
+            output.textContent = 'drop: Element dropped\n' +
+                'dataTransfer.getData(): ' + data;
+        });
+        
+        function resetDemo() {
+            dropZone.textContent = 'Drop Here';
+            output.textContent = 'Reset. Drag the blue box to the drop zone...';
+        }
+    </script>
+</body>
+</html>

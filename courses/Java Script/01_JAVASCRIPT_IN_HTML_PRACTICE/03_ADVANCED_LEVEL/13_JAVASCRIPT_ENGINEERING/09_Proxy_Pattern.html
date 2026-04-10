@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy Pattern</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d5f4e6; border-left: 4px solid #27ae60; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <h1>Proxy Pattern</h1>
+    
+    <div class="section">
+        <h2>JavaScript Proxy Object</h2>
+        <p>The Proxy object allows you to create an object that can intercept and redefine fundamental operations like property access, assignment, enumeration, and function invocation.</p>
+        
+        <pre>
+// Proxy with get and set traps
+const handler = {
+    get(target, property) {
+        console.log(`Getting property: ${property}`);
+        return target[property];
+    },
+    set(target, property, value) {
+        console.log(`Setting ${property} = ${value}`);
+        target[property] = value;
+        return true;
+    }
+};
+
+const target = { name: 'John', age: 30 };
+const proxy = new Proxy(target, handler);
+proxy.name; // Triggers get
+proxy.age = 31; // Triggers set
+        </pre>
+        
+        <button onclick="runProxyDemo()">Run Proxy Demo</button>
+        <div id="proxy-output" class="output"></div>
+    </div>
+    
+    <script>
+        function runProxyDemo() {
+            const handler = {
+                get(target, property) {
+                    return target[property];
+                },
+                set(target, property, value) {
+                    target[property] = value;
+                    return true;
+                },
+                has(target, property) {
+                    return property in target;
+                },
+                deleteProperty(target, property) {
+                    delete target[property];
+                    return true;
+                }
+            };
+            
+            const user = { name: 'Alice', age: 25, role: 'admin' };
+            const proxy = new Proxy(user, handler);
+            
+            let result = [];
+            result.push(`Original name: ${proxy.name}`);
+            result.push(`Has 'age': ${'age' in proxy}`);
+            proxy.role = 'superuser';
+            result.push(`New role: ${proxy.role}`);
+            delete proxy.age;
+            result.push(`After delete, has 'age': ${'age' in proxy}`);
+            result.push(`All keys: ${Object.keys(proxy).join(', ')}`);
+            
+            const output = document.getElementById('proxy-output');
+            output.innerHTML = `
+                <strong>Proxy Pattern Results:</strong><br>
+                ${result.join('<br>')}<br>
+                <em>Proxy intercepts all fundamental operations on the target object!</em>
+            `;
+        }
+    </script>
+</body>
+</html>

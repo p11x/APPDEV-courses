@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Custom Validity</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>Setting Custom Validity Messages</h1>
+    <p>Demonstrates setCustomValidity() to set and clear custom validity</p>
+
+    <div class="demo-section">
+        <h2>Form with Custom Validation</h2>
+        <form id="customForm">
+            <label for="password">Password (min 8 chars):</label>
+            <input type="password" id="password" name="password" minlength="8" placeholder="Enter password">
+            
+            <label for="confirmPass">Confirm Password:</label>
+            <input type="password" id="confirmPass" name="confirmPass" placeholder="Confirm password">
+            
+            <label for="username">Username (no admin):</label>
+            <input type="text" id="username" name="username" placeholder="Enter username">
+            
+            <button type="button" onclick="validatePasswordMatch()">Validate Password Match</button>
+            <button type="button" onclick="validateUsername()">Validate Username</button>
+            <button type="button" onclick="clearCustomValidity()">Clear Custom Validity</button>
+            <button type="submit">Submit Form</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Results</h2>
+        <button type="button" onclick="showCustomValidityState()">Show Custom Validity State</button>
+        <div id="output" class="output">Click a button to see results...</div>
+    </div>
+
+    <script>
+        // Validate password match
+        function validatePasswordMatch() {
+            const password = document.getElementById('password');
+            const confirmPass = document.getElementById('confirmPass');
+            
+            if (confirmPass.value === '') {
+                confirmPass.setCustomValidity('Please confirm your password');
+            } else if (password.value !== confirmPass.value) {
+                confirmPass.setCustomValidity('Passwords do not match');
+            } else {
+                confirmPass.setCustomValidity('');
+            }
+            
+            showCustomValidityState();
+        }
+        
+        // Validate username
+        function validateUsername() {
+            const username = document.getElementById('username');
+            const value = username.value.toLowerCase();
+            
+            if (value === 'admin' || value === 'administrator') {
+                username.setCustomValidity('Username "admin" is not allowed');
+            } else if (value.length > 0 && value.length < 3) {
+                username.setCustomValidity('Username must be at least 3 characters');
+            } else {
+                username.setCustomValidity('');
+            }
+            
+            showCustomValidityState();
+        }
+        
+        // Clear all custom validity
+        function clearCustomValidity() {
+            const form = document.getElementById('customForm');
+            const inputs = form.querySelectorAll('input');
+            
+            inputs.forEach(input => {
+                input.setCustomValidity('');
+            });
+            
+            document.getElementById('output').textContent = 'Custom validity cleared for all inputs.';
+        }
+        
+        // Show custom validity state
+        function showCustomValidityState() {
+            const password = document.getElementById('password');
+            const confirmPass = document.getElementById('confirmPass');
+            const username = document.getElementById('username');
+            
+            let result = 'CUSTOM VALIDITY STATE:\n=========================\n\n';
+            result += `password:\n`;
+            result += `  value: "${password.value}"\n`;
+            result += `  customError: ${password.validity.customError}\n`;
+            result += `  validationMessage: "${password.validationMessage}"\n\n`;
+            
+            result += `confirmPass:\n`;
+            result += `  value: "${confirmPass.value}"\n`;
+            result += `  customError: ${confirmPass.validity.customError}\n`;
+            result += `  validationMessage: "${confirmPass.validationMessage}"\n\n`;
+            
+            result += `username:\n`;
+            result += `  value: "${username.value}"\n`;
+            result += `  customError: ${username.validity.customError}\n`;
+            result += `  validationMessage: "${username.validationMessage}"`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Real-time validation for password match
+        document.getElementById('confirmPass').addEventListener('input', function(e) {
+            validatePasswordMatch();
+        });
+        
+        // Real-time validation for username
+        document.getElementById('username').addEventListener('input', function(e) {
+            validateUsername();
+        });
+        
+        // Form submit
+        document.getElementById('customForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = e.target;
+            if (form.checkValidity()) {
+                document.getElementById('output').textContent = 'Form is valid! Submitted.';
+            } else {
+                document.getElementById('output').textContent = 'Form has validation errors.';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Practice Advanced</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        pre { background: #1e1e1e; color: #fff; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>30. Function Practice Advanced</h1>
+    
+    <h2>Exercise 1: Deep Clone</h2>
+    <pre>function deepClone(obj) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    const clone = Array.isArray(obj) ? [] : {};
+    for (let key in obj) clone[key] = deepClone(obj[key]);
+    return clone;
+}</pre>
+    <div class="output" id="output1"></div>
+    
+    <h2>Exercise 2: Debounce Function</h2>
+    <pre>function debounce(fn, delay) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), delay);
+    };
+}</pre>
+    <div class="output" id="output2"></div>
+    
+    <h2>Exercise 3: Throttle Function</h2>
+    <pre>function throttle(fn, limit) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            fn.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}</pre>
+    <div class="output" id="output3"></div>
+    
+    <h2>Exercise 4: Once Function</h2>
+    <pre>function once(fn) {
+    let called = false;
+    let result;
+    return function(...args) {
+        if (!called) {
+            called = true;
+            result = fn.apply(this, args);
+        }
+        return result;
+    };
+}</pre>
+    <div class="output" id="output4"></div>
+    
+    <h2>Exercise 5: After Function</h2>
+    <pre>function after(n, fn) {
+    let count = 0;
+    return function(...args) {
+        count++;
+        if (count >= n) return fn.apply(this, args);
+    };
+}</pre>
+    <div class="output" id="output5"></div>
+    
+    <script>
+        function deepClone(obj) {
+            if (obj === null || typeof obj !== 'object') return obj;
+            const clone = Array.isArray(obj) ? [] : {};
+            for (let key in obj) clone[key] = deepClone(obj[key]);
+            return clone;
+        }
+        
+        const original = { a: 1, b: { c: 2, d: [3, 4] } };
+        const cloned = deepClone(original);
+        cloned.b.c = 99;
+        document.getElementById('output1').innerHTML = 
+            'Original: ' + JSON.stringify(original) + '<br>' +
+            'Clone (modified): ' + JSON.stringify(cloned) + '<br>' +
+            'Original unchanged: ' + (original.b.c === 2 ? 'Yes' : 'No');
+        
+        let callCount = 0;
+        function debounce(fn, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+        const debouncedFn = debounce(() => { callCount++; }, 100);
+        debouncedFn(); debouncedFn(); debouncedFn();
+        setTimeout(() => {
+            document.getElementById('output2').innerHTML = 'Debounced function called: ' + callCount + ' time(s) after 100ms';
+        }, 150);
+        
+        let throttleCount = 0;
+        function throttle(fn, limit) {
+            let inThrottle;
+            return function(...args) {
+                if (!inThrottle) {
+                    fn.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+        const throttledFn = throttle(() => { throttleCount++; }, 100);
+        for (let i = 0; i < 5; i++) throttledFn();
+        document.getElementById('output3').innerHTML = 'Throttled function called: ' + throttleCount + ' time(s) - only first call executed';
+        
+        let onceCount = 0;
+        function once(fn) {
+            let called = false;
+            let result;
+            return function(...args) {
+                if (!called) {
+                    called = true;
+                    result = fn.apply(this, args);
+                }
+                return result;
+            };
+        }
+        const onceFn = once(() => { onceCount++; return 'executed'; });
+        document.getElementById('output4').innerHTML = 
+            'First call: ' + onceFn() + '<br>' +
+            'Second call: ' + onceFn() + '<br>' +
+            'Function executed: ' + onceCount + ' time(s)';
+        
+        let afterCount = 0;
+        function after(n, fn) {
+            let count = 0;
+            return function(...args) {
+                count++;
+                if (count >= n) return fn.apply(this, args);
+            };
+        }
+        const afterFn = after(3, () => { afterCount++; return 'called!'; });
+        afterFn(); afterFn();
+        document.getElementById('output5').innerHTML = 
+            'After 2 calls: ' + (afterFn() || 'not called') + '<br>' +
+            'After 3rd call: ' + afterFn();
+    </script>
+</body>
+</html>

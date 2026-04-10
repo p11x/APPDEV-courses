@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>14 - Web Worker Message</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>14 - Web Worker Message Passing</h1>
+    <p>Communication between main thread and Web Worker.</p>
+    
+    <button onclick="testMessaging()">Test Message Passing</button>
+    <button onclick="testObjectTransfer()">Transfer Objects</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        let worker = null;
+        let output = [];
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        function createWorker() {
+            const code = `
+                self.onmessage = function(e) {
+                    const { type, data } = e.data;
+                    
+                    if (type === 'compute') {
+                        const sum = data.numbers.reduce((a, b) => a + b, 0);
+                        self.postMessage({ type: 'result', value: sum });
+                    }
+                    
+                    if (type === 'greet') {
+                        self.postMessage({ type: 'greeting', message: 'Hello, ' + data.name + '!' });
+                    }
+                    
+                    if (type === 'async') {
+                        setTimeout(() => {
+                            self.postMessage({ type: 'asyncResult', value: 'Async task done!' });
+                        }, 2000);
+                    }
+                };
+            `;
+            const blob = new Blob([code], { type: 'application/javascript' });
+            return new Worker(URL.createObjectURL(blob));
+        }
+
+        function testMessaging() {
+            output = [];
+            log('Testing message passing...');
+            
+            worker = createWorker();
+            worker.onmessage = function(e) {
+                const { type, value, message } = e.data;
+                if (type === 'result') {
+                    log('Sum result: ' + value);
+                } else if (type === 'greeting') {
+                    log(message);
+                }
+            };
+            
+            worker.postMessage({ type: 'compute', data: { numbers: [1, 2, 3, 4, 5] } });
+            log('Sent compute request');
+            
+            worker.postMessage({ type: 'greet', data: { name: 'World' } });
+            log('Sent greeting request');
+        }
+
+        function testObjectTransfer() {
+            if (!worker) {
+                worker = createWorker();
+                worker.onmessage = function(e) {
+                    log('Async result: ' + e.data.value);
+                };
+            }
+            
+            worker.postMessage({ type: 'async' });
+            log('Sent async request (result in 2 seconds)');
+        }
+    </script>
+</body>
+</html>

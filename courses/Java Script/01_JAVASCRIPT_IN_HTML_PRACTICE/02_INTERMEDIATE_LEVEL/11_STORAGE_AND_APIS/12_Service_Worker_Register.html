@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12 - Service Worker Register</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>12 - Service Worker Register</h1>
+    <p>Register a Service Worker to intercept network requests.</p>
+    
+    <button onclick="registerSW()">Register Service Worker</button>
+    <button onclick="unregisterSW()">Unregister Service Worker</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        let output = [];
+        const swPath = '/sw.js';
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        function registerSW() {
+            output = [];
+            if (!('serviceWorker' in navigator)) {
+                log('Service Workers not supported');
+                return;
+            }
+
+            log('Registering Service Worker...');
+            
+            navigator.serviceWorker.register(swPath)
+                .then(registration => {
+                    log('Service Worker registered successfully!');
+                    log('Scope: ' + registration.scope);
+                    log('State: ' + (registration.active ? 'active' : 'installing'));
+                    
+                    registration.addEventListener('updatefound', () => {
+                        log('New Service Worker found!');
+                    });
+                })
+                .catch(error => {
+                    log('Registration failed: ' + error.message);
+                    log('Note: Service Workers require HTTPS or localhost');
+                });
+        }
+
+        function unregisterSW() {
+            if (!('serviceWorker' in navigator)) {
+                log('Service Workers not supported');
+                return;
+            }
+
+            navigator.serviceWorker.getRegistration()
+                .then(registration => {
+                    if (registration) {
+                        registration.unregister()
+                            .then(success => {
+                                log('Service Worker unregistered: ' + success);
+                            });
+                    } else {
+                        log('No Service Worker registered');
+                    }
+                })
+                .catch(err => log('Error: ' + err.message));
+        }
+    </script>
+</body>
+</html>

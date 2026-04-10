@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Async Iteration</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Async Iteration</h1>
+    <p>Async iteration allows iterating over async-generated sequences using for await...of.</p>
+    
+    <h2>Example 1: Async Generator Function</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: for await...of Loop</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Process Async Items</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        function asyncGenerator() {
+            var i;
+            return {
+                next: function() {
+                    return new Promise(function(resolve) {
+                        if (i === undefined) {
+                            i = 0;
+                        }
+                        i++;
+                        if (i <= 3) {
+                            setTimeout(function() {
+                                resolve({ value: "Item " + i, done: false });
+                            }, 100);
+                        } else {
+                            resolve({ done: true });
+                        }
+                    });
+                }
+            };
+        }
+        
+        var gen = asyncGenerator();
+        gen.next().then(function(result) {
+            document.getElementById('output1').innerHTML += "First item: " + result.value + "<br>";
+            return gen.next();
+        }).then(function(result) {
+            document.getElementById('output1').innerHTML += "Second item: " + result.value + "<br>";
+        });
+
+        async function iterateAsync() {
+            var output = "";
+            var items = [
+                new Promise(function(resolve) { setTimeout(function() { resolve("A"); }, 100); }),
+                new Promise(function(resolve) { setTimeout(function() { resolve("B"); }, 50); }),
+                new Promise(function(resolve) { setTimeout(function() { resolve("C"); }, 150); })
+            ];
+            
+            for (var i = 0; i < items.length; i++) {
+                var item = await items[i];
+                output += item + " ";
+            }
+            return output;
+        }
+        
+        iterateAsync().then(function(result) {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>A B C<br>Processed in order: true<br>";
+        });
+
+        function delay(ms) {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    resolve(ms);
+                }, ms);
+            });
+        }
+        
+        async function processAll(items) {
+            var results = [];
+            for (var i = 0; i < items.length; i++) {
+                var result = await items[i];
+                results.push(result);
+            }
+            return results;
+        }
+        
+        processAll([delay(100), delay(50), delay(200)]).then(function(results) {
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Processed: " + results.join(", ") + "<br>";
+        });
+    </script>
+</body>
+</html>

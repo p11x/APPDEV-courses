@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memoization Pattern</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #1abc9c; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d0f0e8; border-left: 4px solid #1abc9c; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #1abc9c; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #16a085; }
+    </style>
+</head>
+<body>
+    <h1>Memoization Pattern</h1>
+    
+    <!-- Basic Memoization -->
+    <div class="section">
+        <h2>1. Basic Memoization</h2>
+        <p>Cache expensive function results to avoid recomputation.</p>
+        
+        <pre>
+// Basic memoization function
+function memoize(fn) {
+    const cache = {};
+    return function(...args) {
+        const key = JSON.stringify(args);
+        if (cache[key]) {
+            return cache[key];
+        }
+        const result = fn.apply(this, args);
+        cache[key] = result;
+        return result;
+    };
+}
+
+// Example: expensive Fibonacci
+function fib(n) {
+    if (n <= 1) return n;
+    return fib(n - 1) + fib(n - 2);
+}
+
+const memoizedFib = memoize(fib);
+        </pre>
+        
+        <button onclick="runMemoizeDemo()">Run Memoization Demo</button>
+        <div id="memoize-output" class="output"></div>
+    </div>
+    
+    <!-- Fibonacci Comparison -->
+    <div class="section">
+        <h2>2. Performance Comparison</h2>
+        <p>Compare execution time with and without memoization.</p>
+        
+        <pre>
+// Without memoization - exponential time
+function slowFib(n) {
+    if (n <= 1) return n;
+    return slowFib(n - 1) + slowFib(n - 2);
+}
+
+// With memoization - linear time
+function fastFib() {
+    const cache = { 0: 0, 1: 1 };
+    return function fib(n) {
+        if (cache[n] !== undefined) return cache[n];
+        return cache[n] = fib(n - 1) + fib(n - 2);
+    };
+}
+        </pre>
+        
+        <button onclick="runPerformanceDemo()">Compare Performance</button>
+        <div id="perf-output" class="output"></div>
+    </div>
+    
+    <!-- Cache Management -->
+    <div class="section">
+        <h2>3. Cache Management</h2>
+        <p>Advanced memoize with clear, has, and size methods.</p>
+        
+        <pre>
+// Memoize with cache management
+function memoizeWithCache(fn) {
+    const cache = {};
+    const fn2 = function(...args) {
+        const key = JSON.stringify(args);
+        if (cache[key] !== undefined) {
+            return cache[key];
+        }
+        const result = fn.apply(this, args);
+        cache[key] = result;
+        return result;
+    };
+    
+    fn2.cache = cache;
+    fn2.clear = () => { 
+        Object.keys(cache).forEach(k => delete cache[k]); 
+    };
+    fn2.has = (key) => JSON.stringify(key) in cache;
+    fn2.size = () => Object.keys(cache).length;
+    
+    return fn2;
+}
+        </pre>
+        
+        <button onclick="runCacheDemo()">Test Cache Management</button>
+        <div id="cache-output" class="output"></div>
+    </div>
+    
+    <script>
+        // Basic memoization
+        function memoize(fn) {
+            const cache = {};
+            return function(...args) {
+                const key = JSON.stringify(args);
+                if (cache[key]) {
+                    return cache[key];
+                }
+                const result = fn.apply(this, args);
+                cache[key] = result;
+                return result;
+            };
+        }
+
+        function runMemoizeDemo() {
+            let callCount = 0;
+            const expensiveFn = memoize((n) => {
+                callCount++;
+                return n * 2;
+            });
+            
+            expensiveFn(5);
+            expensiveFn(5); // cached
+            expensiveFn(10);
+            expensiveFn(5); // cached
+            
+            const output = document.getElementById('memoize-output');
+            output.innerHTML = `
+                <strong>Memoization Test:</strong><br>
+                Called 3 times with 2 unique args<br>
+                Function executed: <code>${callCount}</code> times (not 3)<br>
+                <em>Second call with same args returns cached result!</em>
+            `;
+        }
+
+        // Performance comparison
+        function slowFib(n) {
+            if (n <= 1) return n;
+            return slowFib(n - 1) + slowFib(n - 2);
+        }
+
+        function fastFib() {
+            const cache = { 0: 0, 1: 1 };
+            return function fib(n) {
+                if (cache[n] !== undefined) return cache[n];
+                return cache[n] = fib(n - 1) + fib(n - 2);
+            };
+        }
+
+        function runPerformanceDemo() {
+            const start1 = performance.now();
+            const result1 = slowFib(20);
+            const time1 = performance.now() - start1;
+            
+            const fast = fastFib();
+            const start2 = performance.now();
+            const result2 = fast(20);
+            const time2 = performance.now() - start2;
+            
+            const output = document.getElementById('perf-output');
+            output.innerHTML = `
+                <strong>Performance Test (fibonacci 20):</strong><br>
+                Without memo: <code>${time1.toFixed(2)}ms</code>, result: ${result1}<br>
+                With memo: <code>${time2.toFixed(2)}ms</code>, result: ${result2}<br>
+                <em>Memoization dramatically improves recursive algorithms!</em>
+            `;
+        }
+
+        // Cache management
+        function memoizeWithCache(fn) {
+            const cache = {};
+            const fn2 = function(...args) {
+                const key = JSON.stringify(args);
+                if (cache[key] !== undefined) {
+                    return cache[key];
+                }
+                const result = fn.apply(this, args);
+                cache[key] = result;
+                return result;
+            };
+            
+            fn2.cache = cache;
+            fn2.clear = () => { 
+                Object.keys(cache).forEach(k => delete cache[k]); 
+            };
+            fn2.has = (key) => JSON.stringify(key) in (fn2.cache = cache, cache);
+            fn2.getCache = () => cache;
+            fn2.size = () => Object.keys(cache).length;
+            
+            return fn2;
+        }
+
+        function runCacheDemo() {
+            const memoized = memoizeWithCache((x) => {
+                return x * x;
+            });
+            
+            memoized(2);
+            memoized(3);
+            memoized(2); // cached
+            memoized(4);
+            
+            const hasKey2 = memoized.has([2]);
+            const hasKey5 = memoized.has([5]);
+            const size = memoized.size();
+            memoized.clear();
+            
+            const output = document.getElementById('cache-output');
+            output.innerHTML = `
+                <strong>Cache Management Test:</strong><br>
+                Cache size before clear: <code>${size}</code><br>
+                Has key [2]? <code>${hasKey2}</code><br>
+                Has key [5]? <code>${hasKey5}</code><br>
+                Cache size after clear: <code>${memoized.size()}</code><br>
+                <em>Full control over cached values!</em>
+            `;
+        }
+    </script>
+</body>
+</html>

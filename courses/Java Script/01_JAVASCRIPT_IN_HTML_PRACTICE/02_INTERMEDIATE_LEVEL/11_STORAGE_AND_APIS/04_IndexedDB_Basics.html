@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IndexedDB Basics</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .output { background: #f4f4f4; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; }
+        pre { background: #2d2d2d; color: #0f0; padding: 10px; border-radius: 3px; }
+        .info { background: #e7f3fe; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1>IndexedDB Basics - Opening Database</h1>
+    
+    <div class="info">
+        <strong>Note:</strong> IndexedDB is a low-level API for client-side storage of large amounts of structured data.
+        Unlike localStorage, it supports indexes and transactions for better performance with large datasets.
+    </div>
+
+    <h3>Database Operations</h3>
+    <button onclick="openDatabase()">Open Database</button>
+    <button onclick="checkDBStatus()">Check DB Status</button>
+
+    <h3>Add Data</h3>
+    <input type="text" id="nameInput" placeholder="Name">
+    <input type="text" id="emailInput" placeholder="Email">
+    <input type="number" id="ageInput" placeholder="Age">
+    <button onclick="addData()">Add Record</button>
+
+    <h3>Read Data</h3>
+    <button onclick="getAllData()">Get All Records</button>
+    <button onclick="getDataByKey()">Get by Key (1)</button>
+
+    <h3>Database Info</h3>
+    <button onclick="getDBInfo()">Get DB Info</button>
+
+    <div class="output">
+        <h3>Output:</h3>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        let db = null;  // Store database reference
+        const DB_NAME = 'MyTestDB';  // Database name
+        const DB_VERSION = 1;  // Database version
+        const STORE_NAME = 'users';  // Object store name
+
+        // Open IndexedDB database
+        function openDatabase() {
+            // request indexedDB.open() returns IDBRequest object
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+            // Handle success - database opened successfully
+            request.onsuccess = function(event) {
+                db = event.target.result;  // Get database reference
+                displayOutput(`Database "${DB_NAME}" opened successfully!\nVersion: ${db.version}`);
+            };
+
+            // Handle error - database failed to open
+            request.onerror = function(event) {
+                displayOutput(`Error opening database: ${event.target.error}`);
+            };
+
+            // Handle upgrade needed - database version changed or DB created
+            request.onupgradeneeded = function(event) {
+                const database = event.target.result;
+                
+                // Create object store if it doesn't exist
+                // keyPath: property that uniquely identifies each record
+                if (!database.objectStoreNames.contains(STORE_NAME)) {
+                    const objectStore = database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    displayOutput(`Object store "${STORE_NAME}" created with auto-incrementing key`);
+                }
+            };
+        }
+
+        // Add data to the database
+        function addData() {
+            if (!db) {
+                displayOutput('Please open the database first!');
+                return;
+            }
+
+            const name = document.getElementById('nameInput').value;
+            const email = document.getElementById('emailInput').value;
+            const age = parseInt(document.getElementById('ageInput').value);
+
+            if (!name || !email) {
+                displayOutput('Please enter name and email');
+                return;
+            }
+
+            // Start a read/write transaction
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const objectStore = transaction.objectStore(STORE_NAME);
+
+            // Create record object
+            const record = { name: name, email: email, age: age };
+
+            // Add to object store
+            const request = objectStore.add(record);
+
+            request.onsuccess = function(event) {
+                displayOutput(`Record added successfully! Key: ${event.target.result}`);
+            };
+
+            request.onerror = function(event) {
+                displayOutput(`Error adding record: ${event.target.error}`);
+            };
+        }
+
+        // Get all data from database
+        function getAllData() {
+            if (!db) {
+                displayOutput('Please open the database first!');
+                return;
+            }
+
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(STORE_NAME);
+
+            // OpenCursor retrieves all records
+            const request = objectStore.openCursor();
+
+            let output = 'All Records:\n';
+
+            request.onsuccess = function(event) {
+                const cursor = event.target.result;
+                
+                if (cursor) {
+                    output += `ID: ${cursor.key}, Name: ${cursor.value.name}, Email: ${cursor.value.email}, Age: ${cursor.value.age}\n`;
+                    cursor.continue();  // Move to next record
+                } else {
+                    displayOutput(output);
+                }
+            };
+
+            request.onerror = function(event) {
+                displayOutput(`Error reading data: ${event.target.error}`);
+            };
+        }
+
+        // Get data by specific key
+        function getDataByKey() {
+            if (!db) {
+                displayOutput('Please open the database first!');
+                return;
+            }
+
+            const key = 1;  // Example key
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const objectStore = transaction.objectStore(STORE_NAME);
+
+            const request = objectStore.get(key);
+
+            request.onsuccess = function(event) {
+                const result = event.target.result;
+                if (result) {
+                    displayOutput(`Record with key ${key}:\nName: ${result.name}\nEmail: ${result.email}\nAge: ${result.age}`);
+                } else {
+                    displayOutput(`No record found with key ${key}`);
+                }
+            };
+
+            request.onerror = function(event) {
+                displayOutput(`Error: ${event.target.error}`);
+            };
+        }
+
+        // Get database info
+        function getDBInfo() {
+            if (!db) {
+                displayOutput('Database not open');
+                return;
+            }
+
+            displayOutput(`Database: ${DB_NAME}\nVersion: ${db.version}\nObject Stores: ${Array.from(db.objectStoreNames).join(', ')}`);
+        }
+
+        // Check database status
+        function checkDBStatus() {
+            if (db) {
+                displayOutput(`Database is open: ${DB_NAME} (v${db.version})`);
+            } else {
+                displayOutput('Database is not open. Click "Open Database" first.');
+            }
+        }
+
+        // Helper function to display output
+        function displayOutput(message) {
+            document.getElementById('output').textContent = message;
+        }
+    </script>
+</body>
+</html>

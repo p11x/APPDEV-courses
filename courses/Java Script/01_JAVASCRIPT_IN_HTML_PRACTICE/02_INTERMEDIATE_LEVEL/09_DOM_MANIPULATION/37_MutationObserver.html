@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MutationObserver</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .demo { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 8px 16px; cursor: pointer; margin: 5px; }
+        .box { padding: 20px; background: #e3f2fd; margin: 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>37. MutationObserver</h1>
+    
+    <div class="demo">
+        <h3>Observe Child List Changes</h3>
+        <div id="container">
+            <div class="box" id="box1">Box 1</div>
+        </div>
+        <button onclick="addBox()">Add Box</button>
+        <button onclick="removeBox()">Remove Box</button>
+    </div>
+    
+    <div class="demo">
+        <h3>Observe Attribute Changes</h3>
+        <div id="attrBox" class="box" style="background: #fff3e0;">Attr Box</div>
+        <button onclick="changeAttr()">Change Style</button>
+        <button onclick="addClass()">Add Class</button>
+    </div>
+    
+    <div class="demo">
+        <h3>Output Log</h3>
+        <pre id="output">Changes will appear here...</pre>
+    </div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        const container = document.getElementById('container');
+        const observer = new MutationObserver((mutations) => {
+            let log = [];
+            mutations.forEach(mutation => {
+                log.push('Type: ' + mutation.type);
+                if (mutation.addedNodes.length) {
+                    log.push('Added: ' + mutation.addedNodes.length + ' node(s)');
+                }
+                if (mutation.removedNodes.length) {
+                    log.push('Removed: ' + mutation.removedNodes.length + ' node(s)');
+                }
+            });
+            output.textContent = log.join('\n');
+        });
+        
+        observer.observe(container, {
+            childList: true,
+            subtree: true
+        });
+        
+        let boxCount = 1;
+        function addBox() {
+            boxCount++;
+            const newBox = document.createElement('div');
+            newBox.className = 'box';
+            newBox.id = 'box' + boxCount;
+            newBox.textContent = 'Box ' + boxCount;
+            container.appendChild(newBox);
+        }
+        
+        function removeBox() {
+            if (container.lastChild && container.lastChild.classList.contains('box')) {
+                container.removeChild(container.lastChild);
+            }
+        }
+        
+        const attrBox = document.getElementById('attrBox');
+        const attrObserver = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                if (mutation.type === 'attributes') {
+                    output.textContent = 'Attribute changed: ' + mutation.attributeName;
+                }
+                if (mutation.type === 'characterData') {
+                    output.textContent = 'Text content changed';
+                }
+            });
+        });
+        
+        attrObserver.observe(attrBox, {
+            attributes: true,
+            attributeOldValue: true
+        });
+        
+        function changeAttr() {
+            attrBox.style.background = '#' + Math.floor(Math.random()*16777215).toString(16);
+        }
+        
+        function addClass() {
+            attrBox.classList.add('highlight');
+            attrObserver.disconnect();
+            output.textContent = 'Observer disconnected';
+        }
+    </script>
+</body>
+</html>

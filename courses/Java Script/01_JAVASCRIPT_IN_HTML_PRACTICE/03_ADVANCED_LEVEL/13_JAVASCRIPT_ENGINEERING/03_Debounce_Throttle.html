@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debounce & Throttle</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #e67e22; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #fdebc8; border-left: 4px solid #e67e22; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #d35400; }
+        input { padding: 10px; font-size: 16px; width: 300px; border: 2px solid #ddd; border-radius: 5px; }
+        .log-box { background: #f8f9fa; padding: 10px; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Debounce & Throttle Techniques</h1>
+    
+    <!-- Debounce Section -->
+    <div class="section">
+        <h2>1. Debounce</h2>
+        <p>Delays function execution until after a pause in events. Great for search inputs.</p>
+        
+        <pre>
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            func.apply(this, args);
+        }, wait);
+    };
+}
+
+// Usage - search only fires after user stops typing
+const searchInput = document.getElementById('search');
+const handleSearch = debounce((query) => {
+    console.log('Searching for:', query);
+}, 500);
+
+searchInput.addEventListener('input', (e) => {
+    handleSearch(e.target.value);
+});
+        </pre>
+        
+        <input type="text" id="search" placeholder="Type to search..." oninput="handleDebounceInput(event)">
+        <div id="debounce-log" class="log-box"></div>
+        <button onclick="testDebounce()">Test Debounce (Click Multiple Times)</button>
+    </div>
+    
+    <!-- Throttle Section -->
+    <div class="section">
+        <h2>2. Throttle</h2>
+        <p>Ensures function executes at most once per specified interval. Great for scroll/resize.</p>
+        
+        <pre>
+// Throttle function
+function throttle(func, limit) {
+    let inThrottle;
+    return function executedFunction(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// Usage - scroll event limited to once per 100ms
+const handleScroll = throttle(() => {
+    console.log('Scroll position:', window.scrollY);
+}, 100);
+
+window.addEventListener('scroll', handleScroll);
+        </pre>
+        
+        <button onclick="testThrottle()">Test Throttle (Click Rapidly)</button>
+        <div id="throttle-log" class="log-box"></div>
+    </div>
+    
+    <!-- Leading/Trailing Debounce -->
+    <div class="section">
+        <h2>3. Advanced: Leading & Trailing Options</h2>
+        <p>Execute immediately on first call (leading) or wait until quiet (trailing).</p>
+        
+        <pre>
+// Debounce with options
+function debounceAdvanced(func, wait, options = {}) {
+    let timeout;
+    const { leading = false, trailing = true } = options;
+    
+    return function executedFunction(...args) {
+        const callNow = leading && !timeout;
+        
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            if (trailing) func.apply(this, args);
+            timeout = null;
+        }, wait);
+        
+        if (callNow) func.apply(this, args);
+    };
+}
+        </pre>
+        
+        <button onclick="testAdvancedDebounce('leading')">Test Leading</button>
+        <button onclick="testAdvancedDebounce('trailing')">Test Trailing</button>
+        <button onclick="testAdvancedDebounce('both')">Test Both</button>
+        <div id="advanced-log" class="log-box"></div>
+    
+    <script>
+        // Debounce implementation
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // Throttle implementation
+        function throttle(func, limit) {
+            let inThrottle;
+            return function(...args) {
+                if (!inThrottle) {
+                    func.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        // Debounce test
+        let debounceCallCount = 0;
+        const debouncedLog = debounce((msg) => {
+            debounceCallCount++;
+            const log = document.getElementById('debounce-log');
+            log.innerHTML += `<div>Debounce fired! (call #${debounceCallCount}) - ${msg}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }, 500);
+
+        function handleDebounceInput(event) {
+            debouncedLog(`Input: "${event.target.value}"`);
+        }
+
+        function testDebounce() {
+            const log = document.getElementById('debounce-log');
+            log.innerHTML += `<div style="color:blue;">--- Rapid clicks ---</div>`;
+            debouncedLog('Click 1');
+            setTimeout(() => debouncedLog('Click 2'), 100);
+            setTimeout(() => debouncedLog('Click 3'), 200);
+            setTimeout(() => debouncedLog('Click 4'), 300);
+            setTimeout(() => debouncedLog('Click 5'), 400);
+        }
+
+        // Throttle test
+        let throttleCallCount = 0;
+        function testThrottle() {
+            const throttledFn = throttle(() => {
+                throttleCallCount++;
+                const log = document.getElementById('throttle-log');
+                log.innerHTML += `<div>Throttle fired! (call #${throttleCallCount})</div>`;
+                log.scrollTop = log.scrollHeight;
+            }, 500);
+
+            // Simulate rapid clicks
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => throttledFn(), i * 50);
+            }
+        }
+
+        // Advanced debounce
+        function debounceAdvanced(func, wait, options = {}) {
+            let timeout;
+            const { leading = false, trailing = true } = options;
+            
+            return function(...args) {
+                const callNow = leading && !timeout;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    if (trailing) func.apply(this, args);
+                    timeout = null;
+                }, wait);
+                if (callNow) func.apply(this, args);
+            };
+        }
+
+        function testAdvancedDebounce(mode) {
+            const log = document.getElementById('advanced-log');
+            log.innerHTML = `<div style="color:blue;">--- Testing ${mode} ---</div>`;
+            
+            let options = {};
+            if (mode === 'leading') options = { leading: true, trailing: false };
+            if (mode === 'trailing') options = { leading: false, trailing: true };
+            if (mode === 'both') options = { leading: true, trailing: true };
+            
+            const fn = debounceAdvanced((msg) => {
+                log.innerHTML += `<div>Fired: ${msg}</div>`;
+                log.scrollTop = log.scrollHeight;
+            }, 300, options);
+            
+            // Simulate calls
+            fn('call @ 0ms');
+            setTimeout(() => fn('call @ 100ms'), 100);
+            setTimeout(() => fn('call @ 200ms'), 200);
+            setTimeout(() => fn('call @ 400ms'), 400);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Issues - Tailwind CSS Troubleshooting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-red-600">Accessibility Issues</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Understanding the Issue</h2>
+            <p class="mb-4">Accessibility (a11y) issues in Tailwind CSS occur when designs are not usable by people with disabilities. This includes problems with color contrast, focus states, keyboard navigation, screen reader support, and motion sensitivity.</p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                <p class="font-bold">Common Causes:</p>
+                <ul class="list-disc ml-6 mt-2">
+                    <li>Low color contrast ratios</li>
+                    <li>Missing focus indicators</li>
+                    <li>Inadequate touch target sizes</li>
+                    <li>Missing ARIA attributes</li>
+                    <li>Animations without prefers-reduced-motion</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Standard Example: The Problem</h2>
+            
+            <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-4">
+                <h3 class="font-bold text-red-700 mb-2">Problem: Low Contrast & No Focus</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Problem: Low contrast text */
+.text-gray-300 {
+    color: #d1d5db; /* Very light gray - hard to read */
+    background-color: #f3f4f6;
+    /* Contrast ratio: ~2.3:1 - FAILS WCAG AA (4.5:1) */
+}
+
+/* Problem: No visible focus state */
+button:focus {
+    outline: none; /* BAD: Removes focus indicator */
+}
+
+/* Problem: Links without underlines */
+a {
+    text-decoration: none;
+    color: blue; /* On blue background - invisible */
+}
+
+/* Problem: Touch targets too small */
+.btn {
+    padding: 4px 8px; /* Too small - hard to tap */
+    height: 20px; /* Not 44px minimum */
+}</code></pre>
+            </div>
+
+            <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                <h3 class="font-bold text-green-700 mb-2">Solution: Proper Contrast & Focus</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Solution: Proper contrast */
+.text-gray-600 {
+    color: #4b5563; /* Meets WCAG AA */
+    background-color: #f3f4f6;
+    /* Contrast ratio: ~7.2:1 - PASSES */
+}
+
+.text-gray-900 {
+    color: #111827;
+    /* High contrast for important text */
+}
+
+/* Solution: Visible focus state */
+button:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+/* Using Tailwind's focus utilities */
+button:focus {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* Solution: Large touch targets */
+.btn {
+    @apply px-4 py-3 min-h-[44px] min-w-[44px];
+    /* Or use Tailwind's built-in sizes */
+    @apply p-4; /* Larger padding */
+}
+
+/* Solution: Link visibility */
+a {
+    @apply underline text-blue-600 hover:text-blue-800;
+    /* Always underline OR use other visual cue */
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 1: Focus Management</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* PROBLEM: Focus not visible on custom components */
+
+/* Custom button loses focus style */
+.custom-btn:focus {
+    outline: none; /* Lost focus indicator! */
+}
+
+/* SOLUTION: Always include focus-visible */
+.custom-btn {
+    @apply bg-blue-500 text-white px-4 py-2 rounded;
+}
+
+.custom-btn:focus-visible {
+    @apply outline-none ring-2 ring-blue-600 ring-offset-2;
+}
+
+/* Using Tailwind's focus utilities */
+.button-primary {
+    @apply bg-blue-500 text-white;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+    /* focus: applies on focus (can show always) */
+    /* focus-visible: applies only when using keyboard */
+}
+
+/* Mobile: Use touch-friendly focus */
+.mobile-button {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500;
+    /* Only shows ring when using keyboard */
+}
+
+/* Dialog/Modal: Trap focus */
+.modal {
+    @apply fixed inset-0 z-50;
+    /* When open, focus should stay in modal */
+    /* Use JavaScript to trap focus */
+}</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Without focus-visible: Keyboard users can't see focus</p>
+                <p>With proper focus: All users can navigate</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 2: Motion & Animations</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* PROBLEM: Animation triggers motion sickness */
+
+/* Spinning loader that never stops */
+.spinner {
+    animation: spin 2s linear infinite;
+    /* This can trigger vestibular disorders */
+}
+
+/* SOLUTION: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    .spinner {
+        animation: none;
+    }
+    
+    .fade-in {
+        animation: none;
+        opacity: 1;
+    }
+    
+    .slide-up {
+        transform: none;
+    }
+}
+
+/* Tailwind's built-in support */
+.fade-enter {
+    @apply transition-opacity duration-300;
+}
+
+@layer utilities {
+    @media (prefers-reduced-motion: reduce) {
+        .motion-reduce {
+            transition: none;
+            animation: none;
+        }
+    }
+}
+
+/* Using Tailwind's transition */
+.animated-element {
+    @apply transition-all duration-300 ease-in-out;
+}
+
+@layer utilities {
+    @media (prefers-reduced-motion: no-preference) {
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+    }
+}
+
+/* Always provide reduced motion option */
+.toggle {
+    @apply transition-transform duration-200;
+    @apply motion-reduce:transition-none;
+}</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Without reduced-motion: Can cause dizziness/nausea</p>
+                <p>With proper support: Respects user preferences</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Debugging Flow</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌─────────────────────────────────────────┐
+│        ACCESSIBILITY DEBUGGING            │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ 1. Test color contrast                   │
+│    Use: WebAIM Contrast Checker          │
+│    Minimum: 4.5:1 for normal text        │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ 2. Check focus states                    │
+│    Tab through all interactive elements  │
+│    Use: focus-visible                    │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ 3. Verify touch targets                  │
+│    Minimum: 44x44px (WCAG)               │
+│    Use: min-h-[44px] min-w-[44px]      │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ 4. Test with screen reader               │
+│    Use: NVDA, JAWS, VoiceOver           │
+│    Check: ARIA labels, headings         │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ 5. Check prefers-reduced-motion         │
+│    Test with motion preferences          │
+│    Use: @media (prefers-reduced-motion) │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+            ┌─────────────────┐
+            │ Issue Resolved! │
+            └─────────────────┘</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Edge Cases & Considerations</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-yellow-50 p-4 rounded">
+                    <h3 class="font-bold text-yellow-800">Edge Cases</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>Color-blind users need additional cues</li>
+                        <li>Keyboard-only navigation</li>
+                        <li>Screen reader order</li>
+                        <li>Zoom up to 400%</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <h3 class="font-bold text-blue-800">Performance</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>Accessibility doesn't impact performance</li>
+                        <li>Optimize animations for all devices</li>
+                    </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                    <h3 class="font-bold text-green-800">Testing Tools</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>axe DevTools</li>
+                        <li>WAVE</li>
+                        <li>Lighthouse</li>
+                        <li>Keyboard testing</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50 p-4 rounded">
+                    <h3 class="font-bold text-purple-800">Standards</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>WCAG 2.1 AA (minimum)</li>
+                        <li>WCAG 2.2 AAA (target)</li>
+                        <li>Section 508 (US government)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Quick Fix Commands</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Check contrast - WebAIM Contrast Checker */
+/* https://webaim.org/resources/contrastchecker/ */
+
+/* Test accessibility with DevTools */
+/* Lighthouse tab → Accessibility audit */
+
+/* Use axe extension */
+/* Chrome: axe DevTools */
+
+/* Check keyboard navigation */
+/* Tab through everything! */
+
+/* Verify ARIA */
+/* &lt;button aria-label="Close dialog"&gt;X&lt;/button&gt; */
+/* &lt;nav aria-label="Main navigation"&gt;...&lt;/nav&gt; */
+
+/* Screen reader testing */
+/* Mac: Cmd + F5 (VoiceOver) */
+/* Windows: NVDA (free screen reader) */</code></pre>
+        </div>
+    </div>
+</body>
+</html>

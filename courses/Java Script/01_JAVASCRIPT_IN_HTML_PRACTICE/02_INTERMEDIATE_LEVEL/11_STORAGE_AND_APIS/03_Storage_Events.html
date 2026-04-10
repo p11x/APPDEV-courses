@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Events</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; }
+        .output { background: #f4f4f4; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; }
+        pre { background: #2d2d2d; color: #0f0; padding: 10px; border-radius: 3px; }
+        .info { background: #e7f3fe; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .events { background: #fff3cd; padding: 10px; border-radius: 5px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Storage Event Listeners</h1>
+    
+    <div class="info">
+        <strong>Instructions:</strong> Open this page in two different tabs/windows.
+        Changes made in one tab will trigger storage events in the other tab.
+        The storage event fires when localStorage changes in another document context.
+    </div>
+
+    <h3>Modify LocalStorage (this tab)</h3>
+    <input type="text" id="keyInput" placeholder="Key">
+    <input type="text" id="valueInput" placeholder="Value">
+    <button onclick="saveItem()">Set Item</button>
+    <button onclick="removeItem()">Remove Item</button>
+    <button onclick="clearAll()">Clear All</button>
+
+    <div class="output">
+        <h3>Output:</h3>
+        <pre id="output">Storage events will appear here when localStorage changes in another tab...</pre>
+    </div>
+
+    <div class="events">
+        <h3>Storage Event Details:</h3>
+        <p><strong>key:</strong> The key that was changed</p>
+        <p><strong>oldValue:</strong> The old value (null for new items)</p>
+        <p><strong>newValue:</strong> The new value (null if deleted)</p>
+        <p><strong>url:</strong> The URL of the document that made the change</p>
+        <p><strong>storageArea:</strong> The storage object (localStorage/sessionStorage)</p>
+    </div>
+
+    <script>
+        // Set up storage event listener
+        window.addEventListener('storage', function(event) {
+            // This event fires when localStorage changes in another document
+            const eventDetails = `
+Storage Event Fired!
+-------------------------
+Key: ${event.key}
+Old Value: ${event.oldValue}
+New Value: ${event.newValue}
+URL: ${event.url}
+Storage Area: ${event.storageArea === localStorage ? 'localStorage' : 'sessionStorage'}`;
+
+            displayOutput(eventDetails);
+        });
+
+        // Save item to localStorage
+        function saveItem() {
+            const key = document.getElementById('keyInput').value;
+            const value = document.getElementById('valueInput').value;
+            
+            if (key && value) {
+                localStorage.setItem(key, value);
+                displayOutput(`Saved locally: "${key}" = "${value}"\n(Check other tabs for storage event)`);
+            } else {
+                displayOutput('Please enter both key and value');
+            }
+        }
+
+        // Remove item from localStorage
+        function removeItem() {
+            const key = document.getElementById('keyInput').value;
+            
+            if (key) {
+                localStorage.removeItem(key);
+                displayOutput(`Removed locally: "${key}"\n(Check other tabs for storage event)`);
+            } else {
+                displayOutput('Please enter a key');
+            }
+        }
+
+        // Clear all localStorage
+        function clearAll() {
+            localStorage.clear();
+            displayOutput('Cleared all locally\n(Check other tabs for storage event)');
+        }
+
+        // Helper function to display output
+        function displayOutput(message) {
+            document.getElementById('output').textContent = message;
+        }
+    </script>
+</body>
+</html>

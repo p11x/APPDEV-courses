@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retry Delayed</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Retry Delayed</h1>
+    <p>Delayed retry adds a wait time between retry attempts to handle rate limiting.</p>
+    
+    <h2>Example 1: Fixed Delay</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Exponential Backoff</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Retry with Jitter</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        var attempts1 = 0;
+        
+        function retryWithDelay(fn, delayMs) {
+            return fn()["catch"](function(err) {
+                return new Promise(function(resolve) {
+                    setTimeout(function() {
+                        retryWithDelay(fn, delayMs)["catch"](function(e) {
+                            resolve(Promise.reject(e));
+                        }).then(function(r) {
+                            resolve(r);
+                        });
+                    }, delayMs);
+                })["catch"](function(e) {
+                    return Promise.reject(e);
+                }).then(function(r) {
+                    return r;
+                });
+            });
+        }
+        
+        function operation1() {
+            attempts1++;
+            return new Promise(function(resolve, reject) {
+                if (attempts1 < 2) {
+                    reject(new Error("Failed"));
+                } else {
+                    resolve("Success!");
+                }
+            });
+        }
+        
+        var simpleRetry = function(fn, retries, delayMs) {
+            return fn()["catch"](function(err) {
+                if (retries <= 0) {
+                    return Promise.reject(err);
+                }
+                return new Promise(function(resolve) {
+                    setTimeout(function() {
+                        simpleRetry(fn, retries - 1, delayMs).then(function(r) {
+                            resolve(r);
+                        })["catch"](function(e) {
+                            resolve(Promise.reject(e));
+                        });
+                    }, delayMs);
+                });
+            });
+        };
+        
+        simpleRetry(operation1, 3, 100).then(function(result) {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>" + result + "<br>Attempts: " + attempts1 + "<br>";
+        });
+
+        var attempts2 = 0;
+        
+        function operation2() {
+            attempts2++;
+            return new Promise(function(resolve, reject) {
+                if (attempts2 < 3) {
+                    reject(new Error("Failed"));
+                } else {
+                    resolve("Success!");
+                }
+            });
+        }
+        
+        var exponentialBackoff = function(fn, retries, baseDelay) {
+            return fn()["catch"](function(err) {
+                if (retries <= 0) {
+                    return Promise.reject(err);
+                }
+                var delay = baseDelay * Math.pow(2, 3 - retries);
+                return new Promise(function(resolve) {
+                    setTimeout(function() {
+                        exponentialBackoff(fn, retries - 1, baseDelay).then(function(r) {
+                            resolve(r);
+                        })["catch"](function(e) {
+                            resolve(Promise.reject(e));
+                        });
+                    }, delay);
+                });
+            });
+        };
+        
+        exponentialBackoff(operation2, 3, 50).then(function(result) {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>" + result + "<br>Attempts: " + attempts2 + "<br>";
+        });
+
+        var attempts3 = 0;
+        
+        function operation3() {
+            attempts3++;
+            return new Promise(function(resolve, reject) {
+                if (attempts3 < 2) {
+                    reject(new Error("Failed"));
+                } else {
+                    resolve("Success!");
+                }
+            });
+        }
+        
+        var retryWithJitter = function(fn, retries, baseDelay) {
+            return fn()["catch"](function(err) {
+                if (retries <= 0) {
+                    return Promise.reject(err);
+                }
+                var jitter = Math.random() * 100;
+                var delay = baseDelay + jitter;
+                return new Promise(function(resolve) {
+                    setTimeout(function() {
+                        retryWithJitter(fn, retries - 1, baseDelay).then(function(r) {
+                            resolve(r);
+                        })["catch"](function(e) {
+                            resolve(Promise.reject(e));
+                        });
+                    }, delay);
+                });
+            });
+        };
+        
+        retryWithJitter(operation3, 3, 50).then(function(result) {
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>" + result + "<br>Attempts: " + attempts3 + "<br>";
+        });
+    </script>
+</body>
+</html>

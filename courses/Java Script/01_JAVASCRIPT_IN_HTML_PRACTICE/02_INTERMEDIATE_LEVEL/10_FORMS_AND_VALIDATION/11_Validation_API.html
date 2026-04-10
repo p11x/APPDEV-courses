@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validation API</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>Constraint Validation API Overview</h1>
+    <p>Demonstrates all properties and methods of the HTML5 Constraint Validation API</p>
+
+    <div class="demo-section">
+        <h2>Form with Validation</h2>
+        <form id="apiForm">
+            <label for="name">Name (required):</label>
+            <input type="text" id="name" name="name" required placeholder="Enter name">
+            
+            <label for="userEmail">Email (required, email):</label>
+            <input type="email" id="userEmail" name="userEmail" required placeholder="email@example.com">
+            
+            <label for="ageNum">Age (number, 18-100):</label>
+            <input type="number" id="ageNum" name="ageNum" min="18" max="100" placeholder="18-100">
+            
+            <label for="code">Code (pattern, 3 digits):</label>
+            <input type="text" id="code" name="code" pattern="[0-9]{3}" placeholder="123">
+            
+            <button type="button" onclick="demonstrateAPI()">Demonstrate API</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>API Properties and Methods</h2>
+        <button type="button" onclick="showWillValidate()">willValidate</button>
+        <button type="button" onclick="showValidity()">validity</button>
+        <button type="button" onclick="showValidationMessage()">validationMessage</button>
+        <button type="button" onclick="showCheckValidity()">checkValidity()</button>
+        <button type="button" onclick="showReportValidity()">reportValidity()</button>
+        <div id="output" class="output">Click a button to see API demonstration...</div>
+    </div>
+
+    <script>
+        const form = document.getElementById('apiForm');
+        
+        // willValidate - returns true if the element will be validated
+        function showWillValidate() {
+            const inputs = form.querySelectorAll('input');
+            let result = 'willValidate PROPERTY:\n====================\n';
+            result += 'Returns true if element will be validated\n\n';
+            
+            inputs.forEach(input => {
+                result += `${input.id}: willValidate = ${input.willValidate}\n`;
+            });
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // validity - returns ValidityState object
+        function showValidity() {
+            const inputs = form.querySelectorAll('input');
+            let result = 'validity PROPERTY:\n==================\n';
+            result += 'Returns ValidityState object with all validation states\n\n';
+            
+            inputs.forEach(input => {
+                const v = input.validity;
+                result += `${input.id}:\n`;
+                result += `  valid: ${v.valid}\n`;
+                result += `  valueMissing: ${v.valueMissing}\n`;
+                result += `  typeMismatch: ${v.typeMismatch}\n`;
+                result += `  tooLong: ${v.tooLong}\n`;
+                result += `  tooShort: ${v.tooShort}\n`;
+                result += `  rangeUnderflow: ${v.rangeUnderflow}\n`;
+                result += `  rangeOverflow: ${v.rangeOverflow}\n`;
+                result += `  patternMismatch: ${v.patternMismatch}\n`;
+                result += `  customError: ${v.customError}\n\n`;
+            });
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // validationMessage - returns validation message
+        function showValidationMessage() {
+            const inputs = form.querySelectorAll('input');
+            let result = 'validationMessage PROPERTY:\n========================\n';
+            result += 'Returns the validation message\n\n';
+            
+            inputs.forEach(input => {
+                result += `${input.id}: "${input.validationMessage}"\n`;
+            });
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // checkValidity() - returns true if valid
+        function showCheckValidity() {
+            const inputs = form.querySelectorAll('input');
+            let result = 'checkValidity() METHOD:\n========================\n';
+            result += 'Returns true if element is valid, false otherwise\n';
+            result += 'Does NOT show validation message to user\n\n';
+            
+            inputs.forEach(input => {
+                const isValid = input.checkValidity();
+                result += `${input.id}: checkValidity() = ${isValid}\n`;
+            });
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // reportValidity() - displays validation message
+        function showReportValidity() {
+            const input = document.getElementById('name');
+            const result = 'reportValidity() METHOD:\n========================\n';
+            result += 'Returns true if valid, false otherwise\n';
+            result += 'DISPLAYS validation message to user\n';
+            result += 'Sets focus to first invalid element\n\n';
+            result += `name input result: ${input.reportValidity()}`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Full API demonstration
+        function demonstrateAPI() {
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('userEmail');
+            
+            let result = 'FULL VALIDATION API DEMO:\n========================\n\n';
+            
+            result += 'name input:\n';
+            result += `  willValidate: ${nameInput.willValidate}\n`;
+            result += `  validity.valid: ${nameInput.validity.valid}\n`;
+            result += `  validationMessage: "${nameInput.validationMessage}"\n`;
+            result += `  checkValidity(): ${nameInput.checkValidity()}\n\n`;
+            
+            result += 'email input:\n';
+            result += `  willValidate: ${emailInput.willValidate}\n`;
+            result += `  validity.valid: ${emailInput.validity.valid}\n`;
+            result += `  validationMessage: "${emailInput.validationMessage}"\n`;
+            result += `  checkValidity(): ${emailInput.checkValidity()}`;
+            
+            document.getElementById('output').textContent = result;
+        }
+    </script>
+</body>
+</html>

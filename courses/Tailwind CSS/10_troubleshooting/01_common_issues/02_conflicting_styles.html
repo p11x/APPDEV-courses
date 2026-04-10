@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conflicting Styles - Tailwind CSS Troubleshooting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-red-600">Conflicting Styles</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Understanding the Issue</h2>
+            <p class="mb-4">Style conflicts in Tailwind CSS occur when multiple CSS rules target the same element with different specificity, or when custom styles override Tailwind utilities incorrectly. Understanding the cascade and specificity order is crucial.</p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                <p class="font-bold">Common Causes:</p>
+                <ul class="list-disc ml-6 mt-2">
+                    <li>Using !important incorrectly</li>
+                    <li>Specificity conflicts with custom CSS</li>
+                    <li>Plugin styles conflicting with core utilities</li>
+                    <li>Base layer styles overriding components</li>
+                    <li>Multiple color definitions</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Standard Example: The Problem</h2>
+            
+            <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-4">
+                <h3 class="font-bold text-red-700 mb-2">Problem: CSS Layer Conflicts</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Problem: Base layer overriding component */
+@layer base {
+    button {
+        @apply bg-gray-200 text-gray-800;
+        /* This conflicts with Tailwind's button styles */
+    }
+}
+
+/* Problem: Wrong specificity order */
+.button-primary {
+    background-color: blue; /* This wins over bg-blue-500 */
+}
+
+&lt;button class="bg-blue-500"&gt;Click&lt;/button&gt;
+/* Element has both .button-primary (from some JS) */
+/* and bg-blue-500 - specificity decides winner */</code></pre>
+            </div>
+
+            <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                <h3 class="font-bold text-green-700 mb-2">Solution: Use @layer Correctly</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Solution: Use component layer for custom components */
+@layer components {
+    .btn-primary {
+        @apply bg-blue-500 text-white px-4 py-2 rounded;
+        /* This has proper precedence */
+    }
+}
+
+/* Solution: Use CSS cascade order */
+@layer base {
+    /* Only define base element styles here */
+    body {
+        @apply bg-white text-gray-900;
+    }
+}
+
+@layer components {
+    /* Component styles - inherits from base */
+    .btn {
+        @apply px-4 py-2 rounded font-medium;
+    }
+}
+
+@layer utilities {
+    /* Utility overrides - highest specificity */
+    .text-balance {
+        text-wrap: balance;
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 1: Component Plugin Conflict</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// tailwind.config.js
+module.exports = {
+    plugins: [
+        require('@tailwindcss/forms'),
+        require('@tailwindcss/typography'),
+        require('@tailwindcss/aspect-ratio')
+    ],
+    theme: {
+        extend: {
+            // This extends but doesn't conflict
+            colors: {
+                brand: {
+                    50: '#f0f9ff',
+                    500: '#0ea5e9',
+                    600: '#0284c7',
+                    700: '#0369a1'
+                }
+            }
+        }
+    }
+}
+
+/* Real-world conflict scenario:
+   @tailwindcss/forms defines:
+   input[type="text"] { @apply block width ... }
+   
+   Your custom CSS:
+   input { @apply w-full p-3; } 
+   
+   The form plugin styles may override yours due to specificity!
+*/
+
+/* Solution: Use @layer utilities or !important sparingly */
+@layer components {
+    input.custom-input {
+        @apply w-full p-3 border-gray-300 rounded;
+    }
+}</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Before: Form plugin input styles override custom styles</p>
+                <p>After: Custom component layer properly scoped wins</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 2: Theme Override Conflict</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// tailwind.config.js - Theme conflicts
+module.exports = {
+    theme: {
+        // This replaces ENTIRE colors object
+        colors: {
+            blue: { /* only blue defined */ }
+        }
+        // Result: red, green, gray all gone!
+    }
+}
+
+// CORRECT: Use extend to preserve defaults
+module.exports = {
+    theme: {
+        extend: {
+            colors: {
+                // Only adds/changes specific colors
+                brand: {
+                    500: '#ff6b6b',
+                    600: '#ee5a5a'
+                }
+                // All other colors preserved!
+            }
+        }
+    }
+}
+
+/* Real-world: CSS specificity conflict */
+&lt;style&gt;
+.btn { background: red !important; } /* Too aggressive */
+&lt;/style&gt;
+
+&lt;button class="bg-blue-500 hover:bg-blue-600"&gt;
+    Click
+&lt;/button&gt;
+
+/* !important breaks hover states - hover won't work! */
+
+/* Solution: Use proper specificity, not !important */
+@layer components {
+    .btn-special {
+        @apply bg-blue-500;
+    }
+    .btn-special:hover {
+        @apply bg-blue-600;
+    }
+}</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Using extend: All default colors preserved + custom added</p>
+                <p>Hover states work when not using !important</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Debugging Flow</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌─────────────────────────────────────────────────────────────────┐
+│                  STYLE CONFLICT DEBUGGING                          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  1. Identify conflicting sources                                  │
+│     ├── Custom CSS vs Tailwind utilities?                        │
+│     ├── Plugin CSS vs custom CSS?                                │
+│     └── Base styles vs component styles?                         │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. Check CSS specificity                                        │
+│     ├── Inline styles (highest)                                  │
+│     ├── IDs (#id)                                                │
+│     ├── Classes (.class), attributes, pseudo-classes             │
+│     └── Elements (lowest)                                        │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  3. Use browser DevTools                                         │
+│     ├── Inspect element                                          │
+│     ├── Check "Computed" tab for final values                    │
+│     └── Look for crossed-out declarations                        │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. Fix using proper @layer                                      │
+│     ├── @layer base - normalize/reset                            │
+│     ├── @layer components - custom components                   │
+│     └── @layer utilities - utility overrides                     │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │  Issue Resolved! │
+                    └──────────────────┘</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Edge Cases & Considerations</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-yellow-50 p-4 rounded">
+                    <h3 class="font-bold text-yellow-800">Edge Cases</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• Multiple @apply in same rule</li>
+                        <li>• !important in utilities overrides hover/focus</li>
+                        <li>• Plugin styles with high specificity</li>
+                        <li>• Inline styles from JS libraries</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <h3 class="font-bold text-blue-800">Performance</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• Excessive @layer can increase CSS size</li>
+                        <li>• Avoid deep nesting of @apply</li>
+                        <li>• Use utilities directly when possible</li>
+                    </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                    <h3 class="font-bold text-green-800">Accessibility</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• Focus states may be overridden</li>
+                        <li>• Ensure focus-visible still works</li>
+                        <li>• Test keyboard navigation</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50 p-4 rounded">
+                    <h3 class="font-bold text-purple-800">Cross-Browser</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• CSS layers support in modern browsers</li>
+                        <li>• Use postcss-layer-deep-support if needed</li>
+                        <li>• Test in target browser versions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Quick Fix Commands</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Check computed styles in browser */
+/* In DevTools Console: */
+getComputedStyle(document.querySelector('.my-element'))
+
+/* Debug CSS layers */
+/* Add to CSS temporarily */
+*, *::before, *::after {
+    outline: 1px solid red; /* See all element boundaries */
+}
+
+/* Force utility priority - use utilities layer */
+@layer utilities {
+    .my-override {
+        background-color: blue !important;
+    }
+}
+
+/* View full cascade in DevTools */
+/* Elements panel > Styles > check "Show all"</code></pre>
+        </div>
+    </div>
+</body>
+</html>

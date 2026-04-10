@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin API - Tailwind CSS Plugin Development</title>
+</head>
+<body>
+    <h1>Plugin API Reference</h1>
+
+    <h2>Understanding the Plugin API</h2>
+    <p>
+        The Plugin API provides methods to extend Tailwind CSS with custom utilities, components, base styles, and variants. Understanding these methods is essential for creating effective plugins that integrate seamlessly with Tailwind's system.
+    </p>
+
+    <h2>API Methods Overview</h2>
+    
+    <h3>Standard Example: Using addUtilities</h3>
+    <!-- Using utility created via plugin -->
+    <div class="text-gradient bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-500">
+        Gradient Text
+    </div>
+    <!-- 
+        Plugin API usage:
+        addUtilities({
+            '.text-gradient': {
+                'background-clip': 'text',
+                '-webkit-background-clip': 'text',
+                'color': 'transparent',
+            }
+        })
+    -->
+
+    <h3>Real-World Example 1: Using addComponents</h3>
+    <!-- Component from plugin -->
+    <div class="card-hover">
+        <h3 class="card-title">Card Title</h3>
+        <p class="card-text">Card content goes here</p>
+    </div>
+    <!-- 
+        addComponents({
+            '.card-hover': {
+                'transition': 'all 0.3s ease',
+                '&:hover': {
+                    'transform': 'translateY(-5px)',
+                    'box-shadow': '0 10px 20px rgba(0,0,0,0.1)',
+                }
+            }
+        })
+    -->
+
+    <h3>Real-World Example 2: Using addBase with theme access</h3>
+    <!-- Base styles applied to the document -->
+    <article class="article">
+        <h1>Article Heading</h1>
+        <p>Article paragraph content.</p>
+    </article>
+    <!-- 
+        addBase({
+            'html': {
+                'scroll-behavior': 'smooth',
+            },
+            'article': {
+                'max-width': theme('screens.md'),
+                'margin': '0 auto',
+            }
+        })
+    -->
+
+    <h2>Output Statement</h2>
+    <p>
+        The Plugin API provides four main methods: addUtilities for single-purpose classes, addComponents for reusable component patterns, addBase for global styles, and addVariant for custom state variants. Each method serves a specific purpose in the Tailwind CSS architecture.
+    </p>
+
+    <h2>ASCII Diagram: Plugin API Flow</h2>
+    <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                    PLUGIN API METHODS                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐  │
+│   │  plugin(function({                                  │  │
+│   │      addUtilities,     // Single CSS properties     │  │
+│   │      addComponents,    // Reusable patterns         │  │
+│   │      addBase,          // Global/base styles        │  │
+│   │      addVariant,       // Custom variants           │  │
+│   │      theme,            // Access theme config       │  │
+│   │      config,           // Full config access        │  │
+│   │      variants,         // Enabled variants          │  │
+│   │      e                 // Escape function           │  │
+│   │  }) {})                                         │  │
+│   └─────────────────────────────────────────────────────┘  │
+│                          │                                  │
+│                          ▼                                  │
+│   ┌─────────────────────────────────────────────────────┐  │
+│   │              Generated CSS                            │  │
+│   │   .custom-utility { ... }  (from addUtilities)      │  │
+│   │   .custom-component { ... } (from addComponents)    │  │
+│   │   body { ... }              (from addBase)          │  │
+│   │   .custom-variant:hover { ... } (from addVariant)   │  │
+│   └─────────────────────────────────────────────────────┘  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Detailed API Reference</h2>
+    
+    <h3>addUtilities(utilities, options)</h3>
+    <pre>
+addUtilities({
+    '.rotate-45': { transform: 'rotate(45deg)' },
+    '.rotate-90': { transform: 'rotate(90deg)' },
+}, { 
+    variants: ['responsive', 'hover']  // Enable variants
+})
+    </pre>
+
+    <h3>addComponents(components, options)</h3>
+    <pre>
+addComponents({
+    '.btn': {
+        padding: '0.5rem 1rem',
+        borderRadius: '0.25rem',
+        fontWeight: '500',
+    },
+})
+    </pre>
+
+    <h3>addBase(baseStyles)</h3>
+    <pre>
+addBase({
+    'html': {
+        scrollBehavior: 'smooth',
+    },
+    'body': {
+        backgroundColor: '#ffffff',
+    },
+})
+    </pre>
+
+    <h3>addVariant(name, definition)</h3>
+    <pre>
+addVariant('group-hover', '@media (hover: hover) { .group:hover & { ... } }')
+    </pre>
+
+    <h2>Theme Function Usage</h2>
+    <pre>
+function({ theme }) {
+    theme('colors.blue.500')  // Access specific theme value
+    theme('spacing.4')        // Access spacing
+    theme('screens.md')       // Access screens
+    theme('borderRadius.md')  // Access border radius
+}
+    </pre>
+
+    <h2>Edge Cases and Considerations</h2>
+    <ul>
+        <li>Always use theme() to access user customizations</li>
+        <li>Use the e() function to escape class names properly</li>
+        <li>Consider CSS specificity when overriding existing styles</li>
+        <li>Use variants option to enable hover/responsive variants</li>
+    </ul>
+
+    <h2>Performance Considerations</h2>
+    <ul>
+        <li>addUtilities generates smaller CSS than addComponents</li>
+        <li>Use variants sparingly to avoid CSS bloat</li>
+        <li>Consider using JIT-compatible arbitrary values</li>
+    </ul>
+
+    <h2>Accessibility Notes</h2>
+    <p>
+        When using addVariant to create custom states (like focus-visible), ensure proper accessibility. Interactive components should maintain visible focus indicators for keyboard users.
+    </p>
+
+    <h2>Cross-Browser Notes</h2>
+    <p>
+        The Plugin API generates standard CSS. Cross-browser compatibility depends on the CSS properties used in your plugin, not the API itself. Use vendor prefixes where necessary.
+    </p>
+</body>
+</html>

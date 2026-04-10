@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallel Execution</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Parallel Execution</h1>
+    <p>Parallel execution runs multiple async operations simultaneously using Promise.all.</p>
+    
+    <h2>Example 1: Basic Parallel</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Parallel with Different Delays</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Parallel Data Fetch</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        function delay(ms, value) {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    resolve(value);
+                }, ms);
+            });
+        }
+
+        var start1 = Date.now();
+        
+        Promise.all([
+            delay(100, "Task 1"),
+            delay(100, "Task 2"),
+            delay(100, "Task 3")
+        ]).then(function(results) {
+            var time = Date.now() - start1;
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Results: " + results.join(", ") + "<br>Time: ~" + time + "ms<br>";
+        });
+
+        var promise1 = delay(200, "Slow");
+        var promise2 = delay(50, "Fast");
+        var promise3 = delay(100, "Medium");
+        
+        var start2 = Date.now();
+        
+        Promise.all([promise1, promise2, promise3]).then(function(results) {
+            var time = Date.now() - start2;
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>Results: " + results.join(", ") + "<br>Completed in: ~" + time + "ms (parallel)<br>";
+        });
+
+        function fetchUserData(id) {
+            return delay(50, { id: id, name: "User" + id });
+        }
+        
+        var userIds = [1, 2, 3];
+        var userPromises = userIds.map(function(id) {
+            return fetchUserData(id);
+        });
+        
+        Promise.all(userPromises).then(function(users) {
+            var output = "";
+            users.forEach(function(user) {
+                output += "ID: " + user.id + ", Name: " + user.name + "<br>";
+            });
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>" + output + "Total users: " + users.length + "<br>";
+        });
+    </script>
+</body>
+</html>

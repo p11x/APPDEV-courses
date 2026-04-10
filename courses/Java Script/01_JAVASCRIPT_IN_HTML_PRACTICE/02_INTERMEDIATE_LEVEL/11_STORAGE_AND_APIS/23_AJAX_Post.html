@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>23 - AJAX Post</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>23 - AJAX POST Request</h1>
+    <p>Using XMLHttpRequest for POST requests.</p>
+    
+    <button onclick="ajaxPost()">AJAX POST</button>
+    <button onclick="ajaxPostJSON()">POST JSON</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        let output = [];
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        function ajaxPost() {
+            output = [];
+            log('Making AJAX POST request...');
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://jsonplaceholder.typicode.com/posts', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 201) {
+                    log('Status: ' + xhr.status + ' (Created)');
+                    log('Response: ' + xhr.responseText);
+                }
+            };
+            
+            xhr.send('title=foo&body=bar&userId=1');
+            log('Form data sent...');
+        }
+
+        function ajaxPostJSON() {
+            output = [];
+            log('POSTing JSON data...');
+            
+            const data = {
+                title: 'My Post',
+                body: 'This is the post content',
+                userId: 1
+            };
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://jsonplaceholder.typicode.com/posts', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onload = function() {
+                if (xhr.status === 201) {
+                    const response = JSON.parse(xhr.responseText);
+                    log('Created post with ID: ' + response.id);
+                    log('Title: ' + response.title);
+                }
+            };
+            
+            xhr.send(JSON.stringify(data));
+            log('JSON sent...');
+        }
+    </script>
+</body>
+</html>

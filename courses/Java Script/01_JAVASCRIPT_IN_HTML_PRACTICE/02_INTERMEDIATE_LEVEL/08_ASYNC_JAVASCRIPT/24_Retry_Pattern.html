@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retry Pattern</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Retry Pattern</h1>
+    <p>Retry pattern allows automatic retrying of failed async operations.</p>
+    
+    <h2>Example 1: Basic Retry</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Retry with Limit</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Retry Until Success</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        function retry(fn, retries) {
+            return fn()["catch"](function(err) {
+                if (retries > 0) {
+                    return retry(fn, retries - 1);
+                }
+                return Promise.reject(err);
+            });
+        }
+        
+        var attempts1 = 0;
+        
+        function unstableOperation1() {
+            attempts1++;
+            return new Promise(function(resolve, reject) {
+                if (attempts1 < 2) {
+                    reject(new Error("Failed"));
+                } else {
+                    resolve("Success!");
+                }
+            });
+        }
+        
+        retry(unstableOperation1, 3).then(function(result) {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>" + result + "<br>Attempts: " + attempts1 + "<br>";
+        })["catch"](function(err) {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Failed: " + err.message + "<br>";
+        });
+
+        var attempts2 = 0;
+        
+        function unstableOperation2() {
+            attempts2++;
+            return new Promise(function(resolve, reject) {
+                reject(new Error("Temporary failure"));
+            });
+        }
+        
+        retry(unstableOperation2, 3)["catch"](function(err) {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>All retries failed<br>Attempts: " + attempts2 + "<br>Error: " + err.message + "<br>";
+        });
+
+        var attempts3 = 0;
+        var maxRetries = 5;
+        
+        function unreliableFetch() {
+            attempts3++;
+            return new Promise(function(resolve, reject) {
+                var success = Math.random() > 0.7;
+                if (success) {
+                    resolve("Data loaded!");
+                } else {
+                    reject(new Error("Network error"));
+                }
+            });
+        }
+        
+        retry(unreliableFetch, maxRetries).then(function(result) {
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>" + result + "<br>Attempts: " + attempts3 + "<br>";
+        })["catch"](function(err) {
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Failed after " + attempts3 + " attempts<br>";
+        });
+    </script>
+</body>
+</html>

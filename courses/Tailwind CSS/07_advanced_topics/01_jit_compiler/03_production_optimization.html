@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Optimization - Tailwind CSS JIT</title>
+</head>
+<body>
+    <h1>Production Optimization with JIT</h1>
+
+    <h2>Why Production Optimization Matters</h2>
+    <p>
+        While JIT provides significant improvements out of the box, there are additional optimization steps you can take to ensure your production CSS is as small and performant as possible. Production optimization ensures your application loads quickly and provides the best user experience.
+    </p>
+
+    <h2>Key Optimization Strategies</h2>
+    
+    <h3>Standard Example: Optimized Configuration</h3>
+    <!-- These classes will be optimized in production build -->
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-900">Welcome</h1>
+    </div>
+    <!-- 
+        Production optimizations:
+        - Unused variants removed
+        - CSS minified
+        - Only used classes included
+    -->
+
+    <h3>Real-World Example 1: E-commerce Product Card</h3>
+    <!-- Optimized for production with minimal CSS footprint -->
+    <div class="product-card">
+        <div class="relative aspect-square bg-gray-100 rounded-t-lg overflow-hidden">
+            <img src="product.jpg" alt="Product" class="object-cover w-full h-full">
+            <span class="absolute top-2 right-2 px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded">Sale</span>
+        </div>
+        <div class="p-4 border border-t-0 rounded-b-lg">
+            <h3 class="text-lg font-medium text-gray-900">Product Name</h3>
+            <p class="mt-1 text-sm text-gray-500">Product description</p>
+            <p class="mt-2 text-lg font-semibold text-gray-900">$29.99</p>
+        </div>
+    </div>
+    <!-- Production: Only generates CSS for actual used classes -->
+
+    <h3>Real-World Example 2: Navigation Component</h3>
+    <nav class="flex items-center justify-between px-6 py-4 bg-white shadow-sm">
+        <div class="flex items-center space-x-4">
+            <img src="logo.svg" alt="Logo" class="w-8 h-8">
+            <span class="text-xl font-bold text-gray-800">Brand</span>
+        </div>
+        <div class="hidden md:flex items-center space-x-6">
+            <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors">Home</a>
+            <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors">About</a>
+            <a href="#" class="text-gray-600 hover:text-gray-900 transition-colors">Contact</a>
+        </div>
+        <button class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700">
+            Sign Up
+        </button>
+    </nav>
+    <!-- Production optimization removes unused responsive variants -->
+
+    <h2>Output Statement</h2>
+    <p>
+        A well-optimized Tailwind CSS production build typically results in 10-50KB of gzipped CSS (100-200KB uncompressed), compared to 3MB+ in classic mode. Additional optimizations like code splitting and lazy loading can further improve performance.
+    </p>
+
+    <h2>ASCII Diagram: Production Build Process</h2>
+    <pre>
+┌─────────────────────────────────────────────────────────────┐
+│              PRODUCTION OPTIMIZATION FLOW                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐  │
+│   │  Dev Build  │    │ JIT Compile │    │   Purge     │  │
+│   │  (watch)    │───▶│             │───▶│  Unused     │  │
+│   └─────────────┘    └─────────────┘    └──────┬──────┘  │
+│                                                 │          │
+│                                                 ▼          │
+│   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐  │
+│   │  Minify     │    │  Gzip/Brotli│    │  Final CSS  │  │
+│   │  CSS        │───▶│  Compress   │───▶│  (10-50KB)  │  │
+│   └─────────────┘    └─────────────┘    └─────────────┘  │
+│                                                             │
+│   Development: Full CSS, fast rebuilds                     │
+│   Production:  Optimized, minified, compressed              │
+└─────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Production Configuration Best Practices</h2>
+    <pre>
+module.exports = {
+  content: ['./src/**/*.{html,js}'],
+  mode: 'jit',
+  purge: {
+    enabled: true, // Automatic in v3
+    content: ['./src/**/*.{html,js,jsx,ts,tsx,vue}'],
+  },
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+    </pre>
+
+    <h2>Advanced Optimizations</h2>
+    <ul>
+        <li>Use content option to specify exactly which files to scan</li>
+        <li>Implement safelist for dynamically generated classes</li>
+        <li>Use PurgeCSS with custom extractors for special file types</li>
+        <li>Enable CSS minification in your build pipeline</li>
+        <li>Consider using CSS modules or component-level CSS for large apps</li>
+    </ul>
+
+    <h2>Edge Cases and Considerations</h2>
+    <ul>
+        <li>Classes used in string concatenation may need safelist</li>
+        <li>Ensure all template files are included in content config</li>
+        <li>Test production build locally before deploying</li>
+        <li>Monitor actual CSS size in production with dev tools</li>
+    </ul>
+
+    <h2>Performance Considerations</h2>
+    <ul>
+        <li>Production builds take longer than development builds</li>
+        <li>Gzip compression typically reduces CSS by 70-80%</li>
+        <li>Consider using a CDN for static assets in production</li>
+        <li>Enable HTTP/2 for better resource loading</li>
+    </ul>
+
+    <h2>Accessibility Notes</h2>
+    <p>
+        Production optimization does not affect accessibility. All classes used in your HTML remain in the output CSS. Ensure proper color contrast and semantic HTML are maintained regardless of CSS optimization.
+    </p>
+
+    <h2>Cross-Browser Notes</h2>
+    <p>
+        Optimized CSS works in all modern browsers including Chrome, Firefox, Safari, and Edge. Older browsers will receive the same optimized CSS as modern browsers.
+    </p>
+</body>
+</html>

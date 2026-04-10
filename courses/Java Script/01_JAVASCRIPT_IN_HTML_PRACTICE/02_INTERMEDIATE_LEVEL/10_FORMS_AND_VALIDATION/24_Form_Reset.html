@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Reset</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>Form Reset Functionality</h1>
+    <p>Demonstrates form reset and custom reset handling</p>
+
+    <div class="demo-section">
+        <h2>Form with Reset</h2>
+        <form id="resetForm">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" value="johndoe">
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="john@example.com">
+            
+            <label for="country">Country:</label>
+            <select id="country" name="country">
+                <option value="">-- Select --</option>
+                <option value="us" selected>United States</option>
+                <option value="uk">United Kingdom</option>
+                <option value="ca">Canada</option>
+            </select>
+            
+            <label>
+                <input type="checkbox" name="newsletter" checked> Subscribe to newsletter
+            </label>
+            
+            <label for="notifications">Notifications:</label>
+            <select id="notifications" name="notifications" multiple size="3">
+                <option value="email" selected>Email</option>
+                <option value="sms" selected>SMS</option>
+                <option value="push">Push</option>
+            </select>
+            
+            <button type="button" onclick="getCurrentValues()">Get Current Values</button>
+            <button type="reset">Reset Form (default)</button>
+            <button type="button" onclick="customReset()">Custom Reset</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Reset Events</h2>
+        <button type="button" onclick="showResetBehavior()">Show Reset Behavior</button>
+        <div id="output" class="output">Click a button to see results...</div>
+    </div>
+
+    <script>
+        const form = document.getElementById('resetForm');
+        
+        // Get current values
+        function getCurrentValues() {
+            let result = 'CURRENT VALUES:\n================\n\n';
+            result += `username: "${document.getElementById('username').value}"\n`;
+            result += `email: "${document.getElementById('email').value}"\n`;
+            result += `country: "${document.getElementById('country').value}"\n`;
+            result += `newsletter: ${document.querySelector('input[name="newsletter"]').checked}\n`;
+            
+            const selectedOptions = Array.from(document.getElementById('notifications').selectedOptions);
+            result += `notifications: [${selectedOptions.map(o => o.value).join(', ')}]`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Custom reset function
+        function customReset() {
+            // Reset to specific default values
+            document.getElementById('username').value = 'guest';
+            document.getElementById('email').value = 'guest@example.com';
+            document.getElementById('country').value = '';
+            
+            const newsletterCheckbox = document.querySelector('input[name="newsletter"]');
+            newsletterCheckbox.checked = false;
+            
+            const notifications = document.getElementById('notifications');
+            Array.from(notifications.options).forEach(option => {
+                option.selected = option.value === 'push';
+            });
+            
+            document.getElementById('output').textContent = 'Form reset to custom values.';
+        }
+        
+        // Show reset behavior
+        function showResetBehavior() {
+            let result = 'RESET BEHAVIOR:\n================\n\n';
+            result += 'Default reset() method:\n';
+            result += '  - Restores all inputs to default values\n';
+            result += '  - Default value is set in HTML or empty\n';
+            result += '  - Fires reset event on form\n\n';
+            result += 'Custom Reset:\n';
+            result += '  - Manually set values with JavaScript\n';
+            result += '  - Can set different initial values\n';
+            result += '  - Useful for complex forms';
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Listen for reset event
+        form.addEventListener('reset', function(e) {
+            console.log('Form is being reset');
+            document.getElementById('output').textContent = 'Reset event fired!';
+        });
+        
+        // Prevent default reset and show message
+        form.addEventListener('reset', function(e) {
+            if (!confirm('Are you sure you want to reset the form?')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

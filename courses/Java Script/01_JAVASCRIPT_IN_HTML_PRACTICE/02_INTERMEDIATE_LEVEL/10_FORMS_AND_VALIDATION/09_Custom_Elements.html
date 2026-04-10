@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Elements</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>Custom Form Elements Demo</h1>
+    <p>Demonstrates creating custom form elements using Web Components</p>
+
+    <div class="demo-section">
+        <h2>Custom Elements</h2>
+        
+        <!-- Custom input element -->
+        <label for="username">Username:</label>
+        <custom-input id="username" name="username" placeholder="Enter username" required></custom-input>
+        
+        <label for="customColor">Custom Color Picker:</label>
+        <custom-color-input id="customColor" name="customColor" value="#ff5500"></custom-color-input>
+        
+        <button type="button" onclick="testCustomElements()">Test Custom Elements</button>
+    </div>
+
+    <div class="demo-section">
+        <h2>Results</h2>
+        <div id="output" class="output">Click a button to see custom element results...</div>
+    </div>
+
+    <script>
+        // Custom Input Element using Web Components
+        class CustomInput extends HTMLElement {
+            static get observedAttributes() {
+                return ['value', 'placeholder', 'required'];
+            }
+            
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
+            }
+            
+            connectedCallback() {
+                this.render();
+                this.setupEvents();
+            }
+            
+            attributeChangedCallback(name, oldValue, newValue) {
+                if (oldValue !== newValue) {
+                    this.render();
+                }
+            }
+            
+            render() {
+                const value = this.getAttribute('value') || '';
+                const placeholder = this.getAttribute('placeholder') || '';
+                const required = this.hasAttribute('required');
+                
+                this.shadowRoot.innerHTML = `
+                    <style>
+                        :host {
+                            display: block;
+                        }
+                        input {
+                            width: 100%;
+                            padding: 8px;
+                            font-size: 14px;
+                            border: 1px solid #ccc;
+                            border-radius: 4px;
+                            box-sizing: border-box;
+                        }
+                        input:invalid {
+                            border-color: red;
+                        }
+                    </style>
+                    <input type="text" 
+                           value="${value}" 
+                           placeholder="${placeholder}"
+                           ${required ? 'required' : ''}
+                           part="input">
+                `;
+            }
+            
+            setupEvents() {
+                const input = this.shadowRoot.querySelector('input');
+                input.addEventListener('input', (e) => {
+                    this.setAttribute('value', e.target.value);
+                    this.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+                
+                input.addEventListener('change', (e) => {
+                    this.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            }
+            
+            // Form associated element API
+            static get formAssociated() {
+                return true;
+            }
+            
+            get validity() {
+                const input = this.shadowRoot.querySelector('input');
+                return input ? input.validity : null;
+            }
+            
+            get validationMessage() {
+                const input = this.shadowRoot.querySelector('input');
+                return input ? input.validationMessage : '';
+            }
+            
+            get value() {
+                return this.getAttribute('value') || '';
+            }
+            
+            set value(val) {
+                this.setAttribute('value', val);
+                const input = this.shadowRoot.querySelector('input');
+                if (input) input.value = val;
+            }
+            
+            checkValidity() {
+                const input = this.shadowRoot.querySelector('input');
+                return input ? input.checkValidity() : true;
+            }
+        }
+        
+        // Custom Color Input Element
+        class CustomColorInput extends HTMLElement {
+            constructor() {
+                super();
+                this.attachShadow({ mode: 'open' });
+            }
+            
+            connectedCallback() {
+                this.render();
+                this.setupEvents();
+            }
+            
+            render() {
+                const value = this.getAttribute('value') || '#000000';
+                
+                this.shadowRoot.innerHTML = `
+                    <style>
+                        :host {
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                        }
+                        input[type="color"] {
+                            width: 50px;
+                            height: 35px;
+                            padding: 0;
+                            border: 1px solid #ccc;
+                            cursor: pointer;
+                        }
+                        .preview {
+                            width: 35px;
+                            height: 35px;
+                            border: 1px solid #ccc;
+                            border-radius: 4px;
+                            background-color: ${value};
+                        }
+                    </style>
+                    <input type="color" value="${value}" part="color">
+                    <div class="preview"></div>
+                `;
+            }
+            
+            setupEvents() {
+                const input = this.shadowRoot.querySelector('input');
+                input.addEventListener('input', (e) => {
+                    this.setAttribute('value', e.target.value);
+                    this.updatePreview(e.target.value);
+                    this.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+            }
+            
+            updatePreview(color) {
+                const preview = this.shadowRoot.querySelector('.preview');
+                if (preview) preview.style.backgroundColor = color;
+            }
+            
+            get value() {
+                return this.getAttribute('value') || '#000000';
+            }
+            
+            set value(val) {
+                this.setAttribute('value', val);
+            }
+        }
+        
+        // Register custom elements
+        customElements.define('custom-input', CustomInput);
+        customElements.define('custom-color-input', CustomColorInput);
+        
+        // Test custom elements
+        function testCustomElements() {
+            const customInput = document.getElementById('username');
+            const customColor = document.getElementById('customColor');
+            
+            let result = 'CUSTOM ELEMENT TESTS:\n====================\n\n';
+            result += `Custom Input:\n`;
+            result += `  value: "${customInput.value}"\n`;
+            result += `  checkValidity(): ${customInput.checkValidity()}\n`;
+            result += `  validationMessage: "${customInput.validationMessage}"\n\n`;
+            
+            result += `Custom Color Input:\n`;
+            result += `  value: "${customColor.value}"\n`;
+            
+            document.getElementById('output').textContent = result;
+        }
+    </script>
+</body>
+</html>

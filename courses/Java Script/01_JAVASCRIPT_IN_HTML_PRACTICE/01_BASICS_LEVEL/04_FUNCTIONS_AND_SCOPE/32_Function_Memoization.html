@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Memoization</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        pre { background: #1e1e1e; color: #fff; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>32. Function Memoization</h1>
+    
+    <h2>Exercise 1: Basic Memoization</h2>
+    <pre>function memoize(fn) {
+    const cache = {};
+    return function(...args) {
+        const key = JSON.stringify(args);
+        if (cache[key]) return cache[key];
+        cache[key] = fn.apply(this, args);
+        return cache[key];
+    };
+}</pre>
+    <div class="output" id="output1"></div>
+    
+    <h2>Exercise 2: Fibonacci with Memoization</h2>
+    <pre>function fibMemo(n, cache = {}) {
+    if (n in cache) return cache[n];
+    if (n <= 1) return n;
+    cache[n] = fibMemo(n - 1, cache) + fibMemo(n - 2, cache);
+    return cache[n];
+}</pre>
+    <div class="output" id="output2"></div>
+    
+    <h2>Exercise 3: Factorial with Memoization</h2>
+    <pre>const memoize = fn => {
+    const cache = {};
+    return (...args) => {
+        const key = args.join(',');
+        if (key in cache) return cache[key];
+        return cache[key] = fn(...args);
+    };
+};
+
+const fact = memoize(n => n <= 1 ? 1 : n * fact(n - 1));</pre>
+    <div class="output" id="output3"></div>
+    
+    <h2>Exercise 4: Memoized Array Sum</h2>
+    <pre>const memoize = fn => {
+    const cache = {};
+    return (...args) => {
+        const key = JSON.stringify(args);
+        if (key in cache) return cache[key];
+        return cache[key] = fn(...args);
+    };
+};
+
+const sumArray = memoize(arr => arr.reduce((a, b) => a + b, 0));</pre>
+    <div class="output" id="output4"></div>
+    
+    <h2>Exercise 5: Recursive DP Pattern</h2>
+    <pre>function countPaths(m, n, memo = {}) {
+    const key = m + ',' + n;
+    if (key in memo) return memo[key];
+    if (m === 0 || n === 0) return 0;
+    if (m === 1 && n === 1) return 1;
+    memo[key] = countPaths(m - 1, n, memo) + countPaths(m, n - 1, memo);
+    return memo[key];
+}</pre>
+    <div class="output" id="output5"></div>
+    
+    <script>
+        function memoize(fn) {
+            const cache = {};
+            return function(...args) {
+                const key = JSON.stringify(args);
+                if (cache[key]) return cache[key];
+                cache[key] = fn.apply(this, args);
+                return cache[key];
+            };
+        }
+        
+        const expensive = n => {
+            console.log('Computing for', n);
+            return n * 2;
+        };
+        
+        const memoizedExpensive = memoize(expensive);
+        
+        document.getElementById('output1').innerHTML = 
+            'memoized(5): ' + memoizedExpensive(5) + '<br>' +
+            'memoized(5) again (cached): ' + memoizedExpensive(5) + '<br>' +
+            'memoized(10): ' + memoizedExpensive(10);
+        
+        function fibMemo(n, cache = {}) {
+            if (n in cache) return cache[n];
+            if (n <= 1) return n;
+            cache[n] = fibMemo(n - 1, cache) + fibMemo(n - 2, cache);
+            return cache[n];
+        }
+        
+        const fibResults = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => n + ': ' + fibMemo(n));
+        
+        document.getElementById('output2').innerHTML = 'Fibonacci: ' + fibResults.join(', ');
+        
+        const memoize = fn => {
+            const cache = {};
+            return (...args) => {
+                const key = args.join(',');
+                if (key in cache) return cache[key];
+                return cache[key] = fn(...args);
+            };
+        };
+        
+        const fact = memoize(n => n <= 1 ? 1 : n * fact(n - 1));
+        
+        document.getElementById('output3').innerHTML = 
+            'fact(5): ' + fact(5) + '<br>' +
+            'fact(10): ' + fact(10);
+        
+        const sumArray = memoize(arr => arr.reduce((a, b) => a + b, 0));
+        
+        const arr = [1, 2, 3, 4, 5];
+        
+        document.getElementById('output4').innerHTML = 
+            'sumArray([1,2,3,4,5]): ' + sumArray(arr) + '<br>' +
+            'sumArray([1,2,3,4,5]) again: ' + sumArray(arr);
+        
+        function countPaths(m, n, memo = {}) {
+            const key = m + ',' + n;
+            if (key in memo) return memo[key];
+            if (m === 0 || n === 0) return 0;
+            if (m === 1 && n === 1) return 1;
+            memo[key] = countPaths(m - 1, n, memo) + countPaths(m, n - 1, memo);
+            return memo[key];
+        }
+        
+        document.getElementById('output5').innerHTML = 
+            'Paths in 2x2 grid: ' + countPaths(2, 2) + '<br>' +
+            'Paths in 3x3 grid: ' + countPaths(3, 3) + '<br>' +
+            'Paths in 4x4 grid: ' + countPaths(4, 4);
+    </script>
+</body>
+</html>

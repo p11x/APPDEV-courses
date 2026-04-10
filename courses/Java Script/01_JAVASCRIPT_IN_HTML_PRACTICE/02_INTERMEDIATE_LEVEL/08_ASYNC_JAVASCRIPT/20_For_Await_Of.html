@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For Await Of</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - For Await Of</h1>
+    <p>for await...of iterates over async iterable objects, awaiting each value.</p>
+    
+    <h2>Example 1: Iterate Over Async Array</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Process Async Data</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Handle Errors</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        function delay(ms, value) {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    resolve(value);
+                }, ms);
+            });
+        }
+        
+        async function runExample1() {
+            var results = [];
+            var promises = [
+                delay(100, "First"),
+                delay(50, "Second"),
+                delay(150, "Third")
+            ];
+            
+            for await (var item of promises) {
+                results.push(item);
+            }
+            return results;
+        }
+        
+        runExample1().then(function(results) {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Order: " + results.join(", ") + "<br>";
+        });
+
+        async function fetchUser(id) {
+            await delay(50, null);
+            return { id: id, name: "User" + id };
+        }
+        
+        async function runExample2() {
+            var output = "";
+            var ids = [1, 2, 3];
+            var asyncIds = ids.map(function(id) {
+                return fetchUser(id);
+            });
+            
+            for await (var user of asyncIds) {
+                output += user.name + " ";
+            }
+            return output;
+        }
+        
+        runExample2().then(function(result) {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>" + result + "<br>";
+        });
+
+        async function runExample3() {
+            var asyncIterable = {};
+            asyncIterable[Symbol.asyncIterator] = function() {
+                var index = 0;
+                var values = ["A", "B", Promise.reject(new Error("Error")), "C"];
+                return {
+                    next: function() {
+                        return new Promise(function(resolve, reject) {
+                            if (index < values.length) {
+                                var value = values[index++];
+                                if (value instanceof Promise) {
+                                    value.then(function(v) {
+                                        resolve({ value: v, done: false });
+                                    })["catch"](function(err) {
+                                        reject(err);
+                                    });
+                                } else {
+                                    resolve({ value: value, done: false });
+                                }
+                            } else {
+                                resolve({ done: true });
+                            }
+                        });
+                    }
+                };
+            };
+            
+            var results = [];
+            try {
+                for await (var item of asyncIterable) {
+                    results.push(item);
+                }
+            } catch (e) {
+                return { error: e.message, partial: results };
+            }
+            return results;
+        }
+        
+        runExample3().then(function(result) {
+            if (result.error) {
+                document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Caught error: " + result.error + "<br>Partial results: " + result.partial.join(", ") + "<br>";
+            } else {
+                document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>" + result.join(", ") + "<br>";
+            }
+        })["catch"](function(err) {
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Error: " + err.message + "<br>";
+        });
+    </script>
+</body>
+</html>

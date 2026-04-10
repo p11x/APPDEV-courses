@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Validation - Built-in</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 20px; margin: 15px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 15px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        input:valid { border: 2px solid green; }
+        input:invalid { border: 2px solid red; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; padding: 10px 20px; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        .error-message { color: red; font-size: 12px; display: none; }
+        input:invalid + .error-message { display: block; }
+        .valid-feedback { color: green; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Built-in Form Validation</h1>
+    <p>Demonstrates HTML5 validation attributes and constraint validation API</p>
+
+    <!-- Validation Status Display -->
+    <div class="demo-section">
+        <h2>Validation Status</h2>
+        <div id="validationStatus" class="output">Form validation status will appear here...</div>
+    </div>
+
+    <!-- Required Attribute -->
+    <div class="demo-section">
+        <h2>1. Required Field (required attribute)</h2>
+        <form id="form1">
+            <label for="fullname">Full Name (required):</label>
+            <input type="text" id="fullname" name="fullname" required>
+            <span class="error-message">This field is required!</span>
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <!-- Min/Max Length -->
+    <div class="demo-section">
+        <h2>2. Length Constraints (minlength, maxlength)</h2>
+        <form id="form2">
+            <label for="username">Username (3-15 chars):</label>
+            <input type="text" id="username" name="username" 
+                   minlength="3" maxlength="15" 
+                   placeholder="Enter username">
+            <span class="error-message">Username must be 3-15 characters!</span>
+            
+            <label for="bio">Bio (max 100 chars):</label>
+            <textarea id="bio" name="bio" maxlength="100" 
+                      placeholder="Tell us about yourself (max 100 chars)"></textarea>
+            <div id="bioCount">0/100</div>
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <!-- Pattern Validation -->
+    <div class="demo-section">
+        <h2>3. Pattern Matching (pattern attribute)</h2>
+        <form id="form3">
+            <label for="phone">Phone Number (US format):</label>
+            <input type="tel" id="phone" name="phone" 
+                   pattern="^\d{3}-\d{3}-\d{4}$"
+                   placeholder="123-456-7890">
+            <span class="error-message">Format: 123-456-7890</span>
+            
+            <label for="zipcode">ZIP Code (5 digits):</label>
+            <input type="text" id="zipcode" name="zipcode" 
+                   pattern="^\d{5}$"
+                   placeholder="12345">
+            <span class="error-message">Enter a valid 5-digit ZIP code</span>
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <!-- Email/URL Validation -->
+    <div class="demo-section">
+        <h2>4. Email and URL Validation</h2>
+        <form id="form4">
+            <label for="userEmail">Email:</label>
+            <input type="email" id="userEmail" name="userEmail" 
+                   placeholder="user@example.com">
+            <span class="error-message">Enter a valid email address</span>
+            
+            <label for="website">Website URL:</label>
+            <input type="url" id="website" name="website" 
+                   placeholder="https://example.com">
+            <span class="error-message">Enter a valid URL (include https://)</span>
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <!-- Number Constraints -->
+    <div class="demo-section">
+        <h2>5. Number Constraints (min, max, step)</h2>
+        <form id="form5">
+            <label for="age">Age (18-100):</label>
+            <input type="number" id="age" name="age" 
+                   min="18" max="100"
+                   placeholder="Enter age">
+            <span class="error-message">Age must be between 18 and 100</span>
+            
+            <label for="price">Price (multiple of 0.01):</label>
+            <input type="number" id="price" name="price" 
+                   min="0" step="0.01"
+                   placeholder="0.00">
+            <span class="error-message">Enter a valid price</span>
+            
+            <label for="quantity">Quantity (multiple of 5):</label>
+            <input type="number" id="quantity" name="quantity" 
+                   min="0" step="5"
+                   placeholder="0, 5, 10, 15...">
+            <span class="error-message">Quantity must be a multiple of 5</span>
+            
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <!-- Constraint Validation API -->
+    <div class="demo-section">
+        <h2>6. Constraint Validation API</h2>
+        <form id="form6">
+            <label for="apiName">Name:</label>
+            <input type="text" id="apiName" name="apiName" required>
+            
+            <label for="apiEmail">Email:</label>
+            <input type="email" id="apiEmail" name="apiEmail" required>
+            
+            <div style="margin: 15px 0;">
+                <button type="button" onclick="checkValidity()">checkValidity()</button>
+                <button type="button" onclick="reportValidity()">reportValidity()</button>
+                <button type="button" onclick="setCustomValidity()">setCustomValidity()</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const statusDisplay = document.getElementById('validationStatus');
+
+        // Helper to update status display
+        function updateStatus(formId) {
+            const form = document.getElementById(formId);
+            const isValid = form.checkValidity();
+            let status = `Form: ${formId}\n`;
+            status += `Valid: ${isValid}\n`;
+            
+            // Check individual fields
+            const inputs = form.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                const valid = input.checkValidity();
+                status += `${input.name}: ${valid ? '✓' : '✗'} - ${input.validationMessage}\n`;
+            });
+            
+            statusDisplay.textContent = status;
+        }
+
+        // Add submit handlers to all forms
+        ['form1', 'form2', 'form3', 'form4', 'form5'].forEach(formId => {
+            const form = document.getElementById(formId);
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                if (form.checkValidity()) {
+                    alert(`Form ${formId} is valid! Submitting...`);
+                    updateStatus(formId);
+                } else {
+                    form.reportValidity();
+                    updateStatus(formId);
+                }
+            });
+            
+            // Update status on input change
+            form.addEventListener('input', () => updateStatus(formId));
+        });
+
+        // Bio character counter
+        const bioInput = document.getElementById('bio');
+        const bioCount = document.getElementById('bioCount');
+        bioInput.addEventListener('input', function() {
+            const length = this.value.length;
+            bioCount.textContent = `${length}/100`;
+            bioCount.style.color = length > 80 ? 'red' : 'black';
+        });
+
+        // ===== CONSTRAINT VALIDATION API DEMOS =====
+        
+        function checkValidity() {
+            const form = document.getElementById('form6');
+            const result = form.checkValidity();
+            const details = `checkValidity() returned: ${result}\n`;
+            const messages = Array.from(form.elements).map(el => 
+                `${el.name}: ${el.validationMessage}`
+            ).join('\n');
+            
+            alert(details + '\nIndividual messages:\n' + messages);
+        }
+
+        function reportValidity() {
+            const form = document.getElementById('form6');
+            const result = form.reportValidity();
+            // reportValidity returns boolean in newer browsers
+            statusDisplay.textContent = `reportValidity() called. Check form for validation messages.`;
+        }
+
+        function setCustomValidity() {
+            const nameInput = document.getElementById('apiName');
+            const emailInput = document.getElementById('apiEmail');
+            
+            // Set custom error
+            if (!nameInput.value) {
+                nameInput.setCustomValidity('Please enter your name (custom error)');
+            } else {
+                nameInput.setCustomValidity(''); // Clear error
+            }
+            
+            if (!emailInput.value) {
+                emailInput.setCustomValidity('Please enter a valid email (custom error)');
+            } else {
+                emailInput.setCustomValidity('');
+            }
+            
+            // Show the custom validation
+            const form = document.getElementById('form6');
+            form.reportValidity();
+        }
+
+        // ===== VALIDITY STATE OBJECT =====
+        // Demonstrate the ValidityState interface
+        const emailInput = document.getElementById('userEmail');
+        
+        emailInput.addEventListener('input', function() {
+            const validity = this.validity;
+            let stateInfo = 'ValidityState properties:\n';
+            stateInfo += `valid: ${validity.valid}\n`;
+            stateInfo += `valueMissing: ${validity.valueMissing}\n`;
+            stateInfo += `typeMismatch: ${validity.typeMismatch}\n`;
+            stateInfo += `patternMismatch: ${validity.patternMismatch}\n`;
+            stateInfo += `tooLong: ${validity.tooLong}\n`;
+            stateInfo += `tooShort: ${validity.tooShort}\n`;
+            stateInfo += `stepMismatch: ${validity.stepMismatch}\n`;
+            stateInfo += `badInput: ${validity.badInput}\n`;
+            stateInfo += `customError: ${validity.customError}`;
+            
+            statusDisplay.textContent = stateInfo;
+        });
+    </script>
+</body>
+</html>

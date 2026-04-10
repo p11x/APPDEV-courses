@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Contrast Issues - Tailwind CSS Troubleshooting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-red-600">Color Contrast Issues</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Understanding the Issue</h2>
+            <p class="mb-4">Color contrast issues occur when text and background colors don't provide enough visual distinction. This makes content difficult or impossible to read for users with visual impairments, color blindness, or in challenging viewing conditions.</p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                <p class="font-bold">WCAG Contrast Requirements:</p>
+                <ul class="list-disc ml-6 mt-2">
+                    <li>Normal text: 4.5:1 ratio minimum (WCAG AA)</li>
+                    <li>Large text (18pt+ or 14pt bold): 3:1 ratio minimum</li>
+                    <li>UI components/graphics: 3:1 ratio minimum</li>
+                    <li>AAA compliance: 7:1 for normal, 4.5:1 for large</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Standard Example: Identifying Contrast Problems</h2>
+            
+            <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-4">
+                <h3 class="font-bold text-red-700 mb-2">Problem: Low Contrast Text</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>&lt;!-- PROBLEM: Light gray text on white background --&gt;
+&lt;p class="text-gray-300 bg-white"&gt;This text is very hard to read&lt;/p&gt;
+
+&lt;!-- PROBLEM: Gray-400 on light background --&gt;
+&lt;p class="text-gray-400 bg-gray-100"&gt;Almost invisible text&lt;/p&gt;
+
+&lt;!-- PROBLEM: Placing light text on colored background --&gt;
+&lt;div class="bg-blue-300"&gt;
+    &lt;p class="text-white"&gt;Blue-300 is too light for white text overlay&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- PROBLEM: Light button on light background --&gt;
+&lt;button class="bg-gray-200 text-gray-400"&gt;Submit&lt;/button&gt;
+
+&lt;!-- PROBLEM: Muted colors for disabled states --&gt;
+&lt;button class="bg-gray-100 text-gray-300" disabled&gt;
+    Disabled button with poor contrast
+&lt;/button&gt;</code></pre>
+            </div>
+
+            <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                <h3 class="font-bold text-green-700 mb-2">Solution: Proper Contrast Ratios</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>&lt;!-- SOLUTION: Use gray-600 or darker on white --&gt;
+&lt;p class="text-gray-600 bg-white"&gt;Now meets 4.5:1 minimum&lt;/p&gt;
+
+&lt;!-- SOLUTION: Use gray-700 on gray-100 --&gt;
+&lt;p class="text-gray-700 bg-gray-100"&gt;Good contrast ratio&lt;/p&gt;
+
+&lt;!-- SOLUTION: Use darker shade for colored backgrounds --&gt;
+&lt;div class="bg-blue-600"&gt;
+    &lt;p class="text-white"&gt;Strong contrast maintained&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- SOLUTION: Adequate button colors --&gt;
+&lt;button class="bg-blue-600 text-white"&gt;Submit&lt;/button&gt;
+
+&lt;!-- SOLUTION: Disabled state still needs contrast --&gt;
+&lt;button class="bg-gray-300 text-gray-600" disabled&gt;
+    Disabled (still needs 3:1 for UI components)
+&lt;/button&gt;
+
+&lt;!-- Text link on colored background --&gt;
+&lt;a href="#" class="text-blue-700 underline"&gt;Learn more&lt;/a&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 1: Form Validation</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>&lt;!-- PROBLEM: Error messages hard to read --&gt;
+&lt;form class="space-y-4"&gt;
+    &lt;!-- Light red background with light text --&gt;
+    &lt;div class="bg-red-50"&gt;
+        &lt;p class="text-red-200"&gt;Error: This field is required&lt;/p&gt;
+        &lt;!-- Contrast: ~1.5:1 - FAILS completely --&gt;
+    &lt;/div&gt;
+    
+    &lt;!-- Placeholder text too light --&gt;
+    &lt;input 
+        type="text" 
+        placeholder="Enter your email"
+        class="border border-gray-300 px-3 py-2"
+    /&gt;
+    &lt;!-- gray-400 placeholder on white - FAILS WCAG --&gt;
+&lt;/form&gt;
+
+&lt;!-- SOLUTION: High contrast validation messages --&gt;
+&lt;form class="space-y-4"&gt;
+    &lt;!-- Strong red with dark red text --&gt;
+    &lt;div class="bg-red-50 border border-red-300 p-3 rounded"&gt;
+        &lt;p class="text-red-700 font-medium"&gt;Error: This field is required&lt;/p&gt;
+        &lt;!-- Contrast: 6.5:1 - PASSES WCAG AA --&gt;
+    &lt;/div&gt;
+    
+    &lt;!-- Use visible label, not placeholder for instruction --&gt;
+    &lt;label class="block"&gt;
+        &lt;span class="text-gray-700 font-medium"&gt;Email&lt;/span&gt;
+        &lt;input 
+            type="email" 
+            class="mt-1 border border-gray-300 px-3 py-2 w-full"
+            aria-required="true"
+        /&gt;
+        &lt;span class="text-gray-600 text-sm"&gt;We'll never share your email.&lt;/span&gt;
+    &lt;/label&gt;
+    
+    &lt;!-- Success state with good contrast --&gt;
+    &lt;div class="bg-green-50 border border-green-300 p-3 rounded"&gt;
+        &lt;p class="text-green-700"&gt;✓ Valid email address&lt;/p&gt;
+    &lt;/div&gt;
+&lt;/form&gt;</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Error messages: Use red-700 on red-50 (6.5:1 ratio)</p>
+                <p>Labels: Always use gray-700 or darker</p>
+                <p>Avoid placeholder-only labels</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 2: Dark Mode Contrast</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>&lt;!-- PROBLEM: Dark mode with poor contrast --&gt;
+&lt;div class="bg-gray-900"&gt;
+    &lt;!-- Light gray on dark background - but too similar! --&gt;
+    &lt;p class="text-gray-400 bg-gray-900"&gt;
+        This text has only 5.3:1 contrast - passes but marginal
+    &lt;/p&gt;
+    
+    &lt;!-- Blue links on dark - color blind issue --&gt;
+    &lt;a href="#" class="text-blue-400"&gt;
+        Link with blue-400 - hard to see for some users
+    &lt;/a&gt;
+    
+    &lt;!-- Disabled state almost invisible --&gt;
+    &lt;button class="bg-gray-800 text-gray-600"&gt;
+        Disabled button - barely visible
+    &lt;/button&gt;
+&lt;/div&gt;
+
+&lt;!-- SOLUTION: Proper dark mode contrast --&gt;
+&lt;div class="bg-gray-900"&gt;
+    &lt;!-- White text on dark - highest contrast --&gt;
+    &lt;p class="text-white"&gt;
+        White on gray-900 = highest contrast (17:1+)
+    &lt;/p&gt;
+    
+    &lt;!-- Underlined links for visibility --&gt;
+    &lt;a href="#" class="text-blue-400 underline"&gt;
+        Link with blue-400 plus underline
+    &lt;/a&gt;
+    
+    &lt;!-- Clear disabled state --&gt;
+    &lt;button class="bg-gray-800 text-gray-500" disabled&gt;
+        Disabled button - visible but clearly disabled
+    &lt;/button&gt;
+    
+    &lt;!-- Secondary text - still needs contrast --&gt;
+    &lt;p class="text-gray-400"&gt;
+        Secondary text at gray-400 = 6.8:1 - passes AA
+    &lt;/p&gt;
+    
+    &lt;!-- Muted text with proper ratio --&gt;
+    &lt;p class="text-gray-500"&gt;
+        Caption text at gray-500 = 4.7:1 - passes AA
+    &lt;/p&gt;
+&lt;/div&gt;</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Dark backgrounds need white or light text (not gray-400)</p>
+                <p>Links need visual cue beyond color (underline)</p>
+                <p>Disabled states need 3:1 minimum for UI components</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Debugging Flow</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌─────────────────────────────────────────────┐
+│         COLOR CONTRAST DEBUGGING              │
+└─────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────┐
+│ 1. Identify text/background pairs            │
+│    Check: text colors vs container colors   │
+└─────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────┐
+│ 2. Calculate contrast ratio                  │
+│    Formula: (L1 + 0.05) / (L2 + 0.05)        │
+│    Tool: WebAIM Contrast Checker             │
+└─────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────┐
+│ 3. Test color combinations                   │
+│    Normal text: Minimum 4.5:1              │
+│    Large text: Minimum 3:1                  │
+│    UI components: Minimum 3:1              │
+└─────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────┐
+│ 4. Check for edge cases                      │
+│    - Disabled states                        │
+│    - Placeholder text                      │
+│    - Error/success messages                │
+│    - Links (color + underline)            │
+└─────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────┐
+│ 5. Test in different conditions             │
+│    - Bright sunlight                        │
+│    - Dark mode                              │
+│    - Color blindness simulation             │
+└─────────────────────────────────────────────┘
+                      │
+                      ▼
+              ┌─────────────────────┐
+              │ Issue Resolved!     │
+              └─────────────────────┘</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Tailwind Color Contrast Guide</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌──────────────────────────────────────────────────────────────────┐
+│                    TAILWIND CONTRAST REFERENCE                      │
+├────────────────────┬──────────────┬──────────────┬──────────────────┤
+│ Text Color         │ BG Color     │ Ratio        │ WCAG Status      │
+├────────────────────┼──────────────┼──────────────┼──────────────────┤
+│ text-gray-900      │ bg-white     │ 17.5:1       │ AAA ✓            │
+│ text-gray-800      │ bg-white     │ 16.1:1       │ AAA ✓            │
+│ text-gray-700      │ bg-white     │ 10.2:1       │ AAA ✓            │
+│ text-gray-600      │ bg-white     │ 7.3:1        │ AAA ✓            │
+│ text-gray-500      │ bg-white     │ 4.7:1        │ AA ✓            │
+│ text-gray-400      │ bg-white     │ 3.0:1        │ Large Text Only  │
+│ text-gray-300      │ bg-white     │ 1.8:1        │ FAIL ✗          │
+├────────────────────┼──────────────┼──────────────┼──────────────────┤
+│ text-white         │ bg-gray-900  │ 17.5:1       │ AAA ✓            │
+│ text-white         │ bg-blue-600  │ 7.5:1        │ AAA ✓            │
+│ text-white         │ bg-blue-500  │ 6.0:1        │ AA ✓             │
+│ text-white         │ bg-blue-400  │ 4.2:1        │ FAIL ✗          │
+├────────────────────┼──────────────┼──────────────┼──────────────────┤
+│ text-white         │ bg-red-600    │ 5.9:1        │ AA ✓             │
+│ text-red-700       │ bg-red-50    │ 6.5:1        │ AA ✓             │
+│ text-green-700     │ bg-green-50  │ 6.4:1        │ AA ✓             │
+└────────────────────┴──────────────┴──────────────┴──────────────────┘</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Edge Cases & Considerations</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-yellow-50 p-4 rounded">
+                    <h3 class="font-bold text-yellow-800">Edge Cases</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>Decorative backgrounds with text overlay</li>
+                        <li>Text over images (need overlay)</li>
+                        <li>Gradient backgrounds</li>
+                        <li>Themed components (buttons, badges)</li>
+                        <li>Focus states need 3:1 minimum</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <h3 class="font-bold text-blue-800">Performance</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>No performance impact</li>
+                        <li>Check contrast in build process</li>
+                        <li>Use CSS custom properties for themes</li>
+                    </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                    <h3 class="font-bold text-green-800">Cross-Browser Notes</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>All browsers handle colors consistently</li>
+                        <li>Test in Safari, Firefox, Chrome</li>
+                        <li>High DPI displays may affect perception</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50 p-4 rounded">
+                    <h3 class="font-bold text-purple-800">Testing Tools</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>WebAIM Contrast Checker</li>
+                        <li>axe DevTools</li>
+                        <li>Lighthouse Accessibility</li>
+                        <li>Color Blindness Simulator</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Quick Fix Commands</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Check contrast with WebAIM tool */
+/* https://webaim.org/resources/contrastchecker/ */
+
+/* Tailwind's accessible text classes */
+/* Use at least gray-700 for important text */
+text-gray-700    /* 10.2:1 - AAA */
+text-gray-600    /* 7.3:1 - AAA */
+text-gray-500    /* 4.7:1 - AA */
+
+/* For dark backgrounds */
+text-white      /* Maximum contrast */
+text-gray-100   /* 17:1 - AAA */
+text-gray-300   /* 10.4:1 - AAA */
+
+/* Links - need visual indicator */
+text-blue-600 underline
+/* OR use other visual cue beyond color */
+
+/* Disabled states - need 3:1 minimum */
+bg-gray-200 text-gray-500
+/* Not: bg-gray-100 text-gray-300 */
+
+/* Form validation - high contrast */
+text-red-700 on bg-red-50   /* 6.5:1 */
+text-green-700 on bg-green-50 /* 6.4:1 */</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">WCAG Contrast Requirements Summary</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌─────────────────────────────────────────────────────────────┐
+│                  WCAG 2.1 CONTRAST LEVELS                      │
+├─────────────────────────────────────────────────────────────┤
+│                     Level AA (Minimum)                      │
+├──────────────┬──────────────────────────────────────────────┤
+│ Normal Text  │ 4.5:1 ratio required                        │
+│ Large Text  │ 3:1 ratio required                         │
+│ UI Colors  │ 3:1 ratio required (graphs, icons, borders)  │
+├─────────────────────────────────────────────────────────────┤
+│                     Level AAA (Target)                     │
+├──────────────┬──────────────────────────────────────────────┤
+│ Normal Text  │ 7:1 ratio required                         │
+│ Large Text  │ 4.5:1 ratio required                       │
+└──────────────┴──────────────────────────────────────────────┘
+
+/* Large Text Definition */
+/* 18pt regular (24px) or 14pt bold (18.67px) */
+
+/* Measuring Contrast */
+/* 1. Get relative luminance for both colors */
+/* 2. Apply formula: (L1 + 0.05) / (L2 + 0.05) */
+/* 3. L1 = lighter, L2 = darker */
+
+ /* Always verify with automated tools */
+ /* Human perception varies - test with users */</code></pre>
+        </div>
+    </div>
+</body>
+</html>

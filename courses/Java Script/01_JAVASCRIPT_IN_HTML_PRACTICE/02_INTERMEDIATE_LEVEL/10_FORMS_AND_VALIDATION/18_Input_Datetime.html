@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Datetime</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>Date and Time Inputs</h1>
+    <p>Demonstrates date, time, datetime-local, month, week inputs</p>
+
+    <div class="demo-section">
+        <h2>Form with Date/Time Inputs</h2>
+        <form id="datetimeForm">
+            <label for="dateInput">Date:</label>
+            <input type="date" id="dateInput" name="dateInput">
+            
+            <label for="timeInput">Time:</label>
+            <input type="time" id="timeInput" name="timeInput">
+            
+            <label for="datetimeInput">Date & Time:</label>
+            <input type="datetime-local" id="datetimeInput" name="datetimeInput">
+            
+            <label for="monthInput">Month:</label>
+            <input type="month" id="monthInput" name="monthInput">
+            
+            <label for="weekInput">Week:</label>
+            <input type="week" id="weekInput" name="weekInput">
+            
+            <button type="button" onclick="setCurrentDateTime()">Set Current Date/Time</button>
+            <button type="button" onclick="parseDateTime()">Parse and Format Dates</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Date/Time Operations</h2>
+        <button type="button" onclick="getDateTimeValues()">Get All Values</button>
+        <button type="button" onclick="calculateDateDifference()">Date Difference</button>
+        <div id="output" class="output">Click a button to see results...</div>
+    </div>
+
+    <script>
+        const dateInput = document.getElementById('dateInput');
+        const timeInput = document.getElementById('timeInput');
+        const datetimeInput = document.getElementById('datetimeInput');
+        const monthInput = document.getElementById('monthInput');
+        const weekInput = document.getElementById('weekInput');
+        
+        // Set current date and time
+        function setCurrentDateTime() {
+            const now = new Date();
+            
+            // Format date (YYYY-MM-DD)
+            const dateStr = now.toISOString().split('T')[0];
+            dateInput.value = dateStr;
+            
+            // Format time (HH:MM)
+            const timeStr = now.toTimeString().slice(0, 5);
+            timeInput.value = timeStr;
+            
+            // Format datetime-local (YYYY-MM-DDTHH:MM)
+            const datetimeStr = now.toISOString().slice(0, 16);
+            datetimeInput.value = datetimeStr;
+            
+            // Format month (YYYY-MM)
+            const monthStr = now.toISOString().slice(0, 7);
+            monthInput.value = monthStr;
+            
+            // Format week (YYYY-Www)
+            const weekNum = getWeekNumber(now);
+            const year = now.getFullYear();
+            weekInput.value = `${year}-W${weekNum.toString().padStart(2, '0')}`;
+            
+            getDateTimeValues();
+        }
+        
+        // Get week number
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+        
+        // Get all values
+        function getDateTimeValues() {
+            let result = 'DATE/TIME VALUES:\n========================\n\n';
+            result += `date: "${dateInput.value}"\n`;
+            result += `time: "${timeInput.value}"\n`;
+            result += `datetime-local: "${datetimeInput.value}"\n`;
+            result += `month: "${monthInput.value}"\n`;
+            result += `week: "${weekInput.value}"`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Parse and format dates
+        function parseDateTime() {
+            if (!dateInput.value) {
+                document.getElementById('output').textContent = 'Please set a date first.';
+                return;
+            }
+            
+            const date = new Date(dateInput.value);
+            let result = 'PARSED DATE:\n===========\n\n';
+            result += `Input: "${dateInput.value}"\n\n`;
+            result += `ISO: ${date.toISOString()}\n`;
+            result += `Locale: ${date.toLocaleDateString()}\n`;
+            result += `Full: ${date.toString()}\n`;
+            result += `UTC: ${date.toUTCString()}\n\n`;
+            result += `Year: ${date.getFullYear()}\n`;
+            result += `Month: ${date.getMonth() + 1}\n`;
+            result += `Day: ${date.getDate()}`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Calculate date difference
+        function calculateDateDifference() {
+            const startDate = new Date();
+            const endDate = new Date(dateInput.value || Date.now());
+            
+            const diffTime = endDate - startDate;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            let result = 'DATE DIFFERENCE:\n================\n\n';
+            result += `Start: ${startDate.toLocaleDateString()}\n`;
+            result += `End: ${endDate.toLocaleDateString()}\n\n`;
+            result += `Difference: ${diffDays} days`;
+            
+            document.getElementById('output').textContent = result;
+        }
+    </script>
+</body>
+</html>

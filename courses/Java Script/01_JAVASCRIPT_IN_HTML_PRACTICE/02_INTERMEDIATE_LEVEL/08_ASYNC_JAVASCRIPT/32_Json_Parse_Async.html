@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Parse Async</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - JSON Parse Async</h1>
+    <p>Parsing JSON asynchronously prevents blocking the main thread on large JSON data.</p>
+    
+    <h2>Example 1: Basic JSON Parse</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Parse with Delay</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Error Handling</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        function parseJSON(str) {
+            return new Promise(function(resolve, reject) {
+                try {
+                    var parsed = JSON.parse(str);
+                    resolve(parsed);
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }
+        
+        var jsonString = '{"name": "John", "age": 30}';
+        
+        parseJSON(jsonString).then(function(obj) {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Name: " + obj.name + "<br>Age: " + obj.age + "<br>";
+        });
+
+        var largeJson = JSON.stringify({ items: [1, 2, 3, 4, 5] });
+        
+        function parseJSONAsync(str) {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    try {
+                        resolve(JSON.parse(str));
+                    } catch (e) {
+                        resolve(null);
+                    }
+                }, 50);
+            });
+        }
+        
+        parseJSONAsync(largeJson).then(function(obj) {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>Items: " + obj.items.join(", ") + "<br>";
+        });
+
+        parseJSON('{"valid": true}')
+            .then(function(obj) {
+                document.getElementById('output3').innerHTML += "Valid JSON parsed<br>";
+            })
+            ["catch"](function(err) {
+                document.getElementById('output3').innerHTML += "Error: " + err.message + "<br>";
+            });
+        
+        parseJSON('invalid json')
+            .then(function(obj) {
+                document.getElementById('output3').innerHTML += "Parsed<br>";
+            })
+            ["catch"](function(err) {
+                document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Invalid JSON error: " + err.message + "<br>";
+            });
+
+        var validJson = '{"message": "Success"}';
+        
+        parseJSON(validJson).then(function(obj) {
+            document.getElementById('output3').innerHTML += "Message: " + obj.message + "<br>";
+        });
+    </script>
+</body>
+</html>

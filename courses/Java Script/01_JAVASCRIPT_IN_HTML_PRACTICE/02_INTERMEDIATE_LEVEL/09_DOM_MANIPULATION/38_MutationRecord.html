@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MutationRecord</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .demo { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 8px 16px; cursor: pointer; margin: 5px; }
+        .target { padding: 20px; background: #e8f5e9; margin: 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>38. MutationRecord Details</h1>
+    
+    <div class="demo">
+        <h3>MutationRecord Properties</h3>
+        <div id="targetContainer">
+            <div class="target" id="target1">Target 1</div>
+            <div class="target" id="target2">Target 2</div>
+            <div class="target" id="target3">Target 3</div>
+        </div>
+        <button onclick="addChild()">Add Child</button>
+        <button onclick="removeChild()">Remove Child</button>
+        <button onclick="modifyText()">Modify Text</button>
+    </div>
+    
+    <div class="demo">
+        <h3>Record Output</h3>
+        <pre id="output"></pre>
+    </div>
+    
+    <script>
+        const output = document.getElementById('output');
+        const container = document.getElementById('targetContainer');
+        
+        const observer = new MutationObserver((mutations) => {
+            let results = [];
+            mutations.forEach((mutation, index) => {
+                results.push('=== Mutation ' + (index + 1) + ' ===');
+                results.push('type: ' + mutation.type);
+                results.push('target: ' + mutation.target.id);
+                results.push('oldValue: ' + mutation.oldValue);
+                results.push('addedNodes: ' + mutation.addedNodes.length);
+                results.push('removedNodes: ' + mutation.removedNodes.length);
+                
+                if (mutation.type === 'characterData') {
+                    results.push('oldValue: "' + mutation.oldValue + '"');
+                }
+            });
+            output.textContent = results.join('\n');
+        });
+        
+        observer.observe(container, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+            characterDataOldValue: true
+        });
+        
+        let childCount = 3;
+        function addChild() {
+            childCount++;
+            const div = document.createElement('div');
+            div.className = 'target';
+            div.id = 'target' + childCount;
+            div.textContent = 'Target ' + childCount;
+            container.appendChild(div);
+        }
+        
+        function removeChild() {
+            if (container.lastChild) {
+                container.removeChild(container.lastChild);
+            }
+        }
+        
+        function modifyText() {
+            const target = document.getElementById('target1');
+            target.textContent = 'Modified at ' + new Date().toLocaleTimeString();
+        }
+    </script>
+</body>
+</html>

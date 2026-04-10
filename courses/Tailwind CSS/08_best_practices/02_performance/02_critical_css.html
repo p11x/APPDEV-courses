@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Critical CSS - Tailwind CSS Best Practices</title>
+</head>
+<body>
+    <h1>Critical CSS in Tailwind CSS</h1>
+
+    <h2>Understanding Critical CSS</h2>
+    <p>
+        Critical CSS is the subset of styles needed to render above-the-fold content immediately, before the full CSS loads. In Tailwind CSS projects, identifying and inlining critical styles significantly improves perceived load time and First Contentful Paint (FCP) metrics.
+    </p>
+
+    <h2>Why Critical CSS Matters</h2>
+    <p>
+        When a user visits a webpage, they expect content to appear quickly. If they see a blank screen while waiting for the full CSS to download, they're more likely to leave. Critical CSS inlining delivers essential styles immediately, improving user experience and Core Web Vitals scores.
+    </p>
+
+    <h3>Standard Example: Identifying Critical Styles</h3>
+    <!-- Critical styles typically include layout and typography for above-fold content -->
+    <style>
+    /* These are typically critical styles */
+    .critical-layout {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    .critical-header {
+        padding: 1rem;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .critical-hero {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+    .critical-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #111827;
+    }
+    /* Critical CSS typically constitutes 10-20KB of the full stylesheet */
+    </style>
+    <!-- Layout, header, and hero sections are critical -->
+
+    <h3>Real-World Example 1: Website Homepage</h3>
+    <!-- For a typical homepage, critical CSS includes navbar and hero -->
+    <div class="critical-header flex items-center justify-between px-4 py-3 bg-white border-b">
+        <div class="font-bold text-xl">Logo</div>
+        <nav class="hidden md:flex gap-4">
+            <a href="#" class="text-gray-600 hover:text-gray-900">Home</a>
+            <a href="#" class="text-gray-600 hover:text-gray-900">About</a>
+            <a href="#" class="text-gray-600 hover:text-gray-900">Contact</a>
+        </nav>
+    </div>
+    <section class="critical-hero bg-gray-50">
+        <div class="text-center">
+            <h1 class="critical-title mb-4">Welcome to Our Site</h1>
+            <p class="text-gray-600 mb-6">Get started with our amazing product</p>
+            <button class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Get Started
+            </button>
+        </div>
+    </section>
+    <!-- Navbar and hero are above the fold - critical for initial render -->
+
+    <h3>Real-World Example 2: E-commerce Product Page</h3>
+    <!-- Product page above-fold: header and product image/name -->
+    <header class="critical-header flex items-center justify-between px-4 py-3 bg-white border-b">
+        <div class="font-bold text-xl">Shop</div>
+        <div class="flex items-center gap-4">
+            <button class="text-gray-600">Search</button>
+            <button class="text-gray-600">Cart (0)</button>
+        </div>
+    </header>
+    <main class="flex flex-col md:flex-row gap-8 p-6">
+        <div class="flex-1 bg-gray-100 rounded-lg min-h-[400px]">
+            <!-- Product image area -->
+        </div>
+        <div class="flex-1">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Product Name</h1>
+            <p class="text-2xl text-gray-700 mb-4">$99.99</p>
+            <p class="text-gray-600 mb-6">Product description goes here.</p>
+            <button class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Add to Cart
+            </button>
+        </div>
+    </main>
+    <!-- Above-fold includes product image, name, price, and add-to-cart -->
+
+    <h2>Output Statement</h2>
+    <p>
+        Critical CSS for Tailwind CSS projects typically includes: header/navigation styles, hero section layout and typography, and above-fold component basics. Inlining these styles (10-15KB) can improve FCP by 200-500ms on slower connections.
+    </p>
+
+    <h2>ASCII Diagram: Critical CSS Extraction Process</h2>
+    <pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                 CRITICAL CSS WORKFLOW                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │                    FULL PAGE LOAD                         │  │
+│   │  ┌─────────────────────────────────────────────────────┐ │  │
+│   │  │  ┌─────────────────────────────────────────────┐   │ │  │
+│   │  │  │         ABOVE THE FOLD           │  CRITICAL  │   │ │  │
+│   │  │  │          (Viewport)             │   CSS     │   │ │  │
+│   │  │  │                                     │           │   │ │  │
+│   │  │  │  [Header] [Hero Section] [Intro]  │  ~10-15KB │   │ │  │
+│   │  │  │                                     │           │   │ │  │
+│   │  │  └─────────────────────────────────────────────┘   │ │  │
+│   │  │                    │                                 │ │  │
+│   │  │                    ▼                                 │ │  │
+│   │  │  ┌─────────────────────────────────────────────┐   │ │  │
+│   │  │  │         BELOW THE FOLD           │   DEFERRED  │   │ │  │
+│   │  │  │                                     │           │   │ │  │
+│   │  │  │  [Content] [Footer] [Sidebar]    │  ~50-100KB │   │ │  │
+│   │  │  │                                     │           │   │ │  │
+│   │  │  └─────────────────────────────────────────────┘   │ │  │
+│   │  └─────────────────────────────────────────────────────┘ │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│   TIMING:                                                        │
+│   ┌────────────���───────────────────────────────────────────┐  │
+│   │  0ms      100ms     500ms      1s        3s        5s   │  │
+│   │  │        │        │          │          │          │     │  │
+│   │  ├────────┴────────┴──────────┴──────────┴──────────┤   │  │
+│   │  │  HTML   │ Critical │ Full CSS │  Render  │  Complete │   │  │
+│   │  │  Parse │   CSS    │  Loaded  │  Complete│          │   │  │
+│   │  │         │ Inlined  │ Deferred│          │          │   │  │
+│   │  └────────┴──────────┴──────────┴──────────┴──────────┘   │  │
+│   └────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Tools for Critical CSS Extraction</h2>
+    <ul>
+        <li><strong>critter:</strong> Extracts critical CSS based on the DOM</li>
+        <li><strong>penthouse:</strong> Generates critical CSS for above-fold content</li>
+        <li><strong>inline-critical:</strong> Inlines critical CSS into HTML</li>
+        <li><strong>vite-plugin-critical:</strong> Vite plugin for critical CSS generation</li>
+    </ul>
+
+    <h2>Edge Cases and Considerations</h2>
+    <p>
+        <strong>Dynamic content:</strong> If above-fold content changes based on user state (logged in vs logged out), consider extracting critical CSS for both states or using a more generic critical set.
+    </p>
+    <p>
+        <strong>Server-side rendering:</strong> In SSR frameworks (Next.js, Nuxt), critical CSS can be automatically extracted and inlined by the framework.
+    </p>
+    <p>
+        <strong>Cached pages:</strong> For cached pages, consider pre-rendering critical CSS during the build step rather than at runtime.
+    </p>
+
+    <h2>Performance Considerations</h2>
+    <p>
+        Critical CSS should be less than 15KB when compressed. Above this threshold, the benefits diminish significantly. Focus on extracting only truly essential styles—there is no benefit to inlining the entire stylesheet.
+    </p>
+
+    <h2>Accessibility Considerations</h2>
+    <p>
+        Ensure critical CSS includes accessible focus indicators and sufficient color contrast. Inlining these styles ensures users don't experience a flash of unstyled content that removes accessibility features.
+    </p>
+
+    <h2>Cross-Browser Notes</h2>
+    <p>
+        Critical CSS inlining works consistently across all modern browsers. For older browsers, the page will still work—it just won't benefit from critical CSS optimization.
+    </p>
+</body>
+</html>

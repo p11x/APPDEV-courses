@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observer Pattern</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d5f4e6; border-left: 4px solid #27ae60; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <h1>Observer Pattern</h1>
+    
+    <div class="section">
+        <h2>Subject with Observers</h2>
+        <p>The Observer pattern defines a one-to-many dependency between objects. When one object changes state, all its dependents are notified.</p>
+        
+        <pre>
+// Subject (Observable)
+class Subject {
+    constructor() {
+        this.observers = [];
+    }
+    addObserver(observer) {
+        this.observers.push(observer);
+    }
+    removeObserver(observer) {
+        this.observers = this.observers.filter(o => o !== observer);
+    }
+    notify(data) {
+        this.observers.forEach(o => o.update(data));
+    }
+}
+
+// Observer
+class Observer {
+    constructor(name) {
+        this.name = name;
+    }
+    update(data) {
+        console.log(`${this.name} received:`, data);
+    }
+}
+
+// Usage
+const subject = new Subject();
+const obs1 = new Observer('Observer 1');
+const obs2 = new Observer('Observer 2');
+subject.addObserver(obs1);
+subject.addObserver(obs2);
+subject.notify('Hello Observers!');
+        </pre>
+        
+        <button onclick="runObserverDemo()">Run Observer Demo</button>
+        <div id="observer-output" class="output"></div>
+    </div>
+    
+    <script>
+        class Subject {
+            constructor() {
+                this.observers = [];
+            }
+            addObserver(observer) {
+                this.observers.push(observer);
+            }
+            removeObserver(observer) {
+                this.observers = this.observers.filter(o => o !== observer);
+            }
+            notify(data) {
+                this.observers.forEach(o => o.update(data));
+            }
+        }
+
+        class Observer {
+            constructor(name) {
+                this.name = name;
+            }
+            update(data) {
+                return `${this.name} received: ${data}`;
+            }
+        }
+
+        function runObserverDemo() {
+            const subject = new Subject();
+            const obs1 = new Observer('Observer 1');
+            const obs2 = new Observer('Observer 2');
+            const obs3 = new Observer('Observer 3');
+            
+            subject.addObserver(obs1);
+            subject.addObserver(obs2);
+            subject.addObserver(obs3);
+            
+            const results = [];
+            results.push(subject.notify('Data Update 1'));
+            subject.removeObserver(obs2);
+            results.push(subject.notify('Data Update 2'));
+            
+            const output = document.getElementById('observer-output');
+            output.innerHTML = `
+                <strong>Observer Pattern Results:</strong><br>
+                Initial observers: <code>3</code><br>
+                After notify: <code>${results[0].length} notifications</code><br>
+                After removing Observer 2: <code>2 observers remaining</code><br>
+                Final notify: <code>${results[1].length} notifications</code><br>
+                <em>Observers notified automatically when subject state changes!</em>
+            `;
+        }
+    </script>
+</body>
+</html>

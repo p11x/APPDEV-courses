@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17 - File Reader</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+        input[type="file"] { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>17 - File Reader API</h1>
+    <p>Read file contents asynchronously.</p>
+    
+    <input type="file" id="fileInput" accept=".txt,.json,.js">
+    <br><br>
+    <button onclick="readAsText()">Read as Text</button>
+    <button onclick="readAsDataURL()">Read as Data URL</button>
+    <button onclick="readAsArrayBuffer()">Read as ArrayBuffer</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        let output = [];
+        let currentFile = null;
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            currentFile = e.target.files[0];
+            if (currentFile) {
+                log('File selected: ' + currentFile.name);
+                log('Size: ' + currentFile.size + ' bytes');
+                log('Type: ' + currentFile.type);
+            }
+        });
+
+        function readAsText() {
+            if (!currentFile) {
+                log('Please select a file first');
+                return;
+            }
+            
+            output = [];
+            log('Reading as text...');
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                log('Content:\n' + e.target.result);
+            };
+            
+            reader.onerror = function() {
+                log('Error reading file');
+            };
+            
+            reader.readAsText(currentFile);
+        }
+
+        function readAsDataURL() {
+            if (!currentFile) {
+                log('Please select a file first');
+                return;
+            }
+            
+            output = [];
+            log('Reading as data URL...');
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                log('Data URL length: ' + dataUrl.length + ' chars');
+                log('Preview: ' + dataUrl.substring(0, 50) + '...');
+            };
+            
+            reader.readAsDataURL(currentFile);
+        }
+
+        function readAsArrayBuffer() {
+            if (!currentFile) {
+                log('Please select a file first');
+                return;
+            }
+            
+            output = [];
+            log('Reading as ArrayBuffer...');
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const buffer = e.target.result;
+                log('ArrayBuffer byteLength: ' + buffer.byteLength);
+                
+                const view = new Uint8Array(buffer);
+                log('First 10 bytes: ' + Array.from(view.slice(0, 10)).join(', '));
+            };
+            
+            reader.readAsArrayBuffer(currentFile);
+        }
+    </script>
+</body>
+</html>

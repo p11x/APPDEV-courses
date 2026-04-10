@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Pattern</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>Using Pattern Attribute</h1>
+    <p>Demonstrates regex patterns for custom validation</p>
+
+    <div class="demo-section">
+        <h2>Form with Pattern Validation</h2>
+        <form id="patternForm">
+            <label for="zipCode">US ZIP Code (5 digits):</label>
+            <input type="text" id="zipCode" name="zipCode" pattern="[0-9]{5}" placeholder="12345" title="Enter 5 digit ZIP code">
+            
+            <label for="phoneNumber">Phone (XXX-XXX-XXXX):</label>
+            <input type="text" id="phoneNumber" name="phoneNumber" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" placeholder="123-456-7890" title="Enter phone in XXX-XXX-XXXX format">
+            
+            <label for="creditCard">Credit Card (16 digits):</label>
+            <input type="text" id="creditCard" name="creditCard" pattern="[0-9]{4}[ -]?[0-9]{4}[ -]?[0-9]{4}[ -]?[0-9]{4}" placeholder="1234 5678 9012 3456" title="Enter 16 digit card number">
+            
+            <label for="username">Username (alphanumeric, 3-15 chars):</label>
+            <input type="text" id="username" name="username" pattern="[A-Za-z0-9_]{3,15}" placeholder="john_doe123" title="3-15 alphanumeric characters">
+            
+            <label for="password">Strong Password (8+ chars, upper, lower, digit):</label>
+            <input type="password" id="password" name="password" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8,}" placeholder="Password123" title="At least 8 chars with upper, lower, and digit">
+            
+            <button type="button" onclick="testAllPatterns()">Test All Patterns</button>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Pattern Testing</h2>
+        <button type="button" onclick="showPatternDetails()">Show Pattern Details</button>
+        <button type="button" onclick="testCustomPattern()">Test Custom Pattern</button>
+        <div id="output" class="output">Click a button to see pattern details...</div>
+    </div>
+
+    <script>
+        // Test all patterns
+        function testAllPatterns() {
+            const form = document.getElementById('patternForm');
+            const inputs = form.querySelectorAll('input[type="text"], input[type="password"]');
+            let result = 'PATTERN VALIDATION RESULTS:\n=============================\n\n';
+            
+            inputs.forEach(input => {
+                const isValid = input.checkValidity();
+                const pattern = input.getAttribute('pattern');
+                result += `${input.id}:\n`;
+                result += `  pattern: ${pattern}\n`;
+                result += `  value: "${input.value}"\n`;
+                result += `  valid: ${isValid}\n`;
+                if (!isValid) {
+                    result += `  message: "${input.validationMessage}"\n`;
+                }
+                result += '\n';
+            });
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Show pattern details
+        function showPatternDetails() {
+            let result = 'PATTERN REGEX EXPLANATIONS:\n========================\n\n';
+            result += 'zipCode: [0-9]{5}\n';
+            result += '  Match exactly 5 digits\n\n';
+            result += 'phoneNumber: [0-9]{3}-[0-9]{3}-[0-9]{4}\n';
+            result += '  Match XXX-XXX-XXXX format\n\n';
+            result += 'creditCard: [0-9]{4}[ -]?[0-9]{4}[ -]?[0-9]{4}[ -]?[0-9]{4}\n';
+            result += '  Match 16 digits with optional separator\n\n';
+            result += 'username: [A-Za-z0-9_]{3,15}\n';
+            result += '  Match 3-15 alphanumeric chars and underscore\n\n';
+            result += 'password: (?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8,}\n';
+            result += '  At least 8 chars with upper, lower, and digit';
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Test custom pattern with JavaScript
+        function testCustomPattern() {
+            const testCases = [
+                { value: '12345', pattern: '[0-9]{5}' },
+                { value: 'abc', pattern: '[0-9]{5}' },
+                { value: 'john_doe', pattern: '[A-Za-z_]+' },
+            ];
+            
+            let result = 'CUSTOM PATTERN TESTING:\n========================\n\n';
+            
+            testCases.forEach(test => {
+                const regex = new RegExp(test.pattern);
+                const matches = regex.test(test.value);
+                result += `value: "${test.value}"\n`;
+                result += `pattern: ${test.pattern}\n`;
+                result += `matches: ${matches}\n\n`;
+            });
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Form submit
+        document.getElementById('patternForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = e.target;
+            if (form.checkValidity()) {
+                document.getElementById('output').textContent = 'All patterns valid! Form submitted.';
+            } else {
+                document.getElementById('output').textContent = 'Some patterns are invalid.';
+            }
+        });
+    </script>
+</body>
+</html>

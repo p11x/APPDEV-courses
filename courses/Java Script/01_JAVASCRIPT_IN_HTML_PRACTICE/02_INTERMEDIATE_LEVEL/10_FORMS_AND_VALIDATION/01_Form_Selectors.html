@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Selectors</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+        .highlight { background: yellow; }
+    </style>
+</head>
+<body>
+    <h1>Form Selectors Demo</h1>
+    <p>Demonstrates various methods to select form elements in JavaScript</p>
+
+    <!-- Sample Form -->
+    <div class="demo-section">
+        <h2>Sample Form</h2>
+        <form id="myForm">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" value="john_doe">
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="john@example.com">
+
+            <label for="country">Country:</label>
+            <select id="country" name="country">
+                <option value="us">United States</option>
+                <option value="uk">United Kingdom</option>
+                <option value="ca">Canada</option>
+            </select>
+
+            <label>
+                <input type="checkbox" name="newsletter" checked> Subscribe to newsletter
+            </label>
+
+            <button type="button" onclick="demonstrateSelectors()">Run Selectors Demo</button>
+        </form>
+    </div>
+
+    <!-- Selector Methods -->
+    <div class="demo-section">
+        <h2>Selector Methods</h2>
+        
+        <button type="button" onclick="demoById()">1. getElementById</button>
+        <button type="button" onclick="demoQuerySelector()">2. querySelector</button>
+        <button type="button" onclick="demoQuerySelectorAll()">3. querySelectorAll</button>
+        <button type="button" onclick="demoFormProperty()">4. form.elements</button>
+        
+        <div id="output" class="output">Click a button to see selector results...</div>
+    </div>
+
+    <script>
+        // Get reference to the form
+        const form = document.getElementById('myForm');
+
+        // Method 1: Using getElementById
+        function demoById() {
+            const username = document.getElementById('username');
+            const email = document.getElementById('email');
+            
+            const result = `METHOD: getElementById\n` +
+                `username.value = "${username.value}"\n` +
+                `email.value = "${email.value}"\n` +
+                `username.tagName = "${username.tagName}"`;
+            
+            document.getElementById('output').textContent = result;
+        }
+
+        // Method 2: Using querySelector (returns first match)
+        function demoQuerySelector() {
+            const firstInput = form.querySelector('input');
+            const emailInput = form.querySelector('input[type="email"]');
+            const firstOption = form.querySelector('option');
+            
+            const result = `METHOD: querySelector (first match)\n` +
+                `input[type="email"].id = "${emailInput.id}"\n` +
+                `first input type = "${firstInput.type}"\n` +
+                `first option text = "${firstOption.textContent}"`;
+            
+            document.getElementById('output').textContent = result;
+        }
+
+        // Method 3: Using querySelectorAll (returns NodeList)
+        function demoQuerySelectorAll() {
+            const allInputs = form.querySelectorAll('input');
+            const allCheckboxes = form.querySelectorAll('input[type="checkbox"]');
+            
+            let result = `METHOD: querySelectorAll\n`;
+            result += `Total input elements: ${allInputs.length}\n`;
+            result += `Total checkboxes: ${allCheckboxes.length}\n`;
+            
+            allInputs.forEach((input, i) => {
+                result += `Input[${i}]: type="${input.type}", id="${input.id}", value="${input.value}"\n`;
+            });
+            
+            document.getElementById('output').textContent = result;
+        }
+
+        // Method 4: Using form.elements collection
+        function demoFormProperty() {
+            const elements = form.elements;
+            
+            let result = `METHOD: form.elements collection\n`;
+            result += `Total elements: ${elements.length}\n`;
+            result += `elements['username'].value = "${elements['username'].value}"\n`;
+            result += `elements['email'].value = "${elements['email'].value}"\n`;
+            result += `elements['country'].value = "${elements['country'].value}"\n`;
+            result += `elements['newsletter'].checked = ${elements['newsletter'].checked}`;
+            
+            document.getElementById('output').textContent = result;
+        }
+
+        // Combined demonstration
+        function demonstrateSelectors() {
+            const output = document.getElementById('output');
+            
+            let result = '=== COMBINED SELECTOR DEMO ===\n\n';
+            
+            // Select by name using form.elements
+            result += `By Name (form.elements):\n`;
+            result += `  username: "${form.elements.username.value}"\n`;
+            result += `  email: "${form.elements.email.value}"\n\n`;
+            
+            // Select by attribute
+            result += `By Attribute Selector:\n`;
+            result += `  Email exists: ${form.querySelector('[name="email"]') !== null}\n`;
+            result += `  Checkbox checked: ${form.querySelector('[name="newsletter"]').checked}\n\n`;
+            
+            // Select by tag and filter
+            result += `By Tag with Filtering:\n`;
+            const allInputs = form.querySelectorAll('input');
+            const textInputs = Array.from(allInputs).filter(i => i.type === 'text');
+            result += `  Text inputs: ${textInputs.length}`;
+            
+            output.textContent = result;
+        }
+    </script>
+</body>
+</html>

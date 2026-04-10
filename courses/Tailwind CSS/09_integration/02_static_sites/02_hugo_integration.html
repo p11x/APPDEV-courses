@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hugo + Tailwind CSS Integration Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Hugo + Tailwind CSS Integration</h1>
+        
+        <!-- Overview Section -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Overview</h2>
+            <p class="text-gray-600 mb-4">
+                Hugo is the fastest static site generator, built in Go. Tailwind CSS integrates with Hugo through PostCSS/Pipeline
+                or by directly linking the Tailwind CLI. Hugo's asset processing pipeline can handle Tailwind compilation
+                by integrating with PostCSS. Hugo's templating system works well with Tailwind's utility classes.
+            </p>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                <p class="text-sm text-blue-700"><strong>Key Point:</strong> Hugo is the fastest option for static sites.
+                Tailwind integration uses Hugo's asset pipeline with PostCSS for efficient build processing.</p>
+            </div>
+        </section>
+
+        <!-- ASCII Diagram: Architecture -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Architecture Flow</h2>
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto text-sm">
+┌─────────────────────────────────────────────────────────────┐
+│                  HUGO + TAILWIND BUILD PROCESS              │
+└─────────────────────────────────────────────────────────────┘
+
+  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+  │ Hugo        │────▶│  PostCSS    │────▶│   Output    │
+  │ Templates   │     │  + Tailwind │     │  Static    │
+  └─────────────┘     └─────────────┘     └─────────────┘
+        │                   │                    
+        │              ┌─────┴─────┐            
+        ▼              ▼           ▼            
+  ┌──────────┐   ┌────────┐  ┌────────┐
+  │  Go      │   │ purge  │  │ minify │
+  │ Templates│   │ unused │  │  CSS   │
+  └──────────┘   └────────┘  └────────┘
+            </pre>
+        </section>
+
+        <!-- Standard Example -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Standard Example: Hugo Setup</h2>
+            <p class="text-gray-600 mb-3">Setting up Tailwind CSS with Hugo's asset pipeline:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">// Install Tailwind CLI</p>
+                <p class="text-yellow-300">npm install -D tailwindcss</p>
+                <p class="text-gray-300">&nbsp;</p>
+                <p class="text-green-400">// tailwind.config.js</p>
+                <p class="text-blue-400">module.exports = {</p>
+                <p class="text-gray-300 pl-4">content: ["./content/**/*.html", "./layouts/**/*.html"],</p>
+                <p class="text-gray-300 pl-4">theme: { extend: {} },</p>
+                <p class="text-gray-300 pl-4">plugins: []</p>
+                <p class="text-blue-400">};</p>
+                <p class="text-gray-300">&nbsp;</p>
+                <p class="text-green-400">// assets/css/tailwind.css</p>
+                <p class="text-blue-400">@tailwind</p>
+                <p class="text-gray-300">base;</p>
+                <p class="text-blue-400">@tailwind</p>
+                <p class="text-gray-300">components;</p>
+                <p class="text-blue-400">@tailwind</p>
+                <p class="text-gray-300">utilities;</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="text-green-400">// hugo.toml</p>
+                <p class="text-yellow-300">[pipeline]</p>
+                <p class="textyellow-300">enableJS = true</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="textgreen-400">// layouts/_default/baseof.html</p>
+                <p class="text-blue-400">&lt;{{</p>
+                <p class="textgray-300">resources.Concat "css" | fingerprint }}</p>
+                <p class="textgray-300">&lt;link rel="stylesheet"&gt;</p>
+                <p class="textblue-400">-&gt;</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="textgreen-400">// OR use resources.ExecuteAsTemplate</p>
+                <p class="text-blue-400">&lt;style&gt;</p>
+                <p class="textgray-300">{{- $style := resources.Get "css/tailwind.css" | postCSS }}</p>
+                <p class="textgray-300">{{ $style.Content | safeCSS }}</p>
+                <p class="textblue-400">&lt;/style&gt;</p>
+            </div>
+        </section>
+
+        <!-- Real-World Example 1 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Real-World Example 1: Hugo Partial for Navigation</h2>
+            <p class="text-gray-600 mb-3">A navigation partial with Tailwind components:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">&lt;!-- layouts/partials/nav.html --&gt;</p>
+                <p class="text-blue-400">&lt;nav class="bg-white shadow sticky top-0 z-50"&gt;</p>
+                <p class="textgray-300 spacing">&lt;div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"&gt;</p>
+                <p class="textgray-300 spacing">&lt;div class="flex justify-between h-16"&gt;</p>
+                <p class="textgray-300 spacing">&lt;div class="flex items-center"&gt;</p>
+                <p class="textgray-300 spacing">&lt;a href="/" class="text-2xl font-bold text-gray-800"&gt;</p>
+                <p class="textgray-300 spacing">  {{ .Site.Title }}</p>
+                <p class="textgray-300 spacing">&lt;/a&gt;</p>
+                <p class="textgray-300 spacing">&lt;/div&gt;</p>
+                <p class="textgray-300 spacing">&lt;div class="hidden md:flex items-center space-x-4"&gt;</p>
+                <p class="textgray-300 spacing">{{ range .Site.Menus.main }}</p>
+                <p class="textgray-300 spacing">  &lt;a href="{{ .URL }}"</p>
+                <p class="textgray-300 spacing">       class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md"</p>
+                <p class="textgray-300 spacing">  &gt;{{ .Name }}&lt;/a&gt;</p>
+                <p class="textgray-300 spacing">{{ end }}</p>
+                <p class="textgray-300 spacing">&lt;/div&gt;</p>
+                <p class="textgray-300 spacing">&lt;div class="md:hidden"&gt;</p>
+                <p class="textgray-300 spacing">  &lt;button id="menu-toggle" class="text-gray-700 p-2"&gt;</p>
+                <p class="textgray-300 spacing">    ☰</p>
+                <p class="textgray-300 spacing">  &lt;/button&gt;</p>
+                <p class="textgray-300 spacing">&lt;/div&gt;</p>
+                <p class="textgray-300 spacing">&lt;/div&gt;</p>
+                <p class="textgray-300 spacing">&lt;/div&gt;</p>
+                <p class="textblue-400">&lt;/nav&gt;</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="textgreen-400">&lt;!-- For mobile menu - include in baseof.html --&gt;</p>
+                <p class="text-blue-400">&lt;script&gt;</p>
+                <p class="textgray-300">document.getElementById('menu-toggle').addEventListener('click', function() {</p>
+                <p class="textgray-300 spacing">  document.getElementById('mobile-menu').classList.toggle('hidden');</p>
+                <p class="textgray-300">});</p>
+                <p class="textblue-400">&lt;/script&gt;</p>
+            </div>
+        </section>
+
+        <!-- Real-World Example 2 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Real-World Example 2: Hugo List Page Template</h2>
+            <p class="text-gray-600 mb-3">A blog listing page with Tailwind grid layout:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">&lt;!-- layouts/_default/list.html --&gt;</p>
+                <p class="text-blue-400">{{ define "main" }}</p>
+                <p class="textgray-300 spacing">&lt;main class="max-w-7xl mx-auto px-4 py-8"&gt;</p>
+                <p class="textgray-300 spacing">&lt;h1 class="text-4xl font-bold text-gray-800 mb-8"&gt;</p>
+                <p class="textgray-300 spacing">  {{ .Title }}</p>
+                <p class="textgray-300 spacing">&lt;/h1&gt;</p>
+                <p class="textgray-300 spacing">&lt;div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3"&gt;</p>
+                <p class="textgray-300 spacing">{{ range .Paginator.Pages }}</p>
+                <p class="textgray-300 spacing">  &lt;article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"&gt;</p>
+                <p class="textgray-300 spacing">    &lt;div class="p-6"&gt;</p>
+                <p class="textgray-300 spacing">      &lt;h2 class="text-xl font-semibold text-gray-800 mb-2"&gt;</p>
+                <p class="textgray-300 spacing">        &lt;a href="{{ .Permalink }}"&gt;</p>
+                <p class="textgray-300 spacing">          {{ .Title }}</p>
+                <p class="textgray-300 spacing">        &lt;/a&gt;</p>
+                <p class="textgray-300 spacing">      &lt;/h2&gt;</p>
+                <p class="textgray-300 spacing">      &lt;p class="text-gray-500 text-sm mb-4"&gt;</p>
+                <p class="textgray-300 spacing">        {{ .Date.Format "January 2, 2006" }}</p>
+                <p class="textgray-300 spacing">      &lt;/p&gt;</p>
+                <p class="textgray-300 spacing">      &lt;p class="text-gray-600"&gt;</p>
+                <p class="textgray-300 spacing">        {{ .Summary }}</p>
+                <p class="textgray-300 spacing">      &lt;/p&gt;</p>
+                <p class="textgray-300 spacing">    &lt;/div&gt;</p>
+                <p class="textgray-300 spacing">  &lt;/article&gt;</p>
+                <p class="textgray-300 spacing">{{ end }}</p>
+                <p class="textgray-300 spacing">&lt;/div&gt;</p>
+                <p class="textgray-300 spacing">&lt;!-- Pagination --&gt;</p>
+                <p class="textgray-300 spacing">{{ template "pagination" .Paginator }}</p>
+                <p class="textgray-300 spacing">&lt;/main&gt;</p>
+                <p class="textblue-400">{{ end }}</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="textgreen-400">&lt;!-- layouts/partials/pagination.html --&gt;</p>
+                <p class="text-blue-400">{{ if .HasPrev }}</p>
+                <p class="textgray-300 spacing">&lt;a href="{{ .Prev.URL }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"&gt;</p>
+                <p class="textgray-300 spacing">  Previous</p>
+                <p class="textgray-300 spacing">&lt;/a&gt;</p>
+                <p class="textblue-400">{{ end }}</p>
+                <p class="textblue-400">{{ if .HasNext }}</p>
+                <p class="textgray-300 spacing">&lt;a href="{{ .Next.URL }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"&gt;</p>
+                <p class="textgray-300 spacing">  Next</p>
+                <p class="textgray-300 spacing">&lt;/a&gt;</p>
+                <p class="textblue-400">{{ end }}</p>
+            </div>
+        </section>
+
+        <!-- Output Statement -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Output: Generated CSS Classes</h2>
+            <p class="text-gray-600 mb-3">Hugo processes Tailwind to generate optimized static CSS:</p>
+            
+            <div class="bg-gray-800 text-green-400 p-4 rounded">
+                <p class="mb-2">/* Output CSS (optimized, ~3-8KB typical site) */</p>
+                <p>.bg-white { background-color: #ffffff; }</p>
+                <p>.shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }</p>
+                <p>.sticky { position: sticky; }</p>
+                <p>.top-0 { top: 0; }</p>
+                <p>.z-50 { z-index: 50; }</p>
+                <p>.max-w-7xl { max-width: 80rem; }</p>
+                <p>.mx-auto { margin-left: auto; margin-right: auto; }</p>
+                <p>.px-4 { padding-left: 1rem; padding-right: 1rem; }</p>
+                <p>.py-8 { padding-top: 2rem; padding-bottom: 2rem; }</p>
+                <p>.grid { display: grid; }</p>
+                <p>.gap-8 { gap: 2rem; }</p>
+            </div>
+        </section>
+
+        <!-- Edge Cases -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Edge Cases & Considerations</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Watch Mode:</strong> Use Hugo server with --reload for live updates.</li>
+                <li><strong>Pipes API:</strong> Hugo 0.55+ has improved asset pipeline with PostCSS.</li>
+                <li><strong>Shortcodes:</strong> Use Tailwind classes in Hugo shortcodes.</li>
+                <li><strong>_taxonomy:</strong> Handle categories and tags with Tailwind styling.</li>
+            </ul>
+        </section>
+
+        <!-- Performance Considerations -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Performance Considerations</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Build Speed:</strong> Hugo is the fastest static site generator (Go-based).</li>
+                <li><strong>Fingerprinting:</strong> Use Hugo's fingerprint for cache busting.</li>
+                <li><strong>Minification:</strong> Hugo can minify HTML/CSS automatically.</li>
+                <li><strong>Asset Bundling:</strong> Combine multiple CSS files with resources.Concat.</li>
+            </ul>
+        </section>
+
+        <!-- Accessibility Notes -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Accessibility Notes</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Navigation:</strong> Include skip-to-content links.</li>
+                <li><strong>ARIA:</strong> Use proper ARIA attributes in Hugo templates.</li>
+                <li><strong>Focus:</strong> Ensure visible focus indicators.</li>
+                <li><strong>Reduced Motion:</strong> Use prefers-reduced-motion in CSS.</li>
+            </ul>
+        </section>
+
+        <!-- Cross-Browser Notes -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Cross-Browser Notes</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Static Output:</strong> Works across all modern browsers.</li>
+                <li><strong>No JS Required:</strong> Works progressively without JavaScript.</li>
+                <li><strong>HTML Output:</strong> Test final HTML for consistency.</li>
+                <li><strong>Testing:</strong> Verify across major browsers.</li>
+            </ul>
+        </section>
+
+        <!-- Additional Resources -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Additional Resources</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><a href="https://gohugo.io/hugo-pipes/" class="text-blue-600 hover:underline">Hugo Asset Pipes</a></li>
+                <li><a href="https://gohugo.io" class="text-blue-600 hover:underline">Hugo Documentation</a></li>
+                <li><a href="https://github.com/gohugoio/hugo" class="text-blue-600 hover:underline">Hugo GitHub</a></li>
+            </ul>
+        </section>
+    </div>
+</body>
+</html>

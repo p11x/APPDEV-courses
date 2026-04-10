@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Event Emitter</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #e74c3c; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #fadbd8; border-left: 4px solid #e74c3c; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #c0392b; }
+    </style>
+</head>
+<body>
+    <h1>Custom Event Emitter Pattern</h1>
+    
+    <!-- Basic Event Emitter -->
+    <div class="section">
+        <h2>1. Basic Event Emitter</h2>
+        <p>Implement publish-subscribe pattern for custom events.</p>
+        
+        <pre>
+// Event Emitter class
+class EventEmitter {
+    constructor() {
+        this.events = {};
+    }
+    
+    on(event, listener) {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+        this.events[event].push(listener);
+    }
+    
+    emit(event, ...args) {
+        if (this.events[event]) {
+            this.events[event].forEach(listener => 
+                listener(...args)
+            );
+        }
+    }
+    
+    off(event, listenerToRemove) {
+        if (!this.events[event]) return;
+        this.events[event] = this.events[event].filter(
+            listener => listener !== listenerToRemove
+        );
+    }
+}
+
+// Usage
+const emitter = new EventEmitter();
+emitter.on('message', (msg) => console.log('A:', msg));
+emitter.on('message', (msg) => console.log('B:', msg));
+emitter.emit('message', 'Hello!');
+        </pre>
+        
+        <button onclick="runEmitterDemo()">Run Emitter Demo</button>
+        <div id="emitter-output" class="output"></div>
+    </div>
+    
+    <!-- Once and OnCE -->
+    <div class="section">
+        <h2>2. Once - Single Execution</h2>
+        <p>Listen for event only one time, then auto-remove.</p>
+        
+        <pre>
+// Once method - fires only once
+class EventEmitterWithOnce extends EventEmitter {
+    once(event, listener) {
+        const wrappedListener = (...args) => {
+            listener(...args);
+            this.off(event, wrappedListener);
+        };
+        this.on(event, wrappedListener);
+    }
+}
+
+// Usage
+emitter.once('connect', () => console.log('Connected!'));
+emitter.emit('connect'); // fires
+emitter.emit('connect'); // won't fire
+        </pre>
+        
+        <button onclick="runOnceDemo()">Run Once Demo</button>
+        <div id="once-output" class="output"></div>
+    </div>
+    
+    <!-- Event Namespaces -->
+    <div class="section">
+    <h2>3. Wildcard & Namespaces</h2>
+    <p>Handle multiple events with wildcards or namespaced events.</p>
+    
+    <pre>
+// Wildcard support
+class WildcardEmitter extends EventEmitter {
+    on(event, listener, wildcard = false) {
+        const key = wildcard ? '*' : event;
+        if (!this.events[key]) {
+            this.events[key] = [];
+        }
+        this.events[key].push({ listener, event });
+    }
+    
+    emit(event, ...args) {
+        // Specific event
+        if (this.events[event]) {
+            this.events[event].forEach(e => e.listener(...args));
+        }
+        // Wildcard listeners
+        if (this.events['*']) {
+            this.events['*']
+                .filter(e => e.event === event || e.event === '*')
+                .forEach(e => e.listener(...args));
+        }
+    }
+}
+    </pre>
+    
+    <button onclick="runWildcardDemo()">Run Wildcard Demo</button>
+    <div id="wildcard-output" class="output"></div>
+    </div>
+    
+    <script>
+        // Basic Event Emitter
+        class EventEmitter {
+            constructor() {
+                this.events = {};
+            }
+            
+            on(event, listener) {
+                if (!this.events[event]) {
+                    this.events[event] = [];
+                }
+                this.events[event].push(listener);
+            }
+            
+            emit(event, ...args) {
+                if (this.events[event]) {
+                    this.events[event].forEach(listener => listener(...args));
+                }
+            }
+            
+            off(event, listenerToRemove) {
+                if (!this.events[event]) return;
+                this.events[event] = this.events[event].filter(
+                    listener => listener !== listenerToRemove
+                );
+            }
+        }
+
+        function runEmitterDemo() {
+            const emitter = new EventEmitter();
+            const results = [];
+            
+            const handler1 = (msg) => results.push(`Handler A: ${msg}`);
+            const handler2 = (msg) => results.push(`Handler B: ${msg}`);
+            
+            emitter.on('message', handler1);
+            emitter.on('message', handler2);
+            emitter.emit('message', 'Hello World!');
+            
+            const output = document.getElementById('emitter-output');
+            output.innerHTML = `
+                <strong>Event Emitter Test:</strong><br>
+                ${results.join('<br>')}<br>
+                <em>Multiple listeners can respond to same event!</em>
+            `;
+        }
+
+        // Once implementation
+        class EventEmitterWithOnce extends EventEmitter {
+            once(event, listener) {
+                const wrappedListener = (...args) => {
+                    listener(...args);
+                    this.off(event, wrappedListener);
+                };
+                this.on(event, wrappedListener);
+            }
+        }
+
+        function runOnceDemo() {
+            const emitter = new EventEmitterWithOnce();
+            let count = 0;
+            
+            emitter.once('connect', () => {
+                count++;
+            });
+            
+            emitter.emit('connect');
+            emitter.emit('connect');
+            emitter.emit('connect');
+            
+            const output = document.getElementById('once-output');
+            output.innerHTML = `
+                <strong>Once Test:</strong><br>
+                Emitted 3 times<br>
+                Handler fired: <code>${count}</code> time(s)<br>
+                <em>Auto-removed after first execution!</em>
+            `;
+        }
+
+        // Wildcard emitter
+        class WildcardEmitter extends EventEmitter {
+            emit(event, ...args) {
+                if (this.events[event]) {
+                    this.events[event].forEach(listener => listener(...args));
+                }
+                if (this.events['*']) {
+                    this.events['*'].forEach(listener => listener(event, ...args));
+                }
+            }
+        }
+
+        function runWildcardDemo() {
+            const emitter = new WildcardEmitter();
+            const results = [];
+            
+            emitter.on('*', (event, data) => {
+                results.push(`Wildcard caught: ${event} = ${data}`);
+            });
+            
+            emitter.on('user:login', (data) => {
+                results.push(`Specific: user logged in with ${data}`);
+            });
+            
+            emitter.emit('user:login', 'alice');
+            emitter.emit('user:logout', 'bob');
+            
+            const output = document.getElementById('wildcard-output');
+            output.innerHTML = `
+                <strong>Wildcard Test:</strong><br>
+                ${results.join('<br>')}<br>
+                <em>Wildcard listens to ALL events!</em>
+            `;
+        }
+    </script>
+</body>
+</html>

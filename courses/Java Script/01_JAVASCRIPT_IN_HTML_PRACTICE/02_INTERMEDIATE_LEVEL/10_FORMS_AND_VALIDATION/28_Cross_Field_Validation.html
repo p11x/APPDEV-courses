@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross Field Validation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+        .error { color: red; font-size: 12px; display: none; }
+        input.invalid { border-color: red; }
+    </style>
+</head>
+<body>
+    <h1>Cross-Field Validation</h1>
+    <p>Demonstrates validation that depends on multiple fields</p>
+
+    <div class="demo-section">
+        <h2>Registration Form</h2>
+        <form id="crossFieldForm">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Enter password">
+            <span class="error" id="passwordError"></span>
+            
+            <label for="confirmPass">Confirm Password:</label>
+            <input type="password" id="confirmPass" name="confirmPass" placeholder="Confirm password">
+            <span class="error" id="confirmPassError"></span>
+            
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate" name="startDate">
+            <span class="error" id="startDateError"></span>
+            
+            <label for="endDate">End Date:</label>
+            <input type="date" id="endDate" name="endDate">
+            <span class="error" id="endDateError"></span>
+            
+            <label for="minAge">Minimum Age:</label>
+            <input type="number" id="minAge" name="minAge" value="18" min="0" max="120">
+            
+            <label for="age">Your Age:</label>
+            <input type="number" id="age" name="age" placeholder="Enter your age">
+            <span class="error" id="ageError"></span>
+            
+            <button type="button" onclick="validateCrossFields()">Validate Cross Fields</button>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Cross-Field Logic</h2>
+        <button type="button" onclick="showCrossFieldLogic()">Show Validation Logic</button>
+        <div id="output" class="output">Modify fields to see cross-field validation...</div>
+    </div>
+
+    <script>
+        // Cross-field: confirm password
+        function validatePasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirmPass = document.getElementById('confirmPass').value;
+            const errorSpan = document.getElementById('confirmPassError');
+            
+            if (confirmPass && password !== confirmPass) {
+                errorSpan.textContent = 'Passwords do not match';
+                errorSpan.style.display = 'block';
+                document.getElementById('confirmPass').classList.add('invalid');
+                return false;
+            }
+            
+            errorSpan.textContent = '';
+            errorSpan.style.display = 'none';
+            document.getElementById('confirmPass').classList.remove('invalid');
+            return true;
+        }
+        
+        // Cross-field: date range
+        function validateDateRange() {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            const errorSpan = document.getElementById('endDateError');
+            
+            if (startDate && endDate && endDate < startDate) {
+                errorSpan.textContent = 'End date must be after start date';
+                errorSpan.style.display = 'block';
+                document.getElementById('endDate').classList.add('invalid');
+                return false;
+            }
+            
+            errorSpan.textContent = '';
+            errorSpan.style.display = 'none';
+            document.getElementById('endDate').classList.remove('invalid');
+            return true;
+        }
+        
+        // Cross-field: age check
+        function validateAge() {
+            const minAge = parseInt(document.getElementById('minAge').value) || 18;
+            const age = parseInt(document.getElementById('age').value);
+            const errorSpan = document.getElementById('ageError');
+            
+            if (age && age < minAge) {
+                errorSpan.textContent = `You must be at least ${minAge} years old`;
+                errorSpan.style.display = 'block';
+                document.getElementById('age').classList.add('invalid');
+                return false;
+            }
+            
+            errorSpan.textContent = '';
+            errorSpan.style.display = 'none';
+            document.getElementById('age').classList.remove('invalid');
+            return true;
+        }
+        
+        // Validate all cross fields
+        function validateCrossFields() {
+            const results = [];
+            results.push('Password Match: ' + (validatePasswordMatch() ? 'VALID' : 'INVALID'));
+            results.push('Date Range: ' + (validateDateRange() ? 'VALID' : 'INVALID'));
+            results.push('Age Check: ' + (validateAge() ? 'VALID' : 'INVALID'));
+            
+            document.getElementById('output').textContent = results.join('\n');
+        }
+        
+        // Show cross-field logic
+        function showCrossFieldLogic() {
+            let result = 'CROSS-FIELD VALIDATION:\n========================\n\n';
+            result += '1. Password Match:\n';
+            result += '   confirmPassword === password\n\n';
+            result += '2. Date Range:\n';
+            result += '   endDate >= startDate\n\n';
+            result += '3. Age Check:\n';
+            result += '   age >= minAge\n\n';
+            result += 'Logic:\n';
+            result += '- Validates dependent fields together\n';
+            result += '- Validates relationship between inputs\n';
+            result += '- Often requires custom checkValidity()';
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Add real-time validation
+        document.getElementById('confirmPass').addEventListener('input', validatePasswordMatch);
+        document.getElementById('endDate').addEventListener('change', validateDateRange);
+        document.getElementById('age').addEventListener('input', validateAge);
+        
+        // Form submit
+        document.getElementById('crossFieldForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            validateCrossFields();
+        });
+    </script>
+</body>
+</html>

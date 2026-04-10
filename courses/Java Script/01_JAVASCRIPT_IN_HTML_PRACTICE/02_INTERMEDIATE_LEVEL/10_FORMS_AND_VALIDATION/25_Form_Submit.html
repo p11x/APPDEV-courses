@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Submit</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>Form Submission Handling</h1>
+    <p>Demonstrates intercepting and handling form submission</p>
+
+    <div class="demo-section">
+        <h2>Contact Form</h2>
+        <form id="contactForm">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required placeholder="Your name">
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required placeholder="your@email.com">
+            
+            <label for="subject">Subject:</label>
+            <select id="subject" name="subject" required>
+                <option value="">-- Select --</option>
+                <option value="general">General Question</option>
+                <option value="support">Technical Support</option>
+                <option value="sales">Sales Inquiry</option>
+                <option value="feedback">Feedback</option>
+            </select>
+            
+            <label for="message">Message:</label>
+            <textarea id="message" name="message" rows="4" required placeholder="Your message..."></textarea>
+            
+            <button type="submit">Submit Form</button>
+            <button type="button" onclick="submitWithValidation()">Submit with JavaScript</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Submission Options</h2>
+        <button type="button" onclick="interceptSubmit()">Intercept Submit</button>
+        <button type="button" onclick="submitWithFetch()">Submit with Fetch API</button>
+        <div id="output" class="output">Click a button to see submission methods...</div>
+    </div>
+
+    <script>
+        const form = document.getElementById('contactForm');
+        
+        // Get form data as object
+        function getFormData() {
+            const formData = new FormData(form);
+            const data = {};
+            for (let [key, value] of formData) {
+                data[key] = value;
+            }
+            return data;
+        }
+        
+        // Submit with validation
+        function submitWithValidation() {
+            if (form.checkValidity()) {
+                const data = getFormData();
+                document.getElementById('output').textContent = 
+                    'SUBMITTING:\n=========\n\n' + JSON.stringify(data, null, 2);
+            } else {
+                form.reportValidity();
+            }
+        }
+        
+        // Intercept submit event
+        function interceptSubmit() {
+            let result = 'SUBMIT INTERCEPTION:\n================\n\n';
+            result += '1. Prevent default submission:\n';
+            result += '   event.preventDefault()\n\n';
+            result += '2. Validate form:\n';
+            result += '   form.checkValidity()\n\n';
+            result += '3. Process data:\n';
+            result += '   new FormData(form)\n\n';
+            result += '4. Send to server:\n';
+            result += '   fetch(url, { body: formData })';
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Submit with Fetch API
+        function submitWithFetch() {
+            const data = getFormData();
+            
+            // Simulate submission
+            let result = 'FETCH SUBMISSION:\n================\n\n';
+            result += 'url: /api/submit\n';
+            result += 'method: POST\n';
+            result += 'headers:\n';
+            result += '  Content-Type: application/json\n\n';
+            result += 'body:\n' + JSON.stringify(data, null, 2);
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Default form submit handler
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const data = getFormData();
+            
+            let result = 'FORM SUBMITTED:\n================\n\n';
+            result += 'Name: ' + data.name + '\n';
+            result += 'Email: ' + data.email + '\n';
+            result += 'Subject: ' + data.subject + '\n';
+            result += 'Message: ' + data.message.substring(0, 50) + '...';
+            
+            document.getElementById('output').textContent = result;
+        });
+    </script>
+</body>
+</html>

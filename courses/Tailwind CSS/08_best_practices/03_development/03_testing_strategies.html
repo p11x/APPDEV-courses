@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing Strategies - Tailwind CSS Best Practices</title>
+</head>
+<body>
+    <h1>Testing Strategies for Tailwind CSS</h1>
+
+    <h2>Understanding Testing for Tailwind CSS</h2>
+    <p>
+        Testing in Tailwind CSS projects involves verifying visual correctness, component behavior, and ensuring styles remain consistent as the codebase evolves. While Tailwind utilities don't require traditional unit testing, proper testing strategies ensure design systems remain reliable and consistent.
+    </p>
+
+    <h2>Testing Layers</h2>
+    <p>
+        A comprehensive testing strategy for Tailwind CSS projects spans multiple layers: visual regression testing, component testing, and integration testing. Each layer catches different issues and provides confidence in the system's reliability.
+    </p>
+
+    <h3>Standard Example: Visual Regression Testing</h3>
+    <!-- Using Chromatic or similar for visual testing -->
+    <pre>
+/* Example Chromatic configuration */
+/* .chromatic.config.json */
+{
+  "projectId": "project:abc123",
+  "buildScriptName": "build-storybook",
+  "zip": true,
+  "exitZeroOnChanges": true,
+  "exitOnceUploaded": false
+}
+
+/* GitHub Actions workflow */
+/* .github/workflows/chromatic.yml */
+name: Chromatic
+on: pull_request
+jobs:
+  chromatic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: chromaui/action@v1
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+</pre>
+    <!-- Visual regression testing catches unintended style changes -->
+
+    <h3>Real-World Example 1: Component Testing with Playwright</h3>
+    <!-- Using Playwright to test component rendering -->
+    <pre>
+// tests/components/Button.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('Button Component', () => {
+  test('renders primary button correctly', async ({ page }) => {
+    await page.goto('/components/button');
+    
+    const button = page.locator('button.btn-primary');
+    await expect(button).toBeVisible();
+    await expect(button).toHaveCSS('background-color', 'rgb(37, 99, 235)');
+    await expect(button).toHaveCSS('color', 'rgb(255, 255, 255)');
+  });
+
+  test('hover state works correctly', async ({ page }) => {
+    await page.goto('/components/button');
+    
+    const button = page.locator('button.btn-primary');
+    await button.hover();
+    await expect(button).toHaveCSS('background-color', 'rgb(29, 78, 216)');
+  });
+
+  test('focus state has visible outline', async ({ page }) => {
+    await page.goto('/components/button');
+    
+    const button = page.locator('button.btn-primary');
+    await button.focus();
+    await expect(button).toHaveCSS('outline-width', '2px');
+  });
+});
+</pre>
+    <!-- Component tests verify rendering and interactions -->
+
+    <h3>Real-World Example 2: CSS Specificity and Conflict Testing</h2>
+    <!-- Testing for CSS conflicts and specificity issues -->
+    <pre>
+/* tests/css/Specificity.test.ts */
+import { test, expect } from '@playwright/test';
+
+test.describe('CSS Specificity', () => {
+  test('custom classes override Tailwind utilities', async ({ page }) => {
+    await page.goto('/components/custom-styles');
+    
+    // Custom class should override Tailwind bg-color
+    const element = page.locator('.custom-bg');
+    await expect(element).toHaveCSS('background-color', 'rgb(239, 68, 68)');
+  });
+
+  test('component styles apply correctly', async ({ page }) => {
+    await page.goto('/components/card');
+    
+    const card = page.locator('.card');
+    await expect(card).toHaveClass(/bg-white/);
+    await expect(card).toHaveClass(/rounded-xl/);
+    await expect(card).toHaveClass(/shadow-md/);
+  });
+
+  test('responsive classes work at breakpoints', async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto('/components/responsive');
+    
+    const element = page.locator('.responsive-element');
+    await expect(element).toHaveClass(/md:flex/);
+  });
+});
+</pre>
+    <!-- Testing CSS specificity and responsive behavior -->
+
+    <h2>Output Statement</h2>
+    <p>
+        Testing Tailwind CSS projects requires a combination of visual regression testing (for unintended changes), component testing (for correct rendering), and accessibility testing (for inclusive design). These tests provide confidence that styles remain consistent as the project evolves.
+    </p>
+
+    <h2>ASCII Diagram: Testing Pyramid</h2>
+    <pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                 TESTING PYRAMID FOR TAILWIND                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                         ▲                                       │
+│                        /│\                                      │
+│                       / │ \          VISUAL REGRESSION          │
+│                      /  │  \        (Chromatic, Percy)         │
+│                     /───│───\                                    │
+│                    /    │    \       COMPONENT TESTS            │
+│                   /     │     \     (Playwright, Cypress)     │
+│                  /──────│──────\                               │
+│                 /       │       \    ACCESSIBILITY TESTS       │
+│                /        │        \   (axe-core, Lighthouse)   │
+│               /─────────│─────────\                             │
+│              │          │          │    INTEGRATION TESTS     │
+│              │          │          │   (Full page rendering)  │
+│              └──────────┴──────────┘                            │
+│                                                                 │
+│   TEST PRIORITY:                                                  │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │  Most:    Accessibility → Component → Visual → Integration │
+│   │  Least:   (Fastest tests first, comprehensive coverage) │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Testing Tools and Strategies</h2>
+    <ul>
+        <li><strong>Visual Regression:</strong> Chromatic, Percy, or BackstopJS for catching visual changes</li>
+        <li><strong>Component Testing:</strong> Playwright or Cypress for testing component rendering</li>
+        <li><strong>Accessibility Testing:</strong> axe-core for automated accessibility validation</li>
+        <li><strong>Linting:</strong> Stylelint for CSS quality and consistency</li>
+        <li><strong>Snapshot Testing:</strong> Jest snapshots for comparing generated HTML structure</li>
+    </ul>
+
+    <h2>Edge Cases and Considerations</h2>
+    <p>
+        <strong>Dynamic content:</strong> Tests with dynamic content should use stable selectors and consider content variations.
+    </p>
+    <p>
+        <strong>Responsive testing:</strong> Test multiple viewport sizes to ensure responsive classes work correctly.
+    </p>
+        <p>
+        <strong>State variants:</strong> Test hover, focus, active, and other states that may not be visible by default.
+    </p>
+
+    <h2>Performance Considerations</h2>
+    <p>
+        Visual regression tests can be slow. Run them in parallel where possible and only trigger full visual regression on significant changes. Use targeted tests for faster feedback during development.
+    </p>
+
+    <h2>Accessibility Considerations</h2>
+    <p>
+        Include automated accessibility testing in the CI pipeline. Test for color contrast, keyboard navigation, screen reader compatibility, and focus management. These tests catch issues that are expensive to fix later.
+    </p>
+
+    <h2>Cross-Browser Notes</h2>
+    <p>
+        Run tests in multiple browsers to catch cross-browser inconsistencies. Focus on browsers in your target audience's usage statistics. Use services like BrowserStack or Sauce Labs for comprehensive coverage.
+    </p>
+</body>
+</html>

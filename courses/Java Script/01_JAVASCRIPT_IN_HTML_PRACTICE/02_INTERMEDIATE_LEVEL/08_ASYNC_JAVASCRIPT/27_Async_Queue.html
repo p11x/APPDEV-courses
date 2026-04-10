@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Async Queue</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Async Queue</h1>
+    <p>Async queue provides async/await based queue management for sequential execution.</p>
+    
+    <h2>Example 1: Basic Async Queue</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Async Queue with Order</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Queue Processing</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        function delay(ms) {
+            return new Promise(function(resolve) {
+                setTimeout(resolve, ms);
+            });
+        }
+
+        var q = [];
+        
+        async function enqueue(fn) {
+            var p = fn();
+            q.push(p);
+            return p;
+        }
+        
+        async function processAll() {
+            var results = [];
+            for (var i = 0; i < q.length; i++) {
+                results.push(await q[i]);
+            }
+            return results;
+        }
+        
+        enqueue(delay(200).then(function() { return "A"; }));
+        enqueue(delay(100).then(function() { return "B"; }));
+        enqueue(delay(150).then(function() { return "C"; }));
+        
+        processAll().then(function(results) {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Results: " + results.join(", ") + "<br>";
+        });
+
+        var tasksCompleted = [];
+        
+        function createAsyncTask(name, delayMs) {
+            return async function() {
+                await delay(delayMs);
+                tasksCompleted.push(name);
+                return name;
+            };
+        }
+        
+        async function runSequential() {
+            var queue = [
+                createAsyncTask("First", 100),
+                createAsyncTask("Second", 50),
+                createAsyncTask("Third", 150)
+            ];
+            
+            for (var i = 0; i < queue.length; i++) {
+                await queue[i]();
+            }
+        }
+        
+        runSequential().then(function() {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>Completed: " + tasksCompleted.join(", ") + "<br>";
+        });
+
+        async function asyncQueue(maxConcurrent) {
+            var queue = [];
+            var running = 0;
+            
+            return {
+                add: async function(fn) {
+                    while (running >= maxConcurrent) {
+                        await delay(10);
+                    }
+                    running++;
+                    try {
+                        return await fn();
+                    } finally {
+                        running--;
+                    }
+                }
+            };
+        }
+        
+        var q3 = asyncQueue(2);
+        var startTime = Date.now();
+        var completionOrder = [];
+        
+        async function trackTask(name, delayMs) {
+            var started = Date.now() - startTime;
+            await delay(delayMs);
+            completionOrder.push(name + "(" + started + "ms)");
+        }
+        
+        var asyncQueue = async function(maxConcurrent) {
+            var queue = [];
+            var running = 0;
+            
+            return {
+                add: async function(task) {
+                    queue.push(task);
+                    processQueue();
+                }
+            };
+            
+            async function processQueue() {
+                while (running < maxConcurrent && queue.length > 0) {
+                    running++;
+                    var task = queue.shift();
+                    task()["finally"](function() {
+                        running--;
+                        processQueue();
+                    });
+                }
+            }
+        };
+        
+        var qMain = asyncQueue(2);
+        
+        qMain.add(trackTask("T1", 100));
+        qMain.add(trackTask("T2", 50));
+        qMain.add(trackTask("T3", 100));
+        
+        setTimeout(function() {
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>Tasks completed sequentially with concurrency limit<br>";
+        }, 300);
+    </script>
+</body>
+</html>

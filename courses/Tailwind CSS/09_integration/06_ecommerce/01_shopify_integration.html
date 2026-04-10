@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopify + Tailwind CSS Integration Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Shopify + Tailwind CSS Integration</h1>
+        
+        <!-- Overview Section -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Overview</h2>
+            <p class="text-gray-600 mb-4">
+                Integrating Tailwind CSS with Shopify requires understanding Shopify's theme architecture 
+                and Liquid templating system. You can integrate Tailwind using the CDN approach for quick prototyping, 
+                or set up a proper build process with npm for production themes. The recommended approach uses 
+                Tailwind CLI with Shopify's asset pipeline.
+            </p>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                <p class="text-sm text-blue-700"><strong>Key Point:</strong> Shopify themes use Liquid templates; Tailwind 
+                classes are added directly to template files. The key is proper configuration of content paths 
+                to include all Liquid files for PurgeCSS processing during build.</p>
+            </div>
+        </section>
+
+        <!-- ASCII Diagram: Architecture -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Architecture Flow</h2>
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto text-sm">
+┌─────────────────────────────────────────────────────────────┐
+│              SHOPIFY + TAILWIND BUILD PROCESS                 │
+└─────────────────────────────────────────────────────────────┘
+
+   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+   │  Liquid    │────▶│  PostCSS   │────▶│   Output    │
+   │  Templates │     │  + Tailwind│     │  CSS Bundle │
+   └─────────────┘     └─────────────┘     └─────────────┘
+         │                   │                    
+         │              ┌─────┴─────┐            
+         ▼              ▼           ▼            
+   ┌──────────┐   ┌────────┐  ┌────────┐
+   │ Shopify  │   │ purge  │  │ minify │
+   │  Theme   │   │ unused │  │  CSS  │
+   └──────────┘   └────────┘  └────────┘
+         │
+         ▼
+   ┌──────────────────┐
+   │   Shopify CDN   │
+   │   Asset Pipeline │
+   └──────────────────┘
+            </pre>
+        </section>
+
+        <!-- Standard Example -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Standard Example: Theme Configuration</h2>
+            <p class="text-gray-600 mb-3">Setting up Tailwind CSS for Shopify theme development:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400 mb-2">// tailwind.config.js (for Shopify theme)</p>
+                <p class="text-blue-400">module.exports = {</p>
+                <p class="text-gray-300 pl-4">content: [</p>
+                <p class="text-gray-300 pl-8">"./**/*.liquid",</p>
+                <p class="text-gray-300 pl-8">"./**/*.js",</p>
+                <p class="text-gray-300 pl-8">"./**/*.json"</p>
+                <p class="textgray-300 pl-4">],</p>
+                <p class="text-gray-300 pl-4">theme: {</p>
+                <p class="text-gray-300 pl-8">extend: {</p>
+                <p class="text-gray-300 pl-12">colors: {</p>
+                <p class="text-gray-300 pl-16">shopify: {</p>
+                <p class="text-gray-300 pl-20">primary: '#24482e',</p>
+                <p class="text-gray-300 pl-20">secondary: '#6b8e23'</p>
+                <p class="text-gray-300 pl-16">}</p>
+                <p class="text-gray-300 pl-12">}</p>
+                <p class="text-gray-300 pl-8">}</p>
+                <p class="text-gray-300 pl-4">},</p>
+                <p class="text-gray-300 pl-4">plugins: [],</p>
+                <p class="text-blue-400">};</p>
+                <p class="text-green-400 mt-4">// package.json scripts</p>
+                <p class="text-blue-400">"scripts": {</p>
+                <p class="text-gray-300 pl-4">"build": "tailwindcss -i ./src/input.css -o ./assets/tailwind.css",</p>
+                <p class="text-gray-300 pl-4">"watch": "tailwindcss -i ./src/input.css -o ./assets/tailwind.css --watch"</p>
+                <p class="text-blue-400">}</p>
+                <p class="text-green-400 mt-4">// src/input.css</p>
+                <p class="text-blue-400">@tailwind</p>
+                <p class="text-gray-300">base;</p>
+                <p class="text-blue-400">@tailwind</p>
+                <p class="text-gray-300">components;</p>
+                <p class="text-blue-400">@tailwind</p>
+                <p class="text-gray-300">utilities;</p>
+            </div>
+        </section>
+
+        <!-- Real-World Example 1 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Real-World Example 1: Product Card Component</h2>
+            <p class="text-gray-600 mb-3">Creating a Shopify product card with Tailwind in Liquid:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">{-- product-card.liquid --}</p>
+                <p class="text-yellow-300">&lt;div className="group relative"&gt;</p>
+                <p class="textgray-300 pl-4">&lt;div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-100"&gt;</p>
+                <p class="textgray-300 pl-8">&lt;img</p>
+                <p class="textgray-300 pl-12">src="&lt;? product.featured_image | image_url: width: 400 ?&gt;"</p>
+                <p class="textgray-300 pl-12">alt="&lt;? product.title ?&gt;"</p>
+                <p class="textgray-300 pl-12">className="h-full w-full object-cover object-center group-hover:opacity-75"</p>
+                <p class="textgray-300 pl-12">&gt;</p>
+                <p class="textgray-300 pl-4">&lt;/div&gt;</p>
+                <p class="textgray-300 pl-4">&lt;div className="mt-4 flex justify-between"&gt;</p>
+                <p class="textgray-300 pl-8">&lt;div&gt;</p>
+                <p class="textgray-300 pl-12">&lt;h3 className="text-sm font-medium text-gray-700"&gt;</p>
+                <p class="textgray-300 pl-16">&lt;a href="&lt;? product.url ?&gt;"&gt;</p>
+                <p class="textgray-300 pl-20">&lt;? product.title ?&gt;</p>
+                <p class="textgray-300 pl-16">&lt;/a&gt;</p>
+                <p class="textgray-300 pl-12">&lt;/h3&gt;</p>
+                <p class="textgray-300 pl-8">&lt;/div&gt;</p>
+                <p class="textgray-300 pl-8">&lt;p className="text-sm font-medium text-gray-900"&gt;</p>
+                <p class="textgray-300 pl-12">&lt;? product.price | money ?&gt;</p>
+                <p class="textgray-300 pl-8">&lt;/p&gt;</p>
+                <p class="textgray-300 pl-4">&lt;/div&gt;</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="textgreen-400">{-- Quick add button on hover --}</p>
+                <p class="textgray-300 pl-4">&lt;div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"&gt;</p>
+                <p class="textgray-300 pl-8">&lt;button</p>
+                <p class="textgray-300 pl-12">type="submit"</p>
+                <p class="textgray-300 pl-12">className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800"</p>
+                <p class="textgray-300 pl-12">data-product-id="&lt;? product.id ?&gt;"</p>
+                <p class="textgray-300 pl-12">&gt;Quick Add&lt;/button&gt;</p>
+                <p class="textgray-300 pl-4">&lt;/div&gt;</p>
+                <p class="textyellow-300">&lt;/div&gt;</p>
+            </div>
+        </section>
+
+        <!-- Real-World Example 2 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Real-World Example 2: Collection Grid</h2>
+            <p class="text-gray-600 mb-3">Building a responsive collection grid in Shopify:</p>
+            
+            <div class="bg-gray-900 p-4 rounded mb-4">
+                <p class="text-green-400">{-- collection-grid.liquid --}</p>
+                <p class="textyellow-300">&lt;div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"&gt;</p>
+                <p class="textgray-300 pl-4">&lt;div className="flex items-center justify-between mb-8"&gt;</p>
+                <p class="textgray-300 pl-8">&lt;h1 className="text-3xl font-bold text-gray-900"&gt;</p>
+                <p class="textgray-300 pl-12">&lt;? collection.title ?&gt;</p>
+                <p class="textgray-300 pl-8">&lt;/h1&gt;</p>
+                <p class="textgray-300 pl-8">&lt;select className="border-gray-300 rounded-md py-2 px-4"&gt;</p>
+                <p class="textgray-300 pl-12">&lt;option value="best-selling"&gt;Best Selling&lt;/option&gt;</p>
+                <p class="textgray-300 pl-12">&lt;option value="price-asc"&gt;Price: Low to High&lt;/option&gt;</p>
+                <p class="textgray-300 pl-12">&lt;option value="price-desc"&gt;Price: High to Low&lt;/option&gt;</p>
+                <p class="textgray-300 pl-8">&lt;/select&gt;</p>
+                <p class="textgray-300 pl-4">&lt;/div&gt;</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="textgreen-400">{-- Product Grid --}</p>
+                <p class="textgray-300 pl-4">&lt;div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"&gt;</p>
+                <p class="textgray-300 pl-8">&lt;? for product in collection.products limit: 12 ?&gt;</p>
+                <p class="textgray-300 pl-12">&lt;? render 'product-card', product: product ?&gt;</p>
+                <p class="textgray-300 pl-8">&lt;? endfor ?&gt;</p>
+                <p class="textgray-300 pl-4">&lt;/div&gt;</p>
+                <p class="textgray-300">&nbsp;</p>
+                <p class="textgreen-400">{-- Pagination --}</p>
+                <p class="textgray-300 pl-4">&lt;? if paginate.pages &gt; 1 ?&gt;</p>
+                <p class="textgray-300 pl-8">&lt;nav className="flex justify-center items-center space-x-2 mt-12"&gt;</p>
+                <p class="textgray-300 pl-12">&lt;? if paginate.previous ?&gt;</p>
+                <p class="textgray-300 pl-16">&lt;a href="&lt;? paginate.previous.url ?&gt;" className="px-4 py-2 border rounded hover:bg-gray-50"&gt;Previous&lt;/a&gt;</p>
+                <p class="textgray-300 pl-12">&lt;? endif ?&gt;</p>
+                <p class="textgray-300 pl-12">&lt;? for part in paginate.parts ?&gt;</p>
+                <p class="textgray-300 pl-16">&lt;? if part.is_link ?&gt;</p>
+                <p class="textgray-300 pl-20">&lt;a href="&lt;? part.url ?&gt;" className="px-4 py-2 border rounded hover:bg-gray-50"&gt;&lt;? part.title ?&gt;&lt;/a&gt;</p>
+                <p class="textgray-300 pl-16">&lt;? else ?&gt;</p>
+                <p class="textgray-300 pl-20">&lt;span className="px-4 py-2 bg-black text-white rounded"&gt;&lt;? part.title ?&gt;&lt;/span&gt;</p>
+                <p class="textgray-300 pl-16">&lt;? endif ?&gt;</p>
+                <p class="textgray-300 pl-12">&lt;? endfor ?&gt;</p>
+                <p class="textgray-300 pl-12">&lt;? if paginate.next ?&gt;</p>
+                <p class="textgray-300 pl-16">&lt;a href="&lt;? paginate.next.url ?&gt;" className="px-4 py-2 border rounded hover:bg-gray-50"&gt;Next&lt;/a&gt;</p>
+                <p class="textgray-300 pl-12">&lt;? endif ?&gt;</p>
+                <p class="textgray-300 pl-8">&lt;/nav&gt;</p>
+                <p class="textgray-300 pl-4">&lt;? endif ?&gt;</p>
+                <p class="textyellow-300">&lt;/div&gt;</p>
+            </div>
+        </section>
+
+        <!-- Output Statement -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Output: Generated CSS Classes</h2>
+            <p class="text-gray-600 mb-3">When building, Tailwind generates optimized CSS for Shopify templates:</p>
+            
+            <div class="bg-gray-800 text-green-400 p-4 rounded">
+                <p class="mb-2">/* Output CSS (optimized for Shopify theme) */</p>
+                <p>.bg-gray-100 { background-color: #f3f4f6; }</p>
+                <p>.group:hover .group-hover\:opacity-100 { opacity: 1; }</p>
+                <p>.aspect-square { aspect-ratio: 1 / 1; }</p>
+                <p>.object-cover { object-fit: cover; }</p>
+                <p>.grid { display: grid; }</p>
+                <p>.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }</p>
+                <p>.gap-6 { gap: 1.5rem; }</p>
+                <p>.transition-opacity { transition-property: opacity; }</p>
+                <p>@media (min-width: 640px) {</p>
+                <p class="pl-4">.sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }</p>
+                <p>}</p>
+                <p>@media (min-width: 1024px) {</p>
+                <p class="pl-4">.lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }</p>
+                <p>}</p>
+            </div>
+        </section>
+
+        <!-- Edge Cases -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Edge Cases & Considerations</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Liquid Filters:</strong> Use Shopify's image_url filter for responsive images, not Tailwind's object-cover alone.</li>
+                <li><strong>Dynamic Products:</strong> Product data is dynamic; ensure all template files are in content paths for PurgeCSS.</li>
+                <li><strong>App Injections:</strong> Some Shopify apps inject inline styles; configure safelist for critical classes.</li>
+                <li><strong>Variant Selectors:</strong> Use JavaScript for variant state changes with Tailwind class toggling.</li>
+                <li><strong>Cart Drawer:</strong> Implement cart drawer with AJAX API and Tailwind for smooth updates.</li>
+            </ul>
+        </section>
+
+        <!-- Performance Considerations -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Performance Considerations</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>CDN Loading:</strong> Use Shopify's asset_url filter to reference compiled CSS from CDN.</li>
+                <li><strong>Lazy Loading:</strong> Implement lazy loading for product images below the fold.</li>
+                <li><strong>Code Splitting:</strong> Separate critical CSS from non-critical for faster initial load.</li>
+                <li><strong>Image Optimization:</strong> Use Shopify's image transformation API for appropriately sized images.</li>
+                <li><strong>Bundle Size:</strong> Keep production CSS under 50KB for optimal performance.</li>
+            </ul>
+        </section>
+
+        <!-- Accessibility Notes -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Accessibility Notes</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Alt Text:</strong> Always use Shopify's alt text from product images for screen readers.</li>
+                <li><strong>Keyboard Navigation:</strong> Ensure all interactive elements (Add to Cart, filters) are keyboard accessible.</li>
+                <li><strong>Form Labels:</strong> Use proper label elements for variant selectors and quantity inputs.</li>
+                <li><strong>Focus States:</strong> Include visible focus indicators for all interactive elements.</li>
+                <li><strong>ARIA Live:</strong> Use aria-live region for cart updates announced to screen readers.</li>
+            </ul>
+        </section>
+
+        <!-- Cross-Browser Notes -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Cross-Browser Compatibility</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>CSS Grid:</strong> Grid has good support; use flexbox as fallback for older browsers.</li>
+                <li><strong>Object-Fit:</strong> For older browsers, use object-fit-images polyfill for product images.</li>
+                <li><strong>Autoprefixer:</strong> Ensure PostCSS includes autoprefixer for vendor prefixes.</li>
+                <li><strong>Modernizr:</strong> Consider using feature detection for progressive enhancement.</li>
+            </ul>
+        </section>
+
+        <!-- Additional Resources -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-3">Additional Resources</h2>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><a href="https://shopify.dev/docs/themes" class="text-blue-600 hover:underline">Shopify Theme Documentation</a></li>
+                <li><a href="https://shopify.dev/docs/api/liquid" class="text-blue-600 hover:underline">Liquid API Reference</a></li>
+                <li><a href="https://tailwindcss.com/docs/guides/shopify" class="text-blue-600 hover:underline">Tailwind Shopify Guide</a></li>
+            </ul>
+        </section>
+    </div>
+</body>
+</html>

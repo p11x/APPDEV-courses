@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+// HTML5 document type declaration
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>19 - Memory Leaks</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffcdd2;
+        }
+        h1 {
+            color: #b71c1c;
+            text-align: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .leak-type {
+            background: #ef9a9a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #d32f2f;
+        }
+        button {
+            background: #c62828;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #b71c1c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Memory Leaks</h1>
+        <p>Memory leaks occur when JavaScript holds references to objects that are no longer needed, preventing garbage collection.</p>
+        
+        <h2>Common Causes:</h2>
+        
+        <div class="leak-type">
+            <strong>Global Variables</strong> - Accidental global variables in non-strict mode
+        </div>
+        
+        <div class="leak-type">
+            <strong>Event Listeners</strong> - Not removing old event listeners
+        </div>
+        
+        <div class="leak-type">
+            <strong>Closures</strong> - References retained in closures
+        </div>
+        
+        <div class="leak-type">
+            <strong>timers/setInterval</strong> - Not clearing intervals
+        </div>
+        
+        <h2>Try It:</h2>
+        <button onclick="demonstrateLeaks()">Memory Leak Demo</button>
+        <button onclick="clearLeaks()">Clear Leaks</button>
+        
+        <div id="output" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
+            // Click button to see demonstration
+        </div>
+    </div>
+
+    // Performance Tip: Remove event listeners when no longer needed
+    // Security Note: Be careful with closures capturing sensitive data
+    
+    <script>
+        // Demonstration of potential memory leak patterns
+        
+        // 1. Accidental global variable
+        // In non-strict mode: leakyVariable = "oops" creates global
+        var leakyArray = [];
+        
+        // 2. Closures capturing large objects
+        var largeObject = new Array(100000).fill("data");
+        
+        function createLeakyClosure() {
+            // This closure keeps reference to largeObject
+            return function() {
+                return largeObject;
+            };
+        }
+        
+        // 3. Event listeners that aren't removed
+        var leakedListeners = [];
+        
+        // 4. Intervals that aren't cleared
+        var intervalId = null;
+        
+        function demonstrateLeaks() {
+            console.log("%c=== Memory Leak Demo ===", "color: #c62828; font-weight: bold; font-size: 16px;");
+            
+            // Add more data to leaky array
+            for(var i = 0; i < 1000; i++) {
+                leakyArray.push({ data: new Array(100).fill(i) });
+            }
+            
+            console.log("Leaky array size:", leakyArray.length);
+            
+            // Create closures
+            var leakyFn = createLeakyClosure();
+            leakedListeners.push(leakyFn);
+            
+            console.log("Leaky closures count:", leakedListeners.length);
+            
+            // Start interval if not started
+            if (!intervalId) {
+                intervalId = setInterval(function() {
+                    // This interval keeps running
+                    console.log("Interval running...");
+                }, 1000);
+                console.log("Interval started (not cleared)");
+            }
+            
+            // Detect memory (approximate)
+            if (window.performance && window.performance.memory) {
+                console.log("Memory usage:");
+                console.log("  Used:", Math.round(window.performance.memory.usedJSHeapSize / 1048576), "MB");
+                console.log("  Total:", Math.round(window.performance.memory.totalJSHeapSize / 1048576), "MB");
+            }
+            
+            console.log("");
+            console.log("Ways to prevent leaks:");
+            console.log("1. Remove event listeners when done");
+            console.log("2. Clear intervals/timeouts");
+            console.log("3. Avoid unnecessary closures");
+            console.log("4. Use WeakMap/WeakSet when appropriate");
+            
+            document.getElementById("output").innerHTML = 
+                "<strong>Leak Patterns:</strong><br>" +
+                "- Global variables (use 'use strict')<br>" +
+                "- Unremoved event listeners<br>" +
+                "- Uncleared intervals<br>" +
+                "- Closures with large objects<br>" +
+                "- Detached DOM references";
+            
+            alert("Memory leak demo! Check Performance tab for memory growth.");
+        }
+        
+        function clearLeaks() {
+            console.log("Clearing leaks...");
+            leakyArray = [];
+            leakedListeners = [];
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            console.log("Leaks cleared!");
+            document.getElementById("output").innerHTML = "Leaks cleared!";
+        }
+        
+        console.log("Memory Leaks page loaded");
+    </script>
+</body>
+</html>

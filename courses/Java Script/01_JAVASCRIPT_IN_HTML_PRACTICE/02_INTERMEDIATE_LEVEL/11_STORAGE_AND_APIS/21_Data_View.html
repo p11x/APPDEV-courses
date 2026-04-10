@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>21 - Data View</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>21 - Data View</h1>
+    <p>DataView provides low-level interface for reading/writing multi-byte data.</p>
+    
+    <button onclick="testDataView()">Test DataView</button>
+    <button onclick="readMixedTypes()">Read Mixed Types</button>
+    <button onclick="writeAndRead()">Write and Read</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        let output = [];
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        function testDataView() {
+            output = [];
+            log('Testing DataView...');
+            
+            const buffer = new ArrayBuffer(16);
+            const view = new DataView(buffer);
+            
+            view.setInt8(0, 42);
+            view.setUint8(1, 255);
+            view.setInt16(2, 1000, true);
+            view.setInt32(4, 100000, true);
+            view.setFloat32(8, 3.14, true);
+            view.setFloat64(12, 2.718281828, true);
+            
+            log('setInt8(0): ' + view.getInt8(0));
+            log('setUint8(1): ' + view.getUint8(1));
+            log('setInt16(2): ' + view.getInt16(2, true));
+            log('setInt32(4): ' + view.getInt32(4, true));
+            log('setFloat32(8): ' + view.getFloat32(8, true));
+            log('setFloat64(12): ' + view.getFloat64(12, true));
+        }
+
+        function readMixedTypes() {
+            log('Reading mixed types from buffer...');
+            
+            const buffer = new ArrayBuffer(12);
+            const view = new DataView(buffer);
+            
+            view.setUint8(0, 1);
+            view.setUint8(1, 2);
+            view.setUint8(2, 3);
+            view.setUint8(3, 4);
+            view.setFloat32(4, 1.5, true);
+            view.setFloat64(8, 3.14159, true);
+            
+            const bytes = [];
+            for (let i = 0; i < 4; i++) bytes.push(view.getUint8(i));
+            log('First 4 bytes: ' + bytes.join(', '));
+            log('Float at 4: ' + view.getFloat32(4, true));
+            log('Double at 8: ' + view.getFloat64(8, true));
+        }
+
+        function writeAndRead() {
+            log('Write and read with different endianness...');
+            
+            const buffer = new ArrayBuffer(4);
+            const view = new DataView(buffer);
+            
+            view.setUint32(0, 0x12345678, false);
+            log('Big endian read: 0x' + view.getUint32(0, false).toString(16));
+            log('Little endian read: 0x' + view.getUint32(0, true).toString(16));
+            
+            view.setUint32(0, 0x12345678, true);
+            log('Written little endian - Big endian read: 0x' + view.getUint32(0, false).toString(16));
+            log('Written little endian - Little endian read: 0x' + view.getUint32(0, true).toString(16));
+        }
+    </script>
+</body>
+</html>

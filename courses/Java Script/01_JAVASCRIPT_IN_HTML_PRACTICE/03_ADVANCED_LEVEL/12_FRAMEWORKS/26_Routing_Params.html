@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>26 - Routing Params</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #61dafb; background: #282c34; padding: 15px; border-radius: 5px; }
+        .concept { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .demo { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; font-family: 'Consolas', monospace; }
+        .output { background: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #4caf50; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>26 - Routing Params</h1>
+    
+    <div class="concept">
+        <h2>What are Route Parameters?</h2>
+        <p>Route parameters are dynamic segments in the URL that can capture variable parts of the path. They are accessed using the useParams hook in React Router.</p>
+    </div>
+
+    <div class="concept">
+        <h2>Using useParams</h2>
+        <div class="demo">
+<pre><span class="comment">// Define route with params</span>
+&lt;Route path="/users/:userId/posts/:postId" /&gt;
+
+<span class="comment">// Access in component</span>
+<span class="highlight">function</span> Post() {
+    <span class="highlight">const</span> { userId, postId } = useParams();
+    <span class="comment">// URL: /users/5/posts/10</span>
+    <span class="comment">// userId = "5", postId = "10"</span>
+}</pre>
+        </div>
+    </div>
+
+    <div class="concept">
+        <h2>Live Demo: Multiple Params</h2>
+        <button onclick="navigate('/users/1/posts/5')">User 1, Post 5</button>
+        <button onclick="navigate('/users/42/posts/100')">User 42, Post 100</button>
+        <div id="params-demo"></div>
+    </div>
+
+    <div class="output">
+        <strong>Output:</strong>
+        <div id="output-container"></div>
+    </div>
+
+    <script>
+        let currentPath = '/users/1/posts/5';
+
+        function parseParams(path) {
+            const match = path.match(/\/users\/(\w+)\/posts\/(\w+)/);
+            if (match) {
+                return { userId: match[1], postId: match[2] };
+            }
+            return { userId: null, postId: null };
+        }
+
+        function navigate(path) {
+            currentPath = path;
+            render();
+        }
+
+        function render() {
+            const params = parseParams(currentPath);
+            
+            document.getElementById('params-demo').innerHTML = `
+                <div style="padding:20px;background:#fff;border-radius:8px;">
+                    <h3>Post Details</h3>
+                    <p>User ID: <strong>${params.userId}</strong></p>
+                    <p>Post ID: <strong>${params.postId}</strong></p>
+                    <p>Full path: <code>${currentPath}</code></p>
+                </div>
+            `;
+            
+            document.getElementById('output-container').innerHTML = `
+                <p>Extracted from URL using <code>useParams()</code></p>
+            `;
+        }
+        
+        render();
+    </script>
+</body>
+</html>

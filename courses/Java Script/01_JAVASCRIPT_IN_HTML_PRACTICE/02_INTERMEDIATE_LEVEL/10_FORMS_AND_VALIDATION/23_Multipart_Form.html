@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multipart Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>Multipart Form Data</h1>
+    <p>Demonstrates creating multipart form data with file upload</p>
+
+    <div class="demo-section">
+        <h2>Multipart Form</h2>
+        <form id="multipartForm">
+            <label for="userName">Name:</label>
+            <input type="text" id="userName" name="userName" placeholder="Enter name">
+            
+            <label for="userEmail">Email:</label>
+            <input type="email" id="userEmail" name="userEmail" placeholder="email@example.com">
+            
+            <label for="userBio">Bio:</label>
+            <textarea id="userBio" name="userBio" rows="3" placeholder="Tell us about yourself"></textarea>
+            
+            <label for="avatar">Avatar (image):</label>
+            <input type="file" id="avatar" name="avatar" accept="image/*">
+            
+            <label for="documents">Documents:</label>
+            <input type="file" id="documents" name="documents" multiple accept=".pdf,.doc,.docx">
+            
+            <button type="button" onclick="buildMultipartData()">Build Multipart Data</button>
+            <button type="button" onclick="showMultipartStructure()">Show Structure</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Multipart Operations</h2>
+        <button type="button" onclick="createFormData()">Create FormData</button>
+        <button type="button" onclick="appendFormData()">Append to FormData</button>
+        <div id="output" class="output">Click a button to see multipart demonstration...</div>
+    </div>
+
+    <script>
+        const nameInput = document.getElementById('userName');
+        const emailInput = document.getElementById('userEmail');
+        const bioInput = document.getElementById('userBio');
+        const avatarInput = document.getElementById('avatar');
+        const documentsInput = document.getElementById('documents');
+        
+        // Create FormData object
+        function createFormData() {
+            const formData = new FormData();
+            
+            // Add text fields
+            formData.append('userName', nameInput.value);
+            formData.append('userEmail', emailInput.value);
+            formData.append('userBio', bioInput.value);
+            
+            // Add files if selected
+            const avatarFile = avatarInput.files[0];
+            if (avatarFile) {
+                formData.append('avatar', avatarFile);
+            }
+            
+            const docFiles = documentsInput.files;
+            for (let i = 0; i < docFiles.length; i++) {
+                formData.append('documents', docFiles[i]);
+            }
+            
+            let result = 'FORM DATA CREATED:\n========================\n\n';
+            result += `userName: "${formData.get('userName')}"\n`;
+            result += `userEmail: "${formData.get('userEmail')}"\n`;
+            result += `userBio: "${formData.get('userBio')}"\n`;
+            result += `avatar: ${avatarFile ? avatarFile.name : '(no file)'}\n`;
+            result += `documents: ${docFiles.length} file(s)`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Append to FormData
+        function appendFormData() {
+            const formData = new FormData();
+            
+            // Using append to add multiple values with same name
+            formData.append('tags', 'javascript');
+            formData.append('tags', 'forms');
+            formData.append('tags', 'validation');
+            
+            // Using append to add custom data
+            formData.append('timestamp', new Date().toISOString());
+            formData.append('userId', '12345');
+            
+            let result = 'FORM DATA WITH APPEND:\n========================\n\n';
+            result += `tags (all):\n`;
+            for (let value of formData.getAll('tags')) {
+                result += `  - ${value}\n`;
+            }
+            result += `\ntimestamp: ${formData.get('timestamp')}\n`;
+            result += `userId: ${formData.get('userId')}`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Build multipart data string representation
+        function buildMultipartData() {
+            const boundary = '----FormBoundary' + Date.now();
+            
+            let result = 'MULTIPART FORM DATA STRUCTURE:\n====================================\n\n';
+            result += `Boundary: ${boundary}\n\n`;
+            
+            // Simulate multipart structure
+            result += `--${boundary}\n`;
+            result += `Content-Disposition: form-data; name="userName"\n\n`;
+            result += `${nameInput.value}\n\n`;
+            
+            result += `--${boundary}\n`;
+            result += `Content-Disposition: form-data; name="userEmail"\n\n`;
+            result += `${emailInput.value}\n\n`;
+            
+            result += `--${boundary}\n`;
+            result += `Content-Disposition: form-data; name="avatar"; filename="${avatarInput.files[0]?.name || 'none'}"\n`;
+            result += `Content-Type: ${avatarInput.files[0]?.type || 'application/octet-stream'}\n\n`;
+            result += `[file content]\n\n`;
+            
+            result += `--${boundary}--`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Show multipart structure
+        function showMultipartStructure() {
+            let result = 'MULTIPART FORM STRUCTURE:\n========================\n\n';
+            result += 'Content-Type: multipart/form-data; boundary=----Boundary\n\n';
+            result += 'Each part contains:\n';
+            result += '1. Content-Disposition header\n';
+            result += '2. (optional) Content-Type header\n';
+            result += '3. Empty line\n';
+            result += '4. Data value\n\n';
+            result += 'For files:\n';
+            result += '  Content-Disposition: form-data; name="fieldName"; filename="file.ext"\n';
+            result += '  Content-Type: image/jpeg\n\n';
+            result += 'For text:\n';
+            result += '  Content-Disposition: form-data; name="fieldName"\n\n';
+            result += '  value';
+            
+            document.getElementById('output').textContent = result;
+        }
+    </script>
+</body>
+</html>

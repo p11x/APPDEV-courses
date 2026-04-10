@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30 - EventSource Basic</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+        .info { background: #e3f2fd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>30 - EventSource Basic</h1>
+    <p>Server-Sent Events for one-way server communication.</p>
+    
+    <div class="info">
+        <strong>Note:</strong> EventSource requires a server that sends text/event-stream.
+        This demo shows the API and simulates the behavior.
+    </div>
+    
+    <button onclick="testEventSourceAPI()">Test EventSource API</button>
+    <button onclick="testEventSourceEvents()">Test EventSource Events</button>
+    <button onclick="simulateSSE()">Simulate SSE</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        let output = [];
+        let eventSource = null;
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        function testEventSourceAPI() {
+            output = [];
+            log('Testing EventSource API...');
+            
+            if (!('EventSource' in window)) {
+                log('EventSource not supported');
+                return;
+            }
+            
+            log('EventSource is supported');
+            
+            log('\nEventSource properties:');
+            log('  - url: The URL connected to');
+            log('  - readyState: 0=CONNECTING, 1=OPEN, 2=CLOSED');
+            log('  - withCredentials: Boolean for CORS');
+            
+            log('\nEventSource methods:');
+            log('  - close(): Closes the connection');
+            
+            log('\nEventSource events:');
+            log('  - onopen: Connection opened');
+            log('  - onmessage: Message received');
+            log('  - onerror: Error occurred');
+        }
+
+        function testEventSourceEvents() {
+            output = [];
+            log('Testing EventSource event handling...');
+            
+            eventSource = new EventSource('https://stream.brave.com/stream');
+            
+            eventSource.onopen = function() {
+                log('Connection opened (or attempted)');
+            };
+            
+            eventSource.onmessage = function(event) {
+                log('Message received: ' + event.data.substring(0, 30));
+            };
+            
+            eventSource.onerror = function(err) {
+                log('Error occurred (expected without server)');
+                log('Ready state: ' + eventSource.readyState);
+            };
+            
+            log('EventSource created, waiting for events...');
+            
+            setTimeout(() => {
+                eventSource.close();
+                log('Connection closed');
+            }, 3000);
+        }
+
+        function simulateSSE() {
+            output = [];
+            log('Simulating Server-Sent Events manually...');
+            
+            let count = 0;
+            const interval = setInterval(() => {
+                count++;
+                log('SSE Message ' + count + ': ' + new Date().toLocaleTimeString());
+                
+                if (count >= 5) {
+                    clearInterval(interval);
+                    log('Simulated SSE complete');
+                }
+            }, 1000);
+            
+            log('Started emitting simulated messages...');
+        }
+    </script>
+</body>
+</html>

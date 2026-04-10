@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Validity</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+    </style>
+</head>
+<body>
+    <h1>Using checkValidity() Method</h1>
+    <p>Demonstrates checkValidity() vs validate and the validity object</p>
+
+    <div class="demo-section">
+        <h2>Form with Validation</h2>
+        <form id="checkForm">
+            <label for="username">Username (required, min 3):</label>
+            <input type="text" id="username" name="username" required minlength="3" placeholder="Enter username">
+            
+            <label for="userpassword">Password (required, min 6):</label>
+            <input type="password" id="userpassword" name="userpassword" required minlength="6" placeholder="Enter password">
+            
+            <label for="confirmPassword">Confirm Password (required):</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm password">
+            
+            <button type="button" onclick="checkFormValidity()">Check checkValidity()</button>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Demonstration</h2>
+        <button type="button" onclick="compareMethods()">compare checkValidity() vs checkValidity()</button>
+        <button type="button" onclick="showValidityObject()">Show validity object</button>
+        <button type="button" onclick="checkAllFields()">Check all fields</button>
+        <div id="output" class="output">Click a button to see demonstration...</div>
+    </div>
+
+    <script>
+        // Compare checkValidity methods
+        function compareMethods() {
+            const username = document.getElementById('username');
+            
+            let result = 'comparing METHODS:\n====================\n\n';
+            result += 'checkValidity() returns boolean:\n';
+            result += `  username.checkValidity() = ${username.checkValidity()}\n\n`;
+            result += 'Note: checkValidity() does NOT display message\n';
+            result += 'It just returns true/false silently\n\n';
+            result += 'The validity object contains all details:\n';
+            result += `  valid: ${username.validity.valid}\n`;
+            result += `  valueMissing: ${username.validity.valueMissing}\n`;
+            result += `  tooShort: ${username.validity.tooShort}`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Show validity object details
+        function showValidityObject() {
+            const username = document.getElementById('username');
+            const password = document.getElementById('userpassword');
+            const v = username.validity;
+            
+            let result = 'validity OBJECT PROPERTIES:\n========================\n\n';
+            result += `${username.id}:\n`;
+            result += `  value: "${username.value}"\n`;
+            result += ` .valid: ${v.valid}\n`;
+            result += `  .valueMissing: ${v.valueMissing}\n`;
+            result += `  .tooShort: ${v.tooShort}\n`;
+            result += `  .tooLong: ${v.tooLong}\n`;
+            result += `  .typeMismatch: ${v.typeMismatch}\n`;
+            result += `  .patternMismatch: ${v.patternMismatch}\n`;
+            result += `  .rangeUnderflow: ${v.rangeUnderflow}\n`;
+            result += `  .rangeOverflow: ${v.rangeOverflow}\n`;
+            result += `  .customError: ${v.customError}\n\n`;
+            
+            result += `${password.id}:\n`;
+            const vp = password.validity;
+            result += `  .valid: ${vp.valid}\n`;
+            result += `  .valueMissing: ${vp.valueMissing}\n`;
+            result += `  .tooShort: ${vp.tooShort}`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Check all form fields
+        function checkAllFields() {
+            const form = document.getElementById('checkForm');
+            const inputs = form.querySelectorAll('input');
+            let result = 'CHECKING ALL FIELDS:\n====================\n\n';
+            
+            let allValid = true;
+            inputs.forEach(input => {
+                const valid = input.checkValidity();
+                if (!valid) allValid = false;
+                result += `${input.id}: ${valid ? 'VALID' : 'INVALID'}\n`;
+                if (!valid) {
+                    result += `  validationMessage: "${input.validationMessage}"\n`;
+                }
+            });
+            
+            result += `\nForm is ${allValid ? 'VALID' : 'INVALID'}`;
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Check form validity
+        function checkFormValidity() {
+            const form = document.getElementById('checkForm');
+            const result = `form.checkValidity() = ${form.checkValidity()}`;
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Form submit handler
+        document.getElementById('checkForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (form.checkValidity()) {
+                document.getElementById('output').textContent = 'Form is valid! Submitted.';
+            } else {
+                document.getElementById('output').textContent = 'Form has validation errors.';
+            }
+        });
+    </script>
+</body>
+</html>

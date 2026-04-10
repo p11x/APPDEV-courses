@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promise Race</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Promise Race</h1>
+    <p>Promise.race() returns a promise that resolves or rejects as soon as one of the input promises resolves or rejects.</p>
+    
+    <h2>Example 1: Basic Promise.race</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Race with Timeout</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Race Winner</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        // Example 1: Basic Promise.race usage
+        const fastPromise = Promise.resolve("Fast!");
+        const slowPromise = new Promise(function(resolve) {
+            setTimeout(function() {
+                resolve("Slow!");
+            }, 1000);
+        });
+        
+        Promise.race([slowPromise, fastPromise]).then(function(result) {
+            document.getElementById('output1').innerHTML += "Winner: " + result + "<br>";
+        });
+        
+        // Example 2: Race with timeout - simulating request timeout
+        function requestWithTimeout(ms) {
+            const requestPromise = new Promise(function(resolve) {
+                setTimeout(function() {
+                    resolve("Data received");
+                }, 2000);
+            });
+            
+            const timeoutPromise = new Promise(function(_, reject) {
+                setTimeout(function() {
+                    reject(new Error("Request timeout"));
+                }, ms);
+            });
+            
+            return Promise.race([requestPromise, timeoutPromise]);
+        }
+        
+        requestWithTimeout(100).then(
+            function(result) {
+                document.getElementById('output2').innerHTML += result + "<br>";
+            },
+            function(error) {
+                document.getElementById('output2').innerHTML += "Error: " + error.message + "<br>";
+            }
+        );
+        
+        // Example 3: Multiple promises racing
+        const promiseA = new Promise(function(resolve) {
+            setTimeout(function() {
+                resolve("A");
+            }, 500);
+        });
+        const promiseB = new Promise(function(resolve) {
+            setTimeout(function() {
+                resolve("B");
+            }, 100);
+        });
+        const promiseC = new Promise(function(resolve) {
+            setTimeout(function() {
+                resolve("C");
+            }, 300);
+        });
+        
+        Promise.race([promiseA, promiseB, promiseC]).then(function(result) {
+            document.getElementById('output3').innerHTML += "First to finish: " + result + "<br>";
+        });
+        
+        // Final output display
+        setTimeout(function() {
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Winner: Fast!<br>";
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>Error: Request timeout<br>";
+            document.getElementById('output3').innerHTML = "<strong>Output 3:</strong><br>First to finish: B<br>";
+        }, 2100);
+    </script>
+</body>
+</html>

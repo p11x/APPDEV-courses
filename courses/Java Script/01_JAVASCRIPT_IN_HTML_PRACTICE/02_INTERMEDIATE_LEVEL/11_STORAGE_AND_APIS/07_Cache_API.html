@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>07 - Cache API</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>07 - Cache API</h1>
+    <p>The Cache API provides storage for request/response pairs.</p>
+    
+    <button onclick="testCacheAPI()">Test Cache API</button>
+    <button onclick="clearCache()">Clear Cache</button>
+    <div id="output" class="output">Output will appear here...</div>
+
+    <script>
+        const cacheName = 'my-cache-v1';
+        let output = [];
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        async function testCacheAPI() {
+            output = [];
+            log('Testing Cache API...');
+            
+            try {
+                const cache = await caches.open(cacheName);
+                log('Cache opened: ' + cacheName);
+                
+                const request = new Request('https://example.com/data');
+                const response = new Response('Hello from cache!', {
+                    headers: { 'Content-Type': 'text/plain' }
+                });
+                
+                await cache.put(request, response);
+                log('Response stored in cache');
+                
+                const cachedResponse = await cache.match('https://example.com/data');
+                if (cachedResponse) {
+                    const text = await cachedResponse.text();
+                    log('Retrieved from cache: ' + text);
+                }
+                
+                const keys = await cache.keys();
+                log('Number of requests in cache: ' + keys.length);
+                
+                log('Cache API test completed successfully!');
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+
+        async function clearCache() {
+            output = [];
+            try {
+                const deleted = await caches.delete(cacheName);
+                log('Cache deleted: ' + deleted);
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

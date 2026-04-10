@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequential Execution</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Async JavaScript - Sequential Execution</h1>
+    <p>Sequential execution runs async operations one after another, waiting for each to complete.</p>
+    
+    <h2>Example 1: Basic Sequential</h2>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Sequential with For Loop</h2>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Sequential vs Parallel</h2>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        function delay(ms, value) {
+            return new Promise(function(resolve) {
+                setTimeout(function() {
+                    resolve(value);
+                }, ms);
+            });
+        }
+
+        var results = [];
+        
+        delay(100, "Task 1").then(function(r) {
+            results.push(r);
+            return delay(100, "Task 2");
+        }).then(function(r) {
+            results.push(r);
+            return delay(100, "Task 3");
+        }).then(function(r) {
+            results.push(r);
+            document.getElementById('output1').innerHTML = "<strong>Output 1:</strong><br>Results: " + results.join(", ") + "<br>";
+        });
+
+        async function runSequential(tasks) {
+            var results2 = [];
+            for (var i = 0; i < tasks.length; i++) {
+                var result = await tasks[i]();
+                results2.push(result);
+            }
+            return results2;
+        }
+        
+        var taskFns = [
+            function() { return delay(50, "A"); },
+            function() { return delay(50, "B"); },
+            function() { return delay(50, "C"); }
+        ];
+        
+        runSequential(taskFns).then(function(results2) {
+            document.getElementById('output2').innerHTML = "<strong>Output 2:</strong><br>Results: " + results2.join(", ") + "<br>";
+        });
+
+        var startParallel = Date.now();
+        
+        Promise.all([
+            delay(100, "P1"),
+            delay(100, "P2"),
+            delay(100, "P3")
+        ]).then(function() {
+            var parallelTime = Date.now() - startParallel;
+            document.getElementById('output3').innerHTML += "<strong>Output 3:</strong><br>";
+            document.getElementById('output3').innerHTML += "Parallel: ~" + parallelTime + "ms<br>";
+        });
+
+        var startSequential = Date.now();
+        
+        delay(100, "S1").then(function() {
+            return delay(100, "S2");
+        }).then(function() {
+            return delay(100, "S3");
+        }).then(function() {
+            var sequentialTime = Date.now() - startSequential;
+            document.getElementById('output3').innerHTML += "Sequential: ~" + sequentialTime + "ms<br>";
+        });
+    </script>
+</body>
+</html>

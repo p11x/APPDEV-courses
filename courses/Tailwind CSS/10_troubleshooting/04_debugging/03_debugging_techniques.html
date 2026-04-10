@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debugging Techniques - Tailwind CSS Troubleshooting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-red-600">Debugging Techniques</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Understanding Debugging</h2>
+            <p class="mb-4">Debugging Tailwind CSS issues requires systematic approach using browser DevTools, build configuration checks, and understanding how Tailwind generates CSS. This guide covers essential debugging techniques.</p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                <p class="font-bold">Debugging Tools:</p>
+                <ul class="list-disc ml-6 mt-2">
+                    <li>Browser DevTools (Elements, Console, Network)</li>
+                    <li>Tailwind CLI with --verbose flag</li>
+                    <li>Content path verification</li>
+                    <li>Generated CSS inspection</li>
+                    <li>Build process monitoring</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Standard Example: Debug Flow</h2>
+            
+            <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-4">
+                <h3 class="font-bold text-red-700 mb-2">Step 1: Identify the Problem</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Check if styles are applied */
+getComputedStyle(element).backgroundColor
+// Returns: "rgb(59, 130, 246)" = bg-blue-500 applied
+
+/* Check what CSS exists */
+getComputedStyle(element).cssText
+// Shows all applied styles
+
+/* Check class in HTML */
+element.className
+// Shows all classes applied to element
+
+/* Check computed values */
+getComputedStyle(document.querySelector('.flex'))
+// display: "flex" - class is working!</code></pre>
+            </div>
+
+            <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                <h3 class="font-bold text-green-700 mb-2">Step 2: Use DevTools</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* In browser DevTools: */
+
+/* 1. Inspect Element (Right-click → Inspect) */
+/* 2. Look at Styles panel - shows applied CSS */
+/* 3. Check for strikethrough (overridden) */
+/* 4. Check cascade order */
+
+/* 5. Toggle classes on/off */
+/* 6. Look at Computed tab for final values */
+
+/* 7. Check Network tab */
+/* Is CSS file loading? (Status 200 vs 404) */
+
+/* 8. Check Console tab */
+/* Any JavaScript errors? */</code></pre>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 1: Build Debugging</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Run build with verbose output */
+npx tailwindcss -i input.css -o output.css --verbose
+
+/* Output shows: */
+/*
+warn - No utility classes found in content files
+   Make sure content includes all template files
+warn - Using default values for missing config
+*/
+
+/* Debug content paths */
+npx tailwindcss --content --debug
+
+/* Output shows all files being scanned: */
+/*
+Content files:
+  ./src/index.html
+  ./src/components/button.html
+  ...
+*/
+
+/* Check if specific class is detected */
+npx tailwindcss -i input.css -o output.css --verbose 2>&1 | grep "bg-blue-500"
+
+/* Verify output CSS exists */
+ls -la output.css
+
+/* Check first 100 lines of output */
+head -100 output.css</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Verbose shows content scanning, class detection</p>
+                <p>Debug flags reveal hidden issues</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 2: Browser Debugging</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* In Browser Console - Tailwind global */
+console.log(tailwind.config)
+// Shows your config object
+
+console.log(tailwind)
+// Shows: { config, matchUtilities, ... }
+
+/* Debug specific element */
+const el = document.querySelector('.my-element');
+const styles = getComputedStyle(el);
+
+// Check if class is applied
+el.classList.contains('bg-blue-500');
+// true/false
+
+/* Check if CSS file loaded */
+const links = document.querySelectorAll('link');
+links.forEach(link => console.log(link.href));
+
+/* Force Tailwind to re-run (if using JIT) */
+__TAILWIND__.refresh();
+
+/* Debug with custom utility */
+@layer utilities {
+    .debug-border {
+        outline: 1px solid red !important;
+    }
+}
+&lt;div class="debug-border"&gt;&lt;/div&gt;</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Console reveals Tailwind config and state</p>
+                <p>Element inspection shows actual CSS</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Debugging Flow Chart</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌─────────────────────────────────────┐
+│         DEBUGGING WORKFLOW           │
+└─────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│ 1. Does class exist in HTML?         │
+│    Check className attribute        │
+└─────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│ 2. Is CSS file loaded?              │
+│    Network tab, status 200          │
+└─────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│ 3. Is class in generated CSS?       │
+│    Search output.css for class     │
+└─────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│ 4. Check config content paths       │
+│    npx tailwindcss --debug         │
+└─────────────────────────────────────┘
+                │
+                ▼
+┌─────────────────────────────────────┐
+│ 5. Check for conflicts/overrides   │
+│    DevTools Styles panel           │
+└─────────────────────────────────────┘
+                │
+                ▼
+        ┌───────────────────┐
+        │  Issue Found!     │
+        └───────────────────┘</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Common Debugging Commands</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-yellow-50 p-4 rounded">
+                    <h3 class="font-bold text-yellow-800">CLI Commands</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>npx tailwindcss --verbose</li>
+                        <li>npx tailwindcss --debug</li>
+                        <li>npx tailwindcss --content</li>
+                        <li>npm run build 2>&1</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <h3 class="font-bold text-blue-800">Browser Console</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>console.log(tailwind)</li>
+                        <li>console.log(tailwind.config)</li>
+                        <li>getComputedStyle(el)</li>
+                    </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                    <h3 class="font-bold text-green-800">Node.js</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>node -e "require('./tailwind.config.js')"</li>
+                        <li>npm ls tailwindcss</li>
+                        <li>npm ls postcss</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50 p-4 rounded">
+                    <h3 class="font-bold text-purple-800">File Inspection</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>grep "bg-blue-500" output.css</li>
+                        <li>head output.css</li>
+                        <li>wc -l output.css</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Quick Debugging Checklist</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Check these in order: */
+
+1. HTML class is correct?
+   class="bg-blue-500" not "bg-blue-500 "
+
+2. CSS file is in HTML?
+   &lt;link rel="stylesheet" href="output.css"&gt;
+
+3. CSS file has content?
+   output.css size > 0
+
+4. Class in CSS file?
+   grep "bg-blue-500" output.css
+
+5. Config has correct paths?
+   content: ['./src/**/*.{html,js}']
+
+6. Build runs without error?
+   npm run build
+
+7. No conflicting styles?
+   DevTools shows overridden?
+
+8. Cache cleared?
+   Hard refresh (Ctrl+Shift+R)</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Using VS Code Extensions</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* VS Code - Tailwind CSS IntelliSense */
+
+/* Features: */
+/* - Autocomplete classes */
+/* - Hover preview of classes */
+/* - Jump to definition */
+
+/* Settings (settings.json): */
+{
+    "tailwindCSS.includeLanguages": {
+        "plaintext": "html"
+    },
+    "tailwindCSS.experimental.classRegex": [
+        ["cva\\(([^)]*)\\)", "['\"`]([^'\"`]*?)['\"`]"]
+    ]
+}
+
+/* Commands: */
+/* - Tailwind CSS: Show Output */
+/* - Tailwind CSS: Rebuild */
+
+/* Lint errors shown in Problems panel */</code></pre>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Not Found - Tailwind CSS Troubleshooting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-red-600">Class Not Found Error</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Understanding the Issue</h2>
+            <p class="mb-4">The "class not found" error occurs when Tailwind CSS cannot detect a class you've used in your HTML. This typically happens during the build process when the content configuration is incorrect or when classes are generated dynamically.</p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                <p class="font-bold">Common Causes:</p>
+                <ul class="list-disc ml-6 mt-2">
+                    <li>Incorrect content configuration in tailwind.config.js</li>
+                    <li>Classes used in string concatenation or template literals</li>
+                    <li>Classes in dynamically loaded content</li>
+                    <li>Missing file extensions in content array</li>
+                    <li>PurgeCSS removing unused classes incorrectly</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Standard Example: The Problem</h2>
+            
+            <!-- PROBLEMATIC CODE -->
+            <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-4">
+                <h3 class="font-bold text-red-700 mb-2">Problem: Dynamic Class Generation</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// This pattern doesn't work - class is never detected
+function getButtonClass(variant) {
+    return 'btn-' + variant; // "btn-primary" never found
+}
+
+// In your HTML
+&lt;button class="btn-primary"&gt;Click Me&lt;/button&gt;
+// Tailwind sees "btn-primary" literal but can't trace it</code></pre>
+            </div>
+
+            <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                <h3 class="font-bold text-green-700 mb-2">Solution: Use safelist</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// tailwind.config.js
+module.exports = {
+    content: ['./src/**/*.{html,js}'],
+    safelist: [
+        'btn-primary',
+        'btn-secondary', 
+        'btn-danger',
+        'text-red-500',
+        'bg-blue-600'
+    ],
+    theme: {},
+    plugins: []
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 1: Template Literal Issue</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// PROBLEM: String interpolation breaks class detection
+const color = 'blue';
+const size = 'lg';
+
+// This WON'T work - dynamically built class strings
+const buttonClass = `bg-${color}-${size}-500`;
+// Result: "bg-blue-lg-500" - Tailwind can't predict this!
+
+// In HTML element directly
+&lt;div class="bg-{{ color }}-600"&gt;&lt;/div&gt;
+// Template engines: class won't be detected
+
+// SOLUTION 1: Use arbitrary values
+&lt;div class="bg-[#1a1a1a]"&gt;&lt;/div&gt;
+
+// SOLUTION 2: Use style attribute for dynamic colors
+&lt;div :style="{ backgroundColor: userColor }"&gt;&lt;/div&gt;
+
+// SOLUTION 3: Map to predefined classes
+const colorMap = {
+    primary: 'bg-blue-600',
+    secondary: 'bg-gray-600', 
+    danger: 'bg-red-600'
+};
+// Then use: class="bg-blue-600" (literal string)</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Without safelist: Class "btn-primary" not found in content</p>
+                <p>With safelist: Class properly included in CSS</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 2: Content Path Configuration</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>// tailwind.config.js - INCORRECT
+module.exports = {
+    content: ['./src/**/*'],      // Missing file extension!
+    // Tailwind needs explicit extensions for some build tools
+    theme: {},
+    plugins: []
+}
+
+// tailwind.config.js - CORRECT
+module.exports = {
+    content: [
+        './src/**/*.{html,js,jsx,ts,tsx,vue,svelte}',
+        './views/**/*.ejs',
+        './components/*.{js,ts}'
+    ],
+    theme: {
+        extend: {}
+    },
+    plugins: []
+}
+
+// Real-world: Next.js configuration
+// tailwind.config.js
+module.exports = {
+    content: [
+        './pages/**/*.{js,ts,jsx,tsx,mdx}',
+        './components/**/*.{js,ts,jsx,tsx,mdx}',
+        './app/**/*.{js,ts,jsx,tsx,mdx}',
+        './src/**/*.{js,ts,jsx,tsx,mdx}',
+    ],
+    theme: {
+        extend: {
+            colors: {
+                brand: '#ff6b6b'
+            }
+        }
+    },
+    plugins: []
+}</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Error: Cannot find tailwind classes - make sure content paths are correct</p>
+                <p>Success: Tailwind generates all found classes</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Debugging Flow</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌─────────────────────────────────────────────────────────────────┐
+│                    CLASS NOT FOUND DEBUGGING                       │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  1. Check tailwind.config.js content array                       │
+│     ├── Are file extensions specified?                           │
+│     ├── Are all source directories included?                     │
+│     └── Pattern matches your files?                              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. Check class is written as literal string                     │
+│     ├── No string concatenation?                                 │
+│     ├── No template literals with variables?                     │
+│     └── No dynamic class builders?                               │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  3. If dynamic - use one of these solutions:                     │
+│     ├── Add to safelist array in config                          │
+│     ├── Use arbitrary values bg-[#color]                         │
+│     └── Use CSS variables with @apply                            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. Run: npx tailwindcss --content --watch                      │
+│     └── Check terminal for detected classes                      │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │  Issue Resolved! │
+                    └──────────────────┘</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Edge Cases & Considerations</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-yellow-50 p-4 rounded">
+                    <h3 class="font-bold text-yellow-800">Edge Cases</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• Classes in conditional comments</li>
+                        <li>• Classes in imported components</li>
+                        <li>• Classes in JSON data files</li>
+                        <li>• Classes generated at runtime</li>
+                        <li>• Third-party component libraries</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <h3 class="font-bold text-blue-800">Performance</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• Safelist increases CSS size</li>
+                        <li>• Only safelist truly dynamic classes</li>
+                        <li>• Consider PurgeCSS alternatives</li>
+                        <li>• Use CDN for development only</li>
+                    </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                    <h3 class="font-bold text-green-800">Accessibility</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• Dynamic classes may break focus styles</li>
+                        <li>• Ensure color contrast maintained</li>
+                        <li>• Test with screen readers</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50 p-4 rounded">
+                    <h3 class="font-bold text-purple-800">Cross-Browser</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>• Works in all modern browsers</li>
+                        <li>• Use prefix if IE11 needed</li>
+                        <li>• Test in target browsers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Quick Fix Commands</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code># Debug what Tailwind is seeing
+npx tailwindcss --content --debug
+
+# Build with verbose output  
+npx tailwindcss -i ./input.css -o ./output.css --verbose
+
+# Check for missing classes in production build
+npm run build 2>&1 | grep -i "warn"
+
+# Enable all classes for debugging (not production!)
+# In tailwind.config.js:
+module.exports = {
+    corePlugins: {
+        preflight: false  // Debug mode
+    }
+}</code></pre>
+        </div>
+    </div>
+</body>
+</html>

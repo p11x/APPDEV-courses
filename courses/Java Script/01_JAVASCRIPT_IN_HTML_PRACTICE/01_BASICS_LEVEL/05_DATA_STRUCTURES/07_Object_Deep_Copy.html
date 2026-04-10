@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Deep Copy</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        h1 { color: #333; }
+        .example { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        code { background: #e0e0e0; padding: 2px 5px; border-radius: 3px; }
+        pre { background: #282c34; color: #abb2bf; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #1e1e1e; color: #50fa7b; padding: 15px; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Object Deep Copy Methods</h1>
+    <p>This file demonstrates different ways to create deep copies of objects in JavaScript.</p>
+
+    <div class="example">
+        <h2>1. Using Spread Operator (...) - Shallow Copy</h2>
+        <pre>// Spread operator - shallow copy only
+const original = { name: "John", address: { city: "NYC" } };
+const shallowCopy = { ...original };
+shallowCopy.address.city = "LA";
+console.log(original.address.city); // "LA" - also changed!</pre>
+        <div class="output" id="output1"></div>
+    </div>
+
+    <div class="example">
+        <h2>2. Using JSON.parse(JSON.stringify()) - Deep Copy</h2>
+        <pre>// JSON methods - creates true deep copy
+const original2 = { name: "Jane", address: { city: "Boston" } };
+const deepCopy = JSON.parse(JSON.stringify(original2));
+deepCopy.address.city = "Seattle";
+console.log(original2.address.city); // "Boston" - unchanged</pre>
+        <div class="output" id="output2"></div>
+    </div>
+
+    <div class="example">
+        <h2>3. Using Structured Clone (Modern)</h2>
+        <pre>// Structured clone - native deep copy
+const original3 = { name: "Mike", hobbies: ["reading", "coding"] };
+const clone = structuredClone(original3);
+clone.hobbies.push("gaming");
+console.log(original3.hobbies); // ["reading", "coding"]</pre>
+        <div class="output" id="output3"></div>
+    </div>
+
+    <div class="example">
+        <h2>4. Manual Deep Copy Function</h2>
+        <pre>// Custom recursive deep copy function
+function deepCopy(obj) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(deepCopy);
+    const copy = {};
+    for (let key in obj) copy[key] = deepCopy(obj[key]);
+    return copy;
+}</pre>
+        <div class="output" id="output4"></div>
+    </div>
+
+    <script>
+        // Example 1: Spread operator (shallow copy)
+        const original = { name: "John", address: { city: "NYC" } };
+        const shallowCopy = { ...original };
+        shallowCopy.address.city = "LA";
+        document.getElementById("output1").textContent = "Original city after modifying copy: " + original.address.city + " (changed - shallow copy)";
+
+        // Example 2: JSON.parse/stringify (deep copy)
+        const original2 = { name: "Jane", address: { city: "Boston" } };
+        const deepCopy = JSON.parse(JSON.stringify(original2));
+        deepCopy.address.city = "Seattle";
+        document.getElementById("output2").textContent = "Original2 city after modifying copy: " + original2.address.city + " (unchanged - deep copy)";
+
+        // Example 3: Structured clone
+        const original3 = { name: "Mike", hobbies: ["reading", "coding"] };
+        const clone = structuredClone(original3);
+        clone.hobbies.push("gaming");
+        document.getElementById("output3").textContent = "Original3 hobbies: " + JSON.stringify(original3.hobbies);
+
+        // Example 4: Manual deep copy
+        function deepCopy(obj) {
+            if (obj === null || typeof obj !== 'object') return obj;
+            if (Array.isArray(obj)) return obj.map(deepCopy);
+            const copy = {};
+            for (let key in obj) copy[key] = deepCopy(obj[key]);
+            return copy;
+        }
+        const obj = { a: 1, b: { c: 2, d: [1, 2, 3] } };
+        const copied = deepCopy(obj);
+        copied.b.d.push(4);
+        document.getElementById("output4").textContent = "Original: " + JSON.stringify(obj) + " | Copy: " + JSON.stringify(copied);
+    </script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Just-In-Time Compiler Overview - Tailwind CSS</title>
+</head>
+<body>
+    <h1>Just-In-Time (JIT) Compiler Overview</h1>
+
+    <h2>What is JIT in Tailwind CSS?</h2>
+    <p>
+        The Just-In-Time (JIT) compiler is a new rendering engine introduced in Tailwind CSS v3.0 that generates CSS on-demand rather than generating a large static CSS file with all possible utilities. Instead of pre-generating thousands of utility classes, the JIT compiler only generates the CSS for the classes that you actually use in your project.
+    </p>
+
+    <h2>How JIT Works</h2>
+    <p>
+        Traditional Tailwind CSS (v2) used a post-CSS approach that generated a large CSS file containing all possible utility classes. This resulted in large file sizes even if you only used a small subset of utilities. The JIT compiler solves this by scanning your content files (HTML, JavaScript, Vue, React, etc.) and generating only the CSS needed for the classes you actually use.
+    </p>
+
+    <h3>Standard Example: Basic JIT Classes</h3>
+    <!-- The JIT compiler only generates CSS for these specific classes -->
+    <div class="p-4 text-center bg-blue-500 text-white rounded-lg">
+        Hello World
+    </div>
+    <!-- Output: JIT generates only .p-4, .text-center, .bg-blue-500, .text-white, .rounded-lg -->
+
+    <h3>Real-World Example 1: Button Component</h3>
+    <!-- JIT generates optimized CSS for each unique class combination -->
+    <button class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors duration-200">
+        Submit
+    </button>
+    <!-- 
+        JIT generates:
+        .px-6, .py-2, .bg-indigo-600, .hover\:bg-indigo-700, 
+        .text-white, .font-medium, .rounded-md, .transition-colors, .duration-200
+    -->
+
+    <h3>Real-World Example 2: Card Component</h3>
+    <div class="max-w-sm mx-auto bg-white shadow-lg rounded-xl overflow-hidden">
+        <img src="placeholder.jpg" alt="Card image" class="w-full h-48 object-cover">
+        <div class="p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Card Title</h3>
+            <p class="text-gray-600">This is a card description.</p>
+        </div>
+    </div>
+    <!-- JIT generates optimized CSS only for used classes -->
+
+    <h2>Output Statement</h2>
+    <p>
+        With JIT enabled, a typical project that might have generated 3MB+ of CSS with classic Tailwind now generates only 10-50KB of CSS, containing only the utilities actually used in your templates.
+    </p>
+
+    <h2>ASCII Diagram: JIT Compilation Process</h2>
+    <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                    JIT COMPILATION FLOW                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌──────────────┐    ┌──────────────┐    ┌────────────┐  │
+│   │   Source     │    │   Scanner    │    │   CSS      │  │
+│   │   Files      │───▶│   (Finds     │───▶│   Generator│  │
+│   │   (.html,    │    │   classes)   │    │   (JIT)    │  │
+│   │   .js, .vue) │    │              │    │            │  │
+│   └──────────────┘    └──────────────┘    └──────┬─────┘  │
+│                                                  │         │
+│                                                  ▼         │
+│                                          ┌────────────┐   │
+│                                          │  Output    │   │
+│                                          │  CSS File  │   │
+│                                          │  (Small)   │   │
+│                                          └────────────┘   │
+│                                                             │
+│   Classic Tailwind: ~3MB generated CSS                     │
+│   JIT Tailwind: ~10-50KB generated CSS                     │
+└─────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Key Benefits of JIT</h2>
+    <ul>
+        <li>Smaller CSS file sizes - Only generates what's used</li>
+        <li>Faster build times - No scanning all possible utilities</li>
+        <li>All CSS features available by default - No need for purge</li>
+        <li>Arbitrary values support - Use any value without configuration</li>
+        <li>Better development experience - Faster hot reloads</li>
+    </ul>
+
+    <h2>Enabling JIT</h2>
+    <p>
+        JIT is enabled by default in Tailwind CSS v3.0+. For earlier versions, add this to your tailwind.config.js:
+    </p>
+    <pre>
+module.exports = {
+  mode: 'jit',
+  // ... rest of config
+}
+    </pre>
+
+    <h2>Edge Cases and Considerations</h2>
+    <ul>
+        <li>Dynamic classes from string concatenation may not be detected</li>
+        <li>Classes used in JavaScript template literals need special handling</li>
+        <li>Content configuration must include all relevant file patterns</li>
+        <li>Some edge cases require safelisting specific classes</li>
+    </ul>
+
+    <h2>Performance Considerations</h2>
+    <ul>
+        <li>Initial build may be slower as it scans all content files</li>
+        <li>Watch mode provides fast incremental rebuilds</li>
+        <li>Content files should be properly configured for optimal scanning</li>
+    </ul>
+
+    <h2>Cross-Browser Notes</h2>
+    <p>
+        JIT-generated CSS is fully compatible with all modern browsers. The output CSS uses standard CSS features that work across Chrome, Firefox, Safari, and Edge. No additional polyfills are needed.
+    </p>
+</body>
+</html>

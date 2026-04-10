@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Issues - Tailwind CSS Troubleshooting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-8 text-red-600">Deployment Issues</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Understanding the Issue</h2>
+            <p class="mb-4">Deployment issues occur when Tailwind CSS works locally but fails in production environments. These can be related to build processes, file paths, server configuration, caching, or CDN issues.</p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                <p class="font-bold">Common Causes:</p>
+                <ul class="list-disc ml-6 mt-2">
+                    <li>Build process not running correctly</li>
+                    <li>Static file paths incorrect</li>
+                    <li>Server not serving static files</li>
+                    <li>Cache not clearing after deploy</li>
+                    <li>Environment variables not set</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Standard Example: The Problem</h2>
+            
+            <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-4">
+                <h3 class="font-bold text-red-700 mb-2">Problem: Build Not Running</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* Problem: Deploying without building */
+
+/* Local development works because: */
+npx tailwindcss -i input.css -o output.css --watch
+/* Runs continuously, watches for changes */
+
+/* Production server expects static CSS! */
+/* But deploy only uploads source files */
+
+/* package.json - missing build script */
+{
+    "scripts": {
+        "dev": "vite",
+        "start": "vite preview"
+        /* Missing: "build": "vite build" */
+    }
+}
+
+/* Result: No output.css in production! */
+&lt;link rel="stylesheet" href="output.css"&gt;
+/* 404 - Not Found */</code></pre>
+            </div>
+
+            <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                <h3 class="font-bold text-green-700 mb-2">Solution: Proper Build Pipeline</h3>
+                <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* package.json - with proper scripts */
+{
+    "scripts": {
+        "dev": "tailwindcss -i input.css -o output.css --watch",
+        "build": "tailwindcss -i input.css -o output.css --minify",
+        "start": "serve dist"
+    }
+}
+
+/* Build steps for deployment: */
+npm run build
+/* Runs: npx tailwindcss -i input.css -o output.css --minify */
+
+/* Deploy should include: */
+/* dist/
+   ├── index.html
+   ├── output.css    <- Generated CSS
+   ├── output.css.map
+   └── js/
+*/
+
+/* Server config (Vercel example) */
+/* vercel.json */
+{
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist"
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 1: CDN Path Issues</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* PROBLEM: CDN not loading in production */
+
+/* Development works: */
+&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;
+
+/* But some servers block external scripts! */
+
+/* SOLUTION 1: Self-hosted CSS */
+npm install -D tailwindcss postcss autoprefixer
+
+npx tailwindcss -i input.css -o dist/output.css
+
+/* In production HTML: */
+&lt;link rel="stylesheet" href="/output.css"&gt;
+
+/* SOLUTION 2: Use proper CDN with config */
+&lt;script src="https://cdn.tailwindcss.com?plugins=forms,typography"&gt;&lt;/script&gt;
+&lt;script&gt;
+    tailwind.config = {
+        content: ['./src/**/*.{html,js}'],
+        theme: { extend: {} },
+        plugins: []
+    }
+&lt;/script&gt;
+
+/* SOLUTION 3: Check Content Security Policy */
+/* If using CSP, add cdn.tailwindcss.com to script-src */</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>CDN blocked: Styles not loading in production</p>
+                <p>Self-hosted: Works reliably everywhere</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Real-World Example 2: Path & Caching</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>/* PROBLEM: Wrong paths or stale cache */
+
+/* Wrong path in HTML */
+&lt;link rel="stylesheet" href="css/output.css"&gt;
+/* But file is at: /output.css */
+
+/* Correct path for static hosting */
+&lt;link rel="stylesheet" href="/output.css"&gt;
+&lt;!-- From root of domain */
+
+/* If in subfolder: */
+&lt;link rel="stylesheet" href="/myapp/output.css"&gt;
+
+/* PROBLEM: Browser caches old CSS */
+/* User sees: white page, no styles */
+
+/* SOLUTION: Cache busting */
+&lt;link rel="stylesheet" href="/output.css?v=1.2.3"&gt;
+
+/* Or use content hash (recommended) */
+/* Output filename: output.a1b2c3d4.css */
+&lt;link rel="stylesheet" href="/output.a1b2c3d4.css"&gt;
+
+/* Server: Add cache headers */
+Cache-Control: public, max-age=31536000, immutable</code></pre>
+            
+            <div class="bg-blue-50 p-4 rounded mt-4">
+                <p class="font-bold">Output:</p>
+                <p>Wrong path: 404 error, no styles</p>
+                <p>Stale cache: Old styles persist after update</p>
+                <p>With versioning: Always fresh, cached properly</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Debugging Flow</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code>┌─────────────────────────────────────────┐
+│       DEPLOYMENT DEBUGGING               │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ 1. Check build running                   │
+│    npm run build runs without error      │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ 2. Verify output files exist            │
+│    ls dist/output.css                   │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ 3. Check HTML path to CSS               │
+│    Correct href in &lt;link&gt; tag         │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ 4. Test in incognito mode              │
+│    Clear cache, test fresh              │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────┐
+│ 5. Check server logs for 404s           │
+│    Verify files being served            │
+└─────────────────────────────────────────┘
+                    │
+                    ▼
+            ┌─────────────────┐
+            │ Issue Resolved! │
+            └─────────────────┘</code></pre>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Edge Cases & Considerations</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-yellow-50 p-4 rounded">
+                    <h3 class="font-bold text-yellow-800">Edge Cases</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>Subdirectory deployments</li>
+                        <li>CDN origins need special config</li>
+                        <li>Serverless functions don't serve static</li>
+                        <li>Docker builds need different steps</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded">
+                    <h3 class="font-bold text-blue-800">Performance</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>Minify CSS in production</li>
+                        <li>Use content hash for caching</li>
+                        <li>Consider CDN for assets</li>
+                    </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded">
+                    <h3 class="font-bold text-green-800">Platforms</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>Vercel: auto-detects</li>
+                        <li>Netlify: needs build command</li>
+                        <li>AWS S3: upload dist folder</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50 p-4 rounded">
+                    <h3 class="font-bold text-purple-800">Tools</h3>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li>Vite, Webpack, Parcel</li>
+                        <li>Next.js, Nuxt have built-in</li>
+                        <li>Check platform docs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Quick Fix Commands</h2>
+            
+            <pre class="bg-gray-800 text-green-400 p-4 rounded overflow-x-auto"><code># Build for production
+npm run build
+# or: npx tailwindcss -i input.css -o output.css --minify
+
+# Check output file exists
+ls -la output.css
+
+# Test locally with serve
+npx serve dist
+
+# Clear all cache
+# Browser: Hard refresh (Ctrl+Shift+R)
+# CDN: Purge cache if using one
+
+# Verify file in production
+curl -I https://yoursite.com/output.css</code></pre>
+        </div>
+    </div>
+</body>
+</html>

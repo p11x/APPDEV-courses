@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch with Abort</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .output { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>33. Fetch with Abort</h1>
+    <p>Using AbortController with fetch to cancel requests.</p>
+    
+    <h2>Example 1: Basic AbortController</h2>
+    <button onclick="startRequest()">Start Request</button>
+    <button onclick="abortRequest()">Abort</button>
+    <div class="output" id="output1"></div>
+    
+    <h2>Example 2: Abort After Timeout</h2>
+    <button onclick="fetchWithTimeout()">Fetch with Timeout</button>
+    <div class="output" id="output2"></div>
+    
+    <h2>Example 3: Multiple Requests</h2>
+    <button onclick="fetchMultiple()">Fetch Multiple</button>
+    <button onclick="abortAll()">Abort All</button>
+    <div class="output" id="output3"></div>
+    
+    <script>
+        let currentController = null;
+        
+        function startRequest() {
+            if (currentController) {
+                currentController.abort();
+            }
+            currentController = new AbortController();
+            const signal = currentController.signal;
+            
+            document.getElementById('output1').innerHTML = 'Request started...';
+            
+            fetch('https://jsonplaceholder.typicode.com/posts/1', { signal })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('output1').innerHTML = 'Success: ' + data.title.substring(0, 30) + '...';
+                })
+                .catch(err => {
+                    if (err.name === 'AbortError') {
+                        document.getElementById('output1').innerHTML = 'Request aborted!';
+                    } else {
+                        document.getElementById('output1').innerHTML = 'Error: ' + err.message;
+                    }
+                });
+        }
+        
+        function abortRequest() {
+            if (currentController) {
+                currentController.abort();
+                currentController = null;
+            }
+        }
+        
+        function fetchWithTimeout() {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            
+            fetch('https://jsonplaceholder.typicode.com/posts/1', { signal: controller.signal })
+                .then(response => response.json())
+                .then(data => {
+                    clearTimeout(timeoutId);
+                    document.getElementById('output2').innerHTML = 'Success: ' + data.title.substring(0, 30) + '...';
+                })
+                .catch(err => {
+                    document.getElementById('output2').innerHTML = err.name === 'AbortError' ? 'Request timed out!' : 'Error: ' + err.message;
+                });
+        }
+        
+        let controllers = [];
+        
+        function fetchMultiple() {
+            controllers = [];
+            const outputs = [];
+            
+            for (let i = 1; i <= 3; i++) {
+                const controller = new AbortController();
+                controllers.push(controller);
+                
+                fetch('https://jsonplaceholder.typicode.com/posts/' + i, { signal: controller.signal })
+                    .then(response => response.json())
+                    .then(data => {
+                        outputs.push(data.title.substring(0, 20));
+                        document.getElementById('output3').innerHTML = outputs.join('<br>');
+                    })
+                    .catch(err => {
+                        if (err.name !== 'AbortError') {
+                            outputs.push('Error: ' + err.message);
+                            document.getElementById('output3').innerHTML = outputs.join('<br>');
+                        }
+                    });
+            }
+        }
+        
+        function abortAll() {
+            controllers.forEach(c => c.abort());
+            document.getElementById('output3').innerHTML = 'All requests aborted!';
+        }
+    </script>
+</body>
+</html>

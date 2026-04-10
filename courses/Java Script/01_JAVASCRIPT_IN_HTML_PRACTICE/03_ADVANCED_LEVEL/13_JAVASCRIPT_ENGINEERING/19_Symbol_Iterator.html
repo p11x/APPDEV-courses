@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symbol Iterator</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d5f4e6; border-left: 4px solid #27ae60; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <h1>Symbol.iterator</h1>
+    
+    <div class="section">
+        <h2>Well-known Symbol Symbol.iterator</h2>
+        <p><code>Symbol.iterator</code> is a well-known Symbol that specifies the default iterator for an object. It's used by <code>for...of</code> and spread operator.</p>
+        
+        <pre>
+const collection = {
+    items: [1, 2, 3],
+    [Symbol.iterator]() {
+        let index = 0;
+        return {
+            next: () => ({
+                value: this.items[index++],
+                done: index > this.items.length
+            })
+        };
+    }
+};
+
+for (const item of collection) {
+    console.log(item); // 1, 2, 3
+}
+        </pre>
+        
+        <button onclick="runSymbolIteratorDemo()">Run Symbol.iterator Demo</button>
+        <div id="symbol-iterator-output" class="output"></div>
+    </div>
+    
+    <script>
+        const customCollection = {
+            data: ['A', 'B', 'C', 'D'],
+            [Symbol.iterator]() {
+                let index = 0;
+                return {
+                    next: () => {
+                        if (index < this.data.length) {
+                            return { value: this.data[index++], done: false };
+                        }
+                        return { value: undefined, done: true };
+                    }
+                };
+            }
+        };
+
+        function runSymbolIteratorDemo() {
+            let results = [];
+            
+            results.push(`Is iterable: ${Symbol.iterator in customCollection}`);
+            
+            const values = [...customCollection];
+            results.push(`Spread: [${values.join(', ')}]`);
+            
+            for (const item of customCollection) {
+                results.push(`for...of: ${item}`);
+            }
+            
+            const output = document.getElementById('symbol-iterator-output');
+            output.innerHTML = `
+                <strong>Symbol.iterator Results:</strong><br>
+                ${results.join('<br>')}<br>
+                <em>Symbol.iterator makes objects usable in for...of loops and spread!</em>
+            `;
+        }
+    </script>
+</body>
+</html>

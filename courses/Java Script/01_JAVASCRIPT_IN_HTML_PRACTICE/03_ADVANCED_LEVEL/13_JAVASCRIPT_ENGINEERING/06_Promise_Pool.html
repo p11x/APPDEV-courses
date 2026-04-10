@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promise Pool Pattern</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d6eaf8; border-left: 4px solid #3498db; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <h1>Promise Pool Pattern</h1>
+    
+    <!-- Basic Promise Pool -->
+    <div class="section">
+        <h2>1. Basic Promise Pool</h2>
+        <p>Limit concurrent async operations to prevent overwhelming resources.</p>
+        
+        <pre>
+// Promise Pool class
+class PromisePool {
+    constructor(concurrency) {
+        this.concurrency = concurrency;
+        this.running = 0;
+        this.queue = [];
+    }
+    
+    add(promiseFn) {
+        return new Promise((resolve, reject) => {
+            this.queue.push({ promiseFn, resolve, reject });
+            this.process();
+        });
+    }
+    
+    process() {
+        while (this.running < this.concurrency && this.queue.length) {
+            const { promiseFn, resolve, reject } = this.queue.shift();
+            this.running++;
+            
+            promiseFn()
+                .then(resolve, reject)
+                .finally(() => {
+                    this.running--;
+                    this.process();
+                });
+        }
+    }
+}
+        </pre>
+        
+        <button onclick="runPoolDemo()">Run Pool Demo</button>
+        <div id="pool-output" class="output"></div>
+    </div>
+    
+    <!-- With Progress -->
+    <div class="section">
+        <h2>2. Pool with Progress Tracking</h2>
+        <p>Track progress and get notified when all tasks complete.</p>
+        
+        <pre>
+// Promise Pool with progress
+class PromisePoolPro {
+    constructor(concurrency) {
+        this.concurrency = concurrency;
+        this.running = 0;
+        this.queue = [];
+        this.results = [];
+    }
+    
+    async add(promiseFn) {
+        return new Promise((resolve, reject) => {
+            this.queue.push({ promiseFn, resolve, reject });
+            this.process();
+        });
+    }
+    
+    async process() {
+        while (this.running < this.concurrency && this.queue.length) {
+            const item = this.queue.shift();
+            this.running++;
+            
+            try {
+                const result = await item.promiseFn();
+                item.resolve(result);
+            } catch (e) {
+                item.reject(e);
+            } finally {
+                this.running--;
+                this.process();
+            }
+        }
+    }
+    
+    async runAll(tasks) {
+        const promises = tasks.map(fn => this.add(fn));
+        return Promise.all(promises);
+    }
+}
+        </pre>
+        
+        <button onclick="runProgressDemo()">Run Progress Demo</button>
+        <div id="progress-output" class="output"></div>
+    </div>
+    
+    <!-- Real World Example -->
+    <div class="section">
+        <h2>3. Real World: Concurrent API Requests</h2>
+        <p>Practical use case - limiting parallel API calls.</p>
+        
+        <pre>
+// Simulated API calls
+async function fetchUser(id) {
+    await delay(500);
+    return { id, name: `User ${id}` };
+}
+
+// Pool with 2 concurrent requests
+const pool = new PromisePool(2);
+
+const users = await Promise.all([
+    pool.add(() => fetchUser(1)),
+    pool.add(() => fetchUser(2)),
+    pool.add(() => fetchUser(3)),
+    pool.add(() => fetchUser(4)),
+    pool.add(() => fetchUser(5))
+]);
+        </pre>
+        
+        <button onclick="runAPI Demo()">Run API Demo</button>
+        <div id="api-output" class="output"></div>
+    
+    <script>
+        // Helper delay function
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        
+        // Basic Promise Pool
+        class PromisePool {
+            constructor(concurrency) {
+                this.concurrency = concurrency;
+                this.running = 0;
+                this.queue = [];
+            }
+            
+            add(promiseFn) {
+                return new Promise((resolve, reject) => {
+                    this.queue.push({ promiseFn, resolve, reject });
+                    this.process();
+                });
+            }
+            
+            process() {
+                while (this.running < this.concurrency && this.queue.length) {
+                    const { promiseFn, resolve, reject } = this.queue.shift();
+                    this.running++;
+                    
+                    promiseFn()
+                        .then(resolve, reject)
+                        .finally(() => {
+                            this.running--;
+                            this.process();
+                        });
+                }
+            }
+        }
+
+        function runPoolDemo() {
+            const pool = new PromisePool(2);
+            const results = [];
+            let order = 0;
+            
+            const createTask = (id, time) => () => delay(time).then(() => {
+                results.push(`Task ${id} completed`);
+                return id;
+            });
+            
+            pool.add(createTask(1, 500));
+            pool.add(createTask(2, 300));
+            pool.add(createTask(3, 400));
+            pool.add(createTask(4, 200));
+            
+            setTimeout(() => {
+                const output = document.getElementById('pool-output');
+                output.innerHTML = `
+                    <strong>Promise Pool Test (concurrency=2):</strong><br>
+                    Added 4 tasks<br>
+                    Results: ${results.join(', ')}<br>
+                    <em>Only 2 run at a time!</em>
+                `;
+            }, 800);
+        }
+
+        // Progress tracking pool
+        class PromisePoolPro {
+            constructor(concurrency) {
+                this.concurrency = concurrency;
+                this.running = 0;
+                this.queue = [];
+            }
+            
+            add(promiseFn) {
+                return new Promise((resolve, reject) => {
+                    this.queue.push({ promiseFn, resolve, reject });
+                    this.process();
+                });
+            }
+            
+            process() {
+                while (this.running < this.concurrency && this.queue.length) {
+                    const { promiseFn, resolve, reject } = this.queue.shift();
+                    this.running++;
+                    
+                    promiseFn()
+                        .then(resolve, reject)
+                        .finally(() => {
+                            this.running--;
+                            this.process();
+                        });
+                }
+            }
+        }
+
+        function runProgressDemo() {
+            const pool = new PromisePoolPro(2);
+            let progress = 0;
+            const total = 5;
+            const results = [];
+            
+            for (let i = 1; i <= total; i++) {
+                pool.add(async () => {
+                    await delay(300);
+                    progress++;
+                    return `Result ${i}`;
+                }).then(r => results.push(r));
+            }
+            
+            setTimeout(() => {
+                const output = document.getElementById('progress-output');
+                output.innerHTML = `
+                    <strong>Progress Pool Test:</strong><br>
+                    Pending: ${pool.queue.length}, Running: ${pool.running}<br>
+                    Results: ${results.join(', ')}<br>
+                    <em>All tasks completed with controlled concurrency!</em>
+                `;
+            }, 1000);
+        }
+
+        // API demo
+        function runAPIDemo() {
+            const pool = new PromisePool(2);
+            const results = [];
+            const startTime = Date.now();
+            
+            const fetchUser = (id) => async () => {
+                await delay(300 + Math.random() * 200);
+                return { id, name: `User ${id}` };
+            };
+            
+            const tasks = [1, 2, 3, 4, 5].map(id => 
+                pool.add(fetchUser(id))
+            );
+            
+            Promise.all(tasks).then(users => {
+                const totalTime = Date.now() - startTime;
+                const output = document.getElementById('api-output');
+                output.innerHTML = `
+                    <strong>API Pool Test:</strong><br>
+                    Fetched ${users.length} users<br>
+                    Total time: ${totalTime}ms<br>
+                    <em>With concurrency=2, ~3 batches instead of 5 serial calls!</em>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>

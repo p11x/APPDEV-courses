@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Validation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .demo-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .output { background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+        input, select, button { margin: 5px; padding: 8px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        label { display: block; margin: 10px 0 5px; }
+        .error { color: red; font-size: 12px; display: none; }
+        input.invalid { border-color: red; }
+        input.valid { border-color: green; }
+        .validating { color: orange; }
+    </style>
+</head>
+<body>
+    <h1>Advanced Validation Patterns</h1>
+    <p>Demonstrates debounced, async, and complex validation</p>
+
+    <div class="demo-section">
+        <h2>Advanced Form</h2>
+        <form id="advancedForm">
+            <label for="username">Username (async check):</label>
+            <input type="text" id="username" name="username" placeholder="Enter username">
+            <span class="error" id="usernameError"></span>
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="email@example.com">
+            <span class="error" id="emailError"></span>
+            
+            <label for="password">Password (complex):</label>
+            <input type="password" id="password" name="password" placeholder="Enter password">
+            <span class="error" id="passwordError"></span>
+            
+            <label for="code">Verification Code:</label>
+            <input type="text" id="code" name="code" placeholder="Enter code" maxlength="6">
+            <span class="error" id="codeError"></span>
+            
+            <button type="button" onclick="validateAdvanced()">Validate</button>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div class="demo-section">
+        <h2>Advanced Patterns</h2>
+        <button type="button" onclick="showDebouncedValidation()">Debounced Validation</button>
+        <button type="button" onclick="showAsyncValidation()">Async Validation</button>
+        <button type="button" onclick="showComplexPatterns()">Complex Patterns</button>
+        <div id="output" class="output">Interact with form to see advanced validation...</div>
+    </div>
+
+    <script>
+        // Debounce helper
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        // Debounced validation for username
+        const debouncedCheckUsername = debounce(async (value) => {
+            const input = document.getElementById('username');
+            const errorSpan = document.getElementById('usernameError');
+            
+            errorSpan.textContent = 'Checking...';
+            errorSpan.className = 'error validating';
+            errorSpan.style.display = 'block';
+            
+            // Simulate async check
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Simulate server check
+            const taken = ['admin', 'root', 'test'].includes(value.toLowerCase());
+            
+            if (taken) {
+                errorSpan.textContent = 'Username is already taken';
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+            } else if (value) {
+                errorSpan.textContent = 'Username is available';
+                errorSpan.className = 'error';
+                input.classList.remove('invalid');
+                input.classList.add('valid');
+            } else {
+                errorSpan.textContent = '';
+                errorSpan.style.display = 'none';
+            }
+        }, 500);
+        
+        // Complex password validation
+        function validatePasswordComplex(password) {
+            const errors = [];
+            
+            if (password.length < 8) {
+                errors.push('At least 8 characters');
+            }
+            if (!/[a-z]/.test(password)) {
+                errors.push('Lowercase letter');
+            }
+            if (!/[A-Z]/.test(password)) {
+                errors.push('Uppercase letter');
+            }
+            if (!/[0-9]/.test(password)) {
+                errors.push('Number');
+            }
+            if (!/[^a-zA-Z0-9]/.test(password)) {
+                errors.push('Special character');
+            }
+            
+            return errors;
+        }
+        
+        // Validate email with complex pattern
+        function validateEmailComplex(email) {
+            const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return pattern.test(email);
+        }
+        
+        // Validate verification code
+        function validateCode(code) {
+            return /^[0-9]{6}$/.test(code);
+        }
+        
+        // Show debounced validation
+        function showDebouncedValidation() {
+            let result = 'DEBOUNCED VALIDATION:\n========================\n\n';
+            result += 'Purpose:\n';
+            result += '  - Wait for user to stop typing\n';
+            result += '  - Prevent excessive API calls\n\n';
+            result += 'Implementation:\n';
+            result += '  function debounce(func, wait) {\n';
+            result += '    let timeout;\n';
+            result += '    return function(...args) {\n';
+            result += '      clearTimeout(timeout);\n';
+            result += '      timeout = setTimeout(() => func(...args), wait);\n';
+            result += '    };\n';
+            result += '  }';
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Show async validation
+        function showAsyncValidation() {
+            let result = 'ASYNC VALIDATION:\n========================\n\n';
+            result += 'Common Use Cases:\n';
+            result += '  1. Username availability check\n';
+            result += '  2. Email uniqueness check\n';
+            result += '  3. API-based validation\n\n';
+            result += 'Implementation:\n';
+            result += '  const isAvailable = await checkUsername(username);\n';
+            result += '  if (!isAvailable) {\n';
+            result += '    input.setCustomValidity("Taken");\n';
+            result += '  }';
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Show complex patterns
+        function showComplexPatterns() {
+            let result = 'COMPLEX PATTERNS:\n========================\n\n';
+            result += '1. Password Strength:\n';
+            result += '   - Multiple regex checks\n';
+            result += '   - Character type validation\n\n';
+            result += '2. Email Validation:\n';
+            result += '   - RFC 5322 pattern\n';
+            result += '   - Domain MX check\n\n';
+            result += '3. Multi-Step:\n';
+            result += '   - Validate step 1, then step 2\n';
+            result += '   - Progressive validation';
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Validate all
+        function validateAdvanced() {
+            const username = document.getElementById('username');
+            const email = document.getElementById('email');
+            const password = document.getElementById('password');
+            const code = document.getElementById('code');
+            
+            let result = 'VALIDATION RESULTS:\n========================\n\n';
+            
+            // Username (async demo)
+            result += 'Username:\n';
+            if (username.value) {
+                const available = !['admin', 'root'].includes(username.value.toLowerCase());
+                result += `  Async check: ${available ? 'Available' : 'Taken'}\n`;
+            }
+            
+            // Email
+            result += 'Email:\n';
+            result += `  Complex pattern: ${validateEmailComplex(email.value) ? 'Valid' : 'Invalid'}\n`;
+            
+            // Password
+            result += 'Password:\n';
+            const passwordErrors = validatePasswordComplex(password.value);
+            if (passwordErrors.length === 0) {
+                result += '  Complex: Valid\n';
+            } else {
+                result += `  Errors: ${passwordErrors.join(', ')}\n`;
+            }
+            
+            // Code
+            result += 'Verification Code:\n';
+            result += `  6-digit: ${validateCode(code.value) ? 'Valid' : 'Invalid'}`;
+            
+            document.getElementById('output').textContent = result;
+        }
+        
+        // Username input with debounce
+        document.getElementById('username').addEventListener('input', function(e) {
+            if (e.target.value.length >= 3) {
+                debouncedCheckUsername(e.target.value);
+            }
+        });
+        
+        // Email real-time validation
+        document.getElementById('email').addEventListener('blur', function(e) {
+            const errorSpan = document.getElementById('emailError');
+            if (!validateEmailComplex(e.target.value)) {
+                errorSpan.textContent = 'Please enter a valid email';
+                errorSpan.style.display = 'block';
+                e.target.classList.add('invalid');
+            } else {
+                errorSpan.textContent = '';
+                errorSpan.style.display = 'none';
+                e.target.classList.remove('invalid');
+            }
+        });
+        
+        // Password real-time validation
+        document.getElementById('password').addEventListener('blur', function(e) {
+            const errors = validatePasswordComplex(e.target.value);
+            const errorSpan = document.getElementById('passwordError');
+            
+            if (errors.length > 0) {
+                errorSpan.textContent = errors.join(', ');
+                errorSpan.style.display = 'block';
+                e.target.classList.add('invalid');
+            } else {
+                errorSpan.textContent = '';
+                errorSpan.style.display = 'none';
+                e.target.classList.remove('invalid');
+            }
+        });
+    </script>
+</body>
+</html>

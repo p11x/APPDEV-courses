@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18 - Data URL</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .output { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; white-space: pre-wrap; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>18 - Data URL</h1>
+    <p>Data URLs embed content directly in the URL string.</p>
+    
+    <button onclick="createTextDataURL()">Create Text Data URL</button>
+    <button onclick="createImageDataURL()">Create Image Data URL</button>
+    <button onclick="parseDataURL()">Parse Data URL</button>
+    <div id="output" class="output">Output will appear here...</div>
+    <div id="preview" style="margin-top: 20px;"></div>
+
+    <script>
+        let output = [];
+
+        function log(message) {
+            output.push(message);
+            document.getElementById('output').textContent = output.join('\n');
+        }
+
+        function createTextDataURL() {
+            output = [];
+            log('Creating text data URL...');
+            
+            const text = 'Hello, World!';
+            const encoded = encodeURIComponent(text);
+            const dataUrl = 'data:text/plain,' + encoded;
+            
+            log('Data URL: ' + dataUrl);
+            log('Length: ' + dataUrl.length + ' characters');
+            
+            fetch(dataUrl)
+                .then(res => res.text())
+                .then(content => log('Decoded content: ' + content));
+        }
+
+        function createImageDataURL() {
+            log('Creating image data URL...');
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 80;
+            canvas.height = 80;
+            const ctx = canvas.getContext('2d');
+            
+            const gradient = ctx.createLinearGradient(0, 0, 80, 80);
+            gradient.addColorStop(0, '#ff6b6b');
+            gradient.addColorStop(1, '#4ecdc4');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 80, 80);
+            
+            const dataUrl = canvas.toDataURL('image/png');
+            log('Image data URL created');
+            log('Length: ' + dataUrl.length + ' characters');
+            
+            document.getElementById('preview').innerHTML = 
+                '<img src="' + dataUrl + '" alt="Data URL Image">';
+        }
+
+        function parseDataURL() {
+            log('Parsing common data URL formats...');
+            
+            const examples = [
+                'data:text/plain;base64,SGVsbG8gV29ybGQh',
+                'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><text>Hi</text></svg>',
+                'data:application/json,{"name":"value"}'
+            ];
+            
+            for (const url of examples) {
+                const parts = url.split(',');
+                const mime = parts[0].split(';')[0].split(':')[1];
+                log('MIME type: ' + mime + ' | Data: ' + parts[1].substring(0, 30) + '...');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy Set Trap</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d5f4e6; border-left: 4px solid #27ae60; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>36. Proxy Set Trap</h1>
+    
+    <div class="section">
+        <h2>The set Trap</h2>
+        <p>Intercepts property assignment (obj.prop = value).</p>
+        <pre>
+const handler = {
+    set(target, property, value, receiver) {
+        console.log('Setting:', property, '=', value);
+        target[property] = value;
+        return true;
+    }
+};
+        </pre>
+    </div>
+    
+    <div class="section">
+        <h2>Example 1: Validation</h2>
+        <button onclick="validateSet()">Test Validation</button>
+        <div class="output" id="output1"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Example 2: Change Tracking</h2>
+        <button onclick="trackChanges()">Track Changes</button>
+        <div class="output" id="output2"></div>
+    </div>
+    
+    <script>
+        function validateSet() {
+            const logs = [];
+            const user = { name: 'John' };
+            const handler = {
+                set(target, prop, value) {
+                    if (prop === 'age' && (value < 0 || value > 120)) {
+                        logs.push('Invalid age: ' + value);
+                        return false;
+                    }
+                    target[prop] = value;
+                    logs.push('Set ' + prop + ' = ' + value);
+                    return true;
+                }
+            };
+            
+            const proxy = new Proxy(user, handler);
+            
+            logs.push('Setting name to Jane');
+            proxy.name = 'Jane';
+            logs.push('Setting age to 25');
+            proxy.age = 25;
+            logs.push('Setting age to 200');
+            proxy.age = 200;
+            
+            document.getElementById('output1').innerHTML = logs.join('<br>');
+        }
+        
+        function trackChanges() {
+            const logs = [];
+            const changes = {};
+            const handler = {
+                set(target, prop, value, receiver) {
+                    const oldValue = target[prop];
+                    changes[prop] = { old: oldValue, new: value };
+                    logs.push('Changed ' + prop + ': ' + oldValue + ' -> ' + value);
+                    return Reflect.set(target, prop, value, receiver);
+                }
+            };
+            
+            const data = new Proxy({}, handler);
+            
+            data.score = 10;
+            data.score = 20;
+            data.score = 30;
+            
+            document.getElementById('output2').innerHTML = Object.entries(changes).map(
+                ([k, v]) => k + ': ' + v.old + ' -> ' + v.new
+            ).join('<br>');
+        }
+    </script>
+</body>
+</html>

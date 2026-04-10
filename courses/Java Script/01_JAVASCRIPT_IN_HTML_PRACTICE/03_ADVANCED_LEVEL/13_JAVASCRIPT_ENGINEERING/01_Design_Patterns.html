@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Patterns - Singleton & Factory</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d5f4e6; border-left: 4px solid #27ae60; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <h1>JavaScript Design Patterns</h1>
+    
+    <!-- Singleton Pattern Section -->
+    <div class="section">
+        <h2>1. Singleton Pattern</h2>
+        <p>Ensures a class has only one instance and provides a global point of access to it.</p>
+        
+        <pre>
+// Singleton Pattern - ensures only one instance exists
+const Singleton = (() => {
+    let instance = null;
+    
+    function createInstance() {
+        return {
+            data: [],
+            add(item) {
+                this.data.push(item);
+            },
+            getAll() {
+                return [...this.data];
+            }
+        };
+    }
+    
+    return {
+        getInstance() {
+            if (!instance) {
+                instance = createInstance();
+            }
+            return instance;
+        }
+    };
+})();
+
+// Usage
+const obj1 = Singleton.getInstance();
+const obj2 = Singleton.getInstance();
+console.log('Same instance?', obj1 === obj2); // true
+        </pre>
+        
+        <button onclick="runSingletonDemo()">Run Singleton Demo</button>
+        <div id="singleton-output" class="output"></div>
+    </div>
+    
+    <!-- Factory Pattern Section -->
+    <div class="section">
+        <h2>2. Factory Pattern</h2>
+        <p>Creates objects without specifying their exact class - defines interface for creating objects.</p>
+        
+        <pre>
+// Factory Pattern - creates objects without specifying exact class
+class Car {
+    constructor(options) {
+        this.doors = options.doors || 4;
+        this.color = options.color || 'white';
+    }
+    drive() { console.log(`Driving ${this.color} car with ${this.doors} doors`); }
+}
+
+class Truck {
+    constructor(options) {
+        this.doors = options.doors || 2;
+        this.color = options.color || 'gray';
+        this.bedLength = options.bedLength || 'short';
+    }
+    drive() { console.log(`Driving ${this.color} truck with ${this.doors} doors`); }
+}
+
+class VehicleFactory {
+    createVehicle(options) {
+        if (options.type === 'car') {
+            return new Car(options);
+        } else if (options.type === 'truck') {
+            return new Truck(options);
+        }
+        throw new Error('Unknown vehicle type');
+    }
+}
+
+// Usage
+const factory = new VehicleFactory();
+const myCar = factory.createVehicle({ type: 'car', color: 'red' });
+const myTruck = factory.createVehicle({ type: 'truck', color: 'blue', bedLength: 'long' });
+        </pre>
+        
+        <button onclick="runFactoryDemo()">Run Factory Demo</button>
+        <div id="factory-output" class="output"></div>
+    </div>
+    
+    <script>
+        // Singleton Pattern
+        const Singleton = (() => {
+            let instance = null;
+            
+            function createInstance() {
+                return {
+                    data: [],
+                    add(item) {
+                        this.data.push(item);
+                    },
+                    getAll() {
+                        return [...this.data];
+                    }
+                };
+            }
+            
+            return {
+                getInstance() {
+                    if (!instance) {
+                        instance = createInstance();
+                    }
+                    return instance;
+                }
+            };
+        })();
+
+        function runSingletonDemo() {
+            const obj1 = Singleton.getInstance();
+            const obj2 = Singleton.getInstance();
+            
+            obj1.add({ name: 'Item 1' });
+            obj2.add({ name: 'Item 2' });
+            
+            const output = document.getElementById('singleton-output');
+            output.innerHTML = `
+                <strong>Singleton Test:</strong><br>
+                obj1 === obj2: <code>TRUE</code> (same instance)<br>
+                obj1 items: ${JSON.stringify(obj1.getAll())}<br>
+                obj2 items: ${JSON.stringify(obj2.getAll())}<br>
+                <em>Both reference the same object!</em>
+            `;
+        }
+
+        // Factory Pattern
+        class Car {
+            constructor(options) {
+                this.doors = options.doors || 4;
+                this.color = options.color || 'white';
+            }
+            describe() { return `${this.color} car with ${this.doors} doors`; }
+        }
+
+        class Truck {
+            constructor(options) {
+                this.doors = options.doors || 2;
+                this.color = options.color || 'gray';
+                this.bedLength = options.bedLength || 'short';
+            }
+            describe() { return `${this.color} truck with ${this.doors} doors, ${this.bedLength} bed`; }
+        }
+
+        class VehicleFactory {
+            createVehicle(options) {
+                if (options.type === 'car') {
+                    return new Car(options);
+                } else if (options.type === 'truck') {
+                    return new Truck(options);
+                }
+                throw new Error('Unknown vehicle type');
+            }
+        }
+
+        function runFactoryDemo() {
+            const factory = new VehicleFactory();
+            const myCar = factory.createVehicle({ type: 'car', color: 'red', doors: 4 });
+            const myTruck = factory.createVehicle({ type: 'truck', color: 'blue', doors: 2, bedLength: 'long' });
+            
+            const output = document.getElementById('factory-output');
+            output.innerHTML = `
+                <strong>Factory Test:</strong><br>
+                Car: <code>${myCar.describe()}</code><br>
+                Truck: <code>${myTruck.describe()}</code><br>
+                <em>Objects created via factory without specifying exact class!</em>
+            `;
+        }
+    </script>
+</body>
+</html>

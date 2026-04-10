@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Plugin Basics - Tailwind CSS Plugin Development</title>
+</head>
+<body>
+    <h1>Custom Plugin Basics</h1>
+
+    <h2>What Are Tailwind CSS Plugins?</h2>
+    <p>
+        Tailwind CSS plugins extend the framework's functionality by adding custom utilities, components, or base styles. Plugins can be distributed as npm packages or added directly to your tailwind.config.js file. They allow you to encapsulate reusable patterns and share them across projects.
+    </p>
+
+    <h2>Why Create Custom Plugins?</h2>
+    <ul>
+        <li>Reuse utility patterns across multiple projects</li>
+        <li>Encapsulate complex utility combinations</li>
+        <li>Create project-specific design system components</li>
+        <li>Share utilities with the community</li>
+    </ul>
+
+    <h3>Standard Example: Basic Plugin Structure</h3>
+    <!-- Basic plugin adds utilities to your project -->
+    <div class="prose text-gray-700">
+        Plugin-generated content
+    </div>
+    <!-- 
+        Plugin definition:
+        plugin(function({ addUtilities }) {
+            addUtilities({
+                '.prose': {
+                    'max-width': '65ch',
+                    'line-height': '1.75',
+                },
+            })
+        })
+    -->
+
+    <h3>Real-World Example 1: Custom Button Plugin</h3>
+    <!-- A reusable button plugin -->
+    <button class="btn-primary">
+        Primary Button
+    </button>
+    <button class="btn-secondary">
+        Secondary Button
+    </button>
+    <!-- 
+        Plugin creates:
+        .btn-primary: background, padding, border-radius, color, hover state
+        .btn-secondary: different background, text color, hover state
+    -->
+
+    <h3>Real-World Example 2: Glass Effect Plugin</h3>
+    <!-- Glass morphism effect utility -->
+    <div class="glass-effect">
+        <h2 class="text-white text-xl">Glass Card</h2>
+        <p class="text-white/80">Content with glass effect</p>
+    </div>
+    <!-- 
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    -->
+
+    <h2>Output Statement</h2>
+    <p>
+        Custom plugins add reusable utilities and components to Tailwind, enabling you to create a consistent design system. A well-designed plugin can reduce code duplication and maintain consistency across your project.
+    </p>
+
+    <h2>ASCII Diagram: Plugin Architecture</h2>
+    <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                 TAILWIND PLUGIN ARCHITECTURE                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐  │
+│   │              tailwind.config.js                     │  │
+│   │  ┌─────────────────────────────────────────────┐   │  │
+│   │  │  plugins: [                                   │   │
+│   │  │    require('@tailwindcss/typography'),       │   │
+│   │  │    require('./custom-plugin.js'),            │   │
+│   │  │    function({ addUtilities }) { ... }        │   │
+│   │  │  ]                                           │   │
+│   │  └─────────────────────────────────────────────┘   │  │
+│   └─────────────────────────────────────────────────────┘  │
+│                          │                                  │
+│                          ▼                                  │
+│   ┌─────────────────────────────────────────────────────┐  │
+│   │                  Generated CSS                       │  │
+│   │   - Standard Tailwind utilities                     │  │
+│   │   - Plugin-added utilities                          │  │
+│   │   - Custom components                               │  │
+│   └─────────────────────────────────────────────────────┘  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+    </pre>
+
+    <h2>Creating a Simple Plugin</h2>
+    <pre>
+const plugin = require('tailwindcss/plugin')
+
+module.exports = plugin(function({ addUtilities, addComponents, addBase, theme }) {
+    // Add utilities
+    addUtilities({
+        '.custom-util': {
+            'property': 'value',
+        }
+    })
+    
+    // Add components
+    addComponents({
+        '.custom-component': {
+            'padding': '1rem',
+        }
+    })
+    
+    // Add base styles
+    addBase({
+        'body': {
+            'background-color': theme('colors.gray.100'),
+        }
+    })
+})
+    </pre>
+
+    <h2>Plugin API Methods</h2>
+    <ul>
+        <li><strong>addUtilities()</strong> - Add new utility classes</li>
+        <li><strong>addComponents()</strong> - Add component-level styles</li>
+        <li><strong>addBase()</strong> - Add base/global styles</li>
+        <li><strong>theme()</strong> - Access theme configuration</li>
+        <li><strong>addVariant()</strong> - Add custom variants</li>
+    </ul>
+
+    <h2>Edge Cases and Considerations</h2>
+    <ul>
+        <li>Plugin order matters - later plugins can override earlier ones</li>
+        <li>Ensure your plugin respects theme customization</li>
+        <li>Use theme() function to access user customizations</li>
+        <li>Consider both class name collisions and CSS specificity</li>
+    </ul>
+
+    <h2>Performance Considerations</h2>
+    <ul>
+        <li>Each plugin adds to the final CSS output</li>
+        <li>Keep plugin utilities focused and minimal</li>
+        <li>Consider using JIT for automatic purge of unused plugin styles</li>
+    </ul>
+
+    <h2>Accessibility Notes</h2>
+    <p>
+        When creating plugin components, ensure they maintain accessibility. Button plugins should include focus states, and interactive elements should be keyboard accessible by default.
+    </p>
+
+    <h2>Cross-Browser Notes</h2>
+    <p>
+        Plugin-generated CSS should work across modern browsers. Test critical properties like backdrop-filter, which has limited support in older browsers.
+    </p>
+</body>
+</html>

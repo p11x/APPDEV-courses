@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Pattern - IIFE & ES Modules</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 3px solid #9b59b6; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 0; }
+        code { background: #ecf0f1; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: #e74c3c; }
+        pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #e8daef; border-left: 4px solid #9b59b6; padding: 15px; margin: 10px 0; border-radius: 0 5px 5px 0; }
+        button { background: #9b59b6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #8e44ad; }
+    </style>
+</head>
+<body>
+    <h1>JavaScript Module Patterns</h1>
+    
+    <!-- IIFE Section -->
+    <div class="section">
+        <h2>1. IIFE (Immediately Invoked Function Expression)</h2>
+        <p>A function that executes immediately upon definition, creating private scope.</p>
+        
+        <pre>
+// IIFE Pattern - creates private scope
+const Counter = (() => {
+    let count = 0; // private variable
+    
+    return {
+        increment() { return ++count; },
+        decrement() { return --count; },
+        getCount() { return count; }
+    };
+})(); // Immediately invoked
+
+console.log(Counter.increment()); // 1
+console.log(Counter.increment()); // 2
+console.log(Counter.getCount()); // 2
+// count is private - cannot access directly
+        </pre>
+        
+        <button onclick="runIIFEDemo()">Run IIFE Demo</button>
+        <div id="iife-output" class="output"></div>
+    </div>
+    
+    <!-- Revealing Module Pattern -->
+    <div class="section">
+        <h2>2. Revealing Module Pattern</h2>
+        <p>IIFE variant that returns an object revealing only certain methods.</p>
+        
+        <pre>
+// Revealing Module Pattern
+const UserManager = (() => {
+    const users = [];
+    
+    function validateEmail(email) {
+        return email.includes('@');
+    }
+    
+    return {
+        addUser(name, email) {
+            if (!validateEmail(email)) {
+                return { success: false, message: 'Invalid email' };
+            }
+            users.push({ name, email });
+            return { success: true, message: 'User added' };
+        },
+        getUsers() {
+            return users.map(u => u.name);
+        }
+    };
+})();
+        </pre>
+        
+        <button onclick="runRevealingDemo()">Run Revealing Module Demo</button>
+        <div id="revealing-output" class="output"></div>
+    </div>
+    
+    <!-- ES Modules Section -->
+    <div class="section">
+        <h2>3. ES Modules Pattern</h2>
+        <p>Native JavaScript modules using import/export syntax.</p>
+        
+        <pre>
+// ES Module syntax (requires separate files with type="module")
+// file: math.js
+// export function add(a, b) { return a + b; }
+
+// file: main.js
+// import { add } from './math.js';
+// console.log(add(2, 3)); // 5
+
+// Inline demo simulating ES modules
+const MathModule = (() => {
+    const add = (a, b) => a + b;
+    const subtract = (a, b) => a - b;
+    const multiply = (a, b) => a * b;
+    
+    return { add, subtract, multiply };
+})();
+
+import { add, subtract } from './module-demo.js';
+        </pre>
+        
+        <button onclick="runESModuleDemo()">Run ES Module Demo</button>
+        <div id="esmodule-output" class="output"></div>
+    </div>
+    
+    <script>
+        // IIFE Pattern
+        function runIIFEDemo() {
+            const Counter = (() => {
+                let count = 0;
+                
+                return {
+                    increment() { return ++count; },
+                    decrement() { return --count; },
+                    getCount() { return count; }
+                };
+            })();
+            
+            Counter.increment();
+            Counter.increment();
+            Counter.increment();
+            
+            const output = document.getElementById('iife-output');
+            output.innerHTML = `
+                <strong>IIFE Test:</strong><br>
+                After 3 increments: <code>${Counter.getCount()}</code><br>
+                Private variable <code>count</code> is encapsulated!<br>
+                <em>Cannot access count directly from outside</em>
+            `;
+        }
+
+        // Revealing Module Pattern
+        function runRevealingDemo() {
+            const UserManager = (() => {
+                const users = [];
+                
+                function validateEmail(email) {
+                    return email.includes('@');
+                }
+                
+                return {
+                    addUser(name, email) {
+                        if (!validateEmail(email)) {
+                            return { success: false, message: 'Invalid email' };
+                        }
+                        users.push({ name, email });
+                        return { success: true, message: 'User added' };
+                    },
+                    getUsers() {
+                        return users.map(u => u.name);
+                    }
+                };
+            })();
+            
+            UserManager.addUser('Alice', 'alice@example.com');
+            UserManager.addUser('Bob', 'bob@test.com');
+            UserManager.addUser('Invalid', 'not-an-email');
+            
+            const output = document.getElementById('revealing-output');
+            output.innerHTML = `
+                <strong>Revealing Module Test:</strong><br>
+                Users: <code>${UserManager.getUsers().join(', ')}</code><br>
+                Private <code>validateEmail</code> used internally!<br>
+                <em>Reveals only public API, hides implementation</em>
+            `;
+        }
+
+        // ES Module Simulation
+        function runESModuleDemo() {
+            const MathModule = (() => {
+                const add = (a, b) => a + b;
+                const subtract = (a, b) => a - b;
+                const multiply = (a, b) => a * b;
+                const divide = (a, b) => b !== 0 ? a / b : 'Error';
+                
+                return { add, subtract, multiply, divide };
+            })();
+            
+            const result1 = MathModule.add(10, 5);
+            const result2 = MathModule.subtract(10, 5);
+            const result3 = MathModule.multiply(10, 5);
+            const result4 = MathModule.divide(10, 5);
+            
+            const output = document.getElementById('esmodule-output');
+            output.innerHTML = `
+                <strong>ES Module Simulation:</strong><br>
+                add(10, 5): <code>${result1}</code><br>
+                subtract(10, 5): <code>${result2}</code><br>
+                multiply(10, 5): <code>${result3}</code><br>
+                divide(10, 5): <code>${result4}</code><br>
+                <em>Module exports public methods, encapsulates private logic</em>
+            `;
+        }
+    </script>
+</body>
+</html>

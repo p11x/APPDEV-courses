@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Traversal</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .demo { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 8px 16px; cursor: pointer; margin: 5px; }
+        #tree { border: 2px solid #333; padding: 10px; }
+        #tree ul { list-style: none; padding-left: 20px; }
+        #tree li { margin: 5px 0; }
+        .highlight { background: lightyellow; padding: 2px 5px; }
+    </style>
+</head>
+<body>
+    <h1>DOM Traversal - parentNode, children, nextSibling</h1>
+
+    <!-- Parent/Child Traversal -->
+    <div id="demo1" class="demo">
+        <h3>parentNode and children</h3>
+        <div id="parent">
+            Parent Div
+            <p id="child">Child Paragraph</p>
+        </div>
+        <button onclick="traverseParent()">Get parentNode</button>
+        <button onclick="traverseChildren()">Get children</button>
+    </div>
+
+    <!-- Sibling Traversal -->
+    <div id="demo2" class="demo">
+        <h3>Sibling Traversal</h3>
+        <div id="siblingContainer">
+            <span id="item1">First</span>
+            <span id="item2">Second</span>
+            <span id="item3">Third</span>
+        </div>
+        <button onclick="nextSibling()">nextSibling</button>
+        <button onclick="previousSibling()">previousSibling</button>
+    </div>
+
+    <!-- Element-only traversal -->
+    <div id="demo3" class="demo">
+        <h3>Element-only traversal (modern)</h3>
+        <ul id="list">
+            <li>Item 1</li>
+            <li>Item 2</li>
+            <li>Item 3</li>
+        </ul>
+        <button onclick="elementTraversal()">Use children/nextElementSibling</button>
+    </div>
+
+    <!-- Output -->
+    <div class="demo">
+        <h3>Output:</h3>
+        <pre id="output">Click buttons to see output...</pre>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        // parentNode - returns the parent element
+        function traverseParent() {
+            const child = document.getElementById('child');
+            const parent = child.parentNode;
+            
+            output.textContent = 
+                'Child: ' + child.tagName + '\n' +
+                'Parent: ' + parent.tagName + ' (id="' + parent.id + '")' + '\n' +
+                'Parent content: ' + parent.textContent.substring(0, 30) + '...';
+        }
+        
+        // children - returns HTMLCollection of child elements (excludes text nodes)
+        function traverseChildren() {
+            const parent = document.getElementById('parent');
+            const children = parent.children;
+            
+            let result = 'Children count: ' + children.length + '\n';
+            for (let i = 0; i < children.length; i++) {
+                result += 'Child ' + i + ': ' + children[i].tagName + '\n';
+            }
+            output.textContent = result;
+        }
+        
+        // nextSibling/previousSibling - includes text nodes
+        function nextSibling() {
+            const item2 = document.getElementById('item2');
+            const next = item2.nextSibling;
+            
+            // nextSibling might be text node (whitespace)
+            output.textContent = 
+                'Current: ' + item2.textContent + '\n' +
+                'nextSibling: ' + (next ? next.nodeName + ' - "' + next.textContent + '"' : 'null');
+        }
+        
+        function previousSibling() {
+            const item2 = document.getElementById('item2');
+            const prev = item2.previousSibling;
+            
+            output.textContent = 
+                'Current: ' + item2.textContent + '\n' +
+                'previousSibling: ' + (prev ? prev.nodeName + ' - "' + prev.textContent + '"' : 'null');
+        }
+        
+        // Modern element-only properties (skip text nodes)
+        function elementTraversal() {
+            const list = document.getElementById('list');
+            const children = list.children;
+            const firstChild = list.firstElementChild;
+            const lastChild = list.lastElementChild;
+            
+            output.textContent = 
+                'children: ' + children.length + ' elements\n' +
+                'firstElementChild: ' + firstChild.tagName + '\n' +
+                'lastElementChild: ' + lastChild.tagName + '\n';
+            
+            // Traverse with nextElementSibling
+            let result = '\nAll items using nextElementSibling:\n';
+            let current = firstChild;
+            let count = 1;
+            while (current) {
+                result += count + ': ' + current.textContent + '\n';
+                current = current.nextElementSibling;
+                count++;
+            }
+            output.textContent += result;
+        }
+    </script>
+</body>
+</html>
