@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# This script only watches for file changes and pushes to GitHub.
+# The website is hosted entirely on GitHub Pages — no local server needed.
+
 """
 Auto-commit file watcher for APPDEV-courses repository.
 Monitors changes and automatically commits and pushes to GitHub.

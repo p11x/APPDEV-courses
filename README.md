@@ -98,6 +98,19 @@ open index.html
 
 ---
 
+## 🏗️ How It Works
+
+This repo uses a **zero-local-server architecture**:
+
+- Your PC runs only the lightweight file watcher (`auto_commit.py` — ~15MB RAM, <0.1% CPU)
+- GitHub servers handle all hosting, building, and deployment
+- Site is online 24/7 at https://p11x.github.io/APPDEV-courses
+- No local server, no ports, no stress on your PC
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for full details.
+
+---
+
 ## 🛠️ Tech Stack
 
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)]()
